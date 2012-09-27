@@ -1,0 +1,5 @@
+main: function() 
+{
+      var ping;
+    
+}
