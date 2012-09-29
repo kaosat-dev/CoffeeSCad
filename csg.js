@@ -899,6 +899,11 @@ CSG.prototype = {
     var newshared = new CSG.Polygon.Shared([red, green, blue]); 
     return this.setShared(newshared);
   },
+  color : function(rgb)
+  {
+  	var newshared = new CSG.Polygon.Shared([red, green, blue]); 
+    return this.setShared(newshared);
+  },
 
   toCompactBinary: function() {
     var csg = this.canonicalized();

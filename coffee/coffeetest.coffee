@@ -1,6 +1,8 @@
 CSG = CSG
 
 
+ELEC_COLOR =[ 0.5, 0.5, 0.6]
+
 class PingSensor
   #all measurements based on http://www.parallax.com/Portals/0/Downloads/docs/prod/acc/28015-PING-v1.6.pdf
   #usefull
@@ -16,7 +18,7 @@ class PingSensor
   emire_center_offset:0
   rounding_resolution:16
   
-  constructor: (@pos=[0,0,0], @rot=[0,45,0]) ->
+  constructor: (@pos=[0,0,0], @rot=[0,0,0]) ->
     @emire_center_offset=(41.7-@emire_dia)/2
     OpenJsCad.log("Dia is: "+@emire_dia)
     OpenJsCad.log("Center offset is: "+@emire_center_offset)
@@ -37,6 +39,17 @@ class PingSensor
 
     return result.translate(@pos).rotateX(@rot[0]).rotateY(@rot[1]).rotateZ(@rot[2])
 
+
+class AdaServoDriver
+  width:25.4
+  length:62.5
+  height:3
+  constructor: (@pos=[0,0,0], @rot=[0,0,0]) ->
+    
+  render: =>
+    result = new CSG()
+    pcb = CSG.cube({center: [0, 0, @height/2],radius: [@width/2, @length/2, @height/2]}).setColor(ELEC_COLOR)
+    return result.translate(@pos).rotateX(@rot[0]).rotateY(@rot[1]).rotateZ(@rot[2])
 
 ping = new PingSensor()
 return ping.render()
