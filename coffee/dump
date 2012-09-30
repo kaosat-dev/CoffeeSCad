@@ -24,6 +24,18 @@ pattern = ///
 ###
 
 
+  params_pattern:
+    ///
+     ([\w]+)
+     \=?
+     
+     [\w.]+
+      |  # or
+     \[ (.*?)?? \]
+    
+    ///g
+
+
 
 matches = test_string.match(pattern)
 
