@@ -65,10 +65,8 @@ while match
 
 
 console.log("#########################################FULL2##")
-text = "module kpla(val=17.2, emire_dia=10, emire_height=7,name='bli', pos=[0,0,0], color=BLACK){cylinder(r=emire_dia/2, h=emire_height);cube([10,10,10],center=true);}
+text = "module kpla(val=17.2,emire_dia=10, emire_height=7,name='bli', pos=[0,0,0], color=BLACK){cylinder(r=emire_dia/2, h=emire_height);cube([10,10,10],center=true);}
 "
-#TODO: fix regexp for param list: (ie it either misses the last one, or only accepts lists with spaces)
-#\,?\s?
 pattern = new RegExp(/module\s??([\w]+)\s??\((.*?)\)/g)
 match = pattern.exec(text)
 while match  
@@ -78,7 +76,7 @@ while match
   
   console.log("moduleName: " + moduleName + " moduleParams: "+moduleParams)
   
-  subpattern = new RegExp(/([\w]+)=([\w\//:'%~+#-.*]+|\[(.*?)\])?/g)
+  subpattern = new RegExp(/([\w]+)=([\w\//:'%~+#-.*]+|\[(.*?)\])?(?=,|$)/g)
   submatch = subpattern.exec(moduleParams)
   while submatch 
     ParamName = submatch[1]
@@ -90,6 +88,9 @@ while match
   match = pattern.exec(text)
   
 
-###
- 
-###
+class Token
+  constructor: () ->
+    @params = []
+    @children = []
+    @parent = null
+  

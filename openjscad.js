@@ -468,13 +468,16 @@ OpenJsCad.getParamDefinitions = function(script) {
   return params;
 };
 
-OpenJsCad.Processor = function(containerdiv, onchange) {
+OpenJsCad.Processor = function(containerdiv, width, height, onchange) 
+{
+    
   this.containerdiv = containerdiv;
   this.onchange = onchange;
   this.viewerdiv = null;
   this.viewer = null;
-  this.viewerwidth = 800;
-  this.viewerheight = 600;
+  
+  this.viewerwidth = (typeof width === "undefined") ? 800 : width;
+  this.viewerheight = (typeof width === "undefined") ? 600 : height;
   this.initialViewerDistance = 50;
   this.processing = false;
   this.currentObject = null;
@@ -533,48 +536,54 @@ OpenJsCad.Processor.prototype = {
       this.viewerdiv.innerHTML = "<b><br><br>Error: "+e.toString()+"</b><br><br>OpenJsCad currently requires Google Chrome with WebGL enabled";
 //      this.viewerdiv.innerHTML = e.toString();
     }
-    this.errordiv = document.createElement("div");
+    this.errordiv = document.getElementById("statusDiv");//document.createElement("div");
     this.errorpre = document.createElement("pre"); 
     this.errordiv.appendChild(this.errorpre);
-    this.statusdiv = document.createElement("div");
-    this.statusdiv.className = "statusdiv";
+    
+    this.statusdiv=  document.getElementById("statusDiv");
+    //this.statusdiv = document.createElement("div");
+    //this.statusdiv.className = "statusdiv";
     //this.statusdiv.style.width = this.viewerwidth + "px";
-    this.statusspan = document.createElement("span");
-    this.statusbuttons = document.createElement("div");
-    this.statusbuttons.style.float = "right";
+    this.statusspan =  document.createElement("span");//document.getElementById("statusSpan");
+    //this.statusbuttons = document.createElement("div");
+    //this.statusbuttons.style.float = "right";
     this.statusdiv.appendChild(this.statusspan);
-    this.statusdiv.appendChild(this.statusbuttons);
-    this.abortbutton = document.createElement("button");
-    this.abortbutton.innerHTML = "Abort";
+    //this.statusdiv.appendChild(this.statusbuttons);
+    this.abortbutton = document.getElementById("abortBtn"); //document.createElement("button");
+    //this.abortbutton.innerHTML = "Abort";
     var that = this;
     this.abortbutton.onclick = function(e) {
       that.abort();
     };
-    this.statusbuttons.appendChild(this.abortbutton);
-    this.generateOutputFileButton = document.createElement("button");
+    //this.statusbuttons.appendChild(this.abortbutton);
+    this.generateOutputFileButton = document.getElementById("generateBtn");//document.createElement("button");
     this.generateOutputFileButton.onclick = function(e) {
       that.generateOutputFile();
     };
-    this.statusbuttons.appendChild(this.generateOutputFileButton);
-    this.downloadOutputFileLink = document.createElement("a");
-    this.statusbuttons.appendChild(this.downloadOutputFileLink);
+    //this.statusbuttons.appendChild(this.generateOutputFileButton);
+    //create download link
+    /*this.downloadOutputFileLink = document.createElement("a");
+    this.statusbuttons.appendChild(this.downloadOutputFileLink);*/
+    
     this.parametersdiv = document.createElement("div");
     this.parametersdiv.className = "parametersdiv";
-    var headerdiv = document.createElement("div");
+    /*var headerdiv = document.createElement("div");
     headerdiv.innerText = "Parameters:";
     headerdiv.className = "header";
-    this.parametersdiv.appendChild(headerdiv);
+    this.parametersdiv.appendChild(headerdiv);*/
     this.parameterstable = document.createElement("table");
     this.parameterstable.className = "parameterstable";
     this.parametersdiv.appendChild(this.parameterstable);
+    /*REBUILD BUTTOn
     var parseParametersButton = document.createElement("button");
     parseParametersButton.innerHTML = "Update";
     parseParametersButton.onclick = function(e) {
       that.rebuildSolid();
     };
     this.parametersdiv.appendChild(parseParametersButton);
+    */
     this.enableItems();    
-    this.containerdiv.appendChild(this.statusdiv);
+    //this.containerdiv.appendChild(this.statusdiv);
     this.containerdiv.appendChild(this.errordiv);
     this.containerdiv.appendChild(this.parametersdiv);
     this.clearViewer();
@@ -589,7 +598,7 @@ OpenJsCad.Processor.prototype = {
     }
     this.hasValidCurrentObject = true;
     var ext = this.extensionForCurrentObject();
-    this.generateOutputFileButton.innerHTML = "Generate "+ext.toUpperCase();
+    //this.generateOutputFileButton.innerHTML = "Generate "+ext.toUpperCase();
   },
   
   clearViewer: function() {
@@ -611,13 +620,14 @@ OpenJsCad.Processor.prototype = {
     }
   },
   
-  enableItems: function() {
-    this.abortbutton.style.display = this.processing? "inline":"none";
-    this.generateOutputFileButton.style.display = ((!this.hasOutputFile)&&(this.hasValidCurrentObject))? "inline":"none";
-    this.downloadOutputFileLink.style.display = this.hasOutputFile? "inline":"none";
-    this.parametersdiv.style.display = (this.paramControls.length > 0)? "block":"none";
-    this.errordiv.style.display = this.hasError? "block":"none";
-    this.statusdiv.style.display = this.hasError? "none":"block";    
+  enableItems: function() 
+  {
+    //this.abortbutton.style.display = this.processing? "visible":"none";
+    //this.generateOutputFileButton.style.display = ((!this.hasOutputFile)&&(this.hasValidCurrentObject))? "inline":"none";
+    //this.downloadOutputFileLink.style.display = this.hasOutputFile? "inline":"none";
+    //this.parametersdiv.style.display = (this.paramControls.length > 0)? "block":"none";
+    this.errordiv.style.display = this.hasError? "visible":"none";
+    //this.statusdiv.style.display = this.hasError? "none":"visible";    
   },
   
   setError: function(txt) {
@@ -714,7 +724,8 @@ OpenJsCad.Processor.prototype = {
     this.setError("");
     this.clearViewer();
     this.processing = true;
-    this.statusspan.innerHTML = "Processing, please wait...";
+    //this.statusspan.text = "Processing, please wait...";
+    
     this.enableItems();
     var that = this;
     var paramValues = this.getParamValues();

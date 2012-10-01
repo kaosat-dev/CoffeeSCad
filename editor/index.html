@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<script src="editor/js/jquery-1.8.1.min.js"></script>
+	<script src="editor/js/bootstrap.js"></script>
+	<script src="editor/js/jquery.hotkeys.js"></script>
+	<script src="editor/js/spin.min.js"></script>
+  	<script src="lightgl.js"></script>
+  	<script src="csg.js"></script>
+  	<script src="openjscad.js"></script>
+  	<script src="editor/js/coffee-script.js"></script>
+  	
+
+  <style>
+	canvas { cursor: move; }
+	.navbar .container { height: 1em; }
+  </style>
+
+
+<script>
+var gProcessor=null;
+// Show all exceptions to the user:
+OpenJsCad.AlertUserOfUncaughtExceptions();
+function onload()
+{
+  gProcessor = new OpenJsCad.Processor(document.getElementById("viewer"),815,500);
+  updateSolid();
+}
+function updateSolid()
+{
+  gProcessor.setJsCad(document.getElementById('code').value);
+}
+</script>
+<script type="text/javascript">
+  $(document).ready(function () 
+  {
+    $("[rel=tooltip]").tooltip();
+    
+    $(document).bind('keyup', 'shift+a', function()
+    {
+  		console.log("Updating solid");
+  		updateSolid();
+	});
+	
+	var spinopts = 
+	{
+		  lines: 9, // The number of lines to draw
+		  length: 3, // The length of each line
+		  width: 2, // The line thickness
+		  radius: 3, // The radius of the inner circle
+		  corners: 1, // Corner roundness (0..1)
+		  rotate: 15, // The rotation offset
+		  color: '#000', // #rgb or #rrggbb
+		  speed: 1.5, // Rounds per second
+		  trail: 37, // Afterglow percentage
+		  shadow: false, // Whether to render a shadow
+		  hwaccel: false, // Whether to use hardware acceleration
+		  className: 'spinner', // The CSS class to assign to the spinner
+		  zIndex: 2e9, // The z-index (defaults to 2000000000)
+		  top: 'auto', // Top position relative to parent in px
+		  left: 'auto' // Left position relative to parent in px
+	};
+	var target = document.getElementById('spinner');
+	var spinner = new Spinner(spinopts).spin(target);
+	
+	 $("#renderProgress").css('width', 100+'%')
+  });
+</script>
+<link rel="stylesheet" href="editor/css/bootstrap.css">
+<link rel="stylesheet" href="editor/css/font-awesome.css">
+
+<title>OpenCoffeeScad</title>  
+</head>
+
+
+<body onload="onload()">
+	<h1>OpenCoffeeCad</h1>
+	<div id="spinner" class="spinner"></div>
+	<div class="container-fluid">
+		<div class="row-fluid">
+			<div id="editor" class="span6">
+				<div class="navbar navbar-top active" style="height: 15px">
+				  <div class="navbar-inner">
+				    
+				    <div class="btn-toolbar">
+				    	<div class="btn-group">
+				    		<a class="btn btn-small dropdown-toggle" data-toggle="dropdown" href="#" rel="tooltip" title="File"><i class="icon-file icon-large"></i>
+				    			<span class="caret"></span>
+				    		</a>
+				    		<a class="btn btn-small" href="#" rel="tooltip" title="Load Openscad file"><i class="icon-upload icon-large"></i></a>
+					  
+				    	</div>
+					    <div class="btn-group">
+						    <a id="updateBtn" class="btn btn-small" href="#" rel="tooltip" title="Update view" onclick="updateSolid(); return false;"><i class="icon-repeat icon-large"></i></a>
+						  	<a id="generateBtn"class="btn btn-small" href="#" rel="tooltip" title="Generate STL"><i class="icon-magic icon-large"></i></a>
+						  	<a id="abortBtn" class="btn hide" href="#" rel="tooltip" title="Abort"><i class="icon-remove icon-large"></i></a>
+
+						</div>
+						<div class="btn-group">
+					    <a class="btn btn-small" href="#" rel="tooltip" title="Settings"><i class="icon-cogs icon-large"></i></a>
+						<a class="btn btn-small" href="#" rel="tooltip" title="Fork me on GitHub!"><i class="icon-github icon-large"></i></a>
+						</div>
+					</div>
+					<a class="brand" href="#">CoffeeScad</a>
+				  </div>
+				</div>
+			
+				<textarea id="code" class="field span12" id="textarea" rows="6" style="resize: none;height: 500px">
+					
+				function main()
+					{
+					  var resolution = 24; // increase to get smoother corners (will get slow!)
+					  
+					  var cube1 = CSG.roundedCube({center: [0,0,0], radius: [10,10,10], roundradius: 2, resolution: resolution});
+					  var sphere1 = CSG.sphere({center: [5, 5, 5], radius: 10, resolution: resolution });
+					  var sphere2 = sphere1.translate([12, 5, 0]);
+					  var sphere3 = CSG.sphere({center: [20, 0, 0], radius: 30, resolution: resolution });
+					  
+					  var result = cube1;
+					  result = result.union(sphere1);
+					  result = result.subtract(sphere2);
+					  result = result.intersect(sphere3);
+					  return result;
+					}
+					
+				</textarea>
+				<div id="statusDiv" class="well"></div>
+				<div class="progress">
+  					<div id="renderProgress" class="bar" style="width: 20%;"></div>
+				</div>
+			</div>
+			<div id="viewer" class="span6"></div>
+			
+		</div>
+	</div>
+</body>
+
+</html>

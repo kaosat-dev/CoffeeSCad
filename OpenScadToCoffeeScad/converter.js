@@ -4,7 +4,7 @@
 
   output_string = "";
 
-  /*est_string = "abcdef;abcf;module bubu(){a=14;} c+=13.2; d-=12;
+  /*test_string = "abcdef;abcf;module bubu(){a=14;} c+=13.2; d-=12;
   module ada_servo_driver(pos=[0,0,0],rot=[0,0,0]){
     width=25.4;
     length=62.5;

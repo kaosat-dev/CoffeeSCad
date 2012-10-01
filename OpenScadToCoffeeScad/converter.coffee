@@ -1,8 +1,9 @@
 output_string = ""
 
 
+
 #test_string = "width=25.487; height=17.17; bli=[0,25,0];"
-###est_string = "abcdef;abcf;module bubu(){a=14;} c+=13.2; d-=12;
+###test_string = "abcdef;abcf;module bubu(){a=14;} c+=13.2; d-=12;
 module ada_servo_driver(pos=[0,0,0],rot=[0,0,0]){
   width=25.4;
   length=62.5;
@@ -111,8 +112,6 @@ class ModuleMatcher
     for match in matches
       submatches = match.match(@components_pattern)
       className = submatches[1].replace " ", ""
-      
-      
       if debug
         console.log("Module/class name: " + className)
         console.log("Match: "+match)
