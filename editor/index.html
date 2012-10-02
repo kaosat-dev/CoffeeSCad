@@ -1,41 +1,116 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<script src="editor/js/jquery-1.8.1.min.js"></script>
-	<script src="editor/js/bootstrap.js"></script>
-	<script src="editor/js/jquery.hotkeys.js"></script>
-	<script src="editor/js/spin.min.js"></script>
-  	<script src="lightgl.js"></script>
-  	<script src="csg.js"></script>
-  	<script src="openjscad.js"></script>
-  	<script src="editor/js/coffee-script.js"></script>
-  	
-
+	<script src="./js/jquery-1.8.1.min.js"></script>
+	<script src="./js/bootstrap.js"></script>
+	<script src="./js/jquery.hotkeys.js"></script>
+	<script src="./js/spin.min.js"></script>
+  	<script src="./js/lightgl.js"></script>
+  	<script src="./js/csg.js"></script>
+  	<script src="./js/openjscad.js"></script>
+  	<script src="./js/coffee-script.js"></script>
+  	<script src="./js/codemirror.js"></script>
+  	<script src="./js/foldcode.js"></script>
+  	<script src="./codeMirror/mode/javascript/javascript.js"></script>
+	<link rel="stylesheet" href="css/bootstrap.css">
+	<link rel="stylesheet" href="css/font-awesome.css">
+	<link rel="stylesheet" href="css/codemirror.css">
   <style>
 	canvas { cursor: move; }
 	.navbar .container { height: 1em; }
+	.CodeMirror {
+		  top: 0;
+		  left: 0;
+		  right: 0;
+		  bottom: 0;
+		  width: 95%;
+		}
+		
+		.CodeMirror-scroll {
+  overflow: auto;
+  height: 750px;
+  /* This is needed to prevent an IE[67] bug where the scrolled content
+     is visible outside of the scrolling box. */
+  position: relative;
+  outline: none;
+}
+.fill { 
+    min-height: 100%;
+    height: 100%;
+}
   </style>
 
 
 <script>
 var gProcessor=null;
+var codeEditor = null;
+var codeUpdated = true;
 // Show all exceptions to the user:
 OpenJsCad.AlertUserOfUncaughtExceptions();
 function onload()
 {
-  gProcessor = new OpenJsCad.Processor(document.getElementById("viewer"),815,500);
-  updateSolid();
+  	gProcessor = new OpenJsCad.Processor(document.getElementById("viewer"),750,750);
+  	//updateSolid();
 }
 function updateSolid()
 {
-  gProcessor.setJsCad(document.getElementById('code').value);
+  	gProcessor.setJsCad(codeEditor.getValue());
 }
 </script>
 <script type="text/javascript">
+function updateUndoRedo ()
+{
+  	var redoes = codeEditor.historySize().redo;
+	var undoes = codeEditor.historySize().undo;
+	//console.log("undoes"+undoes+" redoes "+redoes );
+	
+	if (redoes >0)
+	{
+		$('#redoBtn').removeClass("disabled");
+	}
+	else
+	{
+		$('#redoBtn').addClass("disabled");
+	}
+	if (undoes >0)
+	{
+		$('#undoBtn').removeClass("disabled");
+	}
+	else
+	{
+		$('#undoBtn').addClass("disabled");
+	}
+}
+
+function checkCodeEditorContent()
+{
+	if (codeEditor.lineCount()>0)
+	{
+		$('#updateBtn').removeClass("disabled");
+	}
+}
+
+var foldFunc = CodeMirror.newFoldFunction(CodeMirror.braceRangeFinder);
+
   $(document).ready(function () 
   {
-    $("[rel=tooltip]").tooltip();
-    
+  	codeEditor = CodeMirror.fromTextArea(codeArea,
+	{
+			lineNumbers:true,
+			gutter:true,
+			matchBrackets:true,
+			onChange: function (arg, arg2) 
+			{		 
+				updateUndoRedo();
+				checkCodeEditorContent();
+				//if (arg2.text.length>0):
+				codeUpdated = true;
+				console.log(arg2.text.length);
+			},
+			onGutterClick: foldFunc, extraKeys: {"Ctrl-Q": function(cm){foldFunc(cm, cm.getCursor().line);}}
+	});
+  	checkCodeEditorContent();
+    $("[rel=tooltip]").tooltip({placement:'bottom'});
     $(document).bind('keyup', 'shift+a', function()
     {
   		console.log("Updating solid");
@@ -63,74 +138,116 @@ function updateSolid()
 	var target = document.getElementById('spinner');
 	var spinner = new Spinner(spinopts).spin(target);
 	
-	 $("#renderProgress").css('width', 100+'%')
+	 $("#renderProgress").css('width', 100+'%');
+	 
+	 
+	 $('#undoBtn').on('click', function (e) 
+	 {
+    		codeEditor.undo();
+    		updateUndoRedo();
+	 })
+	 
+	 $('#redoBtn').on('click', function (e) 
+	 {
+    		codeEditor.redo();
+    		updateUndoRedo();	
+	 })
+	 $('#newFileBtn').on('click', function (e) 
+	 {
+    		codeEditor.setValue("")
+    		codeEditor.clearHistory();
+    		updateUndoRedo();
+	 })
+	 $('#newFileBtnDemo').on('click', function (e) 
+	 {
+    		codeEditor.setValue(" function main(){bla}")
+    		codeEditor.clearHistory();
+    		updateUndoRedo();
+	 })
+	 $('#updateBtn').on('click', function (e)
+	{
+		if(codeUpdated)
+		{
+			codeUpdated = false;
+			$('#updateBtn').addClass("disabled");
+			updateSolid(); return false;
+		}
+		 return e.preventDefault();
+	})
+	
+
+	 
   });
 </script>
-<link rel="stylesheet" href="editor/css/bootstrap.css">
-<link rel="stylesheet" href="editor/css/font-awesome.css">
+
 
 <title>OpenCoffeeScad</title>  
 </head>
 
-
 <body onload="onload()">
-	<h1>OpenCoffeeCad</h1>
-	<div id="spinner" class="spinner"></div>
+	<!--<div id="spinner" class="spinner"></div>-->
 	<div class="container-fluid">
 		<div class="row-fluid">
-			<div id="editor" class="span6">
-				<div class="navbar navbar-top active" style="height: 15px">
-				  <div class="navbar-inner">
-				    
-				    <div class="btn-toolbar">
+			<div class="span12">
+				<div class="navbar  active">
+					<a class="brand"> OpenCoffeeCad</a>
+				    <div class="btn-toolbar well"  style="height: 25px; padding-top: 0px">
 				    	<div class="btn-group">
 				    		<a class="btn btn-small dropdown-toggle" data-toggle="dropdown" href="#" rel="tooltip" title="File"><i class="icon-file icon-large"></i>
 				    			<span class="caret"></span>
 				    		</a>
-				    		<a class="btn btn-small" href="#" rel="tooltip" title="Load Openscad file"><i class="icon-upload icon-large"></i></a>
-					  
+				    		<ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+				    			<li id ="newFileBtn"><a tabindex="-1" href="#">New</a></li>
+				    			<li id ="newFileBtnDemo"><a tabindex="-1" href="#">New (Demo)</a></li>
+		                        <li class="divider"></li>
+		                        <li><a tabindex="-1" href="#">About</a></li>
+				    		</ul>
+				    		<a class="btn btn-small disabled" href="#" rel="tooltip" title="Load Openscad file"><i class="icon-upload icon-large"></i></a>
+							<a id="undoBtn" class="btn btn-small disabled" href="#" rel="tooltip" title="Undo (CTRL+Z)"><i class="icon-undo icon-large"></i></a>
+					  		<a id="redoBtn" class="btn btn-small disabled" href="#" rel="tooltip" title="Redo (CTRL+Y)"><i class="icon-repeat icon-large"></i></a>
 				    	</div>
 					    <div class="btn-group">
-						    <a id="updateBtn" class="btn btn-small" href="#" rel="tooltip" title="Update view" onclick="updateSolid(); return false;"><i class="icon-repeat icon-large"></i></a>
-						  	<a id="generateBtn"class="btn btn-small" href="#" rel="tooltip" title="Generate STL"><i class="icon-magic icon-large"></i></a>
+						    <a id="updateBtn" class="btn btn-small disabled" href="#" rel="tooltip" title="Update view" ><i class="icon-refresh icon-large"></i></a>
+						  	<a id="generateBtn"class="btn btn-small disabled" href="#" rel="tooltip" title="Generate STL"><i class="icon-magic icon-large"></i></a>
 						  	<a id="abortBtn" class="btn hide" href="#" rel="tooltip" title="Abort"><i class="icon-remove icon-large"></i></a>
 
 						</div>
 						<div class="btn-group">
-					    <a class="btn btn-small" href="#" rel="tooltip" title="Settings"><i class="icon-cogs icon-large"></i></a>
+					    <a class="btn btn-small disabled" href="#" rel="tooltip" title="Settings"><i class="icon-cogs icon-large"></i></a>
 						<a class="btn btn-small" href="#" rel="tooltip" title="Fork me on GitHub!"><i class="icon-github icon-large"></i></a>
 						</div>
 					</div>
-					<a class="brand" href="#">CoffeeScad</a>
-				  </div>
 				</div>
-			
-				<textarea id="code" class="field span12" id="textarea" rows="6" style="resize: none;height: 500px">
-					
-				function main()
-					{
-					  var resolution = 24; // increase to get smoother corners (will get slow!)
-					  
-					  var cube1 = CSG.roundedCube({center: [0,0,0], radius: [10,10,10], roundradius: 2, resolution: resolution});
-					  var sphere1 = CSG.sphere({center: [5, 5, 5], radius: 10, resolution: resolution });
-					  var sphere2 = sphere1.translate([12, 5, 0]);
-					  var sphere3 = CSG.sphere({center: [20, 0, 0], radius: 30, resolution: resolution });
-					  
-					  var result = cube1;
-					  result = result.union(sphere1);
-					  result = result.subtract(sphere2);
-					  result = result.intersect(sphere3);
-					  return result;
-					}
-					
-				</textarea>
-				<div id="statusDiv" class="well"></div>
-				<div class="progress">
+				<div class="row-fluid">
+					<div id="editor" class="span6" >
+						<!-- <div class="navbar-inner" style="height: 15px; padding-top: 0px">-->
+						<textarea id="codeArea" class="field span12" rows="6" >				
+function main()
+{
+	var resolution = 24; // increase to get smoother corners (will get slow!)
+		  
+	var cube1 = CSG.roundedCube({center: [0,0,0], radius: [10,10,10], 
+		roundradius: 2, resolution: resolution});
+	var sphere1 = CSG.sphere({center: [5, 5, 5], radius: 10, resolution: resolution });
+	var sphere2 = sphere1.translate([12, 5, 0]);
+	var sphere3 = CSG.sphere({center: [20, 0, 0], radius: 30, resolution: resolution });
+	  
+	var result = cube1;
+	result = result.union(sphere1);
+	result = result.subtract(sphere2);
+	result = result.intersect(sphere3);
+	return result;
+}		
+						</textarea>
+				<!--<div class="progress">
   					<div id="renderProgress" class="bar" style="width: 20%;"></div>
-				</div>
+				</div>-->
+					</div>
+					<div id="viewer" class="span6"></div>
+				</div>	
+				<div id="spacer" style="height: 20px"></div>
+				<div id="statusBar" class="well"></div>
 			</div>
-			<div id="viewer" class="span6"></div>
-			
 		</div>
 	</div>
 </body>
