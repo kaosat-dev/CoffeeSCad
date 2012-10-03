@@ -212,6 +212,7 @@ OpenJsCad.Viewer.csgToMesh = function(csg) {
   mesh.colors = colors;
   mesh.computeWireframe();
   mesh.computeNormals();
+  console.log(mesh);
   return mesh;
 };
 
@@ -652,17 +653,17 @@ OpenJsCad.Processor.prototype = {
     this.script = null;
     this.setError("");
     var scripthaserrors = false;
-    try
+    /*try
     {
-      this.paramDefinitions = OpenJsCad.getParamDefinitions(script);
-      this.createParamControls();
+      //this.paramDefinitions = OpenJsCad.getParamDefinitions(script);
+      //this.createParamControls();
     }
     catch(e)
     {
       this.setError(e.toString());
       this.statusspan.innerHTML = "Error.";
       scripthaserrors = true;
-    }
+    }*/
     if(!scripthaserrors)
     {
       this.script = script;
@@ -720,17 +721,17 @@ OpenJsCad.Processor.prototype = {
     
   rebuildSolid: function()
   {
-    this.abort();
-    this.setError("");
-    this.clearViewer();
+    //this.abort();
+    //this.setError("");
+    //this.clearViewer();
     this.processing = true;
     //this.statusspan.text = "Processing, please wait...";
     
-    this.enableItems();
+    //this.enableItems();
     var that = this;
-    var paramValues = this.getParamValues();
+    var paramValues = null;//this.getParamValues();
     var useSync = this.debugging;
-    if(!useSync)
+   /* if(!useSync)
     {
       try
       {
@@ -756,7 +757,7 @@ OpenJsCad.Processor.prototype = {
         useSync = true;
       }
     }
-    
+    */
     if(useSync)
     {
       try
@@ -768,17 +769,17 @@ OpenJsCad.Processor.prototype = {
       }
       catch(e)
       {
-        that.processing = false;
+       /* that.processing = false;
         var errtxt = e.stack;
         if(!errtxt)
         {
           errtxt = e.toString();
         }
         that.setError(errtxt);
-        that.statusspan.innerHTML = "Error.";
+        that.statusspan.innerHTML = "Error.";*/
       }
-      that.enableItems();
-      if(that.onchange) that.onchange();
+     // that.enableItems();
+      //if(that.onchange) that.onchange();
     }
   },
   

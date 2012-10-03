@@ -7,11 +7,17 @@
 	<script src="./js/spin.min.js"></script>
   	<script src="./js/lightgl.js"></script>
   	<script src="./js/csg.js"></script>
-  	<script src="./js/openjscad.js"></script>
+  	
   	<script src="./js/coffee-script.js"></script>
   	<script src="./js/codemirror.js"></script>
   	<script src="./js/foldcode.js"></script>
-  	<script src="./codeMirror/mode/javascript/javascript.js"></script>
+  	<!--<script src="./codeMirror/mode/javascript/javascript.js"></script>-->
+  	<script src="./codeMirror/mode/coffeescript/coffeescript.js"></script>
+  	
+  	<script src="./js/openjscad.js"></script>
+  	<script src="./js/opencoffeescad.js"></script>
+  	<script src="./js/viewer.js"></script>
+  	
 	<link rel="stylesheet" href="css/bootstrap.css">
 	<link rel="stylesheet" href="css/font-awesome.css">
 	<link rel="stylesheet" href="css/codemirror.css">
@@ -45,19 +51,54 @@
 var gProcessor=null;
 var codeEditor = null;
 var codeUpdated = true;
+
+var glViewer = null
+var cadProcessor = null
+
 // Show all exceptions to the user:
-OpenJsCad.AlertUserOfUncaughtExceptions();
+//OpenJsCad.AlertUserOfUncaughtExceptions();
 function onload()
 {
-  	gProcessor = new OpenJsCad.Processor(document.getElementById("viewer"),750,750);
-  	//updateSolid();
+  	/*gProcessor = new OpenJsCad.Processor(document.getElementById("viewer"),750,750);
+  	gProcessor.setDebugging(true);
+  	gProcessor.setJsCad(codeEditor.getValue());*/
+  	
+  	glViewer = new OpenCoffeeScad.Viewer(document.getElementById("viewer"),750,750);
+  	cadProcessor = new OpenCoffeeScad.Processor(true, null, document.getElementById("statusBar"), glViewer);
+  	cadProcessor.setJsCad(compileFormatCoffee());
+  	//cadProcessor.setJsCad(codeEditor.getValue());
 }
+
+function compileFormatCoffee()
+{
+	/*var textblock= codeEditor.getValue();
+	var lines = textblock.split('\n');
+	lines.splice(0,1);
+	textblock= lines.join('\n');
+	console.log(textblock);*/
+	
+	textblock = CoffeeScript.compile(codeEditor.getValue());
+	lines = textblock.split('\n');
+	//console.log("Lines bla" + (lines.length-1));
+	var endsplitter = lines.length-2;
+	lines.splice(endsplitter,2);
+	lines.splice(0,1);
+	var newtext = "function main()"
+	newtext += "{"
+	newtext += lines.join('\n');
+	newtext += "}\n"
+	//console.log(newtext);
+	return newtext
+}
+
 function updateSolid()
 {
-  	gProcessor.setJsCad(codeEditor.getValue());
+	cadProcessor.setJsCad(compileFormatCoffee());
+	//cadProcessor.setJsCad(codeEditor.getValue());
 }
 </script>
 <script type="text/javascript">
+
 function updateUndoRedo ()
 {
   	var redoes = codeEditor.historySize().redo;
@@ -90,22 +131,23 @@ function checkCodeEditorContent()
 	}
 }
 
-var foldFunc = CodeMirror.newFoldFunction(CodeMirror.braceRangeFinder);
+//var foldFunc = CodeMirror.newFoldFunction(CodeMirror.braceRangeFinder);
+var foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder);
 
   $(document).ready(function () 
   {
+	
   	codeEditor = CodeMirror.fromTextArea(codeArea,
 	{
 			lineNumbers:true,
 			gutter:true,
 			matchBrackets:true,
+			firstLineNumber:1,
 			onChange: function (arg, arg2) 
 			{		 
 				updateUndoRedo();
 				checkCodeEditorContent();
-				//if (arg2.text.length>0):
 				codeUpdated = true;
-				console.log(arg2.text.length);
 			},
 			onGutterClick: foldFunc, extraKeys: {"Ctrl-Q": function(cm){foldFunc(cm, cm.getCursor().line);}}
 	});
@@ -115,6 +157,13 @@ var foldFunc = CodeMirror.newFoldFunction(CodeMirror.braceRangeFinder);
     {
   		console.log("Updating solid");
   		updateSolid();
+	});
+	
+	$(document).bind('keydown', 'F5', function()
+    {
+  		console.log("Updating solid");
+  		updateSolid();
+  		return false;
 	});
 	
 	var spinopts = 
@@ -160,9 +209,10 @@ var foldFunc = CodeMirror.newFoldFunction(CodeMirror.braceRangeFinder);
 	 })
 	 $('#newFileBtnDemo').on('click', function (e) 
 	 {
-    		codeEditor.setValue(" function main(){bla}")
+    		codeEditor.setValue("");
     		codeEditor.clearHistory();
     		updateUndoRedo();
+
 	 })
 	 $('#updateBtn').on('click', function (e)
 	{
@@ -175,7 +225,7 @@ var foldFunc = CodeMirror.newFoldFunction(CodeMirror.braceRangeFinder);
 		 return e.preventDefault();
 	})
 	
-
+	
 	 
   });
 </script>
@@ -190,7 +240,7 @@ var foldFunc = CodeMirror.newFoldFunction(CodeMirror.braceRangeFinder);
 		<div class="row-fluid">
 			<div class="span12">
 				<div class="navbar  active">
-					<a class="brand"> OpenCoffeeCad</a>
+					<a class="brand"> OpenCoffeeSCad</a>
 				    <div class="btn-toolbar well"  style="height: 25px; padding-top: 0px">
 				    	<div class="btn-group">
 				    		<a class="btn btn-small dropdown-toggle" data-toggle="dropdown" href="#" rel="tooltip" title="File"><i class="icon-file icon-large"></i>
@@ -221,23 +271,22 @@ var foldFunc = CodeMirror.newFoldFunction(CodeMirror.braceRangeFinder);
 				<div class="row-fluid">
 					<div id="editor" class="span6" >
 						<!-- <div class="navbar-inner" style="height: 15px; padding-top: 0px">-->
-						<textarea id="codeArea" class="field span12" rows="6" >				
-function main()
-{
-	var resolution = 24; // increase to get smoother corners (will get slow!)
-		  
-	var cube1 = CSG.roundedCube({center: [0,0,0], radius: [10,10,10], 
-		roundradius: 2, resolution: resolution});
-	var sphere1 = CSG.sphere({center: [5, 5, 5], radius: 10, resolution: resolution });
-	var sphere2 = sphere1.translate([12, 5, 0]);
-	var sphere3 = CSG.sphere({center: [20, 0, 0], radius: 30, resolution: resolution });
-	  
-	var result = cube1;
-	result = result.union(sphere1);
-	result = result.subtract(sphere2);
-	result = result.intersect(sphere3);
-	return result;
-}		
+						<textarea id="codeArea" class="field span12" rows="6" >		
+class CubeClass
+  width:20
+  length:20
+  height:20
+  constructor: (@pos=[0,0,0], @rot=[0,0,0]) ->
+    return @render()
+  
+  render: =>
+    result = new CSG()
+    cube1 =CSG.cube({center: [0, 0, @height/2],radius: [@width/2, @length/2, @height/2]})
+    result = cube1
+    return result.translate(@pos).rotateX(@rot[0]).rotateY(@rot[1]).rotateZ(@rot[2]) 
+
+cubeStuff = new CubeClass()
+return cubeStuff
 						</textarea>
 				<!--<div class="progress">
   					<div id="renderProgress" class="bar" style="width: 20%;"></div>

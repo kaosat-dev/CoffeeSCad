@@ -1,37 +1,26 @@
-#TODO: seperate viewer from processor
+window.OpenCoffeeScad = { }
 #TODO: add correct way to output progress and error info (to status bar for ex)
 
-log = (txt) ->
+
+OpenCoffeeScad.log = (txt) ->
     timeInMs = Date.now()
     prevtime = OpenCoffeeScad.log.prevLogTime
-    if(!prevtime) prevtime = timeInMs
+    prevtime = if !prevtime then timeInMs 
+
     deltatime = timeInMs - prevtime
     OpenCoffeeScad.log.prevLogTime = timeInMs
-    timefmt = (deltatime*0.001).toFixed(3)
+    ###timefmt = (deltatime*0.001).toFixed(3)
     txt = "["+timefmt+"] "+txt
     if (typeof(console) == "object") && (typeof(console.log) == "function") 
       console.log(txt)
     else if (typeof(self) == "object") && (typeof(self.postMessage) == "function") 
       self.postMessage({cmd: 'log', txt: txt})
-    else throw new Error("Cannot log")
+    else throw new Error("Cannot log")###
 
-isChrome = ()->
+OpenCoffeeScad.isChrome= ->
   return navigator.userAgent.search("Chrome") >= 0
 
-   
-class Viewer
-  constructor: ()->
-  setupUI:->
-  
-class Processor
-  constructor: (@containerdiv,@statusdiv, width, height, onchange)->
-    @viewerwidth = (typeof width === "undefined") ? 800 : width
-    @viewerheight = (typeof width === "undefined") ? 600 : height
-  
-  setupUI:->
-    if !isChrome
-      msg="Please note: OpenJsCad currently only runs reliably on Google Chrome!"
- 
+
 
 ##ORDER OF ALGORITHM
 #1-setJsCad
@@ -41,26 +30,71 @@ class Processor
 #   1-3 rebuildSolid
 #     useSynch= debug 
  
-class CoffeeScad
+class OpenCoffeeScad.Processor
   
-  constructor: (@debug=true, @currentObject)->
+  constructor: (debug, @currentObject, @statusdiv, @viewer)->
+    @debug = if debug? then debug else true 
+    console.log "debug #{@debug},@statusdiv : #{@statusdiv}, @viewer: #{@viewer}"
     
-  setDebug: (@debug) -> 
-  
   abort:()->
     
   setError:(errorMsg)->
+    console.log("ERROR: #{errorMsg}")
     
-    
-  setCurrentObject: (obj) ->
+  setCurrentObject: (obj) =>
+    #console.log("Setting current object")
     @currentObject = obj
     if(@viewer)
+      #console.log("I HAVE A VIEWER")
       csg = @convertToSolid(obj)
       @viewer.setCsg(csg)
     @hasValidCurrentObject = true
     ext = @extensionForCurrentObject()
-    #this.generateOutputFileButton.innerHTML = "Generate "+ext.toUpperCase();
+    return
+    #@generateOutputFileButton.innerHTML = "Generate "+ext.toUpperCase();
+    
+  convertToSolid : (obj) ->
+    if( (typeof(obj) == "object") && ((obj instanceof CAG)) )
+      # convert a 2D shape to a thin solid:
+      obj=obj.extrude({offset: [0,0,0.1]})
+    else if( (typeof(obj) == "object") && ((obj instanceof CSG)) )
+      # obj already is a solid
+    else
+      throw new Error("Cannot convert to solid");
+    return obj
+    
+  extensionForCurrentObject: ()->
+    extension
+    if(this.currentObject instanceof CSG)
+      extension = "stl"
+    else if(this.currentObject instanceof CAG)
+      extension = "dxf"
+    else
+      throw new Error("Not supported")
+    return extension
 
+  clearViewer:()->
+    @clearOutputFile()
+    @setCurrentObject(new CSG())
+    @hasValidCurrentObject = false
+    @enableItems()
+    
+  clearOutputFile:()->
+    if @hasOutputFile
+      @hasOutputFile = false
+      if(@outputFileDirEntry)
+        @outputFileDirEntry.removeRecursively(()->)
+        @outputFileDirEntry=null
+      if @outputFileBlobUrl
+        OpenJsCad.revokeBlobUrl(@outputFileBlobUrl)
+        @outputFileBlobUrl = null
+      @enableItems()
+      if @onchange
+        this.onchange()
+    
+  enableItems: () ->
+    
+  ###
   runMainInWorker: (mainParams) -> 
     try
       #TODO: adapt this to coffeescad
@@ -76,14 +110,16 @@ class CoffeeScad
         
     catch error
       errorTxt = error.stack
-      if errtxt ?
+      if errtxt?
         errorTxt = error.toString()
         postMessage({cmd: 'error', err: errorTxt})
+  ###
    
   parseJsCadScriptSync: (script, mainParameters, debugging) -> 
+    #console.log("Synch Parsing")
     workerscript = ""
     workerscript += script;
-    if debugging
+    if @debuging
       workerscript += "\n\n\n\n\n\n\n/* -------------------------------------------------------------------------\n"
       workerscript += "OpenJsCad debugging\n\nAssuming you are running Chrome:\nF10 steps over an instruction\nF11 steps into an instruction\n"
       workerscript += "F8  continues running\nPress the (||) button at the bottom to enable pausing whenever an error occurs\n"
@@ -94,8 +130,30 @@ class CoffeeScad
       workerscript += "debugger;\n"
   
     workerscript += "return main("+JSON.stringify(mainParameters)+");"  
+    #console.log("workerscript #{workerscript}")
     f = new Function(workerscript)
-    #OpenJsCad.log.prevLogTime = Date.now()
+    #OpenCoffeeScad.log.prevLogTime = Date.now()
+    result = f()
+    return result
+    
+  parseCoffeesCadScriptSync: (script, mainParameters, debugging) -> 
+    #console.log("Synch Parsing")
+    workerscript = ""
+    workerscript += script;
+    if @debuging
+      workerscript += "\n\n\n\n\n\n\n/* -------------------------------------------------------------------------\n"
+      workerscript += "OpenJsCad debugging\n\nAssuming you are running Chrome:\nF10 steps over an instruction\nF11 steps into an instruction\n"
+      workerscript += "F8  continues running\nPress the (||) button at the bottom to enable pausing whenever an error occurs\n"
+      workerscript += "Click on a line number to set or clear a breakpoint\n"
+      workerscript += "For more information see: http://code.google.com/chrome/devtools/docs/overview.html\n\n"
+      workerscript += "------------------------------------------------------------------------- */\n"
+      workerscript += "\n\n// Now press F11 twice to enter your main() function:\n\n"
+      workerscript += "debugger;\n"
+   
+    workerscript += "return main("+JSON.stringify(mainParameters)+");"  
+    #console.log("workerscript #{workerscript}")
+    f = new Function(workerscript)
+    #OpenCoffeeScad.log.prevLogTime = Date.now()
     result = f()
     return result
 
@@ -114,19 +172,20 @@ class CoffeeScad
   setJsCad: (script, filename) ->
     # script: javascript code
     # filename: optional, the name of the .jscad file
-    if(!filename) filename = "openjscad.jscad"
+    filename = if !filename then "openjscad.jscad"
     filename = filename.replace(/\.jscad$/i, "")
-    #this.abort()
-    #this.clearViewer();
+    #@abort()
+    @clearViewer()
     @paramDefinitions = []
     @paramControls = []
     @script = null
     #@.setError("")
     scripthaserrors = false
     try
-      @paramDefinitions = @getParamDefinitions(script)
-      @createParamControls()
-    catch(e)
+      #@paramDefinitions = @getParamDefinitions(script)
+     # console.log("@paramDefinitions: #{@paramDefinitions}")
+     # @createParamControls() : TODO work on this parametrization
+    catch e 
       @setError(e.toString())
       #@statusspan.innerHTML = "Error."
       scripthaserrors = true
@@ -135,9 +194,79 @@ class CoffeeScad
       @script = script
       @filename = filename
       @rebuildSolid()
+      #console.log("No errors in script")
     else
+      #console.log("Errors in script")
       #@enableItems()
-      #if(this.onchange) this.onchange();
+      #if(@onchange) @onchange();
+      
+  createParamControls: ->
+    #@parameterstable.innerHTML = ""
+    @paramControls = []
+    paramControls = []
+    tablerows = []
+    for i in [0..@paramDefinitions.length]
+      errorprefix = "Error in parameter definition #"+(i+1)+": "
+      paramdef = @.paramDefinitions[i]
+      if !('name' in paramdef) then throw new Error(errorprefix + "Should include a 'name' parameter")
+      type = "text"
+      type = if 'type' in paramdef then paramdef.type
+
+      if( (type != "text") && (type != "int") && (type != "float") && (type != "choice") )
+        throw new Error(errorprefix + "Unknown parameter type '"+type+"'")
+      control = null
+      if( (type == "text") || (type == "int") || (type == "float") )
+        control = document.createElement("input")
+        control.type = "text"
+        if('default' in paramdef)
+          control.value = paramdef.default
+        else
+          if( (type == "int") || (type == "float") )
+            control.value = "0"
+          else
+            control.value = ""
+      else if(type == "choice")
+        if !('values' in paramdef) then throw new Error(errorprefix + "Should include a 'values' parameter") 
+        control = document.createElement("select")
+        values = paramdef.values
+        captions=null
+        if 'captions' in paramdef
+          captions = paramdef.captions;
+          if captions.length != values.length then throw new Error(errorprefix + "'captions' and 'values' should have the same number of items")
+        else
+          captions = values
+        selectedindex = 0
+        for valueindex in [0..values.length]
+          option = document.createElement("option")
+          option.value = values[valueindex]
+          option.text = captions[valueindex]
+          control.add(option)
+          if 'default' in paramdef
+            if paramdef.default == values[valueindex]
+
+              selectedindex = valueindex
+              
+        if values.length > 0
+          control.selectedIndex = selectedindex
+
+      paramControls.push(control)
+      tr = document.createElement("tr")
+      td = document.createElement("td")
+      label = paramdef.name + ":"
+      if 'caption' in paramdef
+        label = paramdef.caption
+
+      td.innerHTML = label
+      tr.appendChild(td)
+      td = document.createElement("td")
+      td.appendChild(control)
+      tr.appendChild(td)
+      tablerows.push(tr)
+      
+    tablerows.map((tr) ->
+      @parameterstable.appendChild(tr)
+    )
+    @paramControls = paramControls
 
   getParamDefinitions: (script)->
     scriptisvalid = true
@@ -146,7 +275,7 @@ class CoffeeScad
       # this will catch any syntax errors
       f = new Function(script)
       f()
-    catch(e)
+    catch e 
       scriptisvalid = false;
     params = []
     if(scriptisvalid)
@@ -159,19 +288,21 @@ class CoffeeScad
     return params
     
    getParamValues: ()->
+     if @debug
+       console.log("Getting param values")
+       console.log("#{@paramDefinitions.length}")
      paramValues = {}
-     for i in [0...this.paramDefinitions.length]
-        paramdef = this.paramDefinitions[i]
+     for i in [0...@paramDefinitions.length]
+        paramdef = @paramDefinitions[i]
         type = "text"
-        if'type' in paramdef
+        if 'type' in paramdef
           type = paramdef.type
-          
         control = @paramControls[i]
         value = ""
         if( (type == "text") || (type == "float") || (type == "int") )
           value = control.value;
           if( (type == "float") || (type == "int") )
-            var isnumber = !isNaN(parseFloat(value)) && isFinite(value)
+            isnumber = !isNaN(parseFloat(value)) && isFinite(value)
             if(!isnumber)
               throw new Error("Not a number: "+value)
             if(type == "int")
@@ -179,52 +310,53 @@ class CoffeeScad
             else
               value = parseFloat(value);
 
-        else if(type == "choice")
+        else if type == "choice"
           value = control.options[control.selectedIndex].value
-     paramValues[paramdef.name] = value
+        paramValues[paramdef.name] = value
+     if @debug
+       console.log("Finished getting param values")
      return paramValues
      
    rebuildSolid:() =>
+     if @debug
+       #console.log("Starting solid rebuild")
       #@abort()
       #@setError("")
       #@clearViewer()
       @processing = true
       
       #TODO: clean way to handle these type of messages
-      #this.statusspan.text = "Processing, please wait..."
+      #@statusspan.text = "Processing, please wait..."
     
       #@enableItems()
   
-      paramValues = @getParamValues()
+      paramValues = null#@getParamValues()
       useSync = @debug
       if !useSync
         try
-          @worker = OpenJsCad.parseJsCadScriptASync(@script, paramValues, function(err, obj) {
-          that.processing = false
-          that.worker = null
-          if(err)
-          {
-            that.setError(err);
-            that.statusspan.innerHTML = "Error.";
-          }
-          else
-          {
-            that.setCurrentObject(obj);
-            that.statusspan.innerHTML = "Ready.";
-          }
-          that.enableItems();
-          if(that.onchange) that.onchange();
-          });
-        catch(e)
+          @worker = @parseJsCadScriptASync(@script, paramValues, (err, obj)-> 
+            @processing = false
+            @worker = null
+            if err
+              @setError(err)
+              #@statusspan.innerHTML = "Error."
+            else
+              @setCurrentObject(obj)
+              #@statusspan.innerHTML = "Ready."
+            )
+          @enableItems()
+          #if(that.onchange) that.onchange()
+
+        catch e
           useSync = true
         #TODO : refactor this
       if useSync
         try
-          var obj = OpenJsCad.parseJsCadScriptSync(this.script, paramValues, this.debugging);
-          @setCurrentObject(obj);
+          obj = @parseJsCadScriptSync(@script, paramValues, @debugging)
+          @setCurrentObject(obj)
           @processing = false
           #@statusspan.innerHTML = "Ready."
-        catch(e)
+        catch e 
           @processing = false
           errtxt = e.stack
           if(!errtxt)
@@ -234,6 +366,3 @@ class CoffeeScad
           #@statusspan.innerHTML = "Error."
       #@enableItems()
      
-namespace "OpenCoffeeScad", (exports) ->
-  exports.Viewer = Viewer
-  
