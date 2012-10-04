@@ -17,6 +17,7 @@
   	<script src="./js/openjscad.js"></script>
   	<script src="./js/opencoffeescad.js"></script>
   	<script src="./js/viewer.js"></script>
+  	<script src="./js/DataStore.js"></script>
   	
 	<link rel="stylesheet" href="css/bootstrap.css">
 	<link rel="stylesheet" href="css/font-awesome.css">
@@ -52,8 +53,9 @@ var gProcessor=null;
 var codeEditor = null;
 var codeUpdated = true;
 
-var glViewer = null
-var cadProcessor = null
+var glViewer = null;
+var cadProcessor = null;
+var store = null;
 
 // Show all exceptions to the user:
 //OpenJsCad.AlertUserOfUncaughtExceptions();
@@ -66,7 +68,8 @@ function onload()
   	glViewer = new OpenCoffeeScad.Viewer(document.getElementById("viewer"),750,750);
   	cadProcessor = new OpenCoffeeScad.Processor(true, null, document.getElementById("statusBar"), glViewer);
   	cadProcessor.setJsCad(compileFormatCoffee());
-  	//cadProcessor.setJsCad(codeEditor.getValue());
+  	
+
 }
 
 function compileFormatCoffee()
@@ -136,6 +139,7 @@ var foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder);
 
   $(document).ready(function () 
   {
+	store= new OpenCoffeeScad.DataStore();
 	
   	codeEditor = CodeMirror.fromTextArea(codeArea,
 	{
@@ -207,13 +211,34 @@ var foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder);
     		codeEditor.clearHistory();
     		updateUndoRedo();
 	 })
-	 $('#newFileBtnDemo').on('click', function (e) 
+	 $('#saveFileBtn').on('click', function (e) 
 	 {
-    		codeEditor.setValue("");
+	 		$('#fileSaveModal').modal();
+	 })
+	 $('#realSaveBtn').on('click', function (e) 
+	 {
+	 		var saveName = $('#projectFileName').val(); 
+	 		if (saveName != "")
+	 		{
+	 			store.save_inBrowser(saveName, codeEditor.getValue());
+	 		}
+	 		$('#fileSaveModal').modal('hide');
+	 })
+	 
+	 $('#loadFileBtn').on('click', function (e) 
+	 {
+	 		$('#fileLoadModal').modal();
+	 })
+	 
+	 $('#realLoadBtn').on('click', function (e) 
+	 {
+	 		var saveName = $('#loadProjectFileName').val(); 
+	 		codeEditor.setValue(store.load_fromBrower(saveName));
     		codeEditor.clearHistory();
     		updateUndoRedo();
-
+    		$('#fileLoadModal').modal('hide');
 	 })
+
 	 $('#updateBtn').on('click', function (e)
 	{
 		if(codeUpdated)
@@ -225,7 +250,7 @@ var foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder);
 		 return e.preventDefault();
 	})
 	
-	
+	$('#recentFilesList').append(store.listSaves_fromBrowser());
 	 
   });
 </script>
@@ -247,10 +272,13 @@ var foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder);
 				    			<span class="caret"></span>
 				    		</a>
 				    		<ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
-				    			<li id ="newFileBtn"><a tabindex="-1" href="#">New</a></li>
-				    			<li id ="newFileBtnDemo"><a tabindex="-1" href="#">New (Demo)</a></li>
+				    			<li id ="newFileBtn"><a tabindex="-1" href="#"><i class="icon-file"></i>New</a></li>
+				    			<li id ="saveFileBtn"><a tabindex="-1" href="#"><i class="icon-save"></i>Save</a></li>
+				    			<li id ="loadFileBtn"><a tabindex="-1" href="#"><i class="icon-file"></i>Load</a></li>
 		                        <li class="divider"></li>
-		                        <li><a tabindex="-1" href="#">About</a></li>
+		                        <ul id="recentFilesList"></ul>
+		                        <li class="divider"></li>
+		                        <li><a tabindex="-1" href="#"><i class="icon-bullhorn"></i>About</a></li> 
 				    		</ul>
 				    		<a class="btn btn-small disabled" href="#" rel="tooltip" title="Load Openscad file"><i class="icon-upload icon-large"></i></a>
 							<a id="undoBtn" class="btn btn-small disabled" href="#" rel="tooltip" title="Undo (CTRL+Z)"><i class="icon-undo icon-large"></i></a>
@@ -299,6 +327,36 @@ return cubeStuff
 			</div>
 		</div>
 	</div>
+	
+	<div id="fileSaveModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	    <div class="modal-header">
+	      <h3 id="myModalLabel">Save File As</h3>
+	    </div>
+	    <div class="modal-body">
+	    	Save as 
+	     <input type="text" name="some_name" value="MyProject" id="projectFileName"/><br>
+	     The current code will be saved in the browser using local storage
+	    </div>
+	    <div class="modal-footer">
+	      <button class="btn" data-dismiss="modal">Close</button>
+	      <button id="realSaveBtn" class="btn btn-primary">Save</button>
+	    </div>
+  	</div>
+  	
+  	<div id="fileLoadModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	    <div class="modal-header">
+	      <h3 id="myModalLabel">Save File As</h3>
+	    </div>
+	    <div class="modal-body">
+	    	Load file 
+	     <input type="text" name="some_name" value="MyProject" id="loadProjectFileName"/><br>
+	    </div>
+	    <div class="modal-footer">
+	      <button class="btn" data-dismiss="modal">Close</button>
+	      <button id="realLoadBtn" class="btn btn-primary">Load</button>
+	    </div>
+  	</div>
+	
 </body>
 
 </html>

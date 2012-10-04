@@ -97,6 +97,7 @@ result = result.intersect(sphere3)
 return result.setColor(1.0, 0.5, 0.0) 
 ###############
 ##2d
+shape1 = CAG.fromPoints([[0,0], [5,0], [3,5], [0,5]])
 shape2 = CAG.circle({center: [-2, -2], radius: 4, resolution: 20})
 shape3 = CAG.rectangle({center: [5, -2], radius: [2, 3]})
 shape4 = CAG.roundedRectangle({center: [5, 7], radius: [4, 4], roundradius: 1, resolution: 24})
@@ -109,7 +110,8 @@ extruded=shape.extrude({
   offset: [0.5, 0, 10],   
   twistangle: 30,       
   twiststeps: 10        
-})
+}) 
+return shape
 
 ###Openscad conversion, manual more complex 
 xtra=0.01
@@ -135,6 +137,8 @@ class tibia2
     front_cut_center=5
     front_cut_corners=servo_length/2-front_cut_corner_rad
 
+
+  render: () =>
     rotate([90,0,0])
     translate(pos) rotate(rot) 
     {
@@ -190,3 +194,52 @@ class tibia2
           } 
         }
       }
+      
+#2d other test (hull() reproduction)
+shape1 = CAG.fromPoints([[0,0], [5,0], [7,5], [0,5]])
+shape2 = CAG.circle({center: [-2, -2], radius: 4, resolution: 20})
+shape3 = CAG.rectangle({center: [5, -2], radius: [2, 3]})
+shape4 = CAG.roundedRectangle({center: [5, 7], radius: [4, 4], roundradius: 1, resolution: 24})
+
+
+shape1 = shape1.expand(1, 10)
+shape = shape1
+#shape = shape1.union([shape2, shape3, shape4])
+extruded=shape.extrude({ 
+  offset: [0.5, 0, 10],    
+  twistangle: 30,       
+  twiststeps: 10        
+}) 
+
+c1 = CAG.circle({radius: 2, resolution: 10})
+c2= CAG.circle({center: [15, 5], radius: 2, resolution: 10})
+c3= CAG.circle({center: [0, -5], radius: 2, resolution: 10})
+
+shapeGroup = c1.union([c2, c3])
+
+extruded=shapeGroup.extrude({offset: [0.5, 0, 10]})  
+
+
+return shapeGroup
+
+#and again
+shape1 = CAG.fromPoints([[0,0], [15,5], [0,-5]])
+
+shape = shape1.expand(2, 30)
+
+shape=shape.extrude({ 
+  offset: [0, 0, 5]     
+}) 
+
+###
+c1 = CAG.circle({radius: 2, resolution: 10})
+c2= CAG.circle({center: [15, 5], radius: 2, resolution: 10})
+c3= CAG.circle({center: [0, -5], radius: 2, resolution: 10})
+
+shapeGroup = c1.union([c2, c3])
+shapeGroup=shapeGroup.expand(2, 10)
+extruded=shapeGroup.extrude({offset: [0.5, 0, 10]})  
+return shapeGroup
+###
+
+return shape 
