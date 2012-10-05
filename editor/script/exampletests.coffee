@@ -230,7 +230,7 @@ shape = shape1.expand(2, 30)
 shape=shape.extrude({ 
   offset: [0, 0, 5]     
 }) 
-
+return shape.setColor(1,0.5,0)
 ###
 c1 = CAG.circle({radius: 2, resolution: 10})
 c2= CAG.circle({center: [15, 5], radius: 2, resolution: 10})
@@ -240,6 +240,11 @@ shapeGroup = c1.union([c2, c3])
 shapeGroup=shapeGroup.expand(2, 10)
 extruded=shapeGroup.extrude({offset: [0.5, 0, 10]})  
 return shapeGroup
-###
+###test with prefix removal (see missing CAG. before the "fromPoints method")
+shape1 = fromPoints([[0,0], [15,5], [0,-5]])
 
-return shape 
+shape = shape1.expand(2, 30)
+
+shape=shape.extrude({offset:[0, 0, 5]}) 
+return shape.setColor(1,0.5,0)
+

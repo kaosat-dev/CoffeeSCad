@@ -19,6 +19,7 @@ class OpenCoffeeScad.DataStore
           @addToSaves_inBrowser(fileName)
 
       catch e
+        console.log("Error: #{e}")
         if e == QUOTA_EXCEEDED_ERR 
           console.log("Quota exceeded!") #data wasn't successfully saved due to quota exceed so throw an error
     else
@@ -37,18 +38,32 @@ class OpenCoffeeScad.DataStore
   listSaves_fromBrowser:()->
     try
       data = localStorage.getItem("files")
-      return data.split(" ")
-      console.log(data)
+      if data?
+        data = data.split(" ")
+      else
+        data = []
+      console.log("Retrieved saves: #{data}")
+      return data
+      
     catch e
       console.log("Unable to load files list, sorry")
       
    addToSaves_inBrowser:(filename)->
      saves = localStorage.getItem("files")
-     saves = saves.split(" ")
-     saves.push(filename)
-     saves= saves.join(" ")
+     if not saves?
+       saves= []
+     else
+      saves = saves.split(" ")
+     console.log("present saves: #{saves}, adding file #{filename}")
+     #filename= "MyProject"
+     if filename in saves
+        console.log("NOT adding")
+     else
+        saves.push(filename)
+     saves = saves.join(" ")
+     console.log("saving files: #{saves}")
      localStorage.setItem("files", saves)
     
   delete_fromBrowser:(fileName=null)->
     if fileName?
-      localStorage.removeItem(fileName) 
+      localStorage.removeItem(fileName)

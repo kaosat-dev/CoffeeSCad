@@ -56,6 +56,7 @@ var codeUpdated = true;
 var glViewer = null;
 var cadProcessor = null;
 var store = null;
+var projectName = "MyProject";
 
 // Show all exceptions to the user:
 //OpenJsCad.AlertUserOfUncaughtExceptions();
@@ -68,9 +69,41 @@ function onload()
   	glViewer = new OpenCoffeeScad.Viewer(document.getElementById("viewer"),750,750);
   	cadProcessor = new OpenCoffeeScad.Processor(true, null, document.getElementById("statusBar"), glViewer);
   	cadProcessor.setJsCad(compileFormatCoffee());
-  	
+  	//window.localStorage.clear();
 
 }
+
+var extraLibTest = ""
+fromPoints = function(points) {
+  var numpoints = points.length;
+  if(numpoints < 3) throw new Error("CAG shape needs at least 3 points");
+  var sides = [];
+  var prevpoint = new CSG.Vector2D(points[numpoints-1]);
+  var prevvertex = new CAG.Vertex(prevpoint);
+  points.map(function(p){
+    var point = new CSG.Vector2D(p);
+    var vertex = new CAG.Vertex(point);
+    var side = new CAG.Side(prevvertex, vertex);
+    sides.push(side);
+    prevvertex = vertex;  
+  });
+  var result = CAG.fromSides(sides);
+  if(result.isSelfIntersecting())
+  {
+    throw new Error("Polygon is self intersecting!");
+  }
+  var area = result.area();
+  if(Math.abs(area) < 1e-5)
+  {
+    throw new Error("Degenerate polygon!");
+  }
+  if(area < 0)
+  {
+    result = result.flipped();
+  }
+  result = result.canonicalized();
+  return result;
+};""
 
 function compileFormatCoffee()
 {
@@ -89,7 +122,8 @@ function compileFormatCoffee()
 	var newtext = "function main()"
 	newtext += "{"
 	newtext += lines.join('\n');
-	newtext += "}\n"
+	newtext += "}\n";
+	newtext += extraLibTest;//TODO: work on this, this is just a "namespace removing" / dependency injection test to get rid of CSG. and CAG. in the actual coffeescad projects/scripts
 	//console.log(newtext);
 	return newtext
 }
@@ -101,6 +135,34 @@ function updateSolid()
 }
 </script>
 <script type="text/javascript">
+function newProject()
+{
+	codeEditor.setValue("")
+	codeEditor.clearHistory();
+	updateUndoRedo();
+}
+function saveProject()
+{
+	if (projectName != "")
+	{
+		store.save_inBrowser(projectName, codeEditor.getValue());
+		document.title = "OpenCoffeeSCad "+projectName;
+	}
+}
+
+function loadProject(projectNameToLoad)
+{
+	if (projectNameToLoad != "" && projectNameToLoad != null)
+	{
+		projectName = projectNameToLoad;
+		
+		codeEditor.setValue(store.load_fromBrower(projectName));
+    	codeEditor.clearHistory();
+    	updateUndoRedo();
+
+		document.title = "OpenCoffeeSCad "+projectName;
+	}
+}
 
 function updateUndoRedo ()
 {
@@ -133,7 +195,6 @@ function checkCodeEditorContent()
 		$('#updateBtn').removeClass("disabled");
 	}
 }
-
 //var foldFunc = CodeMirror.newFoldFunction(CodeMirror.braceRangeFinder);
 var foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder);
 
@@ -150,11 +211,18 @@ var foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder);
 			onChange: function (arg, arg2) 
 			{		 
 				updateUndoRedo();
-				checkCodeEditorContent();
+				checkCodeEditorContent(); 
 				codeUpdated = true;
+				document.title = "OpenCoffeeSCad "+" *"+projectName;
 			},
-			onGutterClick: foldFunc, extraKeys: {"Ctrl-Q": function(cm){foldFunc(cm, cm.getCursor().line);}}
+			onGutterClick: foldFunc,
+			extraKeys: 
+				{	"Ctrl-Q": function(cm){foldFunc(cm, cm.getCursor().line);},
+					"Ctrl-P" : newProject,
+					"Ctrl-S" : saveProject
+				}
 	});
+	
   	checkCodeEditorContent();
     $("[rel=tooltip]").tooltip({placement:'bottom'});
     $(document).bind('keyup', 'shift+a', function()
@@ -167,6 +235,14 @@ var foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder);
     {
   		console.log("Updating solid");
   		updateSolid();
+  		return false;
+	});
+	
+	$("#codeArea").bind('keydown', 'F2', function()
+    {
+  		console.log("Saving file");
+  		saveProject();
+  		preventDefault();
   		return false;
 	});
 	
@@ -207,35 +283,28 @@ var foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder);
 	 })
 	 $('#newFileBtn').on('click', function (e) 
 	 {
-    		codeEditor.setValue("")
-    		codeEditor.clearHistory();
-    		updateUndoRedo();
+    		newProject();
 	 })
 	 $('#saveFileBtn').on('click', function (e) 
 	 {
-	 		$('#fileSaveModal').modal();
+	 		$('#fileSaveModal').modal({"backdrop":false});
 	 })
 	 $('#realSaveBtn').on('click', function (e) 
 	 {
-	 		var saveName = $('#projectFileName').val(); 
-	 		if (saveName != "")
-	 		{
-	 			store.save_inBrowser(saveName, codeEditor.getValue());
-	 		}
+	 		projectName = $('#projectFileName').val(); 
+	 		saveProject();
 	 		$('#fileSaveModal').modal('hide');
 	 })
 	 
 	 $('#loadFileBtn').on('click', function (e) 
 	 {
-	 		$('#fileLoadModal').modal();
+	 		$('#fileLoadModal').modal({"backdrop":false});
 	 })
 	 
 	 $('#realLoadBtn').on('click', function (e) 
 	 {
 	 		var saveName = $('#loadProjectFileName').val(); 
-	 		codeEditor.setValue(store.load_fromBrower(saveName));
-    		codeEditor.clearHistory();
-    		updateUndoRedo();
+	 		loadProject(saveName);
     		$('#fileLoadModal').modal('hide');
 	 })
 
@@ -247,11 +316,22 @@ var foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder);
 			$('#updateBtn').addClass("disabled");
 			updateSolid(); return false;
 		}
-		 return e.preventDefault();
 	})
 	
-	$('#recentFilesList').append(store.listSaves_fromBrowser());
-	 
+	$('#settingsBtn').on('click', function (e) 
+	 {
+	 	$('#settingsModal').modal({"backdrop":false});
+	 })
+	
+	
+
+	document.title = "OpenCoffeeSCad "+projectName;
+	
+	$.each(store.listSaves_fromBrowser(),  function(index, value) { 
+		$('#recentFilesList').append('<li><a tabindex="-1" href="#" onclick=loadProject("'+value+'");>'+value+'</a></li>');
+		$('#fileLoadModalFileList').append('<li><a tabindex="-1" href="#" onclick=loadProject("'+value+'");>'+value+'</a></li>');
+	});
+	
   });
 </script>
 
@@ -274,7 +354,22 @@ var foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder);
 				    		<ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
 				    			<li id ="newFileBtn"><a tabindex="-1" href="#"><i class="icon-file"></i>New</a></li>
 				    			<li id ="saveFileBtn"><a tabindex="-1" href="#"><i class="icon-save"></i>Save</a></li>
+				    			
+				    			<li id ="saveToBtn" class="dropdown-submenu">
+				    				<a tabindex="-1" href="#"><i class="icon-save"></i>Save To</a>
+				    				<ul class="dropdown-menu">
+                    					<li><a href="#" class="btn disabled"><i class="icon-hdd"></i> Local file (download) </a></li>
+                    					<li><a href="#" class="btn disabled"><i class="icon-github"></i> Gist (versionned) </a></li>
+				    				</ul>
+				    			</li>
 				    			<li id ="loadFileBtn"><a tabindex="-1" href="#"><i class="icon-file"></i>Load</a></li>
+				    			<li id ="exportBtn" class="dropdown-submenu">
+				    				<a tabindex="-1" href="#"><i class="icon-share"></i>Export</a>
+				    				<ul class="dropdown-menu">
+                    					<li><a href="#" class="btn disabled"><i class="icon-download disabled"></i> Stl</a></li>
+                    					<li><a href="#" class="btn disabled"><i class="icon-download-alt disabled"></i> Dxf</a></li>
+				    				</ul>
+				    			</li>
 		                        <li class="divider"></li>
 		                        <ul id="recentFilesList"></ul>
 		                        <li class="divider"></li>
@@ -291,7 +386,7 @@ var foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder);
 
 						</div>
 						<div class="btn-group">
-					    <a class="btn btn-small disabled" href="#" rel="tooltip" title="Settings"><i class="icon-cogs icon-large"></i></a>
+					    <a id="settingsBtn" class="btn btn-small" href="#" rel="tooltip" title="Settings"><i class="icon-cogs icon-large"></i></a>
 						<a class="btn btn-small" href="#" rel="tooltip" title="Fork me on GitHub!"><i class="icon-github icon-large"></i></a>
 						</div>
 					</div>
@@ -345,11 +440,28 @@ return cubeStuff
   	
   	<div id="fileLoadModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
 	    <div class="modal-header">
-	      <h3 id="myModalLabel">Save File As</h3>
+	      <h3 id="myModalLabel">Load File</h3>
+	    </div>
+	    Files:
+	    <div class="modal-body">
+	    	<ul id="fileLoadModalFileList"></ul>
+	     <input type="text" name="some_name" value="MyProject" id="loadProjectFileName"/><br>
+	    </div>
+	    <div class="modal-footer">
+	      <button class="btn" data-dismiss="modal">Close</button>
+	      <button id="realLoadBtn" class="btn btn-primary">Load</button>
+	    </div>
+  	</div>
+  	
+  	<div id="settingsModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+	    <div class="modal-header">
+	      <h3 id="myModalLabel">Settings</h3>
 	    </div>
 	    <div class="modal-body">
-	    	Load file 
-	     <input type="text" name="some_name" value="MyProject" id="loadProjectFileName"/><br>
+			<h4>Code editor</h4>
+				Start line : 1
+				Theme : 
+			<h4>Stl Export</h4>
 	    </div>
 	    <div class="modal-footer">
 	      <button class="btn" data-dismiss="modal">Close</button>

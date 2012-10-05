@@ -345,7 +345,8 @@
   
   shape=shape.extrude({ 
     offset: [0, 0, 5]     
-  })
+  }) 
+  return shape
   */
 
 
@@ -375,11 +376,5 @@
   });
 
   return shapeGroup;
-
-  /*
-  
-  return shape
-  */
-
 
 }).call(this);

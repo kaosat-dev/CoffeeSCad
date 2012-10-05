@@ -365,4 +365,48 @@ class OpenCoffeeScad.Processor
           #TODO: clean way to handle these type of messages
           #@statusspan.innerHTML = "Error."
       #@enableItems()
+      
+      
+   #TODO: move all this to dataStore
+   onInitFs:(fs) ->  
+     console.log("Opened file system: #{fs.name}")
+      
+   generateOutputFileFileSystem:() ->
+    window.requestFileSystem  = window.requestFileSystem || window.webkitRequestFileSystem
+    if !window.requestFileSystem
+      throw new Error("Your browser does not support the HTML5 FileSystem API. Please try the Chrome browser instead.")
+      
+    # create a random directory name:
+    dirname = "OpenJsCadOutput1_"+ parseInt(Math.random()*1000000000, 10)+"."+extension
+    extension = @extensionForCurrentObject()
+    filename = @filename+"."+extension
+
+    window.requestFileSystem(TEMPORARY, 20*1024*1024, (fs)->
+        fs.root.getDirectory(dirname, {create: true, exclusive: true}, (dirEntry) ->
+            @outputFileDirEntry = dirEntry
+            dirEntry.getFile(filename, {create: true, exclusive: true}, (fileEntry)->
+                 fileEntry.createWriter((fileWriter)->
+                    fileWriter.onwriteend = (e)->
+                      @hasOutputFile = true
+                      @downloadOutputFileLink.href = fileEntry.toURL()
+                      @downloadOutputFileLink.type = @mimeTypeForCurrentObject()
+                      @downloadOutputFileLink.innerHTML = @downloadLinkTextForCurrentObject()
+                      @enableItems()
+                      if(@onchange) @onchange()
+
+                    fileWriter.onerror = (e)-> 
+                      throw new Error('Write failed: ' + e.toString())
+
+                    blob = @currentObjectToBlob()
+                    fileWriter.write(blob)      
+
+                  (fileerror) -> 
+                    OpenJsCad.FileSystemApiErrorHandler(fileerror, "createWriter")
+             (fileerror) -> 
+                OpenJsCad.FileSystemApiErrorHandler(fileerror, "getFile('"+filename+"')")
+          (fileerror) -> 
+            OpenJsCad.FileSystemApiErrorHandler(fileerror, "getDirectory('"+dirname+"')") 
+      (fileerror)->
+        OpenJsCad.FileSystemApiErrorHandler(fileerror, "requestFileSystem")
+
      
