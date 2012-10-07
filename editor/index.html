@@ -18,35 +18,13 @@
   	<script src="./js/opencoffeescad.js"></script>
   	<script src="./js/viewer.js"></script>
   	<script src="./js/DataStore.js"></script>
+  	<script src="./js/underscore-min.js"></script>
+  	<script src="./js/gh3.js"></script>
   	
 	<link rel="stylesheet" href="css/bootstrap.css">
 	<link rel="stylesheet" href="css/font-awesome.css">
 	<link rel="stylesheet" href="css/codemirror.css">
-  <style>
-	canvas { cursor: move; }
-	.navbar .container { height: 1em; }
-	.CodeMirror {
-		  top: 0;
-		  left: 0;
-		  right: 0;
-		  bottom: 0;
-		  width: 95%;
-		}
-		
-		.CodeMirror-scroll {
-  overflow: auto;
-  height: 750px;
-  /* This is needed to prevent an IE[67] bug where the scrolled content
-     is visible outside of the scrolling box. */
-  position: relative;
-  outline: none;
-}
-.fill { 
-    min-height: 100%;
-    height: 100%;
-}
-  </style>
-
+	<link rel="stylesheet" href="css/editor.css">
 
 <script>
 var gProcessor=null;
@@ -68,71 +46,14 @@ function onload()
   	
   	glViewer = new OpenCoffeeScad.Viewer(document.getElementById("viewer"),750,750);
   	cadProcessor = new OpenCoffeeScad.Processor(true, null, document.getElementById("statusBar"), glViewer);
-  	cadProcessor.setJsCad(compileFormatCoffee());
-  	//window.localStorage.clear();
-
-}
-
-var extraLibTest = ""
-fromPoints = function(points) {
-  var numpoints = points.length;
-  if(numpoints < 3) throw new Error("CAG shape needs at least 3 points");
-  var sides = [];
-  var prevpoint = new CSG.Vector2D(points[numpoints-1]);
-  var prevvertex = new CAG.Vertex(prevpoint);
-  points.map(function(p){
-    var point = new CSG.Vector2D(p);
-    var vertex = new CAG.Vertex(point);
-    var side = new CAG.Side(prevvertex, vertex);
-    sides.push(side);
-    prevvertex = vertex;  
-  });
-  var result = CAG.fromSides(sides);
-  if(result.isSelfIntersecting())
-  {
-    throw new Error("Polygon is self intersecting!");
-  }
-  var area = result.area();
-  if(Math.abs(area) < 1e-5)
-  {
-    throw new Error("Degenerate polygon!");
-  }
-  if(area < 0)
-  {
-    result = result.flipped();
-  }
-  result = result.canonicalized();
-  return result;
-};""
-
-function compileFormatCoffee()
-{
-	/*var textblock= codeEditor.getValue();
-	var lines = textblock.split('\n');
-	lines.splice(0,1);
-	textblock= lines.join('\n');
-	console.log(textblock);*/
-	
-	textblock = CoffeeScript.compile(codeEditor.getValue());
-	lines = textblock.split('\n');
-	//console.log("Lines bla" + (lines.length-1));
-	var endsplitter = lines.length-2;
-	lines.splice(endsplitter,2);
-	lines.splice(0,1);
-	var newtext = "function main()"
-	newtext += "{"
-	newtext += lines.join('\n');
-	newtext += "}\n";
-	newtext += extraLibTest;//TODO: work on this, this is just a "namespace removing" / dependency injection test to get rid of CSG. and CAG. in the actual coffeescad projects/scripts
-	//console.log(newtext);
-	return newtext
+  	updateSolid();
 }
 
 function updateSolid()
 {
-	cadProcessor.setJsCad(compileFormatCoffee());
-	//cadProcessor.setJsCad(codeEditor.getValue());
+	cadProcessor.setCoffeeSCad(codeEditor.getValue());
 }
+
 </script>
 <script type="text/javascript">
 function newProject()
@@ -145,7 +66,7 @@ function saveProject()
 {
 	if (projectName != "")
 	{
-		store.save_inBrowser(projectName, codeEditor.getValue());
+		store.save_file("local", projectName, codeEditor.getValue());
 		document.title = "OpenCoffeeSCad "+projectName;
 	}
 }
@@ -156,7 +77,7 @@ function loadProject(projectNameToLoad)
 	{
 		projectName = projectNameToLoad;
 		
-		codeEditor.setValue(store.load_fromBrower(projectName));
+		codeEditor.setValue(store.load_file("local", projectName));
     	codeEditor.clearHistory();
     	updateUndoRedo();
 
@@ -200,7 +121,7 @@ var foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder);
 
   $(document).ready(function () 
   {
-	store= new OpenCoffeeScad.DataStore();
+	store= new OpenCoffeeScad.DataStoreManager();
 	
   	codeEditor = CodeMirror.fromTextArea(codeArea,
 	{
@@ -222,9 +143,11 @@ var foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder);
 					"Ctrl-S" : saveProject
 				}
 	});
-	
+
   	checkCodeEditorContent();
     $("[rel=tooltip]").tooltip({placement:'bottom'});
+    
+
     $(document).bind('keyup', 'shift+a', function()
     {
   		console.log("Updating solid");
@@ -323,15 +246,15 @@ var foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder);
 	 	$('#settingsModal').modal({"backdrop":false});
 	 })
 	
-	
-
 	document.title = "OpenCoffeeSCad "+projectName;
 	
-	$.each(store.listSaves_fromBrowser(),  function(index, value) { 
+	$.each(store.get_files("local"),  function(index, value) { 
 		$('#recentFilesList').append('<li><a tabindex="-1" href="#" onclick=loadProject("'+value+'");>'+value+'</a></li>');
 		$('#fileLoadModalFileList').append('<li><a tabindex="-1" href="#" onclick=loadProject("'+value+'");>'+value+'</a></li>');
 	});
 	
+	//store.load_fromGist()
+
   });
 </script>
 
@@ -340,7 +263,6 @@ var foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder);
 </head>
 
 <body onload="onload()">
-	<!--<div id="spinner" class="spinner"></div>-->
 	<div class="container-fluid">
 		<div class="row-fluid">
 			<div class="span12">
@@ -352,9 +274,8 @@ var foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder);
 				    			<span class="caret"></span>
 				    		</a>
 				    		<ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
-				    			<li id ="newFileBtn"><a tabindex="-1" href="#"><i class="icon-file"></i>New</a></li>
+				    			<li id ="newFileBtn" class="dropdown-submenu"><a tabindex="-1" href="#"><i class="icon-file"></i>New</a></li>
 				    			<li id ="saveFileBtn"><a tabindex="-1" href="#"><i class="icon-save"></i>Save</a></li>
-				    			
 				    			<li id ="saveToBtn" class="dropdown-submenu">
 				    				<a tabindex="-1" href="#"><i class="icon-save"></i>Save To</a>
 				    				<ul class="dropdown-menu">
@@ -363,8 +284,15 @@ var foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder);
 				    				</ul>
 				    			</li>
 				    			<li id ="loadFileBtn"><a tabindex="-1" href="#"><i class="icon-file"></i>Load</a></li>
+				    			<li class="divider"></li>
+				    			<li id ="importBtn" class="dropdown-submenu">
+				    				<a tabindex="-1" href="#"><i class="icon-download-alt"></i>Import</a>
+				    				<ul class="dropdown-menu">
+                    					<li><a href="#" class="btn disabled"><i class="icon-download disabled"></i> Openscad</a></li>
+				    				</ul>
+				    			</li>
 				    			<li id ="exportBtn" class="dropdown-submenu">
-				    				<a tabindex="-1" href="#"><i class="icon-share"></i>Export</a>
+				    				<a tabindex="-1" href="#"><i class="icon-upload-alt"></i>Export</a>
 				    				<ul class="dropdown-menu">
                     					<li><a href="#" class="btn disabled"><i class="icon-download disabled"></i> Stl</a></li>
                     					<li><a href="#" class="btn disabled"><i class="icon-download-alt disabled"></i> Dxf</a></li>
@@ -375,8 +303,17 @@ var foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder);
 		                        <li class="divider"></li>
 		                        <li><a tabindex="-1" href="#"><i class="icon-bullhorn"></i>About</a></li> 
 				    		</ul>
-				    		<a class="btn btn-small disabled" href="#" rel="tooltip" title="Load Openscad file"><i class="icon-upload icon-large"></i></a>
-							<a id="undoBtn" class="btn btn-small disabled" href="#" rel="tooltip" title="Undo (CTRL+Z)"><i class="icon-undo icon-large"></i></a>
+				    	</div>
+				    	<div class="btn-group">
+				    		<a class="btn btn-small dropdown-toggle" data-toggle="dropdown" href="#" rel="tooltip" title="Project"><i class="icon-beaker icon-large"></i>
+				    			<span class="caret"></span>
+				    			<ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+				    			
+				    			</ul>
+				    		</a>
+				    	</div>		
+				    	<div class="btn-group">	
+				    		<a id="undoBtn" class="btn btn-small disabled" href="#" rel="tooltip" title="Undo (CTRL+Z)"><i class="icon-undo icon-large"></i></a>
 					  		<a id="redoBtn" class="btn btn-small disabled" href="#" rel="tooltip" title="Redo (CTRL+Y)"><i class="icon-repeat icon-large"></i></a>
 				    	</div>
 					    <div class="btn-group">
@@ -393,6 +330,12 @@ var foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder);
 				</div>
 				<div class="row-fluid">
 					<div id="editor" class="span6" >
+						<!--<ul class="nav nav-tabs">
+						  <li ><a href="#file1" data-toggle="tab">file1</a></li>
+						  <li class="active"><a href="#file2" data-toggle="tab">file2*</a></li>
+						  <li><a href="#file3" data-toggle="tab">file3</a></li>
+						  <li><a href="#file4" data-toggle="tab">file4</a></li>
+						</ul>-->
 						<!-- <div class="navbar-inner" style="height: 15px; padding-top: 0px">-->
 						<textarea id="codeArea" class="field span12" rows="6" >		
 class CubeClass
@@ -411,14 +354,21 @@ class CubeClass
 cubeStuff = new CubeClass()
 return cubeStuff
 						</textarea>
-				<!--<div class="progress">
-  					<div id="renderProgress" class="bar" style="width: 20%;"></div>
-				</div>-->
+
 					</div>
 					<div id="viewer" class="span6"></div>
 				</div>	
 				<div id="spacer" style="height: 20px"></div>
 				<div id="statusBar" class="well"></div>
+				
+				
+				<div id="fileTabs" class="tab-content">
+				  <div class="tab-pane" id="file1">...</div>
+				  <div class="tab-pane active" id="file2">...</div>
+				  <div class="tab-pane" id="file3">...</div>
+				  <div class="tab-pane" id="file4">...</div>
+				</div>
+				
 			</div>
 		</div>
 	</div>
@@ -468,6 +418,8 @@ return cubeStuff
 	      <button id="realLoadBtn" class="btn btn-primary">Load</button>
 	    </div>
   	</div>
+  	
+  
 	
 </body>
 

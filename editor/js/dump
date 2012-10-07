@@ -56,3 +56,9 @@ function main()
 	result = result.intersect(sphere3);
 	return result;
 }	
+
+	<!--<div id="spinner" class="spinner"></div>-->
+	
+					<!--<div class="progress">
+  					<div id="renderProgress" class="bar" style="width: 20%;"></div>
+				</div>-->

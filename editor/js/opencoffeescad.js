@@ -190,7 +190,7 @@
       return bb;
     };
 
-    Processor.prototype.setJsCad = function(script, filename) {
+    Processor.prototype.setCoffeeSCad = function(script, filename) {
       var scripthaserrors;
       filename = !filename ? "openjscad.jscad" : void 0;
       filename = filename.replace(/\.jscad$/i, "");
@@ -206,7 +206,7 @@
         scripthaserrors = true;
       }
       if (!scripthaserrors) {
-        this.script = script;
+        this.script = this.compileFormatCoffee(script);
         this.filename = filename;
         return this.rebuildSolid();
       } else {
@@ -392,6 +392,68 @@
           }
         }
       }
+    };
+
+    Processor.prototype.preprocessCode = function(code) {
+      /*   
+      function getMethods(obj)
+      {
+          var res = [];
+          for(var m in obj) {
+              if(typeof obj(m) == "function") {
+                  res.push(m)
+              }
+          }
+          return res;
+      }
+      
+      for (prop in CSG)
+      {
+          //console.log("CSG has property " + prop);
+      }
+        
+        console.log(getMethods(CSG));
+        
+        var objs = Object.getOwnPropertyNames(CSG);
+      for(var i in objs ){
+        console.log(objs[i]);
+      }
+      */
+
+    };
+
+    Processor.prototype.compileFormatCoffee = function(source) {
+      /*var extraLibTest2= "fromPoints = "+CAG.fromPoints+ "\n";
+      extraLibTest2 += "cube = "+CSG.cube + "\n";
+      */
+
+      var endsplitter, extraLibTest, formated, lines, textblock;
+      extraLibTest = "var cube = CSG.cube;\n";
+      extraLibTest += "var fromPoints = CAG.fromPoints;\n";
+      /*var textblock= codeEditor.getValue();
+      var lines = textblock.split('\n');
+      lines.splice(0,1);
+      textblock= lines.join('\n');
+      console.log(textblock);
+      */
+
+      textblock = CoffeeScript.compile(source);
+      lines = textblock.split('\n');
+      if (this.debug_ing) {
+        console.log("Raw Lines" + (lines.length - 1));
+      }
+      endsplitter = lines.length - 2;
+      lines.splice(endsplitter, 2);
+      lines.splice(0, 1);
+      formated = "function main()";
+      formated += "{";
+      formated += extraLibTest;
+      formated += lines.join('\n');
+      formated += "}\n";
+      if (this.debug_ing) {
+        console.log("Formated scad " + formated);
+      }
+      return formated;
     };
 
     return Processor;

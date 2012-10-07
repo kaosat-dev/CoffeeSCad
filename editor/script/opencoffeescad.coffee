@@ -169,7 +169,7 @@ class OpenCoffeeScad.Processor
     else throw new Error("Your browser doesn't support BlobBuilder")
     return bb
     
-  setJsCad: (script, filename) ->
+  setCoffeeSCad: (script, filename) ->
     # script: javascript code
     # filename: optional, the name of the .jscad file
     filename = if !filename then "openjscad.jscad"
@@ -191,7 +191,7 @@ class OpenCoffeeScad.Processor
       scripthaserrors = true
 
     if(!scripthaserrors)
-      @script = script
+      @script = @compileFormatCoffee(script)
       @filename = filename
       @rebuildSolid()
       #console.log("No errors in script")
@@ -365,48 +365,65 @@ class OpenCoffeeScad.Processor
           #TODO: clean way to handle these type of messages
           #@statusspan.innerHTML = "Error."
       #@enableItems()
+  preprocessCode:(code)->
+    #just some experimental js code for fetching all CSG and CAG methods, to add them as no-namespace methods
+    #into the project code : ie , "CSG.cube()" should become simply "cube()"
+    ###   
+    function getMethods(obj)
+    {
+        var res = [];
+        for(var m in obj) {
+            if(typeof obj(m) == "function") {
+                res.push(m)
+            }
+        }
+        return res;
+    }
+    
+    for (prop in CSG)
+    {
+        //console.log("CSG has property " + prop);
+    }
+  
+      console.log(getMethods(CSG));
       
+      var objs = Object.getOwnPropertyNames(CSG);
+    for(var i in objs ){
+      console.log(objs[i]);
+    }###
+  compileFormatCoffee:(source)->
+    ###var extraLibTest2= "fromPoints = "+CAG.fromPoints+ "\n";
+    extraLibTest2 += "cube = "+CSG.cube + "\n";###
+    extraLibTest = "var cube = CSG.cube;\n"; 
+    extraLibTest += "var fromPoints = CAG.fromPoints;\n"; 
+    #console.log("fromPoints"+extraLibTest);
+    
+    ###var textblock= codeEditor.getValue();
+    var lines = textblock.split('\n');
+    lines.splice(0,1);
+    textblock= lines.join('\n');
+    console.log(textblock);###
+    
+    
+    
+    textblock = CoffeeScript.compile(source)
+    lines = textblock.split('\n')
+    if @debug_ing#TODO correct this
+      console.log("Raw Lines" + (lines.length-1))
+    endsplitter = lines.length-2
+    lines.splice(endsplitter,2)
+    lines.splice(0,1)
+    formated = "function main()"
+    formated += "{"
+    formated += extraLibTest; #TODO: work on this, this is just a "namespace removing" / dependency injection test to get rid of CSG. and CAG. 
+    #in the actual coffeescad projects/scripts
+    formated += lines.join('\n')
+    formated += "}\n"
+    if @debug_ing#TODO correct this
+      console.log("Formated scad #{formated}")
+    return formated
+
       
-   #TODO: move all this to dataStore
-   onInitFs:(fs) ->  
-     console.log("Opened file system: #{fs.name}")
-      
-   generateOutputFileFileSystem:() ->
-    window.requestFileSystem  = window.requestFileSystem || window.webkitRequestFileSystem
-    if !window.requestFileSystem
-      throw new Error("Your browser does not support the HTML5 FileSystem API. Please try the Chrome browser instead.")
-      
-    # create a random directory name:
-    dirname = "OpenJsCadOutput1_"+ parseInt(Math.random()*1000000000, 10)+"."+extension
-    extension = @extensionForCurrentObject()
-    filename = @filename+"."+extension
-
-    window.requestFileSystem(TEMPORARY, 20*1024*1024, (fs)->
-        fs.root.getDirectory(dirname, {create: true, exclusive: true}, (dirEntry) ->
-            @outputFileDirEntry = dirEntry
-            dirEntry.getFile(filename, {create: true, exclusive: true}, (fileEntry)->
-                 fileEntry.createWriter((fileWriter)->
-                    fileWriter.onwriteend = (e)->
-                      @hasOutputFile = true
-                      @downloadOutputFileLink.href = fileEntry.toURL()
-                      @downloadOutputFileLink.type = @mimeTypeForCurrentObject()
-                      @downloadOutputFileLink.innerHTML = @downloadLinkTextForCurrentObject()
-                      @enableItems()
-                      if(@onchange) @onchange()
-
-                    fileWriter.onerror = (e)-> 
-                      throw new Error('Write failed: ' + e.toString())
-
-                    blob = @currentObjectToBlob()
-                    fileWriter.write(blob)      
-
-                  (fileerror) -> 
-                    OpenJsCad.FileSystemApiErrorHandler(fileerror, "createWriter")
-             (fileerror) -> 
-                OpenJsCad.FileSystemApiErrorHandler(fileerror, "getFile('"+filename+"')")
-          (fileerror) -> 
-            OpenJsCad.FileSystemApiErrorHandler(fileerror, "getDirectory('"+dirname+"')") 
-      (fileerror)->
-        OpenJsCad.FileSystemApiErrorHandler(fileerror, "requestFileSystem")
+   
 
      

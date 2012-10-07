@@ -139,6 +139,17 @@ class tibia2
 
 
   render: () =>
+    result = new CSG()
+    
+    return result.setColor(MECHA_COLOR)
+    
+        
+shape1 = fromPoints([[global_offset,15], [global_offset,-5], [0,-5]])
+shape = shape1.expand(2, 30)
+
+shape=shape.extrude({offset:[0, 0, 5]}) 
+    
+    
     rotate([90,0,0])
     translate(pos) rotate(rot) 
     {

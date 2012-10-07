@@ -38,7 +38,7 @@
       gl.perspective(45, this.width / this.height, 0.5, 1000);
       gl.matrixMode(gl.MODELVIEW);
       gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
-      gl.clearColor(0.95, 0.95, 0.95, 1);
+      gl.clearColor(1, 1, 1, 1);
       gl.enable(gl.DEPTH_TEST);
       gl.enable(gl.CULL_FACE);
       gl.polygonOffset(1, 1);
