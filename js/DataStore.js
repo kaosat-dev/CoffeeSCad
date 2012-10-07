@@ -227,7 +227,6 @@
       } else {
         saves = saves.split(" ");
       }
-      console.log("saves" + saves);
       if (__indexOf.call(saves, filename) >= 0) {
 
       } else {

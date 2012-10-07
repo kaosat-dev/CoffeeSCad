@@ -112,7 +112,6 @@ class OpenCoffeeScad.LocalStore extends OpenCoffeeScad.DataStore
         saves= []
      else
         saves = saves.split(" ")
-     console.log("saves"+saves)
      if filename in saves
         
      else
