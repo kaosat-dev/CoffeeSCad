@@ -7,19 +7,19 @@
   OpenCoffeeScad.DataStoreManager = (function() {
 
     function DataStoreManager(debug) {
-      var store, _i, _len, _ref;
+      var name, store, _ref;
       this.debug = debug != null ? debug : false;
-      this.LocalStore = new OpenCoffeeScad.LocalStore();
-      this.fsStore = new OpenCoffeeScad.FsStore();
-      this.gistStore = new OpenCoffeeScad.GistStore();
+      this.LocalStore = new OpenCoffeeScad.LocalStore(this.debug);
+      this.fsStore = new OpenCoffeeScad.FsStore(this.debug);
+      this.gistStore = new OpenCoffeeScad.GistStore(this.debug);
       this.stores = {
         "local": this.LocalStore,
         "fs": this.fsStore,
         "gist": this.gistStore
       };
       _ref = this.stores;
-      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-        store = _ref[_i];
+      for (name in _ref) {
+        store = _ref[name];
         store.detect_capabilities();
       }
     }
@@ -35,7 +35,11 @@
         data = null;
       }
       if ((fileName != null) && (data != null)) {
-        return this.stores[store].save_file(fileName, data);
+        if (this.stores[store].available) {
+          return this.stores[store].save_file(fileName, data);
+        } else {
+          return console.log("Unable to save file, " + store + " is not supported in this browser");
+        }
       }
     };
 
@@ -47,7 +51,11 @@
         fileName = null;
       }
       if (fileName != null) {
-        return this.stores[store].load_file(fileName);
+        if (this.stores[store].available) {
+          return this.stores[store].load_file(fileName);
+        } else {
+          return console.log("Unable to load file, " + store + " is not supported in this browser");
+        }
       }
     };
 
@@ -55,7 +63,11 @@
       if (store == null) {
         store = "local";
       }
-      return this.stores[store].get_files();
+      if (this.stores[store].available) {
+        return this.stores[store].get_files();
+      } else {
+        return console.log("Unable to get files, " + store + " is not supported in this browser");
+      }
     };
 
     DataStoreManager.prototype.delete_file = function(store, fileName) {
@@ -66,7 +78,11 @@
         fileName = null;
       }
       if (fileName != null) {
-        return this.stores[store].delete_file(fileName);
+        if (this.stores[store].available) {
+          return this.stores[store].delete_file(fileName);
+        } else {
+          return console.log("Unable to delete file, " + store + " is not supported in this browser");
+        }
       }
     };
 
@@ -80,6 +96,10 @@
       this.debug = debug != null ? debug : false;
       this.available = false;
     }
+
+    DataStore.prototype.detect_capabilities = function() {
+      throw "NotImplemented";
+    };
 
     DataStore.prototype.save_file = function(fileName, data) {
       if (fileName == null) {
@@ -131,7 +151,7 @@
 
     LocalStore.prototype.detect_capabilities = function() {
       if (window.localStorage != null) {
-        console.log("Brower localstorage support ok");
+        console.log("Brower localStorage support ok");
         return this.available = true;
       } else {
         return console.log("Your browser does not support HTML5 localStorage. Try upgrading.");
@@ -148,18 +168,14 @@
       if (this.debug) {
         console.log("saving to local storage");
       }
-      if (this.available) {
-        try {
-          localStorage.setItem(fileName, data);
-          return this._addToSaves(fileName);
-        } catch (e) {
-          console.log("Error: " + e);
-          if (e === QUOTA_EXCEEDED_ERR) {
-            return console.log("Quota exceeded!");
-          }
+      try {
+        localStorage.setItem(fileName, data);
+        return this._addToSaves(fileName);
+      } catch (e) {
+        console.log("Error: " + e);
+        if (e === QUOTA_EXCEEDED_ERR) {
+          return console.log("Quota exceeded!");
         }
-      } else {
-        return console.log("Unable to save , browser has no localstorage support");
       }
     };
 
@@ -204,14 +220,17 @@
     };
 
     LocalStore.prototype._addToSaves = function(filename) {
-      var saves, _ref;
+      var saves;
       saves = localStorage.getItem("files");
       if (!(saves != null)) {
         saves = [];
       } else {
         saves = saves.split(" ");
       }
-      if (_ref = !filename, __indexOf.call(saves, _ref) >= 0) {
+      console.log("saves" + saves);
+      if (__indexOf.call(saves, filename) >= 0) {
+
+      } else {
         saves.push(filename);
       }
       saves = saves.join(" ");

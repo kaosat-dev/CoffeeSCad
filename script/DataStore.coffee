@@ -1,32 +1,46 @@
 
 class OpenCoffeeScad.DataStoreManager
   constructor: (@debug=false)->
-    @LocalStore = new OpenCoffeeScad.LocalStore()
-    @fsStore = new OpenCoffeeScad.FsStore()
-    @gistStore = new OpenCoffeeScad.GistStore()
+    @LocalStore = new OpenCoffeeScad.LocalStore(@debug)
+    @fsStore = new OpenCoffeeScad.FsStore(@debug)
+    @gistStore = new OpenCoffeeScad.GistStore(@debug)
     @stores = {"local":@LocalStore, "fs":@fsStore, "gist":@gistStore}
     
-    store.detect_capabilities() for store in @stores
+    store.detect_capabilities() for name,store of @stores
   
   save_file: (store="local", fileName=null, data=null)->
     if fileName? and data?
-      @stores[store].save_file(fileName, data)
+      if @stores[store].available
+        @stores[store].save_file(fileName, data)
+      else
+        console.log("Unable to save file, #{store} is not supported in this browser")
   
   load_file:(store="local", fileName=null)->
     if fileName?
-      @stores[store].load_file(fileName)
+      if @stores[store].available
+        @stores[store].load_file(fileName)
+      else
+        console.log("Unable to load file, #{store} is not supported in this browser")
   
   get_files:(store="local")->
-    @stores[store].get_files()
+    if @stores[store].available
+      @stores[store].get_files()
+    else
+        console.log("Unable to get files, #{store} is not supported in this browser")
 
   delete_file:(store="local", fileName=null)->
     if fileName?
-      @stores[store].delete_file(fileName)
+      if @stores[store].available
+        @stores[store].delete_file(fileName)
+      else
+        console.log("Unable to delete file, #{store} is not supported in this browser")
       
 
 class OpenCoffeeScad.DataStore
   constructor: (@debug=false)->
     @available=false
+  detect_capabilities:()->
+    throw "NotImplemented"
   save_file:(fileName=null, data=null)->
     throw "Save_file NotImplemented"
   load_file:(fileName=null)->
@@ -48,34 +62,31 @@ class OpenCoffeeScad.LocalStore extends OpenCoffeeScad.DataStore
   
   detect_capabilities:()->
     if window.localStorage?
-        console.log("Brower localstorage support ok")
+        console.log("Brower localStorage support ok")
         @available = true
-      else
+    else
         console.log("Your browser does not support HTML5 localStorage. Try upgrading.")
     
   save_file:(fileName=null, data=null)->
     if @debug
       console.log("saving to local storage")
-    if @available
-      try 
-        localStorage.setItem(fileName, data)
-        @_addToSaves(fileName)
-      catch e
-        console.log("Error: #{e}")
-        if e == QUOTA_EXCEEDED_ERR 
-          console.log("Quota exceeded!") #data wasn't successfully saved due to quota exceed so throw an error
-    else
-      console.log("Unable to save , browser has no localstorage support")
+    try 
+      localStorage.setItem(fileName, data)
+      @_addToSaves(fileName)
+    catch e
+      console.log("Error: #{e}")
+      if e == QUOTA_EXCEEDED_ERR 
+        console.log("Quota exceeded!") #data wasn't successfully saved due to quota exceed so throw an error
     
     
-  load_file:(fileName=null) ->
+  load_file:(fileName=null) -> 
     try
       data = ""
       data = localStorage.getItem(fileName)
       return data
     catch e
       console.log("Unable to load data, sorry")
-      
+     
   get_files:()->
     try
       data = localStorage.getItem("files")
@@ -98,11 +109,14 @@ class OpenCoffeeScad.LocalStore extends OpenCoffeeScad.DataStore
   _addToSaves:(filename)->
      saves = localStorage.getItem("files")
      if not saves?
-       saves= []
+        saves= []
      else
-      saves = saves.split(" ")
-     if not filename in saves
-        saves.push(filename)
+        saves = saves.split(" ")
+     console.log("saves"+saves)
+     if filename in saves
+        
+     else
+      saves.push(filename)
      saves = saves.join(" ")
      if @debug
        console.log("saving files: #{saves}")
