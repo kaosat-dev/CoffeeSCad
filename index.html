@@ -1,270 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<script src="./js/jquery-1.8.1.min.js"></script>
-	<script src="./js/bootstrap.js"></script>
-	<script src="./js/jquery.hotkeys.js"></script>
-	<script src="./js/spin.min.js"></script>
+	<script data-main="app/config" src="assets/js/libs/require.min.js"></script>
+	
+	<!--<script src="./js/vendor/jquery-1.8.1.min.js"></script>
+	<script src="./js/vendor/bootstrap.js"></script>
+	<script src="./js/vendor/underscore-min.js"></script>
+	<script src="./js/vendor/jquery.hotkeys.js"></script>
+	<script src="./js/vendor/spin.min.js"></script>
+  	
+  	
   	<script src="./js/lightgl.js"></script>
   	<script src="./js/csg.js"></script>
   	
-  	<script src="./js/coffee-script.js"></script>
-  	<script src="./js/codemirror.js"></script>
-  	<script src="./js/foldcode.js"></script>
-  	<!--<script src="./codeMirror/mode/javascript/javascript.js"></script>-->
+  	<script src="./js/vendor/gh3.js"></script>
+  	<script src="./js/vendor/coffee-script.js"></script>
+  	<script src="./js/vendor/codemirror.js"></script>
+  	<script src="./js/vendor/foldcode.js"></script>
   	<script src="./codeMirror/mode/coffeescript/coffeescript.js"></script>
   	
   	<script src="./js/openjscad.js"></script>
   	<script src="./js/opencoffeescad.js"></script>
   	<script src="./js/viewer.js"></script>
   	<script src="./js/DataStore.js"></script>
-  	<script src="./js/underscore-min.js"></script>
-  	<script src="./js/gh3.js"></script>
-  	<script src="./js/main.js"></script>
   	
-	<link rel="stylesheet" href="css/bootstrap.css">
-	<link rel="stylesheet" href="css/font-awesome.css">
-	<link rel="stylesheet" href="css/codemirror.css">
-	<link rel="stylesheet" href="css/editor.css">
-
-<script>
-var gProcessor=null;
-var codeEditor = null;
-var codeUpdated = true;
-
-var glViewer = null;
-var cadProcessor = null;
-var store = null;
-var projectName = "MyProject";
-
-// Show all exceptions to the user:
-//OpenJsCad.AlertUserOfUncaughtExceptions();
-function onload()
-{
-  	/*gProcessor = new OpenJsCad.Processor(document.getElementById("viewer"),750,750);
-  	gProcessor.setDebugging(true);
-  	gProcessor.setJsCad(codeEditor.getValue());*/
+  	<script src="./js/main.js"></script>-->
   	
-  	glViewer = new OpenCoffeeScad.Viewer(document.getElementById("viewer"),750,750);
-  	cadProcessor = new OpenCoffeeScad.Processor(true, null, document.getElementById("statusBar"), glViewer);
-  	updateSolid();
-}
-
-function updateSolid()
-{
-	cadProcessor.setCoffeeSCad(codeEditor.getValue());
-}
-
-</script>
-<script type="text/javascript">
-function newProject()
-{
-	codeEditor.setValue("")
-	codeEditor.clearHistory();
-	updateUndoRedo();
-}
-function saveProject()
-{
-	if (projectName != "")
-	{
-		store.save_file("local", projectName, codeEditor.getValue());
-		document.title = "OpenCoffeeSCad "+projectName;
-	}
-}
-
-function loadProject(projectNameToLoad)
-{
-	if (projectNameToLoad != "" && projectNameToLoad != null)
-	{
-		projectName = projectNameToLoad;
-		
-		codeEditor.setValue(store.load_file("local", projectName));
-    	codeEditor.clearHistory();
-    	updateUndoRedo();
-
-		document.title = "OpenCoffeeSCad "+projectName;
-	}
-}
-
-function updateUndoRedo ()
-{
-  	var redoes = codeEditor.historySize().redo;
-	var undoes = codeEditor.historySize().undo;
-	//console.log("undoes"+undoes+" redoes "+redoes );
-	
-	if (redoes >0)
-	{
-		$('#redoBtn').removeClass("disabled");
-	}
-	else
-	{
-		$('#redoBtn').addClass("disabled");
-	}
-	if (undoes >0)
-	{
-		$('#undoBtn').removeClass("disabled");
-	}
-	else
-	{
-		$('#undoBtn').addClass("disabled");
-	}
-}
-
-function checkCodeEditorContent()
-{
-	if (codeEditor.lineCount()>0)
-	{
-		$('#updateBtn').removeClass("disabled");
-	}
-}
-//var foldFunc = CodeMirror.newFoldFunction(CodeMirror.braceRangeFinder);
-var foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder);
-
-  $(document).ready(function () 
-  {
-	store = new OpenCoffeeScad.DataStoreManager();
-	
-  	codeEditor = CodeMirror.fromTextArea(codeArea,
-	{
-			lineNumbers:true,
-			gutter:true,
-			matchBrackets:true,
-			firstLineNumber:1,
-			onChange: function (arg, arg2) 
-			{		 
-				updateUndoRedo();
-				checkCodeEditorContent(); 
-				codeUpdated = true;
-				document.title = "OpenCoffeeSCad "+" *"+projectName;
-			},
-			onGutterClick: foldFunc,
-			extraKeys: 
-				{	"Ctrl-Q": function(cm){foldFunc(cm, cm.getCursor().line);},
-					"Ctrl-P" : newProject,
-					"Ctrl-S" : saveProject
-				}
-	});
-
-  	checkCodeEditorContent();
-    $("[rel=tooltip]").tooltip({placement:'bottom'});
-    
-
-    $(document).bind('keyup', 'shift+a', function()
-    {
-  		console.log("Updating solid");
-  		updateSolid();
-	});
-	
-	$(document).bind('keydown', 'F5', function()
-    {
-  		console.log("Updating solid");
-  		updateSolid();
-  		return false;
-	});
-	
-	$("#codeArea").bind('keydown', 'F2', function()
-    {
-  		console.log("Saving file");
-  		saveProject();
-  		preventDefault();
-  		return false;
-	});
-	
-	var spinopts = 
-	{
-		  lines: 9, // The number of lines to draw
-		  length: 3, // The length of each line
-		  width: 2, // The line thickness
-		  radius: 3, // The radius of the inner circle
-		  corners: 1, // Corner roundness (0..1)
-		  rotate: 15, // The rotation offset
-		  color: '#000', // #rgb or #rrggbb
-		  speed: 1.5, // Rounds per second
-		  trail: 37, // Afterglow percentage
-		  shadow: false, // Whether to render a shadow
-		  hwaccel: false, // Whether to use hardware acceleration
-		  className: 'spinner', // The CSS class to assign to the spinner
-		  zIndex: 2e9, // The z-index (defaults to 2000000000)
-		  top: 'auto', // Top position relative to parent in px
-		  left: 'auto' // Left position relative to parent in px
-	};
-	var target = document.getElementById('spinner');
-	var spinner = new Spinner(spinopts).spin(target);
-	
-	 $("#renderProgress").css('width', 100+'%');
-	 
-	 
-	 $('#undoBtn').on('click', function (e) 
-	 {
-    		codeEditor.undo();
-    		updateUndoRedo();
-	 })
-	 
-	 $('#redoBtn').on('click', function (e) 
-	 {
-    		codeEditor.redo();
-    		updateUndoRedo();	
-	 })
-	 $('#newFileBtn').on('click', function (e) 
-	 {
-    		newProject();
-	 })
-	 $('#saveFileBtn').on('click', function (e) 
-	 {
-	 		$('#fileSaveModal').modal({"backdrop":false});
-	 })
-	 $('#realSaveBtn').on('click', function (e) 
-	 {
-	 		projectName = $('#projectFileName').val(); 
-	 		saveProject();
-	 		$('#fileSaveModal').modal('hide');
-	 })
-	 
-	 $('#loadFileBtn').on('click', function (e) 
-	 {
-	 		$('#fileLoadModal').modal({"backdrop":false});
-	 })
-	 
-	 $('#realLoadBtn').on('click', function (e) 
-	 {
-	 		var saveName = $('#loadProjectFileName').val(); 
-	 		loadProject(saveName);
-    		$('#fileLoadModal').modal('hide');
-	 })
-
-	 $('#updateBtn').on('click', function (e)
-	{
-		if(codeUpdated)
-		{
-			codeUpdated = false;
-			$('#updateBtn').addClass("disabled");
-			updateSolid(); return false;
-		}
-	})
-	
-	$('#settingsBtn').on('click', function (e) 
-	 {
-	 	$('#settingsModal').modal({"backdrop":false});
-	 })
-	
-	document.title = "OpenCoffeeSCad "+projectName;
-	
-	$.each(store.get_files("local"),  function(index, value) { 
-		$('#recentFilesList').append('<li><a tabindex="-1" href="#" onclick=loadProject("'+value+'");>'+value+'</a></li>');
-		$('#fileLoadModalFileList').append('<li><a tabindex="-1" href="#" onclick=loadProject("'+value+'");>'+value+'</a></li>');
-	});
-	
-	//store.load_fromGist()
-	
-
-  });
-</script>
-
+	<link rel="stylesheet" href="assets/css/bootstrap.css">
+	<link rel="stylesheet" href="assets/css/font-awesome.css">
+	<link rel="stylesheet" href="assets/css/codemirror.css">
+	<link rel="stylesheet" href="assets/css/editor.css">
 
 <title>OpenCoffeeScad</title>  
 </head>
 
-<body onload="onload()">
+<body >
 	<div class="container-fluid">
 		<div class="row-fluid">
 			<div class="span12">
