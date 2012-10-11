@@ -4,10 +4,11 @@
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   define(function(require) {
-    var $, ProjectFile, backbone, _;
+    var $, LocalStorage, Project, ProjectFile, backbone, _;
     $ = require('jquery');
     _ = require('underscore');
     backbone = require('backbone');
+    LocalStorage = require('localstorage');
     ProjectFile = (function(_super) {
 
       __extends(ProjectFile, _super);
@@ -18,6 +19,8 @@
         content: ""
       };
 
+      ProjectFile.prototype.localStorage = new Backbone.LocalStorage("TestProjectFile");
+
       function ProjectFile(options) {
         ProjectFile.__super__.constructor.call(this, options);
       }
@@ -25,7 +28,24 @@
       return ProjectFile;
 
     })(backbone.Model);
-    return ProjectFile;
+    Project = (function(_super) {
+
+      __extends(Project, _super);
+
+      Project.prototype.model = ProjectFile;
+
+      Project.prototype.localStorage = new Backbone.LocalStorage("Project");
+
+      function Project(options) {
+        Project.__super__.constructor.call(this, options);
+      }
+
+      Project.prototype["export"] = function(format) {};
+
+      return Project;
+
+    })(Backbone.Collection);
+    return [ProjectFile, Project];
   });
 
   /*
@@ -33,14 +53,6 @@
       @bind "change:name", ()=>
         name = @get "name"
         console.log "Changed my name to " + name
-  
-  class Project extends Backbone.Collection
-    model: ProjectFile
-    
-    initialize: (options) =>
-      @all_files_saved=false
-    
-    export:(format)->
   */
 
 

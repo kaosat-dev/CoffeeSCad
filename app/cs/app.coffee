@@ -6,7 +6,7 @@ define (require)->
   CodeEditorView = require "views/codeView"
   MainMenuView = require "views/menuView"
   #ProjectFile = require "modules/Project"
-  bla = require "modules/tutu"
+  bla = require "modules/project"
   ProjectFile=bla[0]
   Project =bla[1]
 
@@ -34,12 +34,9 @@ return cubeStuff"""
   app = new marionette.Application
     root: "/opencoffeescad"
     cadProcessor: null
-    cadEditor: null
-    cadViewer: null
-    projectName: "MyProject"
-    codeUpdated: true
     updateSolid: () ->
       app.cadProcessor.setCoffeeSCad(app.cadEditor.getValue())
+      
   
   app.addRegions
     navigationRegion: "#navigation"
@@ -52,12 +49,9 @@ return cubeStuff"""
   app.on "initialize:after", ->
     console.log "after init"
     
-  app.vent.on "tutu", ->
-    console.log "on TUTU"
-    
   app.addInitializer (options)->
     app.model = new ProjectFile
-      name: "toto"
+      name: "main"
       ext: "coscad"
       content: testcode
       
@@ -78,8 +72,30 @@ return cubeStuff"""
     app.codeEditorView.on "something:do:it", ->
       console.log("I DID IT!")
       
-    app.codeEditorView.on "foo:bar", ->
-      console.log("I fooed IT!")
+    app.mainMenuView.on "file:new:clicked",=>
+      console.log("newfile")
+      
+    app.mainMenuView.on "file:save:clicked",=>
+      console.log("savefile")
+      #@model.save()
+      @model.save null,
+        success: (model, response) ->
+          console.log "sucess"
+          console.log model
+        error: (model, response) ->
+          console.log 'failed'
+    
+    app.mainMenuView.on "file:load:clicked",=>
+      console.log("loadfile")
+      @model.fetch
+        success: (model, response)=> 
+          console.log "sucess"
+          console.log model
+          @codeEditorView.render()
+        error: -> 
+          console.log "error"
+      #
+      #console.log(@model)
 
  
     #app.mainRegion.hide

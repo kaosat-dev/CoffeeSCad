@@ -59,12 +59,8 @@
 
       CodeEditorView.prototype.templateHelpers = {
         showMessage: function() {
-          return "patapon";
+          return "Test";
         }
-      };
-
-      CodeEditorView.prototype.triggers = {
-        "click ": "something:do:it"
       };
 
       function CodeEditorView(options) {
@@ -100,21 +96,19 @@
 
       CodeEditorView.prototype.onRender = function() {
         var _this = this;
-        if (!(this.editor != null)) {
-          this.editor = CodeMirror.fromTextArea(this.ui.codeBlock.get(0), {
-            mode: "coffeescript",
-            lineNumbers: true,
-            gutter: true,
-            matchBrackets: true,
-            firstLineNumber: 1,
-            onChange: function(arg, arg2) {
-              _this.triggerMethod("foo:bar");
-              _this.model.set("content", _this.editor.getValue());
-              console.log(_this.model);
-              return _this.updateUndoRedo();
-            }
-          });
-        }
+        this.editor = CodeMirror.fromTextArea(this.ui.codeBlock.get(0), {
+          mode: "coffeescript",
+          lineNumbers: true,
+          gutter: true,
+          matchBrackets: true,
+          firstLineNumber: 1,
+          onChange: function(arg, arg2) {
+            _this.triggerMethod("foo:bar");
+            _this.model.set("content", _this.editor.getValue());
+            console.log(_this.model);
+            return _this.updateUndoRedo();
+          }
+        });
         setTimeout(this.editor.refresh, 0);
         return this.ui.editor.removeClass("hide");
       };

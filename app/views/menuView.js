@@ -11,6 +11,7 @@
     marionette = require('marionette');
     mainMenu_template = require("text!templates/mainMenu.tmpl");
     MainMenuView = (function(_super) {
+      var get_recentProjects;
 
       __extends(MainMenuView, _super);
 
@@ -23,17 +24,33 @@
 
       MainMenuView.prototype.template = mainMenu_template;
 
-      MainMenuView.prototype.onBeforeRender = function() {
-        return console.log("pouet");
+      MainMenuView.prototype.triggers = {
+        "click .newFile": "file:new:clicked",
+        "click .saveFile": "file:save:clicked",
+        "click .loadFile": "file:load:clicked"
       };
 
-      MainMenuView.prototype.onRender = function() {
-        return console.log("tjtj");
+      get_recentProjects = function() {
+        var index, item, project, value, _ref, _results;
+        _ref = store.get_files("local");
+        _results = [];
+        for (index in _ref) {
+          project = _ref[index];
+          value = project;
+          item = "<li><a tabindex='-1' href='#' >" + value + "</a></li>";
+          $('#recentFilesList').append(item);
+          _results.push($('#fileLoadModalFileList').append(item));
+        }
+        return _results;
       };
+
+      MainMenuView.prototype.onBeforeRender = function() {};
+
+      MainMenuView.prototype.onRender = function() {};
 
       return MainMenuView;
 
-    })(marionette.ItemView);
+    })(marionette.CompositeView);
     return MainMenuView;
   });
 

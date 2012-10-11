@@ -15,30 +15,35 @@
       CodeMirror: "../assets/js/libs/codemirror",
       csg: "../assets/js/libs/csg",
       lightgl: "../assets/js/libs/lightgl",
-      marionette: "../assets/js/libs/backbone.marionette.min",
-      eventbinder: "../assets/js/libs/backbone.eventbinder.min",
-      wreqr: "../assets/js/libs/backbone.wreqr.min",
+      coffee_synhigh: "../assets/js/libs/codeMirror/mode/coffeescript/coffeescript",
       jquery_hotkeys: "../assets/js/plugins/jquery.hotkeys",
       jquery_codemirror: "../assets/js/plugins/jquery.codemirror",
       foldcode: "../assets/js/plugins/foldcode",
-      coffee_synhigh: "../assets/js/libs/codeMirror/mode/coffeescript/coffeescript"
+      marionette: "../assets/js/plugins/backbone.marionette.min",
+      eventbinder: "../assets/js/plugins/backbone.eventbinder.min",
+      wreqr: "../assets/js/plugins/backbone.wreqr.min",
+      localstorage: "../assets/js/plugins/backbone.localstorage.min"
     },
     shim: {
       underscore: {
         deps: [],
         exports: '_'
       },
-      backbone: {
-        deps: ["underscore"],
-        exports: "Backbone"
-      },
       bootstrap: {
         deps: ["jquery"],
         exports: "bootstrap"
       },
+      'backbone': {
+        deps: ["underscore"],
+        exports: "Backbone"
+      },
       marionette: {
         deps: ["jquery", "backbone", "eventbinder", "wreqr"],
         exports: "marionette"
+      },
+      localstorage: {
+        deps: ["backbone", "underscore"],
+        exports: "localstorage"
       },
       CoffeeScript: {
         exports: "CoffeeScript"

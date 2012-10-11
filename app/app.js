@@ -9,17 +9,13 @@
     require('bootstrap');
     CodeEditorView = require("views/codeView");
     MainMenuView = require("views/menuView");
-    bla = require("modules/tutu");
+    bla = require("modules/project");
     ProjectFile = bla[0];
     Project = bla[1];
     testcode = "\nclass CubeClass\n  width:20\n  length:20\n  height:20\n  constructor: (@pos=[0,0,0], @rot=[0,0,0]) ->\n    return @render()\n  \n  render: =>\n    result = new CSG()\n    cube1 =CSG.cube({center: [0, 0, @height/2],radius: [@width/2, @length/2, @height/2]})\n    result = cube1\n    return result.translate(@pos).rotateX(@rot[0]).rotateY(@rot[1]).rotateZ(@rot[2]) \n\ncubeStuff = new CubeClass()\nreturn cubeStuff";
     app = new marionette.Application({
       root: "/opencoffeescad",
       cadProcessor: null,
-      cadEditor: null,
-      cadViewer: null,
-      projectName: "MyProject",
-      codeUpdated: true,
       updateSolid: function() {
         return app.cadProcessor.setCoffeeSCad(app.cadEditor.getValue());
       }
@@ -35,12 +31,10 @@
     app.on("initialize:after", function() {
       return console.log("after init");
     });
-    app.vent.on("tutu", function() {
-      return console.log("on TUTU");
-    });
     app.addInitializer(function(options) {
+      var _this = this;
       app.model = new ProjectFile({
-        name: "toto",
+        name: "main",
         ext: "coscad",
         content: testcode
       });
@@ -58,8 +52,33 @@
       app.codeEditorView.on("something:do:it", function() {
         return console.log("I DID IT!");
       });
-      return app.codeEditorView.on("foo:bar", function() {
-        return console.log("I fooed IT!");
+      app.mainMenuView.on("file:new:clicked", function() {
+        return console.log("newfile");
+      });
+      app.mainMenuView.on("file:save:clicked", function() {
+        console.log("savefile");
+        return _this.model.save(null, {
+          success: function(model, response) {
+            console.log("sucess");
+            return console.log(model);
+          },
+          error: function(model, response) {
+            return console.log('failed');
+          }
+        });
+      });
+      return app.mainMenuView.on("file:load:clicked", function() {
+        console.log("loadfile");
+        return _this.model.fetch({
+          success: function(model, response) {
+            console.log("sucess");
+            console.log(model);
+            return _this.codeEditorView.render();
+          },
+          error: function() {
+            return console.log("error");
+          }
+        });
       });
     });
     /*return _.extend app,

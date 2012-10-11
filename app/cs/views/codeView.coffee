@@ -30,10 +30,8 @@ define (require)->
       
     templateHelpers:
       showMessage: ->
-        return "patapon"  
-    triggers:
-      "click ": "something:do:it"
-    
+        return "Test"  
+
     constructor:(options)->
       super options
       
@@ -58,19 +56,22 @@ define (require)->
         $('#undoBtn').addClass("disabled")
      
     onRender: =>
-      if not @editor?
-        @editor = CodeMirror.fromTextArea @ui.codeBlock.get(0),
-          mode:"coffeescript"
-          lineNumbers:true
-          gutter:true
-          matchBrackets:true
-          firstLineNumber:1
-          onChange:(arg, arg2)  =>   
-            @triggerMethod("foo:bar")
-            @model.set "content", @editor.getValue()
-            #console.log("code changed"+arg,arg2)
-            console.log(@model)
-            @updateUndoRedo()
+      #if not @editor?
+      #console.log "Editor not instanciated"
+      @editor = CodeMirror.fromTextArea @ui.codeBlock.get(0),
+        mode:"coffeescript"
+        lineNumbers:true
+        gutter:true
+        matchBrackets:true
+        firstLineNumber:1
+        onChange:(arg, arg2)  =>   
+          @triggerMethod("foo:bar")
+          @model.set "content", @editor.getValue()
+          #console.log("code changed"+arg,arg2)
+          console.log(@model)
+          @updateUndoRedo()
+      #else
+      #  console.log "Editor already instanciated"
 
       setTimeout @editor.refresh, 0 
       @ui.editor.removeClass("hide") 
