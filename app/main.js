@@ -2,20 +2,24 @@
 (function() {
 
   define(function(require) {
-    var Editor, Router, app, coscad;
+    var Router, app;
     app = require('app');
     Router = require('router');
-    Editor = require('editor');
-    coscad = require('opencoffeescad');
     app.router = new Router();
-    app.cadViewer = new coscad.Viewer(document.getElementById("viewer"), 750, 750);
-    app.cadProcessor = new coscad.Processor(true, null, document.getElementById("statusBar"), app.cadViewer);
-    app.cadEditor = new Editor();
-    app.updateSolid();
+    /*
+      file = new projectMod.ProjectFile()
+      file.bla("yeah")
+      console.log(file)
+      file.bli("yop")
+      console.log(file)
+      file.set "name", "uuuurgh"
+    */
+
     Backbone.history.start({
       pushState: true,
       root: app.root
     });
+    app.start();
     return $(document).on("click", "a[href]:not([data-bypass])", function(evt) {
       var href, root;
       href = {

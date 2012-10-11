@@ -2,30 +2,6 @@
 <html lang="en">
 <head>
 	<script data-main="app/config" src="assets/js/libs/require.min.js"></script>
-	
-	<!--<script src="./js/vendor/jquery-1.8.1.min.js"></script>
-	<script src="./js/vendor/bootstrap.js"></script>
-	<script src="./js/vendor/underscore-min.js"></script>
-	<script src="./js/vendor/jquery.hotkeys.js"></script>
-	<script src="./js/vendor/spin.min.js"></script>
-  	
-  	
-  	<script src="./js/lightgl.js"></script>
-  	<script src="./js/csg.js"></script>
-  	
-  	<script src="./js/vendor/gh3.js"></script>
-  	<script src="./js/vendor/coffee-script.js"></script>
-  	<script src="./js/vendor/codemirror.js"></script>
-  	<script src="./js/vendor/foldcode.js"></script>
-  	<script src="./codeMirror/mode/coffeescript/coffeescript.js"></script>
-  	
-  	<script src="./js/openjscad.js"></script>
-  	<script src="./js/opencoffeescad.js"></script>
-  	<script src="./js/viewer.js"></script>
-  	<script src="./js/DataStore.js"></script>
-  	
-  	<script src="./js/main.js"></script>-->
-  	
 	<link rel="stylesheet" href="assets/css/bootstrap.css">
 	<link rel="stylesheet" href="assets/css/font-awesome.css">
 	<link rel="stylesheet" href="assets/css/codemirror.css">
@@ -38,109 +14,14 @@
 	<div class="container-fluid">
 		<div class="row-fluid">
 			<div class="span12">
-				<div class="navbar  active">
-					<a class="brand"> OpenCoffeeSCad</a>
-				    <div class="btn-toolbar well"  style="height: 25px; padding-top: 0px">
-				    	<div class="btn-group">
-				    		<a class="btn btn-small dropdown-toggle" data-toggle="dropdown" href="#" rel="tooltip" title="File"><i class="icon-file icon-large"></i>
-				    			<span class="caret"></span>
-				    		</a>
-				    		<ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
-				    			<li id ="newFileBtn" class="dropdown-submenu"><a tabindex="-1" href="#"><i class="icon-file"></i>New</a></li>
-				    			<li id ="saveFileBtn"><a tabindex="-1" href="#"><i class="icon-save"></i>Save</a></li>
-				    			<li id ="saveToBtn" class="dropdown-submenu">
-				    				<a tabindex="-1" href="#"><i class="icon-save"></i>Save To</a>
-				    				<ul class="dropdown-menu">
-                    					<li><a href="#" class="btn disabled"><i class="icon-hdd"></i> Local file (download) </a></li>
-                    					<li><a href="#" class="btn disabled"><i class="icon-github"></i> Gist (versionned) </a></li>
-				    				</ul>
-				    			</li>
-				    			<li id ="loadFileBtn"><a tabindex="-1" href="#"><i class="icon-file"></i>Load</a></li>
-				    			<li class="divider"></li>
-				    			<li id ="importBtn" class="dropdown-submenu">
-				    				<a tabindex="-1" href="#"><i class="icon-download-alt"></i>Import</a>
-				    				<ul class="dropdown-menu">
-                    					<li><a href="#" class="btn disabled"><i class="icon-download disabled"></i> Openscad</a></li>
-				    				</ul>
-				    			</li>
-				    			<li id ="exportBtn" class="dropdown-submenu">
-				    				<a tabindex="-1" href="#"><i class="icon-upload-alt"></i>Export</a>
-				    				<ul class="dropdown-menu">
-                    					<li><a href="#" class="btn disabled"><i class="icon-download disabled"></i> Stl</a></li>
-                    					<li><a href="#" class="btn disabled"><i class="icon-download-alt disabled"></i> Dxf</a></li>
-				    				</ul>
-				    			</li>
-		                        <li class="divider"></li>
-		                        <ul id="recentFilesList"></ul>
-		                        <li class="divider"></li>
-		                        <li><a tabindex="-1" href="#"><i class="icon-bullhorn"></i>About</a></li> 
-				    		</ul>
-				    	</div>
-				    	<div class="btn-group">
-				    		<a class="btn btn-small dropdown-toggle" data-toggle="dropdown" href="#" rel="tooltip" title="Project"><i class="icon-beaker icon-large"></i>
-				    			<span class="caret"></span>
-				    			<ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
-				    			
-				    			</ul>
-				    		</a>
-				    	</div>		
-				    	<div class="btn-group">	
-				    		<a id="undoBtn" class="btn btn-small disabled" href="#" rel="tooltip" title="Undo (CTRL+Z)"><i class="icon-undo icon-large"></i></a>
-					  		<a id="redoBtn" class="btn btn-small disabled" href="#" rel="tooltip" title="Redo (CTRL+Y)"><i class="icon-repeat icon-large"></i></a>
-				    	</div>
-					    <div class="btn-group">
-						    <a id="updateBtn" class="btn btn-small disabled" href="#" rel="tooltip" title="Update view" ><i class="icon-refresh icon-large"></i></a>
-						  	<a id="generateBtn"class="btn btn-small disabled" href="#" rel="tooltip" title="Generate STL"><i class="icon-magic icon-large"></i></a>
-						  	<a id="abortBtn" class="btn hide" href="#" rel="tooltip" title="Abort"><i class="icon-remove icon-large"></i></a>
-
-						</div>
-						<div class="btn-group">
-					    <a id="settingsBtn" class="btn btn-small" href="#" rel="tooltip" title="Settings"><i class="icon-cogs icon-large"></i></a>
-						<a class="btn btn-small" href="#" rel="tooltip" title="Fork me on GitHub!"><i class="icon-github icon-large"></i></a>
-						</div>
-					</div>
+				<div id="navigation">
 				</div>
-				<div class="row-fluid">
-					<div id="editor" class="span6" >
-						<!--<ul class="nav nav-tabs">
-						  <li ><a href="#file1" data-toggle="tab">file1</a></li>
-						  <li class="active"><a href="#file2" data-toggle="tab">file2*</a></li>
-						  <li><a href="#file3" data-toggle="tab">file3</a></li>
-						  <li><a href="#file4" data-toggle="tab">file4</a></li>
-						</ul>-->
-						<!-- <div class="navbar-inner" style="height: 15px; padding-top: 0px">-->
-						<textarea id="codeArea" class="field span12" rows="6" >		
-class CubeClass
-  width:20
-  length:20
-  height:20
-  constructor: (@pos=[0,0,0], @rot=[0,0,0]) ->
-    return @render()
-  
-  render: =>
-    result = new CSG()
-    cube1 =CSG.cube({center: [0, 0, @height/2],radius: [@width/2, @length/2, @height/2]})
-    result = cube1
-    return result.translate(@pos).rotateX(@rot[0]).rotateY(@rot[1]).rotateZ(@rot[2]) 
-
-cubeStuff = new CubeClass()
-return cubeStuff
-						</textarea>
-
-					</div>
-					<div id="viewer" class="span6"></div>
+				<div id="mainContent" class="row-fluid" >
+					<!--<div id="editor2" class="span6" >
+					<div id="viewer" class="span6"></div>-->
 				</div>	
-				<div id="spacer" style="height: 20px"></div>
-				<div id="statusBar" class="well"></div>
-				
-				
-				<div id="fileTabs" class="tab-content">
-				  <div class="tab-pane" id="file1">...</div>
-				  <div class="tab-pane active" id="file2">...</div>
-				  <div class="tab-pane" id="file3">...</div>
-				  <div class="tab-pane" id="file4">...</div>
-				</div>
-				
+				<div id="spacer" style="height: 10px"></div>
+				<!--<div id="statusBar" class="well"></div>-->
 			</div>
 		</div>
 	</div>
@@ -193,7 +74,12 @@ return cubeStuff
 	      <button id="realLoadBtn" class="btn btn-primary">Load</button>
 	    </div>
   	</div>
-  	
+  	<div>
+    <script id="testcodeViewTmpl" type="text/x-underscore-template">
+       <span>Name</span> <span><%= name %></span>
+       <span>Ext</span> <span><%= ext %></span>
+    </script>
+	</div>
   
 	
 </body>

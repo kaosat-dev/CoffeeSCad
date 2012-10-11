@@ -7,7 +7,7 @@ define (require)->
   opencoscad = require 'opencoffeescad'
   
 
-  store = opencoscad.Store()
+  #store = opencoscad.Store()
   projectName= "MyProject"
   codeUpdated = true
   

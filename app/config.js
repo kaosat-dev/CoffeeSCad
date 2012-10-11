@@ -19,6 +19,7 @@
       eventbinder: "../assets/js/libs/backbone.eventbinder.min",
       wreqr: "../assets/js/libs/backbone.wreqr.min",
       jquery_hotkeys: "../assets/js/plugins/jquery.hotkeys",
+      jquery_codemirror: "../assets/js/plugins/jquery.codemirror",
       foldcode: "../assets/js/plugins/foldcode",
       coffee_synhigh: "../assets/js/libs/codeMirror/mode/coffeescript/coffeescript"
     },
@@ -50,6 +51,9 @@
       },
       coffee_synhigh: {
         deps: ["CodeMirror"]
+      },
+      jquery_codemirror: {
+        deps: ["CodeMirror", "jquery"]
       }
     }
   });

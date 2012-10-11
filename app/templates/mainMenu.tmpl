@@ -1,0 +1,64 @@
+<script id="mainMenuTmpl" type="text/x-underscore-template">
+	<div id="bla" class="navbar  active">
+					<a class="brand"> OpenCoffeeSCad</a>
+				    <div class="btn-toolbar well"  style="height: 25px; padding-top: 0px">
+				    	<div class="btn-group">
+				    		<a class="btn btn-small dropdown-toggle" data-toggle="dropdown" href="#" rel="tooltip" title="File"><i class="icon-file icon-large"></i>
+				    			<span class="caret"></span>
+				    		</a>
+				    		<ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+				    			<li id ="newFileBtn" class="dropdown-submenu"><a tabindex="-1" href="#"><i class="icon-file"></i>New</a></li>
+				    			<li id ="saveFileBtn"><a tabindex="-1" href="#"><i class="icon-save"></i>Save</a></li>
+				    			<li id ="saveToBtn" class="dropdown-submenu">
+				    				<a tabindex="-1" href="#"><i class="icon-save"></i>Save To</a>
+				    				<ul class="dropdown-menu">
+                    					<li><a href="#" class="btn disabled"><i class="icon-hdd"></i> Local file (download) </a></li>
+                    					<li><a href="#" class="btn disabled"><i class="icon-github"></i> Gist (versionned) </a></li>
+				    				</ul>
+				    			</li>
+				    			<li id ="loadFileBtn"><a tabindex="-1" href="#"><i class="icon-file"></i>Load</a></li>
+				    			<li class="divider"></li>
+				    			<li id ="importBtn" class="dropdown-submenu">
+				    				<a tabindex="-1" href="#"><i class="icon-download-alt"></i>Import</a>
+				    				<ul class="dropdown-menu">
+                    					<li><a href="#" class="btn disabled"><i class="icon-download disabled"></i> Openscad</a></li>
+				    				</ul>
+				    			</li>
+				    			<li id ="exportBtn" class="dropdown-submenu">
+				    				<a tabindex="-1" href="#"><i class="icon-upload-alt"></i>Export</a>
+				    				<ul class="dropdown-menu">
+                    					<li><a href="#" class="btn disabled"><i class="icon-download disabled"></i> Stl</a></li>
+                    					<li><a href="#" class="btn disabled"><i class="icon-download-alt disabled"></i> Dxf</a></li>
+				    				</ul>
+				    			</li>
+		                        <li class="divider"></li>
+		                        <ul id="recentFilesList"></ul>
+		                        <li class="divider"></li>
+		                        <li><a tabindex="-1" href="#"><i class="icon-bullhorn"></i>About</a></li> 
+				    		</ul>
+				    	</div>
+				    	<div class="btn-group">
+				    		<a class="btn btn-small dropdown-toggle" data-toggle="dropdown" href="#" rel="tooltip" title="Project"><i class="icon-beaker icon-large"></i>
+				    			<span class="caret"></span>
+				    			<ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+				    			
+				    			</ul>
+				    		</a>
+				    	</div>		
+				    	<div class="btn-group">	
+				    		<a id="undoBtn" class="btn btn-small disabled" href="#" rel="tooltip" title="Undo (CTRL+Z)"><i class="icon-undo icon-large"></i></a>
+					  		<a id="redoBtn" class="btn btn-small disabled" href="#" rel="tooltip" title="Redo (CTRL+Y)"><i class="icon-repeat icon-large"></i></a>
+				    	</div>
+					    <div class="btn-group">
+						    <a id="updateBtn" class="btn btn-small disabled" href="#" rel="tooltip" title="Update view" ><i class="icon-refresh icon-large"></i></a>
+						  	<a id="generateBtn"class="btn btn-small disabled" href="#" rel="tooltip" title="Generate STL"><i class="icon-magic icon-large"></i></a>
+						  	<a id="abortBtn" class="btn hide" href="#" rel="tooltip" title="Abort"><i class="icon-remove icon-large"></i></a>
+
+						</div>
+						<div class="btn-group">
+					    <a id="settingsBtn" class="btn btn-small" href="#" rel="tooltip" title="Settings"><i class="icon-cogs icon-large"></i></a>
+						<a class="btn btn-small" href="#" rel="tooltip" title="Fork me on GitHub!"><i class="icon-github icon-large"></i></a>
+						</div>
+					</div>
+				</div>
+</script>

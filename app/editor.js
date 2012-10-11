@@ -2,7 +2,7 @@
 (function() {
 
   define(function(require) {
-    var $, CodeMirror, Editor, checkCodeEditorContent, codeUpdated, get_recentProjects, loadProject, newProject, opencoscad, projectName, saveProject, store, updateSolid, _,
+    var $, CodeMirror, Editor, checkCodeEditorContent, codeUpdated, get_recentProjects, loadProject, newProject, opencoscad, projectName, saveProject, updateSolid, _,
       _this = this;
     $ = require('jquery');
     _ = require('underscore');
@@ -10,7 +10,6 @@
     require('foldcode');
     require('coffee_synhigh');
     opencoscad = require('opencoffeescad');
-    store = opencoscad.Store();
     projectName = "MyProject";
     codeUpdated = true;
     updateSolid = function() {
