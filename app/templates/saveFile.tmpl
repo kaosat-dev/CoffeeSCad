@@ -1,0 +1,14 @@
+<script id="saveFileTmpl" type="text/x-underscore-template">
+	<div class="modal-header">
+      <h3 id="myModalLabel">Save File As</h3>
+    </div>
+    <div class="modal-body">
+    	Save as 
+     <input type="text" name="some_name" value="MyProject" id="projectFileName"/><br>
+     The current code will be saved in the browser using local storage
+    </div>
+    <div class="modal-footer">
+	      <button class="btn" data-dismiss="modal">Close</button>
+	      <button id="realSaveBtn" class="btn btn-primary saveFile">Save</button>
+	</div>
+</script>

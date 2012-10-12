@@ -21,67 +21,13 @@
 					<div id="viewer" class="span6"></div>-->
 				</div>	
 				<div id="spacer" style="height: 10px"></div>
-				<!--<div id="statusBar" class="well"></div>-->
+				<div id="statusBar" class="well"></div>
 			</div>
 		</div>
 	</div>
 	
-	<div id="fileSaveModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-	    <div class="modal-header">
-	      <h3 id="myModalLabel">Save File As</h3>
-	    </div>
-	    <div class="modal-body">
-	    	Save as 
-	     <input type="text" name="some_name" value="MyProject" id="projectFileName"/><br>
-	     The current code will be saved in the browser using local storage
-	    </div>
-	    <div class="modal-footer">
-	      <button class="btn" data-dismiss="modal">Close</button>
-	      <button id="realSaveBtn" class="btn btn-primary">Save</button>
-	    </div>
-  	</div>
-  	
-  	<div id="fileLoadModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-	    <div class="modal-header">
-	      <h3 id="myModalLabel">Load File</h3>
-	    </div>
-	    Files:
-	    <div class="modal-body">
-	    	<ul id="fileLoadModalFileList"></ul>
-	     <input type="text" name="some_name" value="MyProject" id="loadProjectFileName"/><br>
-	    </div>
-	    <div class="modal-footer">
-	      <button class="btn" data-dismiss="modal">Close</button>
-	      <button id="realLoadBtn" class="btn btn-primary">Load</button>
-	    </div>
-  	</div>
-  	
-  	<div id="settingsModal" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-	    <div class="modal-header">
-	      <h3 id="myModalLabel">Settings</h3>
-	    </div>
-	    <div class="modal-body">
-	    	<h4>GitHub Gist integration</h4>
-	    		<button id="gitHubLogin" class="btn btn-primary">Login</button>
-	    		
-	    	
-			<h4>Code editor</h4>
-				Start line : TODO
-				Theme : TODO
-	    </div>
-	    <div class="modal-footer">
-	      <button class="btn" data-dismiss="modal">Close</button>
-	      <button id="realLoadBtn" class="btn btn-primary">Load</button>
-	    </div>
-  	</div>
-  	<div>
-    <script id="testcodeViewTmpl" type="text/x-underscore-template">
-       <span>Name</span> <span><%= name %></span>
-       <span>Ext</span> <span><%= ext %></span>
-    </script>
+	<div id="modal" class="modal hide fade">	
 	</div>
-  
-	
 </body>
 
 </html>

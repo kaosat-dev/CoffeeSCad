@@ -5,47 +5,14 @@
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   define(function(require) {
-    var $, CodeEditorView, CodeMirror, CodeView, codeEdit_template, marionette, test_template, _;
+    var $, CodeEditorView, CodeMirror, codeEdit_template, marionette, _;
     $ = require('jquery');
     _ = require('underscore');
     marionette = require('marionette');
     CodeMirror = require('CodeMirror');
     require('foldcode');
     require('coffee_synhigh');
-    test_template = require("text!templates/codeview.tmpl");
     codeEdit_template = require("text!templates/codeedit.tmpl");
-    CodeView = (function(_super) {
-
-      __extends(CodeView, _super);
-
-      function CodeView() {
-        this.onRender = __bind(this.onRender, this);
-
-        this.onBeforeRender = __bind(this.onBeforeRender, this);
-        return CodeView.__super__.constructor.apply(this, arguments);
-      }
-
-      CodeView.prototype.template = test_template;
-
-      CodeView.prototype.initialize = function() {
-        /*
-              @bind @model, ()=>
-                name = @get "name"
-        */
-
-      };
-
-      CodeView.prototype.onBeforeRender = function() {
-        return console.log("pouet");
-      };
-
-      CodeView.prototype.onRender = function() {
-        return console.log("tjtj");
-      };
-
-      return CodeView;
-
-    })(marionette.ItemView);
     CodeEditorView = (function(_super) {
 
       __extends(CodeEditorView, _super);
@@ -65,7 +32,15 @@
 
       function CodeEditorView(options) {
         this.onRender = __bind(this.onRender, this);
+
+        this.redo = __bind(this.redo, this);
+
+        this.undo = __bind(this.undo, this);
+
+        this.updateUndoRedo = __bind(this.updateUndoRedo, this);
         CodeEditorView.__super__.constructor.call(this, options);
+        this.editor = null;
+        this.app = require('app');
       }
 
       CodeEditorView.prototype.modelChanged = function(model, value) {
@@ -73,24 +48,34 @@
       };
 
       CodeEditorView.prototype.updateUndoRedo = function() {
-        var redoes, undoes;
-        redoes = this.editor.historySize().redo;
+        var redos, undos;
+        redos = this.editor.historySize().redo;
+        undos = this.editor.historySize().undo;
+        if (redos > 0) {
+          this.app.vent.trigger("redoAvailable", this);
+        } else {
+          this.app.vent.trigger("redoUnAvailable", this);
+        }
+        if (undos > 0) {
+          return this.app.vent.trigger("undoAvailable", this);
+        } else {
+          return this.app.vent.trigger("undoUnAvailable", this);
+        }
+      };
+
+      CodeEditorView.prototype.undo = function() {
+        var undoes;
         undoes = this.editor.historySize().undo;
-        if (redoes > 0) {
-          console.log("redoes");
-        }
         if (undoes > 0) {
-          console.log("undoes");
+          return this.editor.undo();
         }
+      };
+
+      CodeEditorView.prototype.redo = function() {
+        var redoes;
+        redoes = this.editor.historySize().redo;
         if (redoes > 0) {
-          $('#redoBtn').removeClass("disabled");
-        } else {
-          $('#redoBtn').addClass("disabled");
-        }
-        if (undoes > 0) {
-          return $('#undoBtn').removeClass("disabled");
-        } else {
-          return $('#undoBtn').addClass("disabled");
+          return this.editor.redo();
         }
       };
 
@@ -103,14 +88,14 @@
           matchBrackets: true,
           firstLineNumber: 1,
           onChange: function(arg, arg2) {
-            _this.triggerMethod("foo:bar");
             _this.model.set("content", _this.editor.getValue());
-            console.log(_this.model);
             return _this.updateUndoRedo();
           }
         });
         setTimeout(this.editor.refresh, 0);
-        return this.ui.editor.removeClass("hide");
+        this.ui.editor.removeClass("hide");
+        this.app.vent.bind("undoRequest", this.undo);
+        return this.app.vent.bind("redoRequest", this.redo);
       };
 
       return CodeEditorView;

@@ -5,21 +5,7 @@ define (require)->
   CodeMirror = require 'CodeMirror'
   require 'foldcode'
   require 'coffee_synhigh'
-  test_template = require "text!templates/codeview.tmpl"
   codeEdit_template = require "text!templates/codeedit.tmpl"
-  
-  class CodeView extends marionette.ItemView
-    template: test_template
-    
-    initialize:()->
-      ###
-      @bind @model, ()=>
-        name = @get "name"
-      ###
-    onBeforeRender:() =>
-      console.log "pouet"
-    onRender: =>
-      console.log "tjtj"
   
       
   class CodeEditorView extends marionette.ItemView
@@ -34,26 +20,35 @@ define (require)->
 
     constructor:(options)->
       super options
+      @editor = null
+      @app = require 'app'
+     
       
     modelChanged: (model, value)->
       console.log "model changed"
       
-    updateUndoRedo: () ->
-      redoes = @editor.historySize().redo
+    #this could also be solved by letting the event listeners access the list of available undos & redos ?
+    updateUndoRedo: () =>
+      redos = @editor.historySize().redo
+      undos = @editor.historySize().undo
+      if redos >0
+        @app.vent.trigger("redoAvailable", @)
+      else
+        @app.vent.trigger("redoUnAvailable", @)
+      if undos >0
+        @app.vent.trigger("undoAvailable", @)
+      else
+        @app.vent.trigger("undoUnAvailable", @)
+        
+    undo:=>
       undoes = @editor.historySize().undo
+      if undoes > 0
+        @editor.undo()
+        
+    redo:=>
+      redoes = @editor.historySize().redo
       if redoes >0
-        console.log "redoes"
-      if undoes >0
-        console.log "undoes"
-      #TODO: remove this yucky piece of code
-      if (redoes >0)
-        $('#redoBtn').removeClass("disabled")
-      else
-        $('#redoBtn').addClass("disabled")
-      if (undoes >0)
-        $('#undoBtn').removeClass("disabled")
-      else
-        $('#undoBtn').addClass("disabled")
+        @editor.redo()
      
     onRender: =>
       #if not @editor?
@@ -65,15 +60,16 @@ define (require)->
         matchBrackets:true
         firstLineNumber:1
         onChange:(arg, arg2)  =>   
-          @triggerMethod("foo:bar")
           @model.set "content", @editor.getValue()
-          #console.log("code changed"+arg,arg2)
-          console.log(@model)
           @updateUndoRedo()
       #else
       #  console.log "Editor already instanciated"
-
+      
       setTimeout @editor.refresh, 0 
       @ui.editor.removeClass("hide") 
+      
+      #TODO : find  a way to put this in the init/constructor
+      @app.vent.bind("undoRequest", @undo)
+      @app.vent.bind("redoRequest", @redo)
       
   return CodeEditorView

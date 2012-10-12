@@ -32,6 +32,7 @@ define (require)->
   app.start()
   #app.vent.trigger "tutu"
 
+  ###
   $(document).on "click", "a[href]:not([data-bypass])", (evt)->
     href = 
       prop: $(this).prop("href")
@@ -42,4 +43,4 @@ define (require)->
       evt.preventDefault()
       Backbone.history.navigate(href.attr, true)
       return
-  
+  ###

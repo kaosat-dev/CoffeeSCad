@@ -6,18 +6,18 @@
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   define(function(require) {
-    var ThreeDView, csg, lightgl, marionette, threedView_template;
+    var GlBaseView, csg, lightgl, marionette, threedView_template;
     lightgl = require('lightgl');
     csg = require('csg');
     marionette = require('marionette');
     threedView_template = require("text!templates/3dview.tmpl");
-    ThreeDView = (function(_super) {
+    GlBaseView = (function(_super) {
 
-      __extends(ThreeDView, _super);
+      __extends(GlBaseView, _super);
 
-      ThreeDView.prototype.template = threedView_template;
+      GlBaseView.prototype.template = threedView_template;
 
-      function ThreeDView(containerelement, width, height, initialdepth) {
+      function GlBaseView(containerelement, width, height, initialdepth) {
         var gl, msg,
           _this = this;
         this.containerelement = containerelement;
@@ -27,7 +27,7 @@
 
         this.setCsg = __bind(this.setCsg, this);
 
-        ThreeDView.__super__.constructor.call(this, options);
+        GlBaseView.__super__.constructor.call(this, options);
         console.log("in viewer init: container element");
         console.log(this.containerelement);
         this.width = width != null ? width : 800;
@@ -69,21 +69,21 @@
         this.clear();
       }
 
-      ThreeDView.prototype.setCsg = function(csg) {
+      GlBaseView.prototype.setCsg = function(csg) {
         this.mesh = this.csgToMesh(csg);
         this.onDraw();
       };
 
-      ThreeDView.prototype.clear = function() {
+      GlBaseView.prototype.clear = function() {
         this.mesh = new GL.Mesh();
         this.onDraw();
       };
 
-      ThreeDView.prototype.supported = function() {
+      GlBaseView.prototype.supported = function() {
         return !!this.gl;
       };
 
-      ThreeDView.prototype.onMouseMove = function(e) {
+      GlBaseView.prototype.onMouseMove = function(e) {
         var factor;
         if (e.dragging) {
           e.preventDefault();
@@ -103,7 +103,7 @@
         }
       };
 
-      ThreeDView.prototype.onDraw = function(e) {
+      GlBaseView.prototype.onDraw = function(e) {
         var gl;
         gl = this.gl;
         gl.makeCurrent();
@@ -132,7 +132,7 @@
         }
       };
 
-      ThreeDView.prototype.csgToMesh = function(csg) {
+      GlBaseView.prototype.csgToMesh = function(csg) {
         var color, colors, i, indices, mesh, numpolygons, polygon, polygonindex, polygons, smoothlighting, triangles, vertexTag2Index, vertices, _i, _j, _ref;
         csg = csg.canonicalized();
         mesh = new GL.Mesh({
@@ -183,10 +183,10 @@
         return mesh;
       };
 
-      return ThreeDView;
+      return GlBaseView;
 
     })(marionette.ItemView);
-    return Viewer;
+    return GlBaseView;
   });
 
 }).call(this);

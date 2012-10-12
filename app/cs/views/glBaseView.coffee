@@ -4,7 +4,8 @@ define (require) ->
   marionette = require 'marionette'
   threedView_template = require "text!templates/3dview.tmpl"
   
-  class ThreeDView extends marionette.ItemView
+  
+  class GlBaseView extends marionette.ItemView
     template: threedView_template
     
     #A viewer is a WebGL canvas that lets the user view a mesh. The user can
@@ -186,4 +187,5 @@ define (require) ->
       mesh.computeWireframe()
       mesh.computeNormals()
       return mesh
-  return Viewer
+      
+  return GlBaseView

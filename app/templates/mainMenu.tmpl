@@ -33,6 +33,7 @@
 				    			</li>
 		                        <li class="divider"></li>
 		                        <ul id="recentFilesList"></ul>
+		                       
 		                        <li class="divider"></li>
 		                        <li><a tabindex="-1" href="#"><i class="icon-bullhorn"></i>About</a></li> 
 				    		</ul>
@@ -40,14 +41,14 @@
 				    	<div class="btn-group">
 				    		<a class="btn btn-small dropdown-toggle" data-toggle="dropdown" href="#" rel="tooltip" title="Project"><i class="icon-beaker icon-large"></i>
 				    			<span class="caret"></span>
-				    			<ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
-				    			
-				    			</ul>
 				    		</a>
+				    		<ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+				    			<li id ="newFileBtn" class="newProject"><a tabindex="-1" href="#"><i class="icon-file"></i>New</a></li>			
+				    		</ul>
 				    	</div>		
 				    	<div class="btn-group">	
-				    		<a id="undoBtn" class="btn btn-small disabled" href="#" rel="tooltip" title="Undo (CTRL+Z)"><i class="icon-undo icon-large"></i></a>
-					  		<a id="redoBtn" class="btn btn-small disabled" href="#" rel="tooltip" title="Redo (CTRL+Y)"><i class="icon-repeat icon-large"></i></a>
+				    		<a id="undoBtn" class="btn btn-small disabled undo" href="#" rel="tooltip" title="Undo (CTRL+Z)"><i class="icon-undo icon-large"></i></a>
+					  		<a id="redoBtn" class="btn btn-small disabled redo" href="#" rel="tooltip" title="Redo (CTRL+Y)"><i class="icon-repeat icon-large"></i></a>
 				    	</div>
 					    <div class="btn-group">
 						    <a id="updateBtn" class="btn btn-small disabled" href="#" rel="tooltip" title="Update view" ><i class="icon-refresh icon-large"></i></a>
@@ -56,7 +57,7 @@
 
 						</div>
 						<div class="btn-group">
-					    <a id="settingsBtn" class="btn btn-small" href="#" rel="tooltip" title="Settings"><i class="icon-cogs icon-large"></i></a>
+					    <a id="settingsBtn" class="btn btn-small settings" href="#" rel="tooltip" title="Settings"><i class="icon-cogs icon-large"></i></a>
 						<a class="btn btn-small" href="#" rel="tooltip" title="Fork me on GitHub!"><i class="icon-github icon-large"></i></a>
 						</div>
 					</div>

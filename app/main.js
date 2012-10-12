@@ -19,19 +19,20 @@
       pushState: true,
       root: app.root
     });
-    app.start();
-    return $(document).on("click", "a[href]:not([data-bypass])", function(evt) {
-      var href, root;
-      href = {
-        prop: $(this).prop("href"),
-        attr: $(this).attr("href")
-      };
-      root = location.protocol + "//" + location.host + app.root;
-      if (href.prop.slice(0, root.length) === root) {
-        evt.preventDefault();
-        Backbone.history.navigate(href.attr, true);
-      }
-    });
+    return app.start();
+    /*
+      $(document).on "click", "a[href]:not([data-bypass])", (evt)->
+        href = 
+          prop: $(this).prop("href")
+          attr: $(this).attr("href")
+        root = location.protocol + "//" + location.host + app.root
+    
+        if href.prop.slice(0, root.length) == root
+          evt.preventDefault()
+          Backbone.history.navigate(href.attr, true)
+          return
+    */
+
   });
 
 }).call(this);
