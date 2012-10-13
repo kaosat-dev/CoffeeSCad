@@ -12,7 +12,6 @@ define (require)->
     template: codeEdit_template
     ui:
       codeBlock : "#codeArea2"
-      editor:     "#editor"
       
     templateHelpers:
       showMessage: ->
@@ -66,7 +65,6 @@ define (require)->
       #  console.log "Editor already instanciated"
       
       setTimeout @editor.refresh, 0 
-      @ui.editor.removeClass("hide") 
       
       #TODO : find  a way to put this in the init/constructor
       @app.vent.bind("undoRequest", @undo)

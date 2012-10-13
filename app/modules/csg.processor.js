@@ -4,11 +4,11 @@
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   define(function(require) {
-    var CoffeeScript, Processor;
+    var CoffeeScript, CsgProcessor;
     CoffeeScript = require('CoffeeScript');
-    Processor = (function() {
+    CsgProcessor = (function() {
 
-      function Processor(debug, currentObject, statusdiv, viewer) {
+      function CsgProcessor(debug, currentObject, statusdiv, viewer) {
         this.currentObject = currentObject;
         this.statusdiv = statusdiv;
         this.viewer = viewer;
@@ -21,13 +21,13 @@
         console.log("debug " + this.debug + ",@statusdiv : " + this.statusdiv + ", @viewer: " + this.viewer);
       }
 
-      Processor.prototype.abort = function() {};
+      CsgProcessor.prototype.abort = function() {};
 
-      Processor.prototype.setError = function(errorMsg) {
+      CsgProcessor.prototype.setError = function(errorMsg) {
         return console.log("ERROR: " + errorMsg);
       };
 
-      Processor.prototype.setCurrentObject = function(obj) {
+      CsgProcessor.prototype.setCurrentObject = function(obj) {
         var csg, ext;
         this.currentObject = obj;
         if (this.viewer) {
@@ -38,7 +38,7 @@
         ext = this.extensionForCurrentObject();
       };
 
-      Processor.prototype.convertToSolid = function(obj) {
+      CsgProcessor.prototype.convertToSolid = function(obj) {
         if ((typeof obj === "object") && (obj instanceof CAG)) {
           obj = obj.extrude({
             offset: [0, 0, 0.1]
@@ -51,7 +51,7 @@
         return obj;
       };
 
-      Processor.prototype.extensionForCurrentObject = function() {
+      CsgProcessor.prototype.extensionForCurrentObject = function() {
         extension;
 
         var extension;
@@ -65,14 +65,14 @@
         return extension;
       };
 
-      Processor.prototype.clearViewer = function() {
+      CsgProcessor.prototype.clearViewer = function() {
         this.clearOutputFile();
         this.setCurrentObject(new CSG());
         this.hasValidCurrentObject = false;
         return this.enableItems();
       };
 
-      Processor.prototype.clearOutputFile = function() {
+      CsgProcessor.prototype.clearOutputFile = function() {
         if (this.hasOutputFile) {
           this.hasOutputFile = false;
           if (this.outputFileDirEntry) {
@@ -90,7 +90,7 @@
         }
       };
 
-      Processor.prototype.enableItems = function() {};
+      CsgProcessor.prototype.enableItems = function() {};
 
       /*
           runMainInWorker: (mainParams) -> 
@@ -114,7 +114,7 @@
       */
 
 
-      Processor.prototype.parseJsCadScriptSync = function(script, mainParameters, debugging) {
+      CsgProcessor.prototype.parseJsCadScriptSync = function(script, mainParameters, debugging) {
         var f, result, workerscript;
         workerscript = "";
         workerscript += script;
@@ -134,7 +134,7 @@
         return result;
       };
 
-      Processor.prototype.parseCoffeesCadScriptSync = function(script, mainParameters, debugging) {
+      CsgProcessor.prototype.parseCoffeesCadScriptSync = function(script, mainParameters, debugging) {
         var f, result, workerscript;
         workerscript = "";
         workerscript += script;
@@ -154,7 +154,7 @@
         return result;
       };
 
-      Processor.prototype.getBlobBuilder = function() {
+      CsgProcessor.prototype.getBlobBuilder = function() {
         bb;
 
         var bb;
@@ -170,7 +170,7 @@
         return bb;
       };
 
-      Processor.prototype.setCoffeeSCad = function(script, filename) {
+      CsgProcessor.prototype.setCoffeeSCad = function(script, filename) {
         var scripthaserrors;
         filename = !filename ? "openjscad.jscad" : void 0;
         filename = filename.replace(/\.jscad$/i, "");
@@ -194,7 +194,7 @@
         }
       };
 
-      Processor.prototype.createParamControls = function() {
+      CsgProcessor.prototype.createParamControls = function() {
         var captions, control, errorprefix, i, label, option, paramControls, paramdef, selectedindex, tablerows, td, tr, type, valueindex, values, _i, _j, _ref, _ref1;
         this.paramControls = [];
         paramControls = [];
@@ -274,7 +274,7 @@
         return this.paramControls = paramControls;
       };
 
-      Processor.prototype.getParamDefinitions = function(script) {
+      CsgProcessor.prototype.getParamDefinitions = function(script) {
         var f, params, script1, scriptisvalid;
         scriptisvalid = true;
         try {
@@ -296,7 +296,7 @@
         return params;
       };
 
-      Processor.prototype.getParamValues = function() {
+      CsgProcessor.prototype.getParamValues = function() {
         var control, i, isnumber, paramValues, paramdef, type, value, _i, _ref;
         if (this.debug) {
           console.log("Getting param values");
@@ -335,7 +335,7 @@
         return paramValues;
       };
 
-      Processor.prototype.rebuildSolid = function() {
+      CsgProcessor.prototype.rebuildSolid = function() {
         var errtxt, obj, paramValues, useSync;
         if (this.debug) {
           this.processing = true;
@@ -374,7 +374,7 @@
         }
       };
 
-      Processor.prototype.preprocessCode = function(code) {
+      CsgProcessor.prototype.preprocessCode = function(code) {
         /*   
         function getMethods(obj)
         {
@@ -402,7 +402,7 @@
 
       };
 
-      Processor.prototype.compileFormatCoffee = function(source) {
+      CsgProcessor.prototype.compileFormatCoffee = function(source) {
         /*var extraLibTest2= "fromPoints = "+CAG.fromPoints+ "\n";
         extraLibTest2 += "cube = "+CSG.cube + "\n";
         */
@@ -436,10 +436,10 @@
         return formated;
       };
 
-      return Processor;
+      return CsgProcessor;
 
     })();
-    return Processor;
+    return CsgProcessor;
   });
 
 }).call(this);

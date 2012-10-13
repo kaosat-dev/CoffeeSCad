@@ -8,7 +8,7 @@ define (require) ->
   #   1-3 rebuildSolid
   #     useSynch= debug 
    
-  class Processor 
+  class CsgProcessor 
     constructor: (debug, @currentObject, @statusdiv, @viewer)->
       console.log "in processor init"
       @debug = if debug? then debug else true 
@@ -401,4 +401,4 @@ define (require) ->
         console.log("Formated scad #{formated}")
       return formated
       
-  return Processor
+  return CsgProcessor

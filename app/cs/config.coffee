@@ -15,18 +15,18 @@ require.config
     CodeMirror:       "../assets/js/libs/codemirror"
     csg:              "../assets/js/libs/csg"
     lightgl:          "../assets/js/libs/lightgl"
-    coffee_synhigh:   "../assets/js/libs/codeMirror/mode/coffeescript/coffeescript"
+    three:            "../assets/js/libs/three.min"
     
     #plugins
     jquery_hotkeys:   "../assets/js/plugins/jquery.hotkeys"
     jquery_codemirror:"../assets/js/plugins/jquery.codemirror"
     foldcode:         "../assets/js/plugins/foldcode"
+    coffee_synhigh:   "../assets/js/libs/codeMirror/mode/coffeescript/coffeescript"
     marionette:       "../assets/js/plugins/backbone.marionette.min"
     eventbinder:      "../assets/js/plugins/backbone.eventbinder.min"
     wreqr:            "../assets/js/plugins/backbone.wreqr.min"
     localstorage:     "../assets/js/plugins/backbone.localstorage.min"
     
-
 
   shim:
     underscore:
@@ -54,6 +54,8 @@ require.config
       deps:    ["CodeMirror"]
     jquery_codemirror:
       deps:    ["CodeMirror","jquery"]
+    three: 
+      exports : "THREE"
       
 ###
 require ["CoffeeScript"], (CoffeeScript)->

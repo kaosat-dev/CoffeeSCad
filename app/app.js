@@ -2,7 +2,7 @@
 (function() {
 
   define(function(require) {
-    var $, CodeEditorView, Library, LoadView, MainMenuView, ModalRegion, Project, ProjectFile, ProjectView, SaveView, Settings, SettingsView, app, bla, marionette, modTest, testcode, _;
+    var $, CodeEditorView, CsgProcessor, GlThreeView, Library, LoadView, MainContentLayout, MainMenuView, ModalRegion, Project, ProjectFile, ProjectView, SaveView, Settings, SettingsView, app, bla, marionette, modTest, testcode, _;
     $ = require('jquery');
     _ = require('underscore');
     marionette = require('marionette');
@@ -20,6 +20,9 @@
     LoadView = modTest[2];
     SettingsView = modTest[3];
     Settings = require("modules/settings");
+    CsgProcessor = require("modules/csg.processor");
+    MainContentLayout = require("views/mainContentView");
+    GlThreeView = require("views/glThreeView");
     testcode = "class CubeClass\n  width:20\n  length:20\n  height:20\n  constructor: (@pos=[0,0,0], @rot=[0,0,0]) ->\n    return @render()\n  \n  render: =>\n    result = new CSG()\n    cube1 =CSG.cube({center: [0, 0, @height/2],radius: [@width/2, @length/2, @height/2]})\n    result = cube1\n    return result.translate(@pos).rotateX(@rot[0]).rotateY(@rot[1]).rotateZ(@rot[2]) \n\ncubeStuff = new CubeClass()\nreturn cubeStuff";
     app = new marionette.Application({
       root: "/opencoffeescad",
@@ -44,6 +47,7 @@
       var displayTheThing, displayTheThing2,
         _this = this;
       app.settings = new Settings;
+      app.csgProcessor = new CsgProcessor;
       app.lib = new Library;
       app.project = new Project({
         name: "MyProject",
@@ -69,7 +73,11 @@
       app.projectView = new ProjectView({
         collection: this.lib
       });
-      app.mainRegion.show(app.codeEditorView);
+      app.glThreeView = new GlThreeView;
+      app.mainContentLayout = new MainContentLayout;
+      this.mainRegion.show(this.mainContentLayout);
+      this.mainContentLayout.edit.show(this.codeEditorView);
+      this.mainContentLayout.gl.show(this.glThreeView);
       app.navigationRegion.show(app.mainMenuView);
       app.statusRegion.show(app.projectView);
       app.modal.app = app;

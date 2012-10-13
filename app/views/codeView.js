@@ -20,8 +20,7 @@
       CodeEditorView.prototype.template = codeEdit_template;
 
       CodeEditorView.prototype.ui = {
-        codeBlock: "#codeArea2",
-        editor: "#editor"
+        codeBlock: "#codeArea2"
       };
 
       CodeEditorView.prototype.templateHelpers = {
@@ -93,7 +92,6 @@
           }
         });
         setTimeout(this.editor.refresh, 0);
-        this.ui.editor.removeClass("hide");
         this.app.vent.bind("undoRequest", this.undo);
         return this.app.vent.bind("redoRequest", this.redo);
       };

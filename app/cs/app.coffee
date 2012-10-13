@@ -21,6 +21,13 @@ define (require)->
   
   Settings = require "modules/settings"
   
+  CsgProcessor = require "modules/csg.processor"
+  
+  MainContentLayout = require "views/mainContentView"
+  
+  GlThreeView = require "views/glThreeView"
+  
+  ###############################
   
   testcode = 
   """
@@ -65,7 +72,7 @@ return cubeStuff"""
     
   app.addInitializer (options)->
     app.settings = new Settings
-    
+    app.csgProcessor = new CsgProcessor
     app.lib = new Library
     
     app.project = new Project
@@ -94,9 +101,15 @@ return cubeStuff"""
     app.projectView = new ProjectView
       collection:@lib
       
+    app.glThreeView = new GlThreeView
+      
+    app.mainContentLayout = new MainContentLayout
     
+    #app.mainRegion.show app.codeEditorView
+    @mainRegion.show @mainContentLayout
+    @mainContentLayout.edit.show @codeEditorView
+    @mainContentLayout.gl.show @glThreeView
     
-    app.mainRegion.show app.codeEditorView
     app.navigationRegion.show app.mainMenuView
     app.statusRegion.show app.projectView
     
