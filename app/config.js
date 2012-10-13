@@ -23,7 +23,8 @@
       marionette: "../assets/js/plugins/backbone.marionette.min",
       eventbinder: "../assets/js/plugins/backbone.eventbinder.min",
       wreqr: "../assets/js/plugins/backbone.wreqr.min",
-      localstorage: "../assets/js/plugins/backbone.localstorage.min"
+      localstorage: "../assets/js/plugins/backbone.localstorage.min",
+      three_csg: "../assets/js/plugins/ThreeCSG"
     },
     shim: {
       underscore: {
@@ -63,6 +64,10 @@
       },
       three: {
         exports: "THREE"
+      },
+      three_csg: {
+        deps: ["three"],
+        exports: "THREE.CSG"
       }
     }
   });

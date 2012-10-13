@@ -4,8 +4,126 @@
     __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   define(function(require) {
-    var CoffeeScript, CsgProcessor;
+    var CoffeeScript, CsgProcessor, CsgProcessorMin;
     CoffeeScript = require('CoffeeScript');
+    CsgProcessorMin = (function() {
+
+      function CsgProcessorMin() {
+        this.setCurrentObject = __bind(this.setCurrentObject, this);
+
+        this.rebuildSolid = __bind(this.rebuildSolid, this);
+
+      }
+
+      CsgProcessorMin.prototype.construtor = function() {
+        return this.debug = true;
+      };
+
+      CsgProcessorMin.prototype.setCoffeeSCad = function(script, filename) {
+        var scripthaserrors;
+        filename = !filename ? "openjscad.jscad" : void 0;
+        filename = filename.replace(/\.jscad$/i, "");
+        this.paramDefinitions = [];
+        this.paramControls = [];
+        this.script = null;
+        scripthaserrors = false;
+        try {
+
+        } catch (e) {
+          scripthaserrors = true;
+        }
+        if (!scripthaserrors) {
+          this.script = this.compileFormatCoffee(script);
+          this.filename = filename;
+          this.rebuildSolid();
+          return console.log("No errors in script");
+        } else {
+          return console.log("Errors in script");
+        }
+      };
+
+      CsgProcessorMin.prototype.compileFormatCoffee = function(source) {
+        var endsplitter, extraLibTest, formated, lines, textblock;
+        console.log("Compiling & formating coffeescad code");
+        extraLibTest = "var cube = CSG.cube;\n";
+        extraLibTest += "var fromPoints = CAG.fromPoints;\n";
+        textblock = CoffeeScript.compile(source);
+        console.log("-->base compile done");
+        lines = textblock.split('\n');
+        if (this.debug_ing) {
+          console.log("Raw Lines" + (lines.length - 1));
+        }
+        endsplitter = lines.length - 2;
+        lines.splice(endsplitter, 2);
+        lines.splice(0, 1);
+        formated = "function main()";
+        formated += "{";
+        formated += extraLibTest;
+        formated += lines.join('\n');
+        formated += "}\n";
+        if (this.debug_ing) {
+          console.log("Formated scad " + formated);
+        }
+        return formated;
+      };
+
+      CsgProcessorMin.prototype.rebuildSolid = function() {
+        var obj, paramValues;
+        if (this.debug) {
+          console.log("Starting solid rebuild");
+          this.processing = true;
+          paramValues = null;
+          try {
+            obj = this.parseJsCadScriptSync(this.script, paramValues, this.debugging);
+            this.setCurrentObject(obj);
+            return this.processing = false;
+          } catch (e) {
+            return this.processing = false;
+          }
+        }
+      };
+
+      CsgProcessorMin.prototype.setCurrentObject = function(obj) {
+        this.currentObject = obj;
+        this.csg = this.convertToSolid(obj);
+      };
+
+      CsgProcessorMin.prototype.parseJsCadScriptSync = function(script, mainParameters, debugging) {
+        var f, result, workerscript;
+        workerscript = "";
+        workerscript += script;
+        if (this.debuging) {
+          workerscript += "\n\n\n\n\n\n\n/* -------------------------------------------------------------------------\n";
+          workerscript += "OpenJsCad debugging\n\nAssuming you are running Chrome:\nF10 steps over an instruction\nF11 steps into an instruction\n";
+          workerscript += "F8  continues running\nPress the (||) button at the bottom to enable pausing whenever an error occurs\n";
+          workerscript += "Click on a line number to set or clear a breakpoint\n";
+          workerscript += "For more information see: http://code.google.com/chrome/devtools/docs/overview.html\n\n";
+          workerscript += "------------------------------------------------------------------------- */\n";
+          workerscript += "\n\n// Now press F11 twice to enter your main() function:\n\n";
+          workerscript += "debugger;\n";
+        }
+        workerscript += "return main(" + JSON.stringify(mainParameters) + ");";
+        f = new Function(workerscript);
+        result = f();
+        return result;
+      };
+
+      CsgProcessorMin.prototype.convertToSolid = function(obj) {
+        if ((typeof obj === "object") && (obj instanceof CAG)) {
+          obj = obj.extrude({
+            offset: [0, 0, 0.1]
+          });
+        } else if ((typeof obj === "object") && (obj instanceof CSG)) {
+
+        } else {
+          throw new Error("Cannot convert to solid");
+        }
+        return obj;
+      };
+
+      return CsgProcessorMin;
+
+    })();
     CsgProcessor = (function() {
 
       function CsgProcessor(debug, currentObject, statusdiv, viewer) {
@@ -439,7 +557,7 @@
       return CsgProcessor;
 
     })();
-    return CsgProcessor;
+    return CsgProcessorMin;
   });
 
 }).call(this);

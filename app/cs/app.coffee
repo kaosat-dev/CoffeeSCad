@@ -7,11 +7,8 @@ define (require)->
   CodeEditorView = require "views/codeView"
   MainMenuView = require "views/menuView"
   ProjectView = require "views/projectsview"
-  bla = require "modules/project"
-  ProjectFile=bla[0]
-  Project =bla[1]
-  Library =bla[2]
-  
+  {Library,Project,ProjectFile} = require "modules/project"
+
   modTest = require "views/fileSaveLoadView"
   ModalRegion = modTest[0]
   SaveView = modTest[1]
@@ -23,9 +20,9 @@ define (require)->
   
   CsgProcessor = require "modules/csg.processor"
   
-  MainContentLayout = require "views/mainContentView"
+  MainContentLayout = (require "views/mainContentView")
   
-  GlThreeView = require "views/glThreeView"
+  {GlViewSettings,GlThreeView} = require "views/glThreeView"
   
   ###############################
   
@@ -102,6 +99,7 @@ return cubeStuff"""
       collection:@lib
       
     app.glThreeView = new GlThreeView
+      model: @model
       
     app.mainContentLayout = new MainContentLayout
     

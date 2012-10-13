@@ -30,6 +30,10 @@
           startLine: 1,
           theme: "default"
         },
+        viewer: {
+          antialiasing: true,
+          showgrid: true
+        },
         keyBindings: {
           "CTRL+Z": "undo",
           "CTRL+Y": "redo"

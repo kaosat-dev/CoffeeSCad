@@ -2,7 +2,7 @@
 (function() {
 
   define(function(require) {
-    var $, CodeEditorView, CsgProcessor, GlThreeView, Library, LoadView, MainContentLayout, MainMenuView, ModalRegion, Project, ProjectFile, ProjectView, SaveView, Settings, SettingsView, app, bla, marionette, modTest, testcode, _;
+    var $, CodeEditorView, CsgProcessor, GlThreeView, GlViewSettings, Library, LoadView, MainContentLayout, MainMenuView, ModalRegion, Project, ProjectFile, ProjectView, SaveView, Settings, SettingsView, app, marionette, modTest, testcode, _, _ref, _ref1;
     $ = require('jquery');
     _ = require('underscore');
     marionette = require('marionette');
@@ -10,10 +10,7 @@
     CodeEditorView = require("views/codeView");
     MainMenuView = require("views/menuView");
     ProjectView = require("views/projectsview");
-    bla = require("modules/project");
-    ProjectFile = bla[0];
-    Project = bla[1];
-    Library = bla[2];
+    _ref = require("modules/project"), Library = _ref.Library, Project = _ref.Project, ProjectFile = _ref.ProjectFile;
     modTest = require("views/fileSaveLoadView");
     ModalRegion = modTest[0];
     SaveView = modTest[1];
@@ -22,7 +19,7 @@
     Settings = require("modules/settings");
     CsgProcessor = require("modules/csg.processor");
     MainContentLayout = require("views/mainContentView");
-    GlThreeView = require("views/glThreeView");
+    _ref1 = require("views/glThreeView"), GlViewSettings = _ref1.GlViewSettings, GlThreeView = _ref1.GlThreeView;
     testcode = "class CubeClass\n  width:20\n  length:20\n  height:20\n  constructor: (@pos=[0,0,0], @rot=[0,0,0]) ->\n    return @render()\n  \n  render: =>\n    result = new CSG()\n    cube1 =CSG.cube({center: [0, 0, @height/2],radius: [@width/2, @length/2, @height/2]})\n    result = cube1\n    return result.translate(@pos).rotateX(@rot[0]).rotateY(@rot[1]).rotateZ(@rot[2]) \n\ncubeStuff = new CubeClass()\nreturn cubeStuff";
     app = new marionette.Application({
       root: "/opencoffeescad",
@@ -73,7 +70,9 @@
       app.projectView = new ProjectView({
         collection: this.lib
       });
-      app.glThreeView = new GlThreeView;
+      app.glThreeView = new GlThreeView({
+        model: this.model
+      });
       app.mainContentLayout = new MainContentLayout;
       this.mainRegion.show(this.mainContentLayout);
       this.mainContentLayout.edit.show(this.codeEditorView);

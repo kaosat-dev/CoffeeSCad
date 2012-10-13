@@ -8,6 +8,120 @@ define (require) ->
   #   1-3 rebuildSolid
   #     useSynch= debug 
    
+   
+  class CsgProcessorMin
+    #minimal version of csg processor, for future cleanup of the rest
+    construtor:()->
+      @debug=true
+      
+    setCoffeeSCad: (script, filename) ->
+      # script: coffeescript code
+      # filename: optional, the name of the .cocad file
+      filename = if !filename then "openjscad.jscad"
+      filename = filename.replace(/\.jscad$/i, "")
+      #@clearViewer()
+      @paramDefinitions = []
+      @paramControls = []
+      @script = null
+      scripthaserrors = false
+      try
+       # @createParamControls() : TODO work on this parametrization
+      catch e 
+        scripthaserrors = true
+  
+      if(!scripthaserrors)
+        #console.log("script: #{script}")
+        @script = @compileFormatCoffee(script)
+        @filename = filename
+        @rebuildSolid()
+        console.log("No errors in script")
+      else
+        console.log("Errors in script")
+        
+    compileFormatCoffee:(source)->
+      console.log("Compiling & formating coffeescad code")
+      extraLibTest = "var cube = CSG.cube;\n"; 
+      extraLibTest += "var fromPoints = CAG.fromPoints;\n"
+      
+      #console.log("source: #{source}")
+      #TODO: replace this with compile --bare      
+      textblock = CoffeeScript.compile(source)
+      console.log("-->base compile done")
+      
+      lines = textblock.split('\n')
+      if @debug_ing#TODO correct this
+        console.log("Raw Lines" + (lines.length-1))
+      endsplitter = lines.length-2
+      lines.splice(endsplitter,2)
+      lines.splice(0,1)
+      formated = "function main()"
+      formated += "{"
+      formated += extraLibTest; #TODO: work on this, this is just a "namespace removing" / dependency injection test to get rid of CSG. and CAG. 
+      #in the actual coffeescad projects/scripts
+      formated += lines.join('\n')
+      formated += "}\n"
+      if @debug_ing#TODO correct this
+        console.log("Formated scad #{formated}")
+      return formated
+      
+    rebuildSolid:() =>
+      if @debug
+        console.log("Starting solid rebuild")
+        #@clearViewer()
+        @processing = true
+        
+        #TODO: clean way to handle these type of messages
+        #@statusspan.text = "Processing, please wait..."
+    
+        paramValues = null
+        try
+          obj = @parseJsCadScriptSync(@script, paramValues, @debugging)
+          @setCurrentObject(obj)
+          @processing = false
+        catch e 
+          @processing = false
+          
+    setCurrentObject: (obj) =>
+      #the threeCSG.fromCSG method needs to take the csg from here 
+      @currentObject = obj
+      @csg = @convertToSolid(obj)
+      #@viewer.setCsg(csg)
+      return 
+    
+    
+    parseJsCadScriptSync: (script, mainParameters, debugging) -> 
+      #console.log("Synch Parsing")
+      workerscript = ""
+      workerscript += script;
+      if @debuging
+        workerscript += "\n\n\n\n\n\n\n/* -------------------------------------------------------------------------\n"
+        workerscript += "OpenJsCad debugging\n\nAssuming you are running Chrome:\nF10 steps over an instruction\nF11 steps into an instruction\n"
+        workerscript += "F8  continues running\nPress the (||) button at the bottom to enable pausing whenever an error occurs\n"
+        workerscript += "Click on a line number to set or clear a breakpoint\n"
+        workerscript += "For more information see: http://code.google.com/chrome/devtools/docs/overview.html\n\n"
+        workerscript += "------------------------------------------------------------------------- */\n"
+        workerscript += "\n\n// Now press F11 twice to enter your main() function:\n\n"
+        workerscript += "debugger;\n"
+    
+      workerscript += "return main("+JSON.stringify(mainParameters)+");"  
+      #console.log("workerscript #{workerscript}")
+      f = new Function(workerscript)
+      #OpenCoffeeScad.log.prevLogTime = Date.now()
+      result = f()
+      return result
+      
+    convertToSolid : (obj) ->
+      if( (typeof(obj) == "object") && ((obj instanceof CAG)) )
+        # convert a 2D shape to a thin solid:
+        obj=obj.extrude({offset: [0,0,0.1]})
+      else if( (typeof(obj) == "object") && ((obj instanceof CSG)) )
+        # obj already is a solid
+      else
+        throw new Error("Cannot convert to solid");
+      return obj
+
+
+#######################
   class CsgProcessor 
     constructor: (debug, @currentObject, @statusdiv, @viewer)->
       console.log "in processor init"
@@ -401,4 +515,4 @@ define (require) ->
         console.log("Formated scad #{formated}")
       return formated
       
-  return CsgProcessor
+  return CsgProcessorMin#CsgProcessor

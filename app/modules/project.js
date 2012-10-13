@@ -86,7 +86,11 @@
       return Library;
 
     })(Backbone.Collection);
-    return [ProjectFile, Project, Library];
+    return {
+      ProjectFile: ProjectFile,
+      Project: Project,
+      Library: Library
+    };
   });
 
   /*

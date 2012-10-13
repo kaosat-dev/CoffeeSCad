@@ -99,6 +99,7 @@ CSG.defaultResolution3D = 12;
 
 // Construct a CSG solid from a list of `CSG.Polygon` instances.
 CSG.fromPolygons = function(polygons) {
+    console.log("Doing CSG SIDE of from poly");
   var csg = new CSG();
   csg.polygons = polygons;
   csg.isCanonicalized = false;
@@ -2195,6 +2196,7 @@ CSG.Vertex = function(pos) {
 
 // create from an untyped object with identical property names:
 CSG.Vertex.fromObject = function(obj) {
+    console.log("here too")
   var pos = new CSG.Vector3D(obj.pos);
   return new CSG.Vertex(pos);
 };
@@ -2260,6 +2262,10 @@ CSG.Plane.fromObject = function(obj) {
 CSG.Plane.EPSILON = 1e-5;
 
 CSG.Plane.fromVector3Ds = function(a, b, c) {
+  console.log("here")
+  console.log(a);
+  console.log(b);
+  console.log(c);
   var n = b.minus(a).cross(c.minus(a)).unit();
   return new CSG.Plane(n, n.dot(a));
 };

@@ -1,62 +1,117 @@
 define (require) ->
   $ = require 'jquery'
   marionette = require 'marionette'
+  csg = require 'csg'
   THREE = require 'three'
+  THREE.CSG = require 'three_csg'
   threedView_template = require "text!templates/3dview.tmpl"
   requestAnimationFrame = require 'anim'
+  
+  
+  class GlViewSettings extends Backbone.Model
+      defaults:
+        antialiasing : true
+        showgrid :     true
+  
   
   class GlThreeView extends marionette.ItemView
     template: threedView_template
     ui:
       renderBlock : "#glArea"
-    triggers:
-      'mousedown': 'mdown'
-      #'mousemove': 'mmove'
     events:
-      'mousemove'   : 'mousemove'
-      'mouseup'     : 'mouseup'
+    #  'mousemove'   : 'mousemove'
+    #  'mouseup'     : 'mouseup'
+      'mousewheel'  : 'mousewheel'
+      'mousedown'   :   'mousedown'#'dragstart'
+      
+    mousewheel:(ev)=>
+      ###ev = window.event or ev; # old IE support  
+      delta = Math.max(-1, Math.min(1, (ev.wheelDelta or -ev.detail)))
+      delta*=75
+      if delta - @camera.position.z <= 100
+        @camera.position.z-=delta
+      return false
+      ###
+      @fromCsgTest @model
     
     mousemove:(ev)->
+      if @dragStart?
+        moveMinMax = 10
+        
+        @dragAmount=[@dragStart.x-ev.offsetX, @dragStart.y-ev.offsetY]
+        #@dragAmount[1]=@height-@dragAmount[1]
+        #console.log "bleh #{@dragAmount[0]/500}"
+        x_move = Math.max(-moveMinMax, Math.min(moveMinMax, @dragAmount[0]/10))
+        y_move = Math.max(-moveMinMax, Math.min(moveMinMax, @dragAmount[1]/10))
+        #x_move = (x_move/x_move+0.0001)*moveMinMax
+        #y_move = (y_move/y_move+0.0001)*moveMinMax
+        #console.log("moving by #{y_move}")
+        @camera.position.x+=  x_move #@dragAmount.x/10000
+        @camera.position.y-=  y_move#@dragAmount.y/100
+        return false
+        
+    dragstart:(ev)=>
+      @dragStart={'x':ev.offsetX, 'y':ev.offsetY}
       
-    
     mouseup:(ev)=>
+      if @dragStart?
+        @dragAmount=[@dragStart.x-ev.offsetX, @dragStart.y-ev.offsetY]
+        @dragStart=null
       ###console.log ev
       console.log "clientX: #{ev.clientX} clientY: #{ev.clientY}"
       console.log "clientX: #{ev.offsetX} clientY: #{ev.offsetY}"
       ###
       
-      #$(@ui.renderBlock)
-      x = ev.offsetX;
-      y = ev.offsetY;
+      x = ev.offsetX
+      y = ev.offsetY
       v = new THREE.Vector3((x/@width)*2-1, -(y/@height)*2+1, 0.5)
+      
+    mousedown:(ev)=> 
+      x = ev.offsetX
+      y = ev.offsetY
+      @selectObj(x,y)
+      if @current?
+        @toCsgTest @current
+      
+             
+    selectObj:(mouseX,mouseY)=>
+      v = new THREE.Vector3((mouseX/@width)*2-1, -(mouseY/@height)*2+1, 0.5)
       @projector.unprojectVector(v, @camera)
       ray = new THREE.Ray(@camera.position, v.subSelf(@camera.position).normalize())
-      
-      #console.log(ray)
-      #console.log @controller
-      #console.log("Controller objects "+@controller.objects)
       intersects = ray.intersectObjects(@controller.objects)
       
-      if intersects?
+      reset_col=()=>
+        if @current?
+          newMat = new THREE.MeshLambertMaterial
+            color: 0xCC0000
+          @current.material = newMat
+          @current=null
+          
+      if intersects? 
         #console.log "interesects" 
         #console.log intersects
         if intersects.length > 0
-          @controller.setCurrent(intersects[0].object)
-          console.log @current.name
-          newMat = new THREE.MeshLambertMaterial
-            color: 0x0000FF
-          @current.material = newMat
-        else
-          if @current?
-            newMat = new THREE.MeshLambertMaterial
-              color: 0xCC0000
+          if intersects[0].object.name != "workplane"
+            @current = intersects[0].object
+            #MeshBasicMaterial
+            #MeshLambertMaterial
+            console.log @current.name
+            newMat = new THREE.MeshBasicMaterial
+              color: 0x0000FF
             @current.material = newMat
-            @current=null
-            
+          else
+            reset_col()
+        else
+          reset_col()
+      else
+        reset_col()
       
-    
-    constructor:(options)->
+    constructor:(options, settings)->
       super options
+      
+      #Controls:
+      @dragging = false
+      ##########
       
       @width = 800
       @height = 600
@@ -85,6 +140,8 @@ define (require) ->
       #the camera starts at 0,0,0
       #so pull it back
       @camera.position.z = 300
+      @camera.position.y = 150
+      @camera.position.x = 150
           
       @scene = new THREE.Scene()
       #add the camera to the scene
@@ -94,7 +151,7 @@ define (require) ->
       #@addObjs2()
       @setupLights()
       @addPlane()
-      @addStuff()
+      @addCage()
       
       @renderer.setSize(@width, @height)
   
@@ -104,6 +161,10 @@ define (require) ->
         
       @controller.objects = @scene.__objects
       @projector = new THREE.Projector()
+      
+      
+      @controls = new THREE.OrbitControls(@camera)
+      @controls.autoRotate = false
         
     addObjs2: () =>
       @cube = new THREE.Mesh(new THREE.CubeGeometry(50,50,50),new THREE.MeshBasicMaterial({color: 0x000000}))
@@ -134,10 +195,9 @@ define (require) ->
         sphereMaterial)
       sphere.name="Shinyyy"
       #add the sphere to the scene
+      #@testSphere = sphere
       @scene.add(sphere)
       
-      
-    
     setupLights:()=>
       #create a point light
       pointLight =
@@ -152,16 +212,18 @@ define (require) ->
       @scene.add(pointLight)
       
     addPlane:()=>
-      planeGeo = new THREE.PlaneGeometry(400, 400, 10, 10)
-      planeMat = new THREE.LineBasicMaterial({color: 0xFFFFFF, lineWidth: 1})
+      planeGeo = new THREE.PlaneGeometry(500, 500, 5, 5)
+      planeMat = new THREE.MeshBasicMaterial({color: 0x808080, wireframe: true, shading:THREE.FlatShading})
+      #planeMat = new THREE.LineBasicMaterial({color: 0xFFFFFF, lineWidth: 1})
       #planeMat = new THREE.MeshLambertMaterial({color: 0xFFFFFF})
       plane = new THREE.Mesh(planeGeo, planeMat)
       plane.rotation.x = -Math.PI/2
       plane.position.y = -30
+      plane.name = "workplane"
       #plane.receiveShadow = true
       @scene.add(plane)
       
-    addStuff:()=>
+    addCage:()=>
       v=(x,y,z)->
          return new THREE.Vector3(x,y,z)
       lineGeo = new THREE.Geometry()
@@ -214,14 +276,32 @@ define (require) ->
     animate:()=>
       t= new Date().getTime()
       #console.log t
-      @camera.position.x = Math.sin(t/10000)*300
-      @camera.position.y = 150
-      @camera.position.z = Math.cos(t/10000)*300
+      #@camera.position.x = Math.sin(t/10000)*300
+     # @camera.position.y = 150
+     # @camera.position.z = Math.cos(t/10000)*300
       # you need to update lookAt on every frame
       @camera.lookAt(@scene.position)
+      @controls.update()
       
       @renderer.render(@scene, @camera)
       requestAnimationFrame(@animate)
+    
+    toCsgTest:(mesh)->
+      #csgResult = THREE.CSG.toCSG(mesh)
+      #console.log "CSG conversion result :"
+      #console.log csgResult
+      
+    fromCsgTest:(csg)=>
+      ###app = require 'app'
+      app.csgProcessor.setCoffeeSCad(@model.get("content"))
+      resultCSG = app.csgProcessor.csg
+      console.log "resultCSG:"
+      console.log resultCSG
+      
+      mesh = THREE.CSG.fromCSG(resultCSG)
+      @scene.add
+      ###
+      
       
 
-  return GlThreeView
+  return {GlThreeView, GlViewSettings}

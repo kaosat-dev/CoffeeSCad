@@ -52,7 +52,7 @@ define (require)->
     localStorage: new Backbone.LocalStorage("Library")
     
     
-  return [ProjectFile,Project,Library]
+  return {ProjectFile,Project,Library}
   
   
   
