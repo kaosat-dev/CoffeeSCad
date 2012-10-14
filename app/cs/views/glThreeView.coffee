@@ -3,7 +3,7 @@ define (require) ->
   marionette = require 'marionette'
   csg = require 'csg'
   THREE = require 'three'
-  #THREE.CSG = require 'three_csg'
+  THREE.CSG = require 'three_csg'
   threedView_template = require "text!templates/3dview.tmpl"
   requestAnimationFrame = require 'anim'
   
@@ -22,7 +22,10 @@ define (require) ->
     #  'mouseup'     : 'mouseup'
       'mousewheel'  : 'mousewheel'
       'mousedown'   :   'mousedown'#'dragstart'
+      'contextmenu': 'rightclick'
       
+    rightclick:(ev)=>
+      #console.log "you clicked right"
     mousewheel:(ev)=>
       ###ev = window.event or ev; # old IE support  
       delta = Math.max(-1, Math.min(1, (ev.wheelDelta or -ev.detail)))
@@ -31,7 +34,7 @@ define (require) ->
         @camera.position.z-=delta
       return false
       ###
-      @fromCsgTest @model
+      
     
     mousemove:(ev)->
       if @dragStart?
@@ -69,8 +72,8 @@ define (require) ->
       x = ev.offsetX
       y = ev.offsetY
       @selectObj(x,y)
-      if @current?
-        @toCsgTest @current
+      #if @current?
+      #  @toCsgTest @current
       
              
     selectObj:(mouseX,mouseY)=>
@@ -81,9 +84,10 @@ define (require) ->
       
       reset_col=()=>
         if @current?
-          newMat = new THREE.MeshLambertMaterial
-            color: 0xCC0000
-          @current.material = newMat
+          #newMat = new THREE.MeshLambertMaterial
+          #  color: 0xCC0000
+          #@current.material = newMat
+          @current.material = @current.origMaterial
           @current=null
           
       if intersects? 
@@ -91,22 +95,29 @@ define (require) ->
         #console.log intersects
         if intersects.length > 0
           if intersects[0].object.name != "workplane"
-            @current = intersects[0].object
-            #MeshBasicMaterial
-            #MeshLambertMaterial
-            console.log @current.name
-            newMat = new THREE.MeshBasicMaterial
-              color: 0x0000FF
-            @current.material = newMat
+            if @current != intersects[0].object
+              @current = intersects[0].object
+              #console.log @current.name
+              newMat = new  THREE.MeshLambertMaterial
+                color: 0xCC0000
+              @current.origMaterial = @current.material
+              @current.material = newMat
           else
             reset_col()
         else
           reset_col()
       else
         reset_col()
+    
+    modelChanged:(model, value)=>
+      #console.log "model changed"
+      @fromCsg @model
       
     constructor:(options, settings)->
       super options
+      
+      @bindTo(@model, "change", this.modelChanged)
+
       
       #Controls:
       @dragging = false
@@ -146,11 +157,11 @@ define (require) ->
       #add the camera to the scene
       @scene.add(@camera)
       
-      @addObjs()
+      #@addObjs()
       #@addObjs2()
       @setupLights()
       @addPlane()
-      @addCage()
+      #@addCage()
       
       @renderer.setSize(@width, @height)
   
@@ -198,17 +209,23 @@ define (require) ->
       @scene.add(sphere)
       
     setupLights:()=>
-      #create a point light
       pointLight =
-        new THREE.PointLight(0xFFFFFF)
+        new THREE.PointLight(0x333333,5)
+      pointLight.position.x = -2200
+      pointLight.position.y = -2200
+      pointLight.position.z = 3000
 
-      #set its position
-      pointLight.position.x = 10
-      pointLight.position.y = 50
-      pointLight.position.z = 130
-
-      #add to the scene
+      @ambientColor = '0x253565'
+      ambientLight = new THREE.AmbientLight(@ambientColor);
+      
+      spotLight = new THREE.SpotLight( 0xbbbbbb, 2 )    
+      spotLight.position.x = 0
+      spotLight.position.y = 1000
+      spotLight.position.z = 0
+      
+      @scene.add(ambientLight);
       @scene.add(pointLight)
+      @scene.add( spotLight )
       
     addPlane:()=>
       planeGeo = new THREE.PlaneGeometry(500, 500, 5, 5)
@@ -286,21 +303,38 @@ define (require) ->
       requestAnimationFrame(@animate)
     
     toCsgTest:(mesh)->
-      #csgResult = THREE.CSG.toCSG(mesh)
-      #console.log "CSG conversion result :"
+      csgResult = THREE.CSG.toCSG(mesh)
+      
+      if csgResult?
+        console.log "CSG conversion result ok:"
       #console.log csgResult
       
-    fromCsgTest:(csg)=>
-      ###app = require 'app'
-      app.csgProcessor.setCoffeeSCad(@model.get("content"))
-      resultCSG = app.csgProcessor.csg
-      console.log "resultCSG:"
-      console.log resultCSG
-      
-      mesh = THREE.CSG.fromCSG(resultCSG)
-      @scene.add
-      ###
-      
+    fromCsg:(csg)=>
+      try
+        app = require 'app'
+        app.csgProcessor.setCoffeeSCad(@model.get("content"))
+        resultCSG = app.csgProcessor.csg
+        geom = THREE.CSG.fromCSG(resultCSG)
+        #console.log "resultCSG:"
+        #console.log resultCSG
+        #console.log "result geom"
+        #console.log geom
+        mat = new THREE.MeshBasicMaterial({color: 0xffffff,shading:THREE.FlatShading, vertexColors: THREE.VertexColors })
+        mat = new THREE.LineBasicMaterial({color: 0xFFFFFF, lineWidth: 1})
+        mat = new THREE.MeshLambertMaterial({color: 0xFFFFFF,shading:THREE.FlatShading, vertexColors: THREE.VertexColors})
+        
+        shine= 1500#10+  Math.random() * 1000 
+        spec= 10000000000#Math.random() * 10000000000
+        mat = new THREE.MeshPhongMaterial({color:  0xFFFFFF , shading: THREE.SmoothShading,  shininess: shine, specular: spec, metal: true, vertexColors: THREE.VertexColors}) 
+        
+        if @mesh?
+          @scene.remove @mesh
+          
+        @mesh = new THREE.Mesh(geom, mat)
+        @scene.add @mesh
+      catch error
+        console.log "error #{error} in from csg conversion"
+      #console.log @scene
       
 
   return {GlThreeView, GlViewSettings}

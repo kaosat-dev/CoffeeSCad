@@ -40,7 +40,9 @@ define (require) ->
         
     compileFormatCoffee:(source)->
       console.log("Compiling & formating coffeescad code")
-      extraLibTest = "var cube = CSG.cube;\n"; 
+      extraLibTest = "var cube = CSG.cube;\n"
+      extraLibTest += "var Sphere = CSG.sphere;\n"
+      extraLibTest += "var Cylinder = CSG.cylinder;\n"
       extraLibTest += "var fromPoints = CAG.fromPoints;\n"
       
       #console.log("source: #{source}")
@@ -65,7 +67,8 @@ define (require) ->
       return formated
       
     rebuildSolid:() =>
-      if @debug
+      @debug = true
+      if @debug ==true
         console.log("Starting solid rebuild")
         #@clearViewer()
         @processing = true
@@ -410,8 +413,9 @@ define (require) ->
        return paramValues
        
      rebuildSolid:() =>
+       
        if @debug
-         #console.log("Starting solid rebuild")
+        #console.log("Starting solid rebuild")
         #@abort()
         #@setError("")
         #@clearViewer()

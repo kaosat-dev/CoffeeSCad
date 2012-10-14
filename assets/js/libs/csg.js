@@ -99,7 +99,7 @@ CSG.defaultResolution3D = 12;
 
 // Construct a CSG solid from a list of `CSG.Polygon` instances.
 CSG.fromPolygons = function(polygons) {
-    console.log("Doing CSG SIDE of from poly");
+    //console.log("Doing CSG SIDE of from poly");
   var csg = new CSG();
   csg.polygons = polygons;
   csg.isCanonicalized = false;
@@ -902,8 +902,37 @@ CSG.prototype = {
   },
   color : function(rgb)
   {
-  	var newshared = new CSG.Polygon.Shared([red, green, blue]); 
+  	var newshared = new CSG.Polygon.Shared([rgb[0], rgb[1], rgb[2]]); 
     return this.setShared(newshared);
+  },
+  //hack attempt to create individual "object" tags
+  setobjTag: function(name)
+  {
+      //TODO: clean this up 
+      //console.log("test");
+      //console.log (this);
+   
+      if(this.polygons[0].shared.color)
+      {     
+          //TODO: grab the actual colors
+          var color = this.polygons[0].shared.color;
+          var newshared = new CSG.Polygon.Shared([color[0], color[1], color[2]],name); 
+          return this.setShared(newshared);
+          
+         /* var polygons = this.polygons.map( function(p) {
+              return new CSG.Polygon(p.vertices, shared, p.plane);
+            });
+          var result = CSG.fromPolygons(polygons);
+            result.properties = this.properties;  // keep original properties
+            result.isRetesselated = this.isRetesselated;
+            result.isCanonicalized = this.isCanonicalized;
+            return result;
+          */
+      }
+      //return 
+     
+
+      
   },
 
   toCompactBinary: function() {
@@ -2196,7 +2225,6 @@ CSG.Vertex = function(pos) {
 
 // create from an untyped object with identical property names:
 CSG.Vertex.fromObject = function(obj) {
-    console.log("here too")
   var pos = new CSG.Vector3D(obj.pos);
   return new CSG.Vertex(pos);
 };
@@ -2262,10 +2290,10 @@ CSG.Plane.fromObject = function(obj) {
 CSG.Plane.EPSILON = 1e-5;
 
 CSG.Plane.fromVector3Ds = function(a, b, c) {
-  console.log("here")
+  /*console.log("here")
   console.log(a);
   console.log(b);
-  console.log(c);
+  console.log(c);*/
   var n = b.minus(a).cross(c.minus(a)).unit();
   return new CSG.Plane(n, n.dot(a));
 };
@@ -2803,12 +2831,16 @@ CSG.Polygon.isStrictlyConvexPoint = function(prevpoint, point, nextpoint, normal
 
 // Holds the shared properties for each polygon (currently only color)
 
-CSG.Polygon.Shared = function(color) {
+CSG.Polygon.Shared = function(color,name) {
   this.color = color;
+  this.name = name;
+  /*console.log("Shared init");
+  console.log(color);
+  console.log(name);*/
 };
 
 CSG.Polygon.Shared.fromObject = function(obj) {
-  return new CSG.Polygon.Shared(obj.color);
+  return new CSG.Polygon.Shared(obj.color, obj.name);
 };
 
 CSG.Polygon.Shared.prototype = {
@@ -2826,9 +2858,14 @@ CSG.Polygon.Shared.prototype = {
     if(!this.color) return "null";
     return ""+this.color[0]+"/"+this.color[1]+"/"+this.color[2];
   },
+  // get this object's name
+  getName: function() {
+    if(!this.name) return "null";
+    return this.name;
+  },
 };
 
-CSG.Polygon.defaultShared = new CSG.Polygon.Shared(null);
+CSG.Polygon.defaultShared = new CSG.Polygon.Shared(null,null);
 
 // # class PolygonTreeNode
 

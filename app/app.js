@@ -2,7 +2,7 @@
 (function() {
 
   define(function(require) {
-    var $, CodeEditorView, CsgProcessor, GlThreeView, GlViewSettings, Library, LoadView, MainContentLayout, MainMenuView, ModalRegion, Project, ProjectFile, ProjectView, SaveView, Settings, SettingsView, app, marionette, modTest, testcode, _, _ref, _ref1;
+    var $, CodeEditorView, CsgProcessor, GlThreeView, GlViewSettings, Library, LoadView, MainContentLayout, MainMenuView, ModalRegion, Project, ProjectFile, ProjectView, SaveView, Settings, SettingsView, app, marionette, modTest, testcode, testcode_alt, _, _ref, _ref1;
     $ = require('jquery');
     _ = require('underscore');
     marionette = require('marionette');
@@ -20,7 +20,9 @@
     CsgProcessor = require("modules/csg.processor");
     MainContentLayout = require("views/mainContentView");
     _ref1 = require("views/glThreeView"), GlViewSettings = _ref1.GlViewSettings, GlThreeView = _ref1.GlThreeView;
-    testcode = "class CubeClass\n  width:20\n  length:20\n  height:20\n  constructor: (@pos=[0,0,0], @rot=[0,0,0]) ->\n    return @render()\n  \n  render: =>\n    result = new CSG()\n    cube1 =CSG.cube({center: [0, 0, @height/2],radius: [@width/2, @length/2, @height/2]})\n    result = cube1\n    return result.translate(@pos).rotateX(@rot[0]).rotateY(@rot[1]).rotateZ(@rot[2]) \n\ncubeStuff = new CubeClass()\nreturn cubeStuff";
+    testcode_alt = "#test with prefix removal (see missing CAG. before the \"fromPoints method\")\nshape1 = fromPoints([[0,0], [150,50], [0,-50]])\n\nshape = shape1.expand(15, 30)\n\nshape=shape.extrude({offset:[0, 0, 50]}) \nreturn shape.setColor(1,0.5,0)";
+    testcode = "class CubeClass\n  constructor: (@width=10,@length=20,@height=20, @pos=[0,0,0], @rot=[0,0,0]) ->\n    return @render()\n  \n  render: =>\n    result = new CSG()\n    cube1 =CSG.cube({center: [0, 0, @height/2],radius: [@width/2, @length/2, @height/2]})\n    result = cube1\n    return result.translate(@pos).rotateX(@rot[0]).rotateY(@rot[1]).rotateZ(@rot[2]) \n\ncubeStuff = new CubeClass(75,50,50,[-20,10,10])\ncubeStuff2 = new CubeClass(50,100,50)\n\n\nreturn cubeStuff2.subtract(cubeStuff).color([0,1,0])";
+    testcode = "class Thingy\n  constructor: (@thickness=10, @pos=[0,0,0], @rot=[0,0,0]) ->\n  \n  render: =>\n    result = new CSG()\n    shape1 = fromPoints([[0,0], [150,50], [0,-50]])\n    shape = shape1.expand(20, 25)\n    shape = shape.extrude({offset:[0, 0, @thickness]}) \n    cyl = new Cylinder({start: [0, 0, -50],end: [0, 0, 50],radius:10, resolution:12})\n    result = shape.subtract(cyl)\n    return result.translate(@pos).rotateX(@rot[0]).\n    rotateY(@rot[1]).rotateZ(@rot[2]).color([1,0.5,0])\n\nthing = new Thingy(35)\nthing2 = new Thingy(25)\n\nres = thing.render().union(thing2.render().mirroredX().color([0.2,0.5,0.6])) \nreturn res";
     app = new marionette.Application({
       root: "/opencoffeescad",
       cadProcessor: null,
@@ -142,9 +144,10 @@
         });
         return app.modal.show(_this.modView);
       });
-      return app.project.on("change", function() {
+      app.project.on("change", function() {
         return console.log("project changed");
       });
+      return app.glThreeView.fromCsg();
     });
     /*return _.extend app,
       module: (additionalProps)->

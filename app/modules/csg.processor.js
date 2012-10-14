@@ -46,6 +46,8 @@
         var endsplitter, extraLibTest, formated, lines, textblock;
         console.log("Compiling & formating coffeescad code");
         extraLibTest = "var cube = CSG.cube;\n";
+        extraLibTest += "var Sphere = CSG.sphere;\n";
+        extraLibTest += "var Cylinder = CSG.cylinder;\n";
         extraLibTest += "var fromPoints = CAG.fromPoints;\n";
         textblock = CoffeeScript.compile(source);
         console.log("-->base compile done");
@@ -69,7 +71,8 @@
 
       CsgProcessorMin.prototype.rebuildSolid = function() {
         var obj, paramValues;
-        if (this.debug) {
+        this.debug = true;
+        if (this.debug === true) {
           console.log("Starting solid rebuild");
           this.processing = true;
           paramValues = null;

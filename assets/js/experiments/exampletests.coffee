@@ -259,3 +259,157 @@ shape = shape1.expand(2, 30)
 shape=shape.extrude({offset:[0, 0, 5]}) 
 return shape.setColor(1,0.5,0)
 
+
+cylinder = CSG.cylinder({
+  start: [0, -1, 0],
+  end: [0, 1, 0],
+  radius: 1,
+  resolution: 16
+});
+
+
+########
+
+shape1 = fromPoints([[0,0], [150,50], [0,-50]])
+shape = shape1.expand(20, 30)
+shape=shape.extrude({offset:[0, 0, 50]}) 
+return shape.color([1,0.5,0])
+
+#######
+class Thingy
+  constructor: (@thickness=10, @pos=[0,0,0], @rot=[0,0,0]) ->
+    #return @render()
+  
+  render: =>
+    result = new CSG()
+    shape1 = fromPoints([[0,0], [150,50], [0,-50]])
+    shape = shape1.expand(20, 30)
+    shape = shape.extrude({offset:[0, 0, @thickness]}) 
+    cyl = new Cylinder({start: [0, 0, -50],end: [0, 0, 50],radius:10})
+    result = shape.subtract(cyl)
+    return result.translate(@pos).rotateX(@rot[0]).
+    rotateY(@rot[1]).rotateZ(@rot[2]).color([1,0.5,0])
+
+thing = new Thingy(35)
+thing2 = new Thingy(25)
+
+
+
+return thing.render().union(thing2.render().mirroredX())
+
+########
+class CubeClass
+  constructor: (@width=10,@length=20,@height=20, @pos=[0,0,0], @rot=[0,0,0]) ->
+    return @render()
+  
+  render: =>
+    result = new CSG()
+    cube1 =CSG.cube({center: [0, 0, @height/2],radius: [@width/2, @length/2, @height/2]})
+    result = cube1
+    return result.translate(@pos).rotateX(@rot[0]).rotateY(@rot[1]).rotateZ(@rot[2]) 
+
+cubeStuff = new CubeClass(75,50,50,[-20,10,10])
+cubeStuff2 = new CubeClass(50,100,50)
+
+
+return cubeStuff2.subtract(cubeStuff).setColor([0,1,0])
+
+#return cubeStuff2.subtract(cubeStuff).setColor([1,0.25,0.1])
+#####
+class Thingy
+  constructor: (@thickness=10, @pos=[0,0,0], @rot=[0,0,0]) ->
+    #return @render()
+  
+  render: =>
+    result = new CSG()
+    shape1 = fromPoints([[0,0], [150,50], [0,-50]])
+    shape = shape1.expand(20, 30)
+    shape = shape.extrude({offset:[0, 0, @thickness]}) 
+    cyl = new Cylinder({start: [0, 0, -50],end: [0, 0, 50],radius:10})
+    result = shape.subtract(cyl)
+    return result.translate(@pos).rotateX(@rot[0]).
+    rotateY(@rot[1]).rotateZ(@rot[2]).color([1,0.5,0])
+
+thing = new Thingy(35)
+thing2 = new Thingy(25)
+
+
+
+tmpres = thing.render().union(thing2.render().mirroredX()) 
+
+res = tmpres.unionForNonIntersecting(tmpres.translate([0,0,75]).color([0.2,0.5,0.6]))  
+
+return res
+
+##
+class Thingy
+  constructor: (@thickness=10, @pos=[0,0,0], @rot=[0,0,0]) ->
+    #return @render()
+  
+  render: =>
+    result = new CSG()
+    shape1 = fromPoints([[0,0], [150,50], [0,-50]])
+    shape = shape1.expand(20, 30)
+    shape = shape.extrude({offset:[0, 0, @thickness]}) 
+    cyl = new Cylinder({start: [0, 0, -50],end: [0, 0, 50],radius:10})
+    result = shape.subtract(cyl)
+    return result.translate(@pos).rotateX(@rot[0]).
+    rotateY(@rot[1]).rotateZ(@rot[2]).color([1,0.5,0])
+
+thing = new Thingy(35)
+thing2 = new Thingy(25)
+
+
+tmpres = thing.render().union(thing2.render().mirroredX().color([0.2,0.5,0.6])) 
+
+res = tmpres  
+
+return res
+
+#########
+class Thingy
+  constructor: (@thickness=10, @pos=[0,0,0], @rot=[0,0,0]) ->
+
+  render: =>
+    result = new CSG()
+    shape1 = fromPoints([[0,0], [150,50], [0,-50]])
+    shape = shape1.expand(20, 25)
+    shape = shape.extrude({offset:[0, 0, @thickness]}) 
+    cyl = new Cylinder({start: [0, 0, -50],end: [0, 0, 50],radius:10, resolution:12})
+    result = shape.subtract(cyl)
+    return result.translate(@pos).rotateX(@rot[0]).
+    rotateY(@rot[1]).rotateZ(@rot[2]).color([1,0.5,0])
+
+thing = new Thingy(35)
+thing2 = new Thingy(25)
+
+
+tmpres = thing.render().color([0.2,0.2,0.2]).union(thing2.render().
+                                                   mirroredX().color([0.2,0.5,0.6])) 
+tmpres2 = thing.render().union(thing2.render().mirroredX().color([0.2,0.2,0.2])) 
+tmpres3 = thing.render().union(thing2.render().mirroredX().color([0.2,0.2,0.2])) 
+
+
+tmpres = tmpres2.translate([0,0,-100]).union(tmpres)
+tmpres = tmpres3.translate([0,0,100]).union(tmpres)
+
+res = tmpres  
+
+return res
+
+#########
+class CubeClass
+  constructor: (@width=10,@length=20,@height=20, @pos=[0,0,0], @rot=[0,0,0]) ->
+    return @render()
+  
+  render: =>
+    result = new CSG()
+    cube1 =CSG.cube({center: [0, 0, @height/2],radius: [@width/2, @length/2, @height/2]})
+    result = cube1
+    return result.translate(@pos).rotateX(@rot[0]).rotateY(@rot[1]).rotateZ(@rot[2]) 
+
+cubeStuff = new CubeClass(75,50,50,[-20,10,10])
+cubeStuff2 = new CubeClass(50,100,50)#.color([0,1,0])
+
+
+return cubeStuff2.subtract(cubeStuff).color([0,1,0]).setobjTag("tutu") 

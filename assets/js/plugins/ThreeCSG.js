@@ -29,7 +29,7 @@ THREE.CSG = {
 		}
 		rotation_matrix = new THREE.Matrix4( ).setRotationFromEuler( rotation );
 		
-		console.log("geometry");
+		//console.log("geometry");
 		//console.log(geometry);
 		 //FIXME: changed vertices[x].position.clone( ) to vertices[x].clone( ) (as per changes in the geometry class)
 		var polygons = [];
@@ -56,7 +56,7 @@ THREE.CSG = {
                 
                 
 
-				console.log("before poly push");
+				//console.log("before poly push");
 				polygons.push( new CSG.Polygon( vertices ) );
 				
 			} else if ( geometry.faces[i] instanceof THREE.Face4 ) {
@@ -111,7 +111,10 @@ THREE.CSG = {
 		return CSG.fromPolygons( polygons );
 	},
 	
-	fromCSG: function( csg_model ) {
+	fromCSG: function( csg_model ) 
+	{
+	    //TODO: attempt to output multiple models based on name ? (or some other unique id?)
+	    //TODO: fix normals?
 		var i, j, vertices, face,
 			three_geometry = new THREE.Geometry( ),
 			polygons = csg_model.toPolygons( );
@@ -121,6 +124,24 @@ THREE.CSG = {
 		}
 		
 		for ( i = 0; i < polygons.length; i++ ) {
+			
+			color= new THREE.Color( 0xffffff );
+			try
+			{  
+			    poly = polygons[i];
+			   /* console.log("poly");
+			    console.log(poly);
+			    console.log("shared");
+			    console.log(poly.shared.name);*/
+			   /* console.log("color check");
+                console.log(poly.shared.color[0]);*/
+                
+                color.r=poly.shared.color[0];
+                color.g=poly.shared.color[1];
+                color.b=poly.shared.color[2];
+			}
+			catch(e)
+			{}
 			
 			// Vertices
 			vertices = [];
@@ -133,6 +154,9 @@ THREE.CSG = {
 			
 			for (var j = 2; j < vertices.length; j++) {
 				face = new THREE.Face3( vertices[0], vertices[j-1], vertices[j], new THREE.Vector3( ).copy( polygons[i].plane.normal ) );
+				face.vertexColors[0] = color;
+				face.vertexColors[1] = color;
+				face.vertexColors[2] = color;
 				three_geometry.faces.push( face );
 				three_geometry.faceVertexUvs[0].push( new THREE.UV( ) );
 			}
@@ -146,13 +170,13 @@ THREE.CSG = {
 	getGeometryVertice: function ( geometry, vertice_position ) {
 		var i;
 		for ( i = 0; i < geometry.vertices.length; i++ ) {
-			if ( geometry.vertices[i].position.x === vertice_position.x && geometry.vertices[i].position.y === vertice_position.y && geometry.vertices[i].position.z === vertice_position.z ) {
+			if ( geometry.vertices[i].x === vertice_position.x && geometry.vertices[i].y === vertice_position.y && geometry.vertices[i].z === vertice_position.z ) {
 				// Vertice already exists
 				return i;
 			}
 		};
 		
-		geometry.vertices.push( new THREE.Vertex( new THREE.Vector3( vertice_position.x, vertice_position.y, vertice_position.z ) ) );
+		geometry.vertices.push( new THREE.Vector3( vertice_position.x, vertice_position.y, vertice_position.z )  );
 		return geometry.vertices.length - 1;
 	}
 };

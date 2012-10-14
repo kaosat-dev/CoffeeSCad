@@ -25,14 +25,22 @@ define (require)->
   {GlViewSettings,GlThreeView} = require "views/glThreeView"
   
   ###############################
+  testcode_alt=
+  """
+  #test with prefix removal (see missing CAG. before the "fromPoints method")
+shape1 = fromPoints([[0,0], [150,50], [0,-50]])
+
+shape = shape1.expand(15, 30)
+
+shape=shape.extrude({offset:[0, 0, 50]}) 
+return shape.setColor(1,0.5,0)
+ """
+  
   
   testcode = 
   """
 class CubeClass
-  width:20
-  length:20
-  height:20
-  constructor: (@pos=[0,0,0], @rot=[0,0,0]) ->
+  constructor: (@width=10,@length=20,@height=20, @pos=[0,0,0], @rot=[0,0,0]) ->
     return @render()
   
   render: =>
@@ -41,8 +49,35 @@ class CubeClass
     result = cube1
     return result.translate(@pos).rotateX(@rot[0]).rotateY(@rot[1]).rotateZ(@rot[2]) 
 
-cubeStuff = new CubeClass()
-return cubeStuff"""
+cubeStuff = new CubeClass(75,50,50,[-20,10,10])
+cubeStuff2 = new CubeClass(50,100,50)
+
+
+return cubeStuff2.subtract(cubeStuff).color([0,1,0])"""
+
+  testcode = 
+  """
+  class Thingy
+    constructor: (@thickness=10, @pos=[0,0,0], @rot=[0,0,0]) ->
+    
+    render: =>
+      result = new CSG()
+      shape1 = fromPoints([[0,0], [150,50], [0,-50]])
+      shape = shape1.expand(20, 25)
+      shape = shape.extrude({offset:[0, 0, @thickness]}) 
+      cyl = new Cylinder({start: [0, 0, -50],end: [0, 0, 50],radius:10, resolution:12})
+      result = shape.subtract(cyl)
+      return result.translate(@pos).rotateX(@rot[0]).
+      rotateY(@rot[1]).rotateZ(@rot[2]).color([1,0.5,0])
+  
+  thing = new Thingy(35)
+  thing2 = new Thingy(25)
+  
+  res = thing.render().union(thing2.render().mirroredX().color([0.2,0.5,0.6])) 
+  return res
+  """
+
+
   #testcode = testcode.replace(/^\s*/g, "") #ltrim
   #testcode = testcode.replace(/\s*$/g, "") #rtrim
   #testcode = testcode.replace(/^\s*|\s*$/g, "")
@@ -180,6 +215,8 @@ return cubeStuff"""
       
     app.project.on "change", ->
       console.log "project changed"
+   
+    app.glThreeView.fromCsg()
       
    
       

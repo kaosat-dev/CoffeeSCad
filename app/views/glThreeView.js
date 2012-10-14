@@ -10,6 +10,7 @@
     marionette = require('marionette');
     csg = require('csg');
     THREE = require('three');
+    THREE.CSG = require('three_csg');
     threedView_template = require("text!templates/3dview.tmpl");
     requestAnimationFrame = require('anim');
     GlViewSettings = (function(_super) {
@@ -40,8 +41,11 @@
 
       GlThreeView.prototype.events = {
         'mousewheel': 'mousewheel',
-        'mousedown': 'mousedown'
+        'mousedown': 'mousedown',
+        'contextmenu': 'rightclick'
       };
+
+      GlThreeView.prototype.rightclick = function(ev) {};
 
       GlThreeView.prototype.mousewheel = function(ev) {
         /*ev = window.event or ev; # old IE support  
@@ -51,7 +55,7 @@
           @camera.position.z-=delta
         return false
         */
-        return this.fromCsgTest(this.model);
+
       };
 
       GlThreeView.prototype.mousemove = function(ev) {
@@ -94,10 +98,7 @@
         var x, y;
         x = ev.offsetX;
         y = ev.offsetY;
-        this.selectObj(x, y);
-        if (this.current != null) {
-          return this.toCsgTest(this.current);
-        }
+        return this.selectObj(x, y);
       };
 
       GlThreeView.prototype.selectObj = function(mouseX, mouseY) {
@@ -108,24 +109,22 @@
         ray = new THREE.Ray(this.camera.position, v.subSelf(this.camera.position).normalize());
         intersects = ray.intersectObjects(this.controller.objects);
         reset_col = function() {
-          var newMat;
           if (_this.current != null) {
-            newMat = new THREE.MeshLambertMaterial({
-              color: 0xCC0000
-            });
-            _this.current.material = newMat;
+            _this.current.material = _this.current.origMaterial;
             return _this.current = null;
           }
         };
         if (intersects != null) {
           if (intersects.length > 0) {
             if (intersects[0].object.name !== "workplane") {
-              this.current = intersects[0].object;
-              console.log(this.current.name);
-              newMat = new THREE.MeshBasicMaterial({
-                color: 0x0000FF
-              });
-              return this.current.material = newMat;
+              if (this.current !== intersects[0].object) {
+                this.current = intersects[0].object;
+                newMat = new THREE.MeshLambertMaterial({
+                  color: 0xCC0000
+                });
+                this.current.origMaterial = this.current.material;
+                return this.current.material = newMat;
+              }
             } else {
               return reset_col();
             }
@@ -137,8 +136,12 @@
         }
       };
 
+      GlThreeView.prototype.modelChanged = function(model, value) {
+        return this.fromCsg(this.model);
+      };
+
       function GlThreeView(options, settings) {
-        this.fromCsgTest = __bind(this.fromCsgTest, this);
+        this.fromCsg = __bind(this.fromCsg, this);
 
         this.animate = __bind(this.animate, this);
 
@@ -154,6 +157,8 @@
 
         this.addObjs2 = __bind(this.addObjs2, this);
 
+        this.modelChanged = __bind(this.modelChanged, this);
+
         this.selectObj = __bind(this.selectObj, this);
 
         this.mousedown = __bind(this.mousedown, this);
@@ -164,9 +169,12 @@
 
         this.mousewheel = __bind(this.mousewheel, this);
 
+        this.rightclick = __bind(this.rightclick, this);
+
         var ASPECT, FAR, NEAR,
           _this = this;
         GlThreeView.__super__.constructor.call(this, options);
+        this.bindTo(this.model, "change", this.modelChanged);
         this.dragging = false;
         this.width = 800;
         this.height = 600;
@@ -186,10 +194,8 @@
         this.camera.position.x = 150;
         this.scene = new THREE.Scene();
         this.scene.add(this.camera);
-        this.addObjs();
         this.setupLights();
         this.addPlane();
-        this.addCage();
         this.renderer.setSize(this.width, this.height);
         this.controller = new THREE.Object3D();
         this.controller.setCurrent = function(current) {
@@ -222,12 +228,20 @@
       };
 
       GlThreeView.prototype.setupLights = function() {
-        var pointLight;
-        pointLight = new THREE.PointLight(0xFFFFFF);
-        pointLight.position.x = 10;
-        pointLight.position.y = 50;
-        pointLight.position.z = 130;
-        return this.scene.add(pointLight);
+        var ambientLight, pointLight, spotLight;
+        pointLight = new THREE.PointLight(0x333333, 5);
+        pointLight.position.x = -2200;
+        pointLight.position.y = -2200;
+        pointLight.position.z = 3000;
+        this.ambientColor = '0x253565';
+        ambientLight = new THREE.AmbientLight(this.ambientColor);
+        spotLight = new THREE.SpotLight(0xbbbbbb, 2);
+        spotLight.position.x = 0;
+        spotLight.position.y = 1000;
+        spotLight.position.z = 0;
+        this.scene.add(ambientLight);
+        this.scene.add(pointLight);
+        return this.scene.add(spotLight);
       };
 
       GlThreeView.prototype.addPlane = function() {
@@ -277,19 +291,53 @@
         return requestAnimationFrame(this.animate);
       };
 
-      GlThreeView.prototype.toCsgTest = function(mesh) {};
+      GlThreeView.prototype.toCsgTest = function(mesh) {
+        var csgResult;
+        csgResult = THREE.CSG.toCSG(mesh);
+        if (csgResult != null) {
+          return console.log("CSG conversion result ok:");
+        }
+      };
 
-      GlThreeView.prototype.fromCsgTest = function(csg) {
-        /*app = require 'app'
-        app.csgProcessor.setCoffeeSCad(@model.get("content"))
-        resultCSG = app.csgProcessor.csg
-        console.log "resultCSG:"
-        console.log resultCSG
-        
-        mesh = THREE.CSG.fromCSG(resultCSG)
-        @scene.add
-        */
-
+      GlThreeView.prototype.fromCsg = function(csg) {
+        var app, geom, mat, resultCSG, shine, spec;
+        try {
+          app = require('app');
+          app.csgProcessor.setCoffeeSCad(this.model.get("content"));
+          resultCSG = app.csgProcessor.csg;
+          geom = THREE.CSG.fromCSG(resultCSG);
+          mat = new THREE.MeshBasicMaterial({
+            color: 0xffffff,
+            shading: THREE.FlatShading,
+            vertexColors: THREE.VertexColors
+          });
+          mat = new THREE.LineBasicMaterial({
+            color: 0xFFFFFF,
+            lineWidth: 1
+          });
+          mat = new THREE.MeshLambertMaterial({
+            color: 0xFFFFFF,
+            shading: THREE.FlatShading,
+            vertexColors: THREE.VertexColors
+          });
+          shine = 1500;
+          spec = 10000000000;
+          mat = new THREE.MeshPhongMaterial({
+            color: 0xFFFFFF,
+            shading: THREE.SmoothShading,
+            shininess: shine,
+            specular: spec,
+            metal: true,
+            vertexColors: THREE.VertexColors
+          });
+          if (this.mesh != null) {
+            this.scene.remove(this.mesh);
+          }
+          this.mesh = new THREE.Mesh(geom, mat);
+          return this.scene.add(this.mesh);
+        } catch (error) {
+          return console.log("error " + error + " in from csg conversion");
+        }
       };
 
       return GlThreeView;
