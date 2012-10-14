@@ -3,10 +3,9 @@ define (require) ->
   marionette = require 'marionette'
   csg = require 'csg'
   THREE = require 'three'
-  THREE.CSG = require 'three_csg'
+  #THREE.CSG = require 'three_csg'
   threedView_template = require "text!templates/3dview.tmpl"
   requestAnimationFrame = require 'anim'
-  
   
   class GlViewSettings extends Backbone.Model
       defaults:
