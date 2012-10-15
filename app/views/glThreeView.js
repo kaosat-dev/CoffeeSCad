@@ -5,7 +5,7 @@
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   define(function(require) {
-    var $, GlThreeView, GlViewSettings, THREE, csg, marionette, requestAnimationFrame, threedView_template;
+    var $, GlThreeView, GlViewSettings, MyAxisHelper, THREE, csg, marionette, requestAnimationFrame, threedView_template;
     $ = require('jquery');
     marionette = require('marionette');
     csg = require('csg');
@@ -23,12 +23,30 @@
 
       GlViewSettings.prototype.defaults = {
         antialiasing: true,
-        showgrid: true
+        showGrid: true,
+        showAxis: true
       };
 
       return GlViewSettings;
 
     })(Backbone.Model);
+    MyAxisHelper = (function() {
+
+      function MyAxisHelper(size, xcolor, ycolor, zcolor) {
+        var geometry, material;
+        geometry = new THREE.Geometry();
+        geometry.vertices.push(new THREE.Vector3(-size || -1, 0, 0), new THREE.Vector3(size || 1, 0, 0), new THREE.Vector3(0, -size || -1, 0), new THREE.Vector3(0, size || 1, 0), new THREE.Vector3(0, 0, -size || -1), new THREE.Vector3(0, 0, size || 1));
+        geometry.colors.push(new THREE.Color(xcolor || 0xffaa00), new THREE.Color(xcolor || 0xffaa00), new THREE.Color(ycolor || 0xaaff00), new THREE.Color(ycolor || 0xaaff00), new THREE.Color(zcolor || 0x00aaff), new THREE.Color(zcolor || 0x00aaff));
+        material = new THREE.LineBasicMaterial({
+          vertexColors: THREE.VertexColors,
+          linewidth: 2
+        });
+        return new THREE.Line(geometry, material, THREE.LinePieces);
+      }
+
+      return MyAxisHelper;
+
+    })();
     GlThreeView = (function(_super) {
 
       __extends(GlThreeView, _super);
@@ -36,7 +54,8 @@
       GlThreeView.prototype.template = threedView_template;
 
       GlThreeView.prototype.ui = {
-        renderBlock: "#glArea"
+        renderBlock: "#glArea",
+        overlayBlock: "#glOverlay"
       };
 
       GlThreeView.prototype.events = {
@@ -171,9 +190,10 @@
 
         this.rightclick = __bind(this.rightclick, this);
 
-        var ASPECT, FAR, NEAR,
+        var ASPECT, FAR, NEAR, viewAngle,
           _this = this;
         GlThreeView.__super__.constructor.call(this, options);
+        settings = options.settings;
         this.bindTo(this.model, "change", this.modelChanged);
         this.dragging = false;
         this.width = 800;
@@ -195,7 +215,15 @@
         this.scene = new THREE.Scene();
         this.scene.add(this.camera);
         this.setupLights();
-        this.addPlane();
+        if (settings) {
+          console.log("we have settings");
+          if (settings.get("showGrid")) {
+            this.addPlane();
+          }
+          if (settings.get("showAxis")) {
+            this.addAxes();
+          }
+        }
         this.renderer.setSize(this.width, this.height);
         this.controller = new THREE.Object3D();
         this.controller.setCurrent = function(current) {
@@ -205,6 +233,29 @@
         this.projector = new THREE.Projector();
         this.controls = new THREE.OrbitControls(this.camera);
         this.controls.autoRotate = false;
+        viewAngle = 45;
+        ASPECT = 800 / 600;
+        NEAR = 1;
+        FAR = 10000;
+        this.overlayRenderer = new THREE.WebGLRenderer({
+          clearColor: 0x000000,
+          clearAlpha: 0,
+          antialias: true
+        });
+        this.overlayCamera = new THREE.OrthographicCamera(-200, 200, 150, -150, NEAR, FAR);
+        this.overlayCamera.position.z = 300;
+        this.overlayCamera.position.y = 150;
+        this.overlayCamera.position.x = 150;
+        this.overlayscene = new THREE.Scene();
+        this.overlayscene.add(this.overlayCamera);
+        this.overlayControls = new THREE.OrbitControls(this.overlayCamera);
+        this.overlayControls.autoRotate = false;
+        this.xArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 0), 100, 0xFF7700);
+        this.yArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 0, -1), new THREE.Vector3(0, 0, 0), 100, 0x77FF00);
+        this.zArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 0), 100, 0x0077FF);
+        this.overlayscene.add(this.xArrow);
+        this.overlayscene.add(this.yArrow);
+        this.overlayscene.add(this.zArrow);
       }
 
       GlThreeView.prototype.addObjs2 = function() {
@@ -259,6 +310,12 @@
         return this.scene.add(plane);
       };
 
+      GlThreeView.prototype.addAxes = function() {
+        var axes;
+        axes = new MyAxisHelper(200, 0x666666, 0x666666, 0x666666);
+        return this.scene.add(axes);
+      };
+
       GlThreeView.prototype.addCage = function() {
         var line, lineGeo, lineMat, v;
         v = function(x, y, z) {
@@ -276,9 +333,11 @@
       };
 
       GlThreeView.prototype.onRender = function() {
-        var container;
+        var container, container2;
         container = $(this.ui.renderBlock);
         container.append(this.renderer.domElement);
+        container2 = $(this.ui.overlayBlock);
+        container2.append(this.overlayRenderer.domElement);
         return this.animate();
       };
 
@@ -288,6 +347,9 @@
         this.camera.lookAt(this.scene.position);
         this.controls.update();
         this.renderer.render(this.scene, this.camera);
+        this.overlayCamera.lookAt(this.overlayscene.position);
+        this.overlayControls.update();
+        this.overlayRenderer.render(this.overlayscene, this.overlayCamera);
         return requestAnimationFrame(this.animate);
       };
 

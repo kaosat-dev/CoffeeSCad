@@ -1,3 +1,22 @@
 <script id="3dViewTmpl" type="text/x-underscore-template">
-	<div id="glArea"> </div>
+	<div id="glArea" style="position: absolute"> </div>
+	<div id="glOverlay" style="position: absolute; top: 500px; left: 900px"></div>
+	<div id="overlay" style="position: absolute;">OverlayTest</div>
+	<script>
+	/*Just tinkering:
+	 *See:  https://github.com/mrdoob/three.js/issues/634
+	 var background = document.createElement( 'canvas' );
+	background.style.position = 'absolute';
+	background.context = background.getContext( '2d' );
+	background.context.fillStyle = 'rgba(255,0,0,0.5)';
+	background.context.fillRect( 0, 0, background.width, background.height );
+	container.appendChild( background );
+	
+	var foreground = document.createElement( 'canvas' );
+	foreground.style.position = 'absolute';
+	foreground.context = foreground.getContext( '2d' );
+	foreground.context.fillStyle = 'rgba(0,0,255,0.5)';
+	foreground.context.fillRect( 0, 0, foreground.width, foreground.height );
+	container.appendChild( foreground );*/
+	</script>
 </script>

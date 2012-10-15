@@ -83,6 +83,18 @@ return cubeStuff2.subtract(cubeStuff).color([0,1,0])"""
   #testcode = testcode.replace(/^\s*|\s*$/g, "")
   #testcode = testcode.replace /^\s+|\s+$/g, ""
 
+  class TestStuff
+    constructor:()->
+      @size=10
+      @name ="bleh"
+      shortcut = -> @doThat
+      #for key, value of @
+      #    shortcut[key] = value
+      return @doThat
+    
+    doThat:()=>
+      console.log @size+ " "+ @name
+
   app = new marionette.Application
     root: "/opencoffeescad"
     cadProcessor: null
@@ -103,6 +115,10 @@ return cubeStuff2.subtract(cubeStuff).color([0,1,0])"""
     console.log "after init"
     
   app.addInitializer (options)->
+    ts = new TestStuff()
+    console.log ts
+    ts("sfd")
+    console.log("done")
     app.settings = new Settings
     app.csgProcessor = new CsgProcessor
     app.lib = new Library
@@ -133,8 +149,10 @@ return cubeStuff2.subtract(cubeStuff).color([0,1,0])"""
     app.projectView = new ProjectView
       collection:@lib
       
+    
     app.glThreeView = new GlThreeView
       model: @model
+      settings: new GlViewSettings()
       
     app.mainContentLayout = new MainContentLayout
     

@@ -10,13 +10,42 @@ define (require) ->
   class GlViewSettings extends Backbone.Model
       defaults:
         antialiasing : true
-        showgrid :     true
+        showGrid     : true
+        showAxis     : true 
+  
+  #just for testing
+  
+  class MyAxisHelper
+    constructor:(size, xcolor, ycolor, zcolor)->
+      geometry = new THREE.Geometry()
+      
+      geometry.vertices.push(
+        new THREE.Vector3(-size or -1, 0, 0 ), new THREE.Vector3( size or 1, 0, 0 ),
+        new THREE.Vector3(0, -size or -1, 0), new THREE.Vector3( 0, size or 1, 0 ),
+        new THREE.Vector3(0, 0, -size or -1 ), new THREE.Vector3( 0, 0, size or 1 )
+        )
+        
+      geometry.colors.push(
+        new THREE.Color( xcolor or 0xffaa00 ), new THREE.Color( xcolor or 0xffaa00 ),
+        new THREE.Color( ycolor or 0xaaff00 ), new THREE.Color( ycolor or 0xaaff00 ),
+        new THREE.Color( zcolor or 0x00aaff ), new THREE.Color( zcolor or 0x00aaff )
+        )
+        
+      material = new THREE.LineBasicMaterial
+        vertexColors: THREE.VertexColors
+        #depthTest:false
+        linewidth:2
+      
+      return new THREE.Line(geometry, material, THREE.LinePieces)
+      #return THREE.Line.call( @, geometry, material, THREE.LinePieces )
+  
   
   
   class GlThreeView extends marionette.ItemView
     template: threedView_template
     ui:
       renderBlock : "#glArea"
+      overlayBlock: "#glOverlay" 
     events:
     #  'mousemove'   : 'mousemove'
     #  'mouseup'     : 'mouseup'
@@ -115,10 +144,8 @@ define (require) ->
       
     constructor:(options, settings)->
       super options
-      
+      settings = options.settings
       @bindTo(@model, "change", this.modelChanged)
-
-      
       #Controls:
       @dragging = false
       ##########
@@ -132,9 +159,6 @@ define (require) ->
       NEAR = 1
       FAR = 10000
       
-      #console.log("Aspect: #{ASPECT}")
-      #create a WebGL renderer, camera
-      #and a scene
       @renderer = new THREE.WebGLRenderer 
         clearColor: 0xEEEEEE
         clearAlpha: 1
@@ -154,13 +178,22 @@ define (require) ->
       @camera.position.x = 150
           
       @scene = new THREE.Scene()
-      #add the camera to the scene
       @scene.add(@camera)
       
       #@addObjs()
       #@addObjs2()
       @setupLights()
-      @addPlane()
+      
+      #TODO: do this properly
+      #antialiasing : true
+      #  showGrid     : true
+      #  showAxis     : true 
+      if settings
+        console.log ("we have settings")
+        if settings.get("showGrid")
+          @addPlane()
+        if settings.get("showAxis")
+          @addAxes()
       #@addCage()
       
       @renderer.setSize(@width, @height)
@@ -172,9 +205,43 @@ define (require) ->
       @controller.objects = @scene.__objects
       @projector = new THREE.Projector()
       
-      
       @controls = new THREE.OrbitControls(@camera)
       @controls.autoRotate = false
+      
+      
+      
+      #########
+      #Experimental overlay
+      viewAngle=45
+      ASPECT = 800 / 600
+      NEAR = 1
+      FAR = 10000
+      
+      @overlayRenderer = new THREE.WebGLRenderer 
+        clearColor: 0x000000
+        clearAlpha: 0
+        antialias: true
+      
+      @overlayCamera =
+        new THREE.OrthographicCamera(-200,200,150,-150,NEAR, FAR)
+      
+      @overlayCamera.position.z = 300
+      @overlayCamera.position.y = 150
+      @overlayCamera.position.x = 150
+            
+      @overlayscene = new THREE.Scene()
+      @overlayscene.add(@overlayCamera)
+      
+      @overlayControls = new THREE.OrbitControls(@overlayCamera)
+      @overlayControls.autoRotate = false
+      
+      @xArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,0),100,0xFF7700)
+      @yArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,-1),new THREE.Vector3(0,0,0),100, 0x77FF00)
+      @zArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,0),100, 0x0077FF)
+     
+      @overlayscene.add(@xArrow)
+      @overlayscene.add(@yArrow)
+      @overlayscene.add(@zArrow)
         
     addObjs2: () =>
       @cube = new THREE.Mesh(new THREE.CubeGeometry(50,50,50),new THREE.MeshBasicMaterial({color: 0x000000}))
@@ -186,15 +253,10 @@ define (require) ->
       new THREE.MeshLambertMaterial
         color: 0xCC0000
       
-      
-      #set up the sphere vars
       radius = 50
       segments = 16
       rings = 16
 
-      #create a new mesh with
-      #sphere geometry - we will cover
-      #the sphereMaterial next!
       sphere = new THREE.Mesh(
       
         new THREE.SphereGeometry(
@@ -204,8 +266,6 @@ define (require) ->
       
         sphereMaterial)
       sphere.name="Shinyyy"
-      #add the sphere to the scene
-      #@testSphere = sphere
       @scene.add(sphere)
       
     setupLights:()=>
@@ -238,6 +298,10 @@ define (require) ->
       plane.name = "workplane"
       #plane.receiveShadow = true
       @scene.add(plane)
+      
+    addAxes:()->
+      axes = new MyAxisHelper(200,0x666666,0x666666, 0x666666)
+      @scene.add(axes)
       
     addCage:()=>
       v=(x,y,z)->
@@ -287,6 +351,9 @@ define (require) ->
     onRender:()=>
       container = $(@ui.renderBlock)
       container.append(@renderer.domElement)
+      
+      container2 = $(@ui.overlayBlock)
+      container2.append(@overlayRenderer.domElement)
       @animate()
       
     animate:()=>
@@ -298,8 +365,12 @@ define (require) ->
       # you need to update lookAt on every frame
       @camera.lookAt(@scene.position)
       @controls.update()
-      
       @renderer.render(@scene, @camera)
+      
+      @overlayCamera.lookAt(@overlayscene.position)
+      @overlayControls.update()
+      @overlayRenderer.render(@overlayscene, @overlayCamera)
+      
       requestAnimationFrame(@animate)
     
     toCsgTest:(mesh)->
