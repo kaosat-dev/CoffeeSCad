@@ -118,6 +118,7 @@ THREE.CSG = {
 		var i, j, vertices, face,
 			three_geometry = new THREE.Geometry( ),
 			polygons = csg_model.toPolygons( );
+		//console.log(csg_model);
 		
 		if ( !CSG ) {
 			throw 'CSG library not loaded. Please get a copy from https://github.com/evanw/csg.js';
@@ -125,11 +126,11 @@ THREE.CSG = {
 		
 		for ( i = 0; i < polygons.length; i++ ) {
 			
-			color= new THREE.Color( 0xffffff );
+			color= new THREE.Color( 0xaaaaaa );
 			try
 			{  
 			    poly = polygons[i];
-			   /* console.log("poly");
+			    /*console.log("poly");
 			    console.log(poly);
 			    console.log("shared");
 			    console.log(poly.shared.name);*/
@@ -141,7 +142,10 @@ THREE.CSG = {
                 color.b=poly.shared.color[2];
 			}
 			catch(e)
-			{}
+			{
+			    //console.log("Error: "+e);
+			}
+			
 			
 			// Vertices
 			vertices = [];
@@ -153,7 +157,12 @@ THREE.CSG = {
 			}
 			
 			for (var j = 2; j < vertices.length; j++) {
-				face = new THREE.Face3( vertices[0], vertices[j-1], vertices[j], new THREE.Vector3( ).copy( polygons[i].plane.normal ) );
+			    var tmp = new THREE.Vector3( ).copy( polygons[i].plane.normal ) 
+			    var b = tmp[2]
+                tmp[2]=tmp[1]
+			    tmp[1]=b
+			    
+				face = new THREE.Face3( vertices[0], vertices[j-1], vertices[j], tmp);
 				face.vertexColors[0] = color;
 				face.vertexColors[1] = color;
 				face.vertexColors[2] = color;

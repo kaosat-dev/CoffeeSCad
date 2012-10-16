@@ -10,7 +10,7 @@ define (require) ->
   class GlViewSettings extends Backbone.Model
       defaults:
         antialiasing : true
-        showGrid     : true
+        showGrid     : false
         showAxis     : true 
   
   #just for testing
@@ -100,6 +100,12 @@ define (require) ->
     mousedown:(ev)=> 
       x = ev.offsetX
       y = ev.offsetY
+      #console.log ("x: #{x}, y: #{y}")
+      
+      ###for i in [0...10000]
+         p = new THREE.Vector3(Math.random() * 800,Math.random() * 600,Math.random() * 300-250)
+         @selectObj(p.x,p.y)
+      ###
       @selectObj(x,y)
       #if @current?
       #  @toCsgTest @current
@@ -117,20 +123,53 @@ define (require) ->
           #  color: 0xCC0000
           #@current.material = newMat
           @current.material = @current.origMaterial
+          if @current.cageView?
+            @scene.remove @current.cageView
           @current=null
+          
+      draw_impact=(position)=>
+        #particle = new THREE.Particle(@particleMaterial)
+        #particle.position = position 
+        #particle.scale.x = particle.scale.y = 80
+        #@scene.add( particle )
+        
+        sprite = new THREE.Sprite(
+          map: @particleTexture
+          transparent: true
+          useScreenCoordinates: false
+          scaleByViewport:false)
+        sprite.position = position
+       # sprite.position.x = sprite.position.Y = sprite.position.z = 100
+        @scene.add(sprite)
+        
+        #xLabel=@drawText("X")
+        #xLabel.position=position
+       # @scene.add(xLabel)
+        
           
       if intersects? 
         #console.log "interesects" 
         #console.log intersects
         if intersects.length > 0
+          
+          #display impact
+          #draw_impact(intersects[ 0 ].point)
+          
           if intersects[0].object.name != "workplane"
             if @current != intersects[0].object
               @current = intersects[0].object
-              #console.log @current.name
               newMat = new  THREE.MeshLambertMaterial
                 color: 0xCC0000
+              #newMat = new THREE.MeshBasicMaterial({color: 0x808080, wireframe: true, shading:THREE.FlatShading})
+              #newMat = new THREE.LineBasicMaterial({color: 0xFFFFFF, lineWidth: 1})
+                
               @current.origMaterial = @current.material
               @current.material = newMat
+              @addCage @current
+              if @current.cageView?
+                @scene.add @current.cageView
+              
+              
           else
             reset_col()
         else
@@ -141,6 +180,7 @@ define (require) ->
     modelChanged:(model, value)=>
       #console.log "model changed"
       @fromCsg @model
+      
       
     constructor:(options, settings)->
       super options
@@ -160,8 +200,8 @@ define (require) ->
       FAR = 10000
       
       @renderer = new THREE.WebGLRenderer 
-        clearColor: 0xEEEEEE
-        clearAlpha: 1
+        clearColor: 0x00000000
+        clearAlpha: 0
         antialias: true
       @renderer.clear()  
       
@@ -202,7 +242,7 @@ define (require) ->
       @controller.setCurrent = (current)=>
         @current = current
         
-      @controller.objects = @scene.__objects
+      @controller.objects = []
       @projector = new THREE.Projector()
       
       @controls = new THREE.OrbitControls(@camera)
@@ -212,18 +252,22 @@ define (require) ->
       
       #########
       #Experimental overlay
-      viewAngle=45
+      #viewAngle=45
       ASPECT = 800 / 600
-      NEAR = 1
-      FAR = 10000
+      #NEAR = 1
+      #FAR = 10000
       
       @overlayRenderer = new THREE.WebGLRenderer 
         clearColor: 0x000000
         clearAlpha: 0
         antialias: true
       
+     # @overlayCamera =
+      #  new THREE.OrthographicCamera(-200,200,150,-150,NEAR, FAR)
+        
+      @overlayRenderer.setSize(400, 300)
       @overlayCamera =
-        new THREE.OrthographicCamera(-200,200,150,-150,NEAR, FAR)
+        new THREE.PerspectiveCamera(@viewAngle,ASPECT, NEAR, FAR)
       
       @overlayCamera.position.z = 300
       @overlayCamera.position.y = 150
@@ -235,13 +279,64 @@ define (require) ->
       @overlayControls = new THREE.OrbitControls(@overlayCamera)
       @overlayControls.autoRotate = false
       
-      @xArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,0),100,0xFF7700)
-      @yArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,-1),new THREE.Vector3(0,0,0),100, 0x77FF00)
+      @xArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,0),100, 0xFF7700)
+      @yArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(0,0,0),100, 0x77FF00)
       @zArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,0),100, 0x0077FF)
      
       @overlayscene.add(@xArrow)
       @overlayscene.add(@yArrow)
       @overlayscene.add(@zArrow)
+      ###
+        for i in [-250..250]
+        text = @drawText()
+        text.position.set(Math.random() * 300-200,Math.random() * 300+100,Math.random() * 300-250)
+        @overlayscene.add(text)
+      ###
+      xLabel=@drawText("X")
+      xLabel.position.set(120,20,0)
+      @overlayscene.add(xLabel)
+      
+      yLabel=@drawText("Y")
+      yLabel.position.set(0,20,110)
+      @overlayscene.add(yLabel)
+      
+      zLabel=@drawText("Z")
+      zLabel.position.set(-15,140,-15)
+      @overlayscene.add(zLabel)
+      
+      canvas = document.createElement('canvas')
+      canvas.width = 100
+      canvas.height = 100
+      context = canvas.getContext('2d')
+  
+      PI2 = Math.PI * 2
+      context.beginPath()
+      context.arc( 0, 0, 1, 0, PI2, true )
+      context.closePath()
+      context.fill()
+      context.fillText("X", 40, 40)
+
+      texture = new THREE.Texture( canvas )
+      texture.needsUpdate = true
+
+      @particleTexture = new THREE.Texture(canvas)
+      @particleTexture.needsUpdate = true
+      
+      @particleMaterial = new THREE.MeshBasicMaterial( { map: texture, transparent: true ,color: 0x000000} );
+
+      
+
+
+      ###
+      context.fillStyle = "yellow";
+      context.fillRect(0, 0, 100, 100);
+      context.font = "24pt Arial";
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      context.fillStyle = "white";
+      context.fillText(text, 0, 0);
+      ###
+
         
     addObjs2: () =>
       @cube = new THREE.Mesh(new THREE.CubeGeometry(50,50,50),new THREE.MeshBasicMaterial({color: 0x000000}))
@@ -303,50 +398,63 @@ define (require) ->
       axes = new MyAxisHelper(200,0x666666,0x666666, 0x666666)
       @scene.add(axes)
       
-    addCage:()=>
+    addCage:(mesh)=>
+      bbox = mesh.geometry.boundingBox
+      length = bbox.max.x-bbox.min.x
+      width  = bbox.max.y-bbox.min.y
+      height = bbox.max.z-bbox.min.z
+      
+      cageGeo= new THREE.CubeGeometry(length,width,height)
+      #console.log @current.geometry.boundingBox
       v=(x,y,z)->
          return new THREE.Vector3(x,y,z)
-      lineGeo = new THREE.Geometry()
-      lineGeo.vertices.push(
-        v(-50, 0, 0), v(50, 0, 0),
-        v(0, -50, 0), v(0, 50, 0),
-        v(0, 0, -50), v(0, 0, 50),
-
-        v(-50, 50, -50), v(50, 50, -50),
-        v(-50, -50, -50), v(50, -50, -50),
-        v(-50, 50, 50), v(50, 50, 50),
-        v(-50, -50, 50), v(50, -50, 50),
-
-        v(-50, 0, 50), v(50, 0, 50),
-        v(-50, 0, -50), v(50, 0, -50),
-        v(-50, 50, 0), v(50, 50, 0),
-        v(-50, -50, 0), v(50, -50, 0),
-
-        v(50, -50, -50), v(50, 50, -50),
-        v(-50, -50, -50), v(-50, 50, -50),
-        v(50, -50, 50), v(50, 50, 50),
-        v(-50, -50, 50), v(-50, 50, 50),
-
-        v(0, -50, 50), v(0, 50, 50),
-        v(0, -50, -50), v(0, 50, -50),
-        v(50, -50, 0), v(50, 50, 0),
-        v(-50, -50, 0), v(-50, 50, 0),
-
-        v(50, 50, -50), v(50, 50, 50),
-        v(50, -50, -50), v(50, -50, 50),
-        v(-50, 50, -50), v(-50, 50, 50),
-        v(-50, -50, -50), v(-50, -50, 50),
-
-        v(-50, 0, -50), v(-50, 0, 50),
-        v(50, 0, -50), v(50, 0, 50),
-        v(0, 50, -50), v(0, 50, 50),
-        v(0, -50, -50), v(0, -50, 50)
-      )
-      lineMat = new THREE.LineBasicMaterial({color: 0x808080, lineWidth: 1})
-      line = new THREE.Line(lineGeo, lineMat)
-      line.type = THREE.Lines
-      @scene.add (line)
+     
+      lineMat = new THREE.LineBasicMaterial({color: 0x808080, lineWidth: 1,wireframe: true})
+      lineMat = new THREE.MeshBasicMaterial({color: 0x808080, wireframe: true, shading:THREE.FlatShading})
+      cage = new THREE.Mesh(cageGeo, lineMat)
+      #cage.type = THREE.Lines
+      console.log mesh.geometry
+      ##bla middlepoint
+      middlePoint=(geometry)->
+        
+        #console.log geometry.boundingBox
+        
+        middle  = new THREE.Vector3()
+        middle.x  = ( geometry.boundingBox.max.x + geometry.boundingBox.min.x ) / 2
+        middle.y  = ( geometry.boundingBox.max.y + geometry.boundingBox.min.y ) / 2
+        middle.z  = ( geometry.boundingBox.max.z + geometry.boundingBox.min.z ) / 2
+        return middle
       
+      delta = middlePoint(mesh.geometry)#.negate();
+      #cage.translate(mesh.geometry, delta)
+      cage.position = delta
+      
+      truc = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(-length/2,-width/2,height/2),width-15,0xFF7700)
+      cage.add truc
+      mesh.cageView= cage #children = []
+      
+      
+    drawText:(text)=>
+      canvas = document.createElement('canvas')
+      canvas.width = 120
+      canvas.height = 40
+      context = canvas.getContext('2d')
+      context.fillText(text, 40, 40)
+
+      texture = new THREE.Texture(canvas)
+      texture.needsUpdate = true
+      sprite = new THREE.Sprite(
+        map: texture
+        transparent: true
+        useScreenCoordinates: false
+        scaleByViewport:false)
+        
+      return sprite
+      
+      
+      #sprite = THREE.ImageUtils.loadTexture( "textures/sprites/disc.png" );
+      #material = new THREE.ParticleBasicMaterial( { size: 35, sizeAttenuation: false, map: sprite } );
+      #material.color.setHSV( 1.0, 0.2, 0.8 );
       
     onRender:()=>
       container = $(@ui.renderBlock)
@@ -403,6 +511,7 @@ define (require) ->
           
         @mesh = new THREE.Mesh(geom, mat)
         @scene.add @mesh
+        @controller.objects = [@mesh]
       catch error
         console.log "error #{error} in from csg conversion"
       #console.log @scene

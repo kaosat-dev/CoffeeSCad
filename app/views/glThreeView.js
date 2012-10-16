@@ -23,7 +23,7 @@
 
       GlViewSettings.prototype.defaults = {
         antialiasing: true,
-        showGrid: true,
+        showGrid: false,
         showAxis: true
       };
 
@@ -117,11 +117,16 @@
         var x, y;
         x = ev.offsetX;
         y = ev.offsetY;
+        /*for i in [0...10000]
+           p = new THREE.Vector3(Math.random() * 800,Math.random() * 600,Math.random() * 300-250)
+           @selectObj(p.x,p.y)
+        */
+
         return this.selectObj(x, y);
       };
 
       GlThreeView.prototype.selectObj = function(mouseX, mouseY) {
-        var intersects, newMat, ray, reset_col, v,
+        var draw_impact, intersects, newMat, ray, reset_col, v,
           _this = this;
         v = new THREE.Vector3((mouseX / this.width) * 2 - 1, -(mouseY / this.height) * 2 + 1, 0.5);
         this.projector.unprojectVector(v, this.camera);
@@ -130,8 +135,22 @@
         reset_col = function() {
           if (_this.current != null) {
             _this.current.material = _this.current.origMaterial;
+            if (_this.current.cageView != null) {
+              _this.scene.remove(_this.current.cageView);
+            }
             return _this.current = null;
           }
+        };
+        draw_impact = function(position) {
+          var sprite;
+          sprite = new THREE.Sprite({
+            map: _this.particleTexture,
+            transparent: true,
+            useScreenCoordinates: false,
+            scaleByViewport: false
+          });
+          sprite.position = position;
+          return _this.scene.add(sprite);
         };
         if (intersects != null) {
           if (intersects.length > 0) {
@@ -142,7 +161,11 @@
                   color: 0xCC0000
                 });
                 this.current.origMaterial = this.current.material;
-                return this.current.material = newMat;
+                this.current.material = newMat;
+                this.addCage(this.current);
+                if (this.current.cageView != null) {
+                  return this.scene.add(this.current.cageView);
+                }
               }
             } else {
               return reset_col();
@@ -165,6 +188,8 @@
         this.animate = __bind(this.animate, this);
 
         this.onRender = __bind(this.onRender, this);
+
+        this.drawText = __bind(this.drawText, this);
 
         this.addCage = __bind(this.addCage, this);
 
@@ -190,7 +215,7 @@
 
         this.rightclick = __bind(this.rightclick, this);
 
-        var ASPECT, FAR, NEAR, viewAngle,
+        var ASPECT, FAR, NEAR, PI2, canvas, context, texture, xLabel, yLabel, zLabel,
           _this = this;
         GlThreeView.__super__.constructor.call(this, options);
         settings = options.settings;
@@ -203,8 +228,8 @@
         NEAR = 1;
         FAR = 10000;
         this.renderer = new THREE.WebGLRenderer({
-          clearColor: 0xEEEEEE,
-          clearAlpha: 1,
+          clearColor: 0x00000000,
+          clearAlpha: 0,
           antialias: true
         });
         this.renderer.clear();
@@ -229,20 +254,18 @@
         this.controller.setCurrent = function(current) {
           return _this.current = current;
         };
-        this.controller.objects = this.scene.__objects;
+        this.controller.objects = [];
         this.projector = new THREE.Projector();
         this.controls = new THREE.OrbitControls(this.camera);
         this.controls.autoRotate = false;
-        viewAngle = 45;
         ASPECT = 800 / 600;
-        NEAR = 1;
-        FAR = 10000;
         this.overlayRenderer = new THREE.WebGLRenderer({
           clearColor: 0x000000,
           clearAlpha: 0,
           antialias: true
         });
-        this.overlayCamera = new THREE.OrthographicCamera(-200, 200, 150, -150, NEAR, FAR);
+        this.overlayRenderer.setSize(400, 300);
+        this.overlayCamera = new THREE.PerspectiveCamera(this.viewAngle, ASPECT, NEAR, FAR);
         this.overlayCamera.position.z = 300;
         this.overlayCamera.position.y = 150;
         this.overlayCamera.position.x = 150;
@@ -251,11 +274,56 @@
         this.overlayControls = new THREE.OrbitControls(this.overlayCamera);
         this.overlayControls.autoRotate = false;
         this.xArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 0), 100, 0xFF7700);
-        this.yArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 0, -1), new THREE.Vector3(0, 0, 0), 100, 0x77FF00);
+        this.yArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, 0), 100, 0x77FF00);
         this.zArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 0), 100, 0x0077FF);
         this.overlayscene.add(this.xArrow);
         this.overlayscene.add(this.yArrow);
         this.overlayscene.add(this.zArrow);
+        /*
+                for i in [-250..250]
+                text = @drawText()
+                text.position.set(Math.random() * 300-200,Math.random() * 300+100,Math.random() * 300-250)
+                @overlayscene.add(text)
+        */
+
+        xLabel = this.drawText("X");
+        xLabel.position.set(120, 20, 0);
+        this.overlayscene.add(xLabel);
+        yLabel = this.drawText("Y");
+        yLabel.position.set(0, 20, 110);
+        this.overlayscene.add(yLabel);
+        zLabel = this.drawText("Z");
+        zLabel.position.set(-15, 140, -15);
+        this.overlayscene.add(zLabel);
+        canvas = document.createElement('canvas');
+        canvas.width = 100;
+        canvas.height = 100;
+        context = canvas.getContext('2d');
+        PI2 = Math.PI * 2;
+        context.beginPath();
+        context.arc(0, 0, 1, 0, PI2, true);
+        context.closePath();
+        context.fill();
+        context.fillText("X", 40, 40);
+        texture = new THREE.Texture(canvas);
+        texture.needsUpdate = true;
+        this.particleTexture = new THREE.Texture(canvas);
+        this.particleTexture.needsUpdate = true;
+        this.particleMaterial = new THREE.MeshBasicMaterial({
+          map: texture,
+          transparent: true,
+          color: 0x000000
+        });
+        /*
+              context.fillStyle = "yellow";
+              context.fillRect(0, 0, 100, 100);
+              context.font = "24pt Arial";
+              context.textAlign = "center";
+              context.textBaseline = "middle";
+              context.fillStyle = "white";
+              context.fillText(text, 0, 0);
+        */
+
       }
 
       GlThreeView.prototype.addObjs2 = function() {
@@ -316,20 +384,59 @@
         return this.scene.add(axes);
       };
 
-      GlThreeView.prototype.addCage = function() {
-        var line, lineGeo, lineMat, v;
+      GlThreeView.prototype.addCage = function(mesh) {
+        var bbox, cage, cageGeo, delta, height, length, lineMat, middlePoint, truc, v, width;
+        bbox = mesh.geometry.boundingBox;
+        length = bbox.max.x - bbox.min.x;
+        width = bbox.max.y - bbox.min.y;
+        height = bbox.max.z - bbox.min.z;
+        cageGeo = new THREE.CubeGeometry(length, width, height);
         v = function(x, y, z) {
           return new THREE.Vector3(x, y, z);
         };
-        lineGeo = new THREE.Geometry();
-        lineGeo.vertices.push(v(-50, 0, 0), v(50, 0, 0), v(0, -50, 0), v(0, 50, 0), v(0, 0, -50), v(0, 0, 50), v(-50, 50, -50), v(50, 50, -50), v(-50, -50, -50), v(50, -50, -50), v(-50, 50, 50), v(50, 50, 50), v(-50, -50, 50), v(50, -50, 50), v(-50, 0, 50), v(50, 0, 50), v(-50, 0, -50), v(50, 0, -50), v(-50, 50, 0), v(50, 50, 0), v(-50, -50, 0), v(50, -50, 0), v(50, -50, -50), v(50, 50, -50), v(-50, -50, -50), v(-50, 50, -50), v(50, -50, 50), v(50, 50, 50), v(-50, -50, 50), v(-50, 50, 50), v(0, -50, 50), v(0, 50, 50), v(0, -50, -50), v(0, 50, -50), v(50, -50, 0), v(50, 50, 0), v(-50, -50, 0), v(-50, 50, 0), v(50, 50, -50), v(50, 50, 50), v(50, -50, -50), v(50, -50, 50), v(-50, 50, -50), v(-50, 50, 50), v(-50, -50, -50), v(-50, -50, 50), v(-50, 0, -50), v(-50, 0, 50), v(50, 0, -50), v(50, 0, 50), v(0, 50, -50), v(0, 50, 50), v(0, -50, -50), v(0, -50, 50));
         lineMat = new THREE.LineBasicMaterial({
           color: 0x808080,
-          lineWidth: 1
+          lineWidth: 1,
+          wireframe: true
         });
-        line = new THREE.Line(lineGeo, lineMat);
-        line.type = THREE.Lines;
-        return this.scene.add(line);
+        lineMat = new THREE.MeshBasicMaterial({
+          color: 0x808080,
+          wireframe: true,
+          shading: THREE.FlatShading
+        });
+        cage = new THREE.Mesh(cageGeo, lineMat);
+        console.log(mesh.geometry);
+        middlePoint = function(geometry) {
+          var middle;
+          middle = new THREE.Vector3();
+          middle.x = (geometry.boundingBox.max.x + geometry.boundingBox.min.x) / 2;
+          middle.y = (geometry.boundingBox.max.y + geometry.boundingBox.min.y) / 2;
+          middle.z = (geometry.boundingBox.max.z + geometry.boundingBox.min.z) / 2;
+          return middle;
+        };
+        delta = middlePoint(mesh.geometry);
+        cage.position = delta;
+        truc = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(-length / 2, -width / 2, height / 2), width - 15, 0xFF7700);
+        cage.add(truc);
+        return mesh.cageView = cage;
+      };
+
+      GlThreeView.prototype.drawText = function(text) {
+        var canvas, context, sprite, texture;
+        canvas = document.createElement('canvas');
+        canvas.width = 120;
+        canvas.height = 40;
+        context = canvas.getContext('2d');
+        context.fillText(text, 40, 40);
+        texture = new THREE.Texture(canvas);
+        texture.needsUpdate = true;
+        sprite = new THREE.Sprite({
+          map: texture,
+          transparent: true,
+          useScreenCoordinates: false,
+          scaleByViewport: false
+        });
+        return sprite;
       };
 
       GlThreeView.prototype.onRender = function() {
@@ -396,7 +503,8 @@
             this.scene.remove(this.mesh);
           }
           this.mesh = new THREE.Mesh(geom, mat);
-          return this.scene.add(this.mesh);
+          this.scene.add(this.mesh);
+          return this.controller.objects = [this.mesh];
         } catch (error) {
           return console.log("error " + error + " in from csg conversion");
         }

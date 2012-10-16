@@ -40,13 +40,14 @@ define (require) ->
         
     compileFormatCoffee:(source)->
       console.log("Compiling & formating coffeescad code")
-      extraLibTest = "var cube = CSG.cube;\n"
+      extraLibTest = "var Cube = CSG.cube;\n"
       extraLibTest += "var Sphere = CSG.sphere;\n"
       extraLibTest += "var Cylinder = CSG.cylinder;\n"
       extraLibTest += "var fromPoints = CAG.fromPoints;\n"
       
       #console.log("source: #{source}")
-      #TODO: replace this with compile --bare      
+      #TODO: replace this with compile --bare 
+      source+=".mirroredY().rotateX(-90)"     
       textblock = CoffeeScript.compile(source)
       console.log("-->base compile done")
       

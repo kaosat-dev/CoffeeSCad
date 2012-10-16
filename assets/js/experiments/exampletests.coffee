@@ -413,3 +413,56 @@ cubeStuff2 = new CubeClass(50,100,50)#.color([0,1,0])
 
 
 return cubeStuff2.subtract(cubeStuff).color([0,1,0]).setobjTag("tutu") 
+
+
+
+class Thingy
+  constructor: (@thickness=10, @pos=[0,0,0], @rot=[0,0,0]) ->
+  
+  render: =>
+    result = new CSG()
+    shape1 = fromPoints([[0,0], [150,50], [0,-50]])
+    shape = shape1.expand(20, 25)
+    shape = shape.extrude({offset:[0, 0, @thickness]}) 
+    cyl = new Cylinder({start: [0, 0, -50],end: [0, 0, 50],radius:10, resolution:12})
+    result = shape.subtract(cyl)
+    return result.translate(@pos).rotateX(@rot[0]).
+    rotateY(@rot[1]).rotateZ(@rot[2]).color([1,0.5,0])
+
+thing = new Thingy(50)
+thing2 = new Thingy(35)
+
+res = thing.render().union(thing2.render().mirroredX().color([0.2,0.5,0.6]))
+res= res.rotateX(9)
+res= res.rotateZ(180)
+res=res.rotateY(0)
+res= res.translate([0,0,100])
+return res
+
+###################
+cube1 = new Cube 
+  radius: 12
+cube2 = new Cube
+  radius: 5
+
+# define a connector on the center of one face of cube1
+# The connector's axis points outwards and its normal points
+# towards the positive z axis:
+cube1.properties.myConnector = new CSG.Connector([30, 0, 0], [1, 0, 0], [0, 0, 1])
+
+# define a similar connector for cube 2:
+cube2.properties.myConnector = new CSG.Connector([0, -4, 0], [0, -1, 0], [0, 0, 1])
+
+#do some random transformations on cube 1:
+cube1 = cube1.rotateX(0).rotateY(40)
+cube1 = cube1.translate([3.1, 30, 0])
+
+#Now attach cube2 to cube 1:
+cube2 = cube2.connectTo(
+  cube2.properties.myConnector, 
+  cube1.properties.myConnector, 
+  true,   # mirror 
+  0       # normalrotation
+)
+result = cube2.union(cube1);
+return result 
