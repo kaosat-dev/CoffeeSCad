@@ -74,9 +74,9 @@ thing = new Thingy(35)
 thing2 = new Thingy(25)
 
 res = thing.render().union(thing2.render().mirroredX().color([0.2,0.5,0.6]))
-res= res.rotateX(90)
-res= res.rotateZ(180)
-res= res.translate([0,0,0])
+res= res.rotateX(37)
+res= res.rotateZ(190)
+res= res.translate([0,0,100])
 return res
   """
 

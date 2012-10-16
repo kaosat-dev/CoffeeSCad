@@ -13,6 +13,14 @@
     THREE.CSG = require('three_csg');
     threedView_template = require("text!templates/3dview.tmpl");
     requestAnimationFrame = require('anim');
+    var normalizeEvent = function(event) {
+  if(!event.offsetX) {
+    event.offsetX = (event.pageX - $(event.target).offset().left);
+    event.offsetY = (event.pageY - $(event.target).offset().top);
+  }
+  return event;
+  };;
+
     GlViewSettings = (function(_super) {
 
       __extends(GlViewSettings, _super);
@@ -23,8 +31,9 @@
 
       GlViewSettings.prototype.defaults = {
         antialiasing: true,
-        showGrid: false,
-        showAxis: true
+        showGrid: true,
+        showAxis: true,
+        shadows: true
       };
 
       return GlViewSettings;
@@ -61,12 +70,28 @@
       GlThreeView.prototype.events = {
         'mousewheel': 'mousewheel',
         'mousedown': 'mousedown',
-        'contextmenu': 'rightclick'
+        'DOMMouseScroll': 'mousewheel'
       };
 
       GlThreeView.prototype.rightclick = function(ev) {};
 
       GlThreeView.prototype.mousewheel = function(ev) {
+        var wheelDelta;
+        ev = window.event || ev;
+        wheelDelta = null;
+        if (ev.originalEvent != null) {
+          wheelDelta = ev.originalEvent.detail != null ? ev.originalEvent.detail * (-120) : void 0;
+        } else {
+          wheelDelta = ev.wheelDelta;
+        }
+        if (wheelDelta > 0) {
+          this.controls.zoomOut();
+        } else {
+          this.controls.zoomIn();
+        }
+        ev.preventDefault();
+        ev.stopPropagation();
+        return false;
         /*ev = window.event or ev; # old IE support  
         delta = Math.max(-1, Math.min(1, (ev.wheelDelta or -ev.detail)))
         delta*=75
@@ -98,31 +123,29 @@
       };
 
       GlThreeView.prototype.mouseup = function(ev) {
-        var v, x, y;
+        var x, y;
         if (this.dragStart != null) {
           this.dragAmount = [this.dragStart.x - ev.offsetX, this.dragStart.y - ev.offsetY];
           this.dragStart = null;
         }
-        /*console.log ev
-        console.log "clientX: #{ev.clientX} clientY: #{ev.clientY}"
-        console.log "clientX: #{ev.offsetX} clientY: #{ev.offsetY}"
-        */
-
         x = ev.offsetX;
-        y = ev.offsetY;
-        return v = new THREE.Vector3((x / this.width) * 2 - 1, -(y / this.height) * 2 + 1, 0.5);
+        return y = ev.offsetY;
       };
 
       GlThreeView.prototype.mousedown = function(ev) {
         var x, y;
+        normalizeEvent(ev);
         x = ev.offsetX;
         y = ev.offsetY;
-        /*for i in [0...10000]
-           p = new THREE.Vector3(Math.random() * 800,Math.random() * 600,Math.random() * 300-250)
-           @selectObj(p.x,p.y)
+        return this.selectObj(x, y);
+        /*
+               #console.log ("x: #{x}, y: #{y}")
+               experimental: displays a set of random mouse->3d objects ray hits
+                for i in [0...10000]
+                 p = new THREE.Vector3(Math.random() * 800,Math.random() * 600,Math.random() * 300-250)
+                 @selectObj(p.x,p.y)
         */
 
-        return this.selectObj(x, y);
       };
 
       GlThreeView.prototype.selectObj = function(mouseX, mouseY) {
@@ -183,6 +206,8 @@
       };
 
       function GlThreeView(options, settings) {
+        this.addObjs = __bind(this.addObjs, this);
+
         this.fromCsg = __bind(this.fromCsg, this);
 
         this.animate = __bind(this.animate, this);
@@ -196,10 +221,6 @@
         this.addPlane = __bind(this.addPlane, this);
 
         this.setupLights = __bind(this.setupLights, this);
-
-        this.addObjs = __bind(this.addObjs, this);
-
-        this.addObjs2 = __bind(this.addObjs2, this);
 
         this.modelChanged = __bind(this.modelChanged, this);
 
@@ -234,9 +255,9 @@
         });
         this.renderer.clear();
         this.camera = new THREE.PerspectiveCamera(this.viewAngle, ASPECT, NEAR, FAR);
-        this.camera.position.z = 300;
-        this.camera.position.y = 150;
-        this.camera.position.x = 150;
+        this.camera.position.z = 500;
+        this.camera.position.y = 250;
+        this.camera.position.x = -250;
         this.scene = new THREE.Scene();
         this.scene.add(this.camera);
         this.setupLights();
@@ -248,6 +269,9 @@
           if (settings.get("showAxis")) {
             this.addAxes();
           }
+          if (settings.get("shadows")) {
+            this.renderer.shadowMapEnabled = true;
+          }
         }
         this.renderer.setSize(this.width, this.height);
         this.controller = new THREE.Object3D();
@@ -256,44 +280,33 @@
         };
         this.controller.objects = [];
         this.projector = new THREE.Projector();
-        this.controls = new THREE.OrbitControls(this.camera);
-        this.controls.autoRotate = false;
         ASPECT = 800 / 600;
         this.overlayRenderer = new THREE.WebGLRenderer({
           clearColor: 0x000000,
           clearAlpha: 0,
           antialias: true
         });
-        this.overlayRenderer.setSize(400, 300);
+        this.overlayRenderer.setSize(350, 250);
         this.overlayCamera = new THREE.PerspectiveCamera(this.viewAngle, ASPECT, NEAR, FAR);
-        this.overlayCamera.position.z = 300;
-        this.overlayCamera.position.y = 150;
-        this.overlayCamera.position.x = 150;
+        this.overlayCamera.position.z = this.camera.position.z;
+        this.overlayCamera.position.y = this.camera.position.y;
+        this.overlayCamera.position.x = this.camera.position.x;
         this.overlayscene = new THREE.Scene();
         this.overlayscene.add(this.overlayCamera);
-        this.overlayControls = new THREE.OrbitControls(this.overlayCamera);
-        this.overlayControls.autoRotate = false;
-        this.xArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 0), 100, 0xFF7700);
-        this.yArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, 0), 100, 0x77FF00);
-        this.zArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 0), 100, 0x0077FF);
+        this.xArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 0), 50, 0xFF7700);
+        this.yArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, 0), 50, 0x77FF00);
+        this.zArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 0), 50, 0x0077FF);
         this.overlayscene.add(this.xArrow);
         this.overlayscene.add(this.yArrow);
         this.overlayscene.add(this.zArrow);
-        /*
-                for i in [-250..250]
-                text = @drawText()
-                text.position.set(Math.random() * 300-200,Math.random() * 300+100,Math.random() * 300-250)
-                @overlayscene.add(text)
-        */
-
         xLabel = this.drawText("X");
-        xLabel.position.set(120, 20, 0);
+        xLabel.position.set(55, 0, 0);
         this.overlayscene.add(xLabel);
         yLabel = this.drawText("Y");
-        yLabel.position.set(0, 20, 110);
+        yLabel.position.set(0, 0, 55);
         this.overlayscene.add(yLabel);
         zLabel = this.drawText("Z");
-        zLabel.position.set(-15, 140, -15);
+        zLabel.position.set(0, 55, 0);
         this.overlayscene.add(zLabel);
         canvas = document.createElement('canvas');
         canvas.width = 100;
@@ -314,37 +327,9 @@
           transparent: true,
           color: 0x000000
         });
-        /*
-              context.fillStyle = "yellow";
-              context.fillRect(0, 0, 100, 100);
-              context.font = "24pt Arial";
-              context.textAlign = "center";
-              context.textBaseline = "middle";
-              context.fillStyle = "white";
-              context.fillText(text, 0, 0);
-        */
-
       }
 
-      GlThreeView.prototype.addObjs2 = function() {
-        this.cube = new THREE.Mesh(new THREE.CubeGeometry(50, 50, 50), new THREE.MeshBasicMaterial({
-          color: 0x000000
-        }));
-        return this.scene.add(this.cube);
-      };
-
-      GlThreeView.prototype.addObjs = function() {
-        var radius, rings, segments, sphere, sphereMaterial;
-        sphereMaterial = new THREE.MeshLambertMaterial({
-          color: 0xCC0000
-        });
-        radius = 50;
-        segments = 16;
-        rings = 16;
-        sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, segments, rings), sphereMaterial);
-        sphere.name = "Shinyyy";
-        return this.scene.add(sphere);
-      };
+      GlThreeView.prototype.setupScene = function() {};
 
       GlThreeView.prototype.setupLights = function() {
         var ambientLight, pointLight, spotLight;
@@ -358,6 +343,7 @@
         spotLight.position.x = 0;
         spotLight.position.y = 1000;
         spotLight.position.z = 0;
+        spotLight.castShadow = true;
         this.scene.add(ambientLight);
         this.scene.add(pointLight);
         return this.scene.add(spotLight);
@@ -371,10 +357,14 @@
           wireframe: true,
           shading: THREE.FlatShading
         });
+        planeMat = new THREE.MeshLambertMaterial({
+          color: 0xFFFFFF
+        });
         plane = new THREE.Mesh(planeGeo, planeMat);
         plane.rotation.x = -Math.PI / 2;
         plane.position.y = -30;
         plane.name = "workplane";
+        plane.receiveShadow = true;
         return this.scene.add(plane);
       };
 
@@ -405,7 +395,6 @@
           shading: THREE.FlatShading
         });
         cage = new THREE.Mesh(cageGeo, lineMat);
-        console.log(mesh.geometry);
         middlePoint = function(geometry) {
           var middle;
           middle = new THREE.Vector3();
@@ -424,15 +413,16 @@
       GlThreeView.prototype.drawText = function(text) {
         var canvas, context, sprite, texture;
         canvas = document.createElement('canvas');
-        canvas.width = 120;
-        canvas.height = 40;
+        canvas.width = 640;
+        canvas.height = 640;
         context = canvas.getContext('2d');
-        context.fillText(text, 40, 40);
+        context.font = "17px sans-serif";
+        context.fillText(text, canvas.width / 2, canvas.height / 2);
         texture = new THREE.Texture(canvas);
         texture.needsUpdate = true;
         sprite = new THREE.Sprite({
           map: texture,
-          transparent: true,
+          transparent: false,
           useScreenCoordinates: false,
           scaleByViewport: false
         });
@@ -443,14 +433,17 @@
         var container, container2;
         container = $(this.ui.renderBlock);
         container.append(this.renderer.domElement);
+        this.controls = new THREE.OrbitControls(this.camera, this.el);
+        this.controls.autoRotate = false;
         container2 = $(this.ui.overlayBlock);
         container2.append(this.overlayRenderer.domElement);
+        this.overlayControls = new THREE.OrbitControls(this.overlayCamera, this.el);
+        this.overlayControls.autoRotate = false;
+        this.overlayControls.userZoomSpeed = 0;
         return this.animate();
       };
 
       GlThreeView.prototype.animate = function() {
-        var t;
-        t = new Date().getTime();
         this.camera.lookAt(this.scene.position);
         this.controls.update();
         this.renderer.render(this.scene, this.camera);
@@ -503,11 +496,30 @@
             this.scene.remove(this.mesh);
           }
           this.mesh = new THREE.Mesh(geom, mat);
+          this.mesh.castShadow = true;
           this.scene.add(this.mesh);
-          return this.controller.objects = [this.mesh];
+          this.controller.objects = [this.mesh];
+          return this.addObjs;
         } catch (error) {
           return console.log("error " + error + " in from csg conversion");
         }
+      };
+
+      GlThreeView.prototype.addObjs = function() {
+        var radius, rings, segments, sphere, sphereMaterial;
+        this.cube = new THREE.Mesh(new THREE.CubeGeometry(50, 50, 50), new THREE.MeshBasicMaterial({
+          color: 0x000000
+        }));
+        this.scene.add(this.cube);
+        sphereMaterial = new THREE.MeshLambertMaterial({
+          color: 0xCC0000
+        });
+        radius = 50;
+        segments = 16;
+        rings = 16;
+        sphere = new THREE.Mesh(new THREE.SphereGeometry(radius, segments, rings), sphereMaterial);
+        sphere.name = "Shinyyy";
+        return this.scene.add(sphere);
       };
 
       return GlThreeView;

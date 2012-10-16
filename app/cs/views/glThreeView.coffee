@@ -7,11 +7,23 @@ define (require) ->
   threedView_template = require "text!templates/3dview.tmpl"
   requestAnimationFrame = require 'anim'
   
+  #TODO : move this to some "utils" lib
+  #This is to be able to use offsetX in firefox
+  `var normalizeEvent = function(event) {
+  if(!event.offsetX) {
+    event.offsetX = (event.pageX - $(event.target).offset().left);
+    event.offsetY = (event.pageY - $(event.target).offset().top);
+  }
+  return event;
+  };`
+  
+  
   class GlViewSettings extends Backbone.Model
       defaults:
         antialiasing : true
-        showGrid     : false
+        showGrid     : true
         showAxis     : true 
+        shadows      : true
   
   #just for testing
   
@@ -37,8 +49,6 @@ define (require) ->
         linewidth:2
       
       return new THREE.Line(geometry, material, THREE.LinePieces)
-      #return THREE.Line.call( @, geometry, material, THREE.LinePieces )
-  
   
   
   class GlThreeView extends marionette.ItemView
@@ -50,12 +60,30 @@ define (require) ->
     #  'mousemove'   : 'mousemove'
     #  'mouseup'     : 'mouseup'
       'mousewheel'  : 'mousewheel'
-      'mousedown'   :   'mousedown'#'dragstart'
-      'contextmenu': 'rightclick'
+      'mousedown'   : 'mousedown'#'dragstart'
+      #'contextmenu' : 'rightclick'
+      'DOMMouseScroll' : 'mousewheel'
       
     rightclick:(ev)=>
       #console.log "you clicked right"
     mousewheel:(ev)=>
+      #fix for firefox scroll
+      ev = window.event or ev
+      wheelDelta = null
+      if ev.originalEvent?
+        wheelDelta = if ev.originalEvent.detail? then ev.originalEvent.detail*(-120)
+      else
+        wheelDelta = ev.wheelDelta
+      
+      if wheelDelta > 0
+        @controls.zoomOut()
+      else 
+        @controls.zoomIn()
+      ev.preventDefault()
+      ev.stopPropagation()
+      return false
+      
+      #@controls.onMouseWheel(ev)
       ###ev = window.event or ev; # old IE support  
       delta = Math.max(-1, Math.min(1, (ev.wheelDelta or -ev.detail)))
       delta*=75
@@ -63,8 +91,7 @@ define (require) ->
         @camera.position.z-=delta
       return false
       ###
-      
-    
+
     mousemove:(ev)->
       if @dragStart?
         moveMinMax = 10
@@ -88,25 +115,24 @@ define (require) ->
       if @dragStart?
         @dragAmount=[@dragStart.x-ev.offsetX, @dragStart.y-ev.offsetY]
         @dragStart=null
-      ###console.log ev
-      console.log "clientX: #{ev.clientX} clientY: #{ev.clientY}"
-      console.log "clientX: #{ev.offsetX} clientY: #{ev.offsetY}"
+     
+      x = ev.offsetX
+      y = ev.offsetY
+      #v = new THREE.Vector3((x/@width)*2-1, -(y/@height)*2+1, 0.5)
+      
+    mousedown:(ev)=>
+      normalizeEvent(ev)
+      x = ev.offsetX
+      y = ev.offsetY
+      @selectObj(x,y)
+      
       ###
-      
-      x = ev.offsetX
-      y = ev.offsetY
-      v = new THREE.Vector3((x/@width)*2-1, -(y/@height)*2+1, 0.5)
-      
-    mousedown:(ev)=> 
-      x = ev.offsetX
-      y = ev.offsetY
-      #console.log ("x: #{x}, y: #{y}")
-      
-      ###for i in [0...10000]
+       #console.log ("x: #{x}, y: #{y}")
+       experimental: displays a set of random mouse->3d objects ray hits
+        for i in [0...10000]
          p = new THREE.Vector3(Math.random() * 800,Math.random() * 600,Math.random() * 300-250)
          @selectObj(p.x,p.y)
       ###
-      @selectObj(x,y)
       #if @current?
       #  @toCsgTest @current
       
@@ -181,7 +207,6 @@ define (require) ->
       #console.log "model changed"
       @fromCsg @model
       
-      
     constructor:(options, settings)->
       super options
       settings = options.settings
@@ -189,10 +214,8 @@ define (require) ->
       #Controls:
       @dragging = false
       ##########
-      
       @width = 800
       @height = 600
-      
       #camera attributes
       @viewAngle=45
       ASPECT = @width / @height
@@ -203,7 +226,9 @@ define (require) ->
         clearColor: 0x00000000
         clearAlpha: 0
         antialias: true
+        
       @renderer.clear()  
+     
       
       @camera =
         new THREE.PerspectiveCamera(
@@ -213,9 +238,9 @@ define (require) ->
           FAR)
       #the camera starts at 0,0,0
       #so pull it back
-      @camera.position.z = 300
-      @camera.position.y = 150
-      @camera.position.x = 150
+      @camera.position.z = 500
+      @camera.position.y = 250
+      @camera.position.x = -250
           
       @scene = new THREE.Scene()
       @scene.add(@camera)
@@ -234,7 +259,8 @@ define (require) ->
           @addPlane()
         if settings.get("showAxis")
           @addAxes()
-      #@addCage()
+        if settings.get("shadows")
+          @renderer.shadowMapEnabled = true
       
       @renderer.setSize(@width, @height)
   
@@ -245,17 +271,13 @@ define (require) ->
       @controller.objects = []
       @projector = new THREE.Projector()
       
-      @controls = new THREE.OrbitControls(@camera)
-      @controls.autoRotate = false
-      
-      
       
       #########
       #Experimental overlay
       #viewAngle=45
       ASPECT = 800 / 600
       #NEAR = 1
-      #FAR = 10000
+      #FAR = 100000
       
       @overlayRenderer = new THREE.WebGLRenderer 
         clearColor: 0x000000
@@ -265,45 +287,38 @@ define (require) ->
      # @overlayCamera =
       #  new THREE.OrthographicCamera(-200,200,150,-150,NEAR, FAR)
         
-      @overlayRenderer.setSize(400, 300)
+      @overlayRenderer.setSize(350, 250)
       @overlayCamera =
         new THREE.PerspectiveCamera(@viewAngle,ASPECT, NEAR, FAR)
       
-      @overlayCamera.position.z = 300
-      @overlayCamera.position.y = 150
-      @overlayCamera.position.x = 150
+      @overlayCamera.position.z = @camera.position.z
+      @overlayCamera.position.y = @camera.position.y
+      @overlayCamera.position.x = @camera.position.x
             
       @overlayscene = new THREE.Scene()
       @overlayscene.add(@overlayCamera)
       
-      @overlayControls = new THREE.OrbitControls(@overlayCamera)
-      @overlayControls.autoRotate = false
-      
-      @xArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,0),100, 0xFF7700)
-      @yArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(0,0,0),100, 0x77FF00)
-      @zArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,0),100, 0x0077FF)
+      @xArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,0),50, 0xFF7700)
+      @yArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(0,0,0),50, 0x77FF00)
+      @zArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,0),50, 0x0077FF)
      
       @overlayscene.add(@xArrow)
       @overlayscene.add(@yArrow)
       @overlayscene.add(@zArrow)
-      ###
-        for i in [-250..250]
-        text = @drawText()
-        text.position.set(Math.random() * 300-200,Math.random() * 300+100,Math.random() * 300-250)
-        @overlayscene.add(text)
-      ###
+      
       xLabel=@drawText("X")
-      xLabel.position.set(120,20,0)
+      xLabel.position.set(55,0,0)
       @overlayscene.add(xLabel)
       
       yLabel=@drawText("Y")
-      yLabel.position.set(0,20,110)
+      yLabel.position.set(0,0,55)
       @overlayscene.add(yLabel)
       
       zLabel=@drawText("Z")
-      zLabel.position.set(-15,140,-15)
+      zLabel.position.set(0,55,0)
       @overlayscene.add(zLabel)
       
+      ####
       canvas = document.createElement('canvas')
       canvas.width = 100
       canvas.height = 100
@@ -324,44 +339,7 @@ define (require) ->
       
       @particleMaterial = new THREE.MeshBasicMaterial( { map: texture, transparent: true ,color: 0x000000} );
 
-      
-
-
-      ###
-      context.fillStyle = "yellow";
-      context.fillRect(0, 0, 100, 100);
-      context.font = "24pt Arial";
-      context.textAlign = "center";
-      context.textBaseline = "middle";
-      context.fillStyle = "white";
-      context.fillText(text, 0, 0);
-      ###
-
-        
-    addObjs2: () =>
-      @cube = new THREE.Mesh(new THREE.CubeGeometry(50,50,50),new THREE.MeshBasicMaterial({color: 0x000000}))
-      @scene.add(@cube)
-      
-    addObjs: () =>
-      #set up material
-      sphereMaterial =
-      new THREE.MeshLambertMaterial
-        color: 0xCC0000
-      
-      radius = 50
-      segments = 16
-      rings = 16
-
-      sphere = new THREE.Mesh(
-      
-        new THREE.SphereGeometry(
-          radius,
-          segments,
-          rings),
-      
-        sphereMaterial)
-      sphere.name="Shinyyy"
-      @scene.add(sphere)
+    setupScene:()->
       
     setupLights:()=>
       pointLight =
@@ -377,6 +355,8 @@ define (require) ->
       spotLight.position.x = 0
       spotLight.position.y = 1000
       spotLight.position.z = 0
+      #
+      spotLight.castShadow = true
       
       @scene.add(ambientLight);
       @scene.add(pointLight)
@@ -387,11 +367,14 @@ define (require) ->
       planeMat = new THREE.MeshBasicMaterial({color: 0x808080, wireframe: true, shading:THREE.FlatShading})
       #planeMat = new THREE.LineBasicMaterial({color: 0xFFFFFF, lineWidth: 1})
       #planeMat = new THREE.MeshLambertMaterial({color: 0xFFFFFF})
+      planeMat = new THREE.MeshLambertMaterial({color: 0xFFFFFF})
+      
       plane = new THREE.Mesh(planeGeo, planeMat)
       plane.rotation.x = -Math.PI/2
       plane.position.y = -30
       plane.name = "workplane"
-      #plane.receiveShadow = true
+      #
+      plane.receiveShadow = true
       @scene.add(plane)
       
     addAxes:()->
@@ -413,7 +396,6 @@ define (require) ->
       lineMat = new THREE.MeshBasicMaterial({color: 0x808080, wireframe: true, shading:THREE.FlatShading})
       cage = new THREE.Mesh(cageGeo, lineMat)
       #cage.type = THREE.Lines
-      console.log mesh.geometry
       ##bla middlepoint
       middlePoint=(geometry)->
         
@@ -436,41 +418,39 @@ define (require) ->
       
     drawText:(text)=>
       canvas = document.createElement('canvas')
-      canvas.width = 120
-      canvas.height = 40
+      canvas.width = 640
+      canvas.height = 640
       context = canvas.getContext('2d')
-      context.fillText(text, 40, 40)
+      context.font = "17px sans-serif"
+      context.fillText(text, canvas.width/2, canvas.height/2)
 
       texture = new THREE.Texture(canvas)
       texture.needsUpdate = true
       sprite = new THREE.Sprite(
         map: texture
-        transparent: true
+        transparent: false
         useScreenCoordinates: false
         scaleByViewport:false)
-        
       return sprite
-      
-      
-      #sprite = THREE.ImageUtils.loadTexture( "textures/sprites/disc.png" );
-      #material = new THREE.ParticleBasicMaterial( { size: 35, sizeAttenuation: false, map: sprite } );
-      #material.color.setHSV( 1.0, 0.2, 0.8 );
       
     onRender:()=>
       container = $(@ui.renderBlock)
       container.append(@renderer.domElement)
       
+      @controls = new THREE.OrbitControls(@camera,@el)
+      @controls.autoRotate = false
+      
+      
       container2 = $(@ui.overlayBlock)
       container2.append(@overlayRenderer.domElement)
+      
+      @overlayControls = new THREE.OrbitControls(@overlayCamera,@el)
+      @overlayControls.autoRotate = false
+      @overlayControls.userZoomSpeed=0
+      
       @animate()
       
     animate:()=>
-      t= new Date().getTime()
-      #console.log t
-      #@camera.position.x = Math.sin(t/10000)*300
-     # @camera.position.y = 150
-     # @camera.position.z = Math.cos(t/10000)*300
-      # you need to update lookAt on every frame
       @camera.lookAt(@scene.position)
       @controls.update()
       @renderer.render(@scene, @camera)
@@ -510,11 +490,41 @@ define (require) ->
           @scene.remove @mesh
           
         @mesh = new THREE.Mesh(geom, mat)
+        #
+        @mesh.castShadow = true
+        #@mesh.receiveShadow = true
+        
         @scene.add @mesh
         @controller.objects = [@mesh]
+        @addObjs
       catch error
         console.log "error #{error} in from csg conversion"
       #console.log @scene
+      
+      
+      
+    addObjs: () =>
+      @cube = new THREE.Mesh(new THREE.CubeGeometry(50,50,50),new THREE.MeshBasicMaterial({color: 0x000000}))
+      @scene.add(@cube)
+      #set up material
+      sphereMaterial =
+      new THREE.MeshLambertMaterial
+        color: 0xCC0000
+      
+      radius = 50
+      segments = 16
+      rings = 16
+
+      sphere = new THREE.Mesh(
+      
+        new THREE.SphereGeometry(
+          radius,
+          segments,
+          rings),
+      
+        sphereMaterial)
+      sphere.name="Shinyyy"
+      @scene.add(sphere)
       
 
   return {GlThreeView, GlViewSettings}
