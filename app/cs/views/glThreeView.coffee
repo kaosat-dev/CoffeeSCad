@@ -4,22 +4,15 @@ define (require) ->
   csg = require 'csg'
   THREE = require 'three'
   THREE.CSG = require 'three_csg'
+  detector = require 'detector'
+  utils = require 'utils'
   threedView_template = require "text!templates/3dview.tmpl"
   requestAnimationFrame = require 'anim'
-  
-  #TODO : move this to some "utils" lib
-  #This is to be able to use offsetX in firefox
-  `var normalizeEvent = function(event) {
-  if(!event.offsetX) {
-    event.offsetX = (event.pageX - $(event.target).offset().left);
-    event.offsetY = (event.pageY - $(event.target).offset().top);
-  }
-  return event;
-  };`
   
   
   class GlViewSettings extends Backbone.Model
       defaults:
+        renderer     : 'webgl'
         antialiasing : true
         showGrid     : true
         showAxis     : true 
@@ -57,15 +50,21 @@ define (require) ->
       renderBlock : "#glArea"
       overlayBlock: "#glOverlay" 
     events:
-    #  'mousemove'   : 'mousemove'
-    #  'mouseup'     : 'mouseup'
+      'mousemove'   : 'mousemove'
+      'mouseup'     : 'mouseup'
       'mousewheel'  : 'mousewheel'
-      'mousedown'   : 'mousedown'#'dragstart'
-      #'contextmenu' : 'rightclick'
+      'mousedown'   : 'mousedown'
+      'contextmenu' : 'rightclick'
       'DOMMouseScroll' : 'mousewheel'
       
     rightclick:(ev)=>
-      #console.log "you clicked right"
+      normalizeEvent(ev)
+      x = ev.offsetX
+      y = ev.offsetY
+      @selectObj(x,y)
+      ev.preventDefault()
+      return false
+      
     mousewheel:(ev)=>
       #fix for firefox scroll
       ev = window.event or ev
@@ -93,7 +92,8 @@ define (require) ->
       ###
 
     mousemove:(ev)->
-      if @dragStart?
+      #return false
+      ###if @dragStart?
         moveMinMax = 10
         
         @dragAmount=[@dragStart.x-ev.offsetX, @dragStart.y-ev.offsetY]
@@ -107,35 +107,22 @@ define (require) ->
         @camera.position.x+=  x_move #@dragAmount.x/10000
         @camera.position.y-=  y_move#@dragAmount.y/100
         return false
-        
+      ###  
     dragstart:(ev)=>
       @dragStart={'x':ev.offsetX, 'y':ev.offsetY}
       
     mouseup:(ev)=>
-      if @dragStart?
-        @dragAmount=[@dragStart.x-ev.offsetX, @dragStart.y-ev.offsetY]
-        @dragStart=null
+      #if @dragStart?
+      #  @dragAmount=[@dragStart.x-ev.offsetX, @dragStart.y-ev.offsetY]
+      #  @dragStart=null
      
-      x = ev.offsetX
-      y = ev.offsetY
+      #x = ev.offsetX
+      #y = ev.offsetY
       #v = new THREE.Vector3((x/@width)*2-1, -(y/@height)*2+1, 0.5)
       
     mousedown:(ev)=>
-      normalizeEvent(ev)
-      x = ev.offsetX
-      y = ev.offsetY
-      @selectObj(x,y)
-      
-      ###
-       #console.log ("x: #{x}, y: #{y}")
-       experimental: displays a set of random mouse->3d objects ray hits
-        for i in [0...10000]
-         p = new THREE.Vector3(Math.random() * 800,Math.random() * 600,Math.random() * 300-250)
-         @selectObj(p.x,p.y)
-      ###
-      #if @current?
-      #  @toCsgTest @current
-      
+      #ev.preventDefault()
+      #return false
              
     selectObj:(mouseX,mouseY)=>
       v = new THREE.Vector3((mouseX/@width)*2-1, -(mouseY/@height)*2+1, 0.5)
@@ -194,8 +181,6 @@ define (require) ->
               @addCage @current
               if @current.cageView?
                 @scene.add @current.cageView
-              
-              
           else
             reset_col()
         else
@@ -216,45 +201,14 @@ define (require) ->
       ##########
       @width = 800
       @height = 600
-      #camera attributes
-      @viewAngle=45
-      ASPECT = @width / @height
-      NEAR = 1
-      FAR = 10000
       
-      @renderer = new THREE.WebGLRenderer 
-        clearColor: 0x00000000
-        clearAlpha: 0
-        antialias: true
-        
-      @renderer.clear()  
-     
-      
-      @camera =
-        new THREE.PerspectiveCamera(
-          @viewAngle,
-          ASPECT,
-          NEAR,
-          FAR)
-      #the camera starts at 0,0,0
-      #so pull it back
-      @camera.position.z = 500
-      @camera.position.y = 250
-      @camera.position.x = -250
-          
-      @scene = new THREE.Scene()
-      @scene.add(@camera)
-      
-      #@addObjs()
-      #@addObjs2()
-      @setupLights()
+      @renderer=null
+      @setupScene()
+      @setupOverlayScene()
       
       #TODO: do this properly
-      #antialiasing : true
-      #  showGrid     : true
-      #  showAxis     : true 
+      @configure(settings)
       if settings
-        console.log ("we have settings")
         if settings.get("showGrid")
           @addPlane()
         if settings.get("showAxis")
@@ -262,32 +216,90 @@ define (require) ->
         if settings.get("shadows")
           @renderer.shadowMapEnabled = true
       
-      @renderer.setSize(@width, @height)
-  
       @controller = new THREE.Object3D()      
       @controller.setCurrent = (current)=>
         @current = current
         
       @controller.objects = []
       @projector = new THREE.Projector()
+    
+    configure:(settings)=>
+      if settings.get("renderer")
+          renderer = settings.get("renderer")
+          if renderer =="webgl"
+            if detector.webgl
+              @renderer = new THREE.WebGLRenderer 
+                clearColor: 0x00000000
+                clearAlpha: 0
+                antialias: true
+              @renderer.clear() 
+              @renderer.setSize(@width, @height)
+              
+              @overlayRenderer = new THREE.WebGLRenderer 
+                clearColor: 0x000000
+                clearAlpha: 0
+                antialias: true
+              @overlayRenderer.setSize(350, 250)
+            else if not detector.webgl and not detector.canvas
+              #TODO: handle this correctly
+              console.log("No Webgl and no canvas (fallback) support, cannot render")
+            else if not detector.webgl and detector.canvas
+              @renderer = new THREE.CanvasRenderer 
+                clearColor: 0x00000000
+                clearAlpha: 0
+                antialias: true
+              @renderer.clear() 
+              @overlayRenderer = new THREE.CanvasRenderer 
+                clearColor: 0x000000
+                clearAlpha: 0
+                antialias: true
+              @overlayRenderer.setSize(350, 250)
+              @renderer.setSize(@width, @height)
+            else
+              console.log("No Webgl and no canvas (fallback) support, cannot render")
+          else if renderer =="canvas"
+            if detector.canvas
+              @renderer = new THREE.CanvasRenderer 
+                clearColor: 0x00000000
+                clearAlpha: 0
+                antialias: true
+              @renderer.clear() 
+              @overlayRenderer = new THREE.CanvasRenderer 
+                clearColor: 0x000000
+                clearAlpha: 0
+                antialias: true
+              @overlayRenderer.setSize(350, 250)
+              @renderer.setSize(@width, @height)
+            else if not detector.canvas
+              #TODO: handle this correctly
+              console.log("No canvas support, cannot render")
+    
+    setupScene:()->
+      @viewAngle=45
+      ASPECT = @width / @height
+      NEAR = 1
+      FAR = 10000
       
+      @camera =
+        new THREE.PerspectiveCamera(
+          @viewAngle,
+          ASPECT,
+          NEAR,
+          FAR)
+      @camera.position.z = 500
+      @camera.position.y = 250
+      @camera.position.x = -250
+          
+      @scene = new THREE.Scene()
+      @scene.add(@camera)
       
-      #########
+      @setupLights()
+      
+    setupOverlayScene:()->
       #Experimental overlay
-      #viewAngle=45
-      ASPECT = 800 / 600
-      #NEAR = 1
-      #FAR = 100000
-      
-      @overlayRenderer = new THREE.WebGLRenderer 
-        clearColor: 0x000000
-        clearAlpha: 0
-        antialias: true
-      
-     # @overlayCamera =
-      #  new THREE.OrthographicCamera(-200,200,150,-150,NEAR, FAR)
-        
-      @overlayRenderer.setSize(350, 250)
+      ASPECT = @width / @height
+      NEAR = 1
+      FAR = 10000
       @overlayCamera =
         new THREE.PerspectiveCamera(@viewAngle,ASPECT, NEAR, FAR)
       
@@ -318,28 +330,6 @@ define (require) ->
       zLabel.position.set(0,55,0)
       @overlayscene.add(zLabel)
       
-      ####
-      canvas = document.createElement('canvas')
-      canvas.width = 100
-      canvas.height = 100
-      context = canvas.getContext('2d')
-  
-      PI2 = Math.PI * 2
-      context.beginPath()
-      context.arc( 0, 0, 1, 0, PI2, true )
-      context.closePath()
-      context.fill()
-      context.fillText("X", 40, 40)
-
-      texture = new THREE.Texture( canvas )
-      texture.needsUpdate = true
-
-      @particleTexture = new THREE.Texture(canvas)
-      @particleTexture.needsUpdate = true
-      
-      @particleMaterial = new THREE.MeshBasicMaterial( { map: texture, transparent: true ,color: 0x000000} );
-
-    setupScene:()->
       
     setupLights:()=>
       pointLight =
@@ -432,6 +422,25 @@ define (require) ->
         useScreenCoordinates: false
         scaleByViewport:false)
       return sprite
+    
+    setupPickerHelper:()->
+      canvas = document.createElement('canvas')
+      canvas.width = 100
+      canvas.height = 100
+      context = canvas.getContext('2d')
+  
+      PI2 = Math.PI * 2
+      context.beginPath()
+      context.arc( 0, 0, 1, 0, PI2, true )
+      context.closePath()
+      context.fill()
+      context.fillText("X", 40, 40)
+
+      texture = new THREE.Texture( canvas )
+      texture.needsUpdate = true
+      @particleTexture = new THREE.Texture(canvas)
+      @particleTexture.needsUpdate = true
+      @particleMaterial = new THREE.MeshBasicMaterial( { map: texture, transparent: true ,color: 0x000000} );
       
     onRender:()=>
       container = $(@ui.renderBlock)

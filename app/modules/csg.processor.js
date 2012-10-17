@@ -276,22 +276,6 @@
         return result;
       };
 
-      CsgProcessor.prototype.getBlobBuilder = function() {
-        bb;
-
-        var bb;
-        if (window.BlobBuilder) {
-          bb = new window.BlobBuilder();
-        } else if (window.WebKitBlobBuilder) {
-          bb = new window.WebKitBlobBuilder();
-        } else if (window.MozBlobBuilder) {
-          bb = new window.MozBlobBuilder();
-        } else {
-          throw new Error("Your browser doesn't support BlobBuilder");
-        }
-        return bb;
-      };
-
       CsgProcessor.prototype.setCoffeeSCad = function(script, filename) {
         var scripthaserrors;
         filename = !filename ? "openjscad.jscad" : void 0;

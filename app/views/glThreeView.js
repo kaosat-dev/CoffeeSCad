@@ -5,22 +5,16 @@
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   define(function(require) {
-    var $, GlThreeView, GlViewSettings, MyAxisHelper, THREE, csg, marionette, requestAnimationFrame, threedView_template;
+    var $, GlThreeView, GlViewSettings, MyAxisHelper, THREE, csg, detector, marionette, requestAnimationFrame, threedView_template, utils;
     $ = require('jquery');
     marionette = require('marionette');
     csg = require('csg');
     THREE = require('three');
     THREE.CSG = require('three_csg');
+    detector = require('detector');
+    utils = require('utils');
     threedView_template = require("text!templates/3dview.tmpl");
     requestAnimationFrame = require('anim');
-    var normalizeEvent = function(event) {
-  if(!event.offsetX) {
-    event.offsetX = (event.pageX - $(event.target).offset().left);
-    event.offsetY = (event.pageY - $(event.target).offset().top);
-  }
-  return event;
-  };;
-
     GlViewSettings = (function(_super) {
 
       __extends(GlViewSettings, _super);
@@ -30,6 +24,7 @@
       }
 
       GlViewSettings.prototype.defaults = {
+        renderer: 'webgl',
         antialiasing: true,
         showGrid: true,
         showAxis: true,
@@ -68,12 +63,23 @@
       };
 
       GlThreeView.prototype.events = {
+        'mousemove': 'mousemove',
+        'mouseup': 'mouseup',
         'mousewheel': 'mousewheel',
         'mousedown': 'mousedown',
+        'contextmenu': 'rightclick',
         'DOMMouseScroll': 'mousewheel'
       };
 
-      GlThreeView.prototype.rightclick = function(ev) {};
+      GlThreeView.prototype.rightclick = function(ev) {
+        var x, y;
+        normalizeEvent(ev);
+        x = ev.offsetX;
+        y = ev.offsetY;
+        this.selectObj(x, y);
+        ev.preventDefault();
+        return false;
+      };
 
       GlThreeView.prototype.mousewheel = function(ev) {
         var wheelDelta;
@@ -103,16 +109,22 @@
       };
 
       GlThreeView.prototype.mousemove = function(ev) {
-        var moveMinMax, x_move, y_move;
-        if (this.dragStart != null) {
-          moveMinMax = 10;
-          this.dragAmount = [this.dragStart.x - ev.offsetX, this.dragStart.y - ev.offsetY];
-          x_move = Math.max(-moveMinMax, Math.min(moveMinMax, this.dragAmount[0] / 10));
-          y_move = Math.max(-moveMinMax, Math.min(moveMinMax, this.dragAmount[1] / 10));
-          this.camera.position.x += x_move;
-          this.camera.position.y -= y_move;
-          return false;
-        }
+        /*if @dragStart?
+          moveMinMax = 10
+          
+          @dragAmount=[@dragStart.x-ev.offsetX, @dragStart.y-ev.offsetY]
+          #@dragAmount[1]=@height-@dragAmount[1]
+          #console.log "bleh #{@dragAmount[0]/500}"
+          x_move = Math.max(-moveMinMax, Math.min(moveMinMax, @dragAmount[0]/10))
+          y_move = Math.max(-moveMinMax, Math.min(moveMinMax, @dragAmount[1]/10))
+          #x_move = (x_move/x_move+0.0001)*moveMinMax
+          #y_move = (y_move/y_move+0.0001)*moveMinMax
+          #console.log("moving by #{y_move}")
+          @camera.position.x+=  x_move #@dragAmount.x/10000
+          @camera.position.y-=  y_move#@dragAmount.y/100
+          return false
+        */
+
       };
 
       GlThreeView.prototype.dragstart = function(ev) {
@@ -122,31 +134,9 @@
         };
       };
 
-      GlThreeView.prototype.mouseup = function(ev) {
-        var x, y;
-        if (this.dragStart != null) {
-          this.dragAmount = [this.dragStart.x - ev.offsetX, this.dragStart.y - ev.offsetY];
-          this.dragStart = null;
-        }
-        x = ev.offsetX;
-        return y = ev.offsetY;
-      };
+      GlThreeView.prototype.mouseup = function(ev) {};
 
-      GlThreeView.prototype.mousedown = function(ev) {
-        var x, y;
-        normalizeEvent(ev);
-        x = ev.offsetX;
-        y = ev.offsetY;
-        return this.selectObj(x, y);
-        /*
-               #console.log ("x: #{x}, y: #{y}")
-               experimental: displays a set of random mouse->3d objects ray hits
-                for i in [0...10000]
-                 p = new THREE.Vector3(Math.random() * 800,Math.random() * 600,Math.random() * 300-250)
-                 @selectObj(p.x,p.y)
-        */
-
-      };
+      GlThreeView.prototype.mousedown = function(ev) {};
 
       GlThreeView.prototype.selectObj = function(mouseX, mouseY) {
         var draw_impact, intersects, newMat, ray, reset_col, v,
@@ -222,6 +212,8 @@
 
         this.setupLights = __bind(this.setupLights, this);
 
+        this.configure = __bind(this.configure, this);
+
         this.modelChanged = __bind(this.modelChanged, this);
 
         this.selectObj = __bind(this.selectObj, this);
@@ -236,33 +228,18 @@
 
         this.rightclick = __bind(this.rightclick, this);
 
-        var ASPECT, FAR, NEAR, PI2, canvas, context, texture, xLabel, yLabel, zLabel,
-          _this = this;
+        var _this = this;
         GlThreeView.__super__.constructor.call(this, options);
         settings = options.settings;
         this.bindTo(this.model, "change", this.modelChanged);
         this.dragging = false;
         this.width = 800;
         this.height = 600;
-        this.viewAngle = 45;
-        ASPECT = this.width / this.height;
-        NEAR = 1;
-        FAR = 10000;
-        this.renderer = new THREE.WebGLRenderer({
-          clearColor: 0x00000000,
-          clearAlpha: 0,
-          antialias: true
-        });
-        this.renderer.clear();
-        this.camera = new THREE.PerspectiveCamera(this.viewAngle, ASPECT, NEAR, FAR);
-        this.camera.position.z = 500;
-        this.camera.position.y = 250;
-        this.camera.position.x = -250;
-        this.scene = new THREE.Scene();
-        this.scene.add(this.camera);
-        this.setupLights();
+        this.renderer = null;
+        this.setupScene();
+        this.setupOverlayScene();
+        this.configure(settings);
         if (settings) {
-          console.log("we have settings");
           if (settings.get("showGrid")) {
             this.addPlane();
           }
@@ -273,20 +250,94 @@
             this.renderer.shadowMapEnabled = true;
           }
         }
-        this.renderer.setSize(this.width, this.height);
         this.controller = new THREE.Object3D();
         this.controller.setCurrent = function(current) {
           return _this.current = current;
         };
         this.controller.objects = [];
         this.projector = new THREE.Projector();
-        ASPECT = 800 / 600;
-        this.overlayRenderer = new THREE.WebGLRenderer({
-          clearColor: 0x000000,
-          clearAlpha: 0,
-          antialias: true
-        });
-        this.overlayRenderer.setSize(350, 250);
+      }
+
+      GlThreeView.prototype.configure = function(settings) {
+        var renderer;
+        if (settings.get("renderer")) {
+          renderer = settings.get("renderer");
+          if (renderer === "webgl") {
+            if (detector.webgl) {
+              this.renderer = new THREE.WebGLRenderer({
+                clearColor: 0x00000000,
+                clearAlpha: 0,
+                antialias: true
+              });
+              this.renderer.clear();
+              this.renderer.setSize(this.width, this.height);
+              this.overlayRenderer = new THREE.WebGLRenderer({
+                clearColor: 0x000000,
+                clearAlpha: 0,
+                antialias: true
+              });
+              return this.overlayRenderer.setSize(350, 250);
+            } else if (!detector.webgl && !detector.canvas) {
+              return console.log("No Webgl and no canvas (fallback) support, cannot render");
+            } else if (!detector.webgl && detector.canvas) {
+              this.renderer = new THREE.CanvasRenderer({
+                clearColor: 0x00000000,
+                clearAlpha: 0,
+                antialias: true
+              });
+              this.renderer.clear();
+              this.overlayRenderer = new THREE.CanvasRenderer({
+                clearColor: 0x000000,
+                clearAlpha: 0,
+                antialias: true
+              });
+              this.overlayRenderer.setSize(350, 250);
+              return this.renderer.setSize(this.width, this.height);
+            } else {
+              return console.log("No Webgl and no canvas (fallback) support, cannot render");
+            }
+          } else if (renderer === "canvas") {
+            if (detector.canvas) {
+              this.renderer = new THREE.CanvasRenderer({
+                clearColor: 0x00000000,
+                clearAlpha: 0,
+                antialias: true
+              });
+              this.renderer.clear();
+              this.overlayRenderer = new THREE.CanvasRenderer({
+                clearColor: 0x000000,
+                clearAlpha: 0,
+                antialias: true
+              });
+              this.overlayRenderer.setSize(350, 250);
+              return this.renderer.setSize(this.width, this.height);
+            } else if (!detector.canvas) {
+              return console.log("No canvas support, cannot render");
+            }
+          }
+        }
+      };
+
+      GlThreeView.prototype.setupScene = function() {
+        var ASPECT, FAR, NEAR;
+        this.viewAngle = 45;
+        ASPECT = this.width / this.height;
+        NEAR = 1;
+        FAR = 10000;
+        this.camera = new THREE.PerspectiveCamera(this.viewAngle, ASPECT, NEAR, FAR);
+        this.camera.position.z = 500;
+        this.camera.position.y = 250;
+        this.camera.position.x = -250;
+        this.scene = new THREE.Scene();
+        this.scene.add(this.camera);
+        return this.setupLights();
+      };
+
+      GlThreeView.prototype.setupOverlayScene = function() {
+        var ASPECT, FAR, NEAR, xLabel, yLabel, zLabel;
+        ASPECT = this.width / this.height;
+        NEAR = 1;
+        FAR = 10000;
         this.overlayCamera = new THREE.PerspectiveCamera(this.viewAngle, ASPECT, NEAR, FAR);
         this.overlayCamera.position.z = this.camera.position.z;
         this.overlayCamera.position.y = this.camera.position.y;
@@ -307,29 +358,8 @@
         this.overlayscene.add(yLabel);
         zLabel = this.drawText("Z");
         zLabel.position.set(0, 55, 0);
-        this.overlayscene.add(zLabel);
-        canvas = document.createElement('canvas');
-        canvas.width = 100;
-        canvas.height = 100;
-        context = canvas.getContext('2d');
-        PI2 = Math.PI * 2;
-        context.beginPath();
-        context.arc(0, 0, 1, 0, PI2, true);
-        context.closePath();
-        context.fill();
-        context.fillText("X", 40, 40);
-        texture = new THREE.Texture(canvas);
-        texture.needsUpdate = true;
-        this.particleTexture = new THREE.Texture(canvas);
-        this.particleTexture.needsUpdate = true;
-        this.particleMaterial = new THREE.MeshBasicMaterial({
-          map: texture,
-          transparent: true,
-          color: 0x000000
-        });
-      }
-
-      GlThreeView.prototype.setupScene = function() {};
+        return this.overlayscene.add(zLabel);
+      };
 
       GlThreeView.prototype.setupLights = function() {
         var ambientLight, pointLight, spotLight;
@@ -427,6 +457,29 @@
           scaleByViewport: false
         });
         return sprite;
+      };
+
+      GlThreeView.prototype.setupPickerHelper = function() {
+        var PI2, canvas, context, texture;
+        canvas = document.createElement('canvas');
+        canvas.width = 100;
+        canvas.height = 100;
+        context = canvas.getContext('2d');
+        PI2 = Math.PI * 2;
+        context.beginPath();
+        context.arc(0, 0, 1, 0, PI2, true);
+        context.closePath();
+        context.fill();
+        context.fillText("X", 40, 40);
+        texture = new THREE.Texture(canvas);
+        texture.needsUpdate = true;
+        this.particleTexture = new THREE.Texture(canvas);
+        this.particleTexture.needsUpdate = true;
+        return this.particleMaterial = new THREE.MeshBasicMaterial({
+          map: texture,
+          transparent: true,
+          color: 0x000000
+        });
       };
 
       GlThreeView.prototype.onRender = function() {

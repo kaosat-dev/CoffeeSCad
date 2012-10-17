@@ -16,6 +16,8 @@ require.config
     csg:              "../assets/js/libs/csg"
     lightgl:          "../assets/js/libs/lightgl"
     three:            "../assets/js/libs/three.min"
+    detector:         "../assets/js/libs/detector"
+    utils:            "../assets/js/libs/utils"
     
     #plugins
     jquery_hotkeys:   "../assets/js/plugins/jquery.hotkeys"
@@ -62,6 +64,11 @@ require.config
     three_csg: 
       deps:    ["three"]
       exports : "THREE.CSG"
+    detector: 
+      exports : "Detector"
+    utils: 
+      deps:    ["jquery"]
+      exports : "normalizeEvent"
       
 ###
 require ["CoffeeScript"], (CoffeeScript)->

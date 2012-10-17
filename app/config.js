@@ -16,6 +16,8 @@
       csg: "../assets/js/libs/csg",
       lightgl: "../assets/js/libs/lightgl",
       three: "../assets/js/libs/three.min",
+      detector: "../assets/js/libs/detector",
+      utils: "../assets/js/libs/utils",
       jquery_hotkeys: "../assets/js/plugins/jquery.hotkeys",
       jquery_codemirror: "../assets/js/plugins/jquery.codemirror",
       foldcode: "../assets/js/plugins/foldcode",
@@ -68,6 +70,13 @@
       three_csg: {
         deps: ["three"],
         exports: "THREE.CSG"
+      },
+      detector: {
+        exports: "Detector"
+      },
+      utils: {
+        deps: ["jquery"],
+        exports: "normalizeEvent"
       }
     }
   });

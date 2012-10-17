@@ -1,64 +1,7 @@
-this.blackShader = new GL.Shader('\
-    		    void main() {\
-    	      gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\
-    	    }\
-    	  ', '\
-    	    void main() {\
-    	      gl_FragColor = vec4(0.0, 0.0, 0.0, 0.1);\
-    	    }\
-    	  ');
-      this.lightingShader = new GL.Shader('\
-    	      varying vec3 color;\
-    	      varying vec3 normal;\
-    	      varying vec3 light;\
-    	      void main() {\
-    	        const vec3 lightDir = vec3(1.0, 2.0, 3.0) / 3.741657386773941;\
-    	        light = lightDir;\
-    	        color = gl_Color.rgb;\
-    	        normal = gl_NormalMatrix * gl_Normal;\
-    	        gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;\
-    	      }\
-    	    ', '\
-    	      varying vec3 color;\
-    	      varying vec3 normal;\
-    	      varying vec3 light;\
-    	      void main() {\
-    	        vec3 n = normalize(normal);\
-    	        float diffuse = max(0.0, dot(light, n));\
-    	        float specular = pow(max(0.0, -reflect(light, n).z), 10.0) * sqrt(diffuse);\
-    	        gl_FragColor = vec4(mix(color * (0.3 + 0.7 * diffuse), vec3(1.0), specular), 1.0);\
-    	      }\
-    	    ');
-    	    
-
-function main()
-{
-    		var resolution = 5;
-    		var cube1 = CSG.roundedCube({center: [0,0,0], radius: [10,10,10],
-		roundradius: 2, resolution: resolution});
-    		var result = cube1;
-    		return result; 
-}
-
-function main()
-{
-	var resolution = 24; // increase to get smoother corners (will get slow!)
-		  
-	var cube1 = CSG.roundedCube({center: [0,0,0], radius: [10,10,10], 
-		roundradius: 2, resolution: resolution});
-	var sphere1 = CSG.sphere({center: [5, 5, 5], radius: 10, resolution: resolution });
-	var sphere2 = sphere1.translate([12, 5, 0]);
-	var sphere3 = CSG.sphere({center: [20, 0, 0], radius: 30, resolution: resolution });
-	  
-	var result = cube1;
-	result = result.union(sphere1);
-	result = result.subtract(sphere2);
-	result = result.intersect(sphere3);
-	return result;
-}	
-
-	<!--<div id="spinner" class="spinner"></div>-->
-	
-					<!--<div class="progress">
-  					<div id="renderProgress" class="bar" style="width: 20%;"></div>
-				</div>-->
+###
+       #console.log ("x: #{x}, y: #{y}")
+       experimental: displays a set of random mouse->3d objects ray hits
+        for i in [0...10000]
+         p = new THREE.Vector3(Math.random() * 800,Math.random() * 600,Math.random() * 300-250)
+         @selectObj(p.x,p.y)
+      ###

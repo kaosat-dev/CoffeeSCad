@@ -252,18 +252,6 @@ define (require) ->
       #OpenCoffeeScad.log.prevLogTime = Date.now()
       result = f()
       return result
-  
-  
-    getBlobBuilder:() ->
-      bb;
-      if(window.BlobBuilder)
-        bb = new window.BlobBuilder()
-      else if(window.WebKitBlobBuilder)
-        bb = new window.WebKitBlobBuilder()
-      else if(window.MozBlobBuilder) 
-        bb = new window.MozBlobBuilder()
-      else throw new Error("Your browser doesn't support BlobBuilder")
-      return bb
       
     setCoffeeSCad: (script, filename) ->
       # script: javascript code
