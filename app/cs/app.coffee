@@ -7,53 +7,29 @@ define (require)->
   CodeEditorView = require "views/codeView"
   MainMenuView = require "views/menuView"
   ProjectView = require "views/projectsview"
+  SettingsView = require "views/settingsView"
+  MainContentLayout = (require "views/mainContentView")
+  modTest = require "views/fileSaveLoadView"
+  
   {Library,Project,ProjectFile} = require "modules/project"
 
-  modTest = require "views/fileSaveLoadView"
+
   ModalRegion = modTest[0]
   SaveView = modTest[1]
   LoadView = modTest[2]
-  SettingsView = modTest[3]
   
   
-  Settings = require "modules/settings"
+  
+  SettingsManager = require "modules/settings"
+  SettingsTest = require "modules/testSettings"
   
   CsgProcessor = require "modules/csg.processor"
   
-  MainContentLayout = (require "views/mainContentView")
+
   
   {GlViewSettings,GlThreeView} = require "views/glThreeView"
   
   ###############################
-  testcode_alt=
-  """
-  #test with prefix removal (see missing CAG. before the "fromPoints method")
-shape1 = fromPoints([[0,0], [150,50], [0,-50]])
-
-shape = shape1.expand(15, 30)
-
-shape=shape.extrude({offset:[0, 0, 50]}) 
-return shape.setColor(1,0.5,0)
- """
-  
-  
-  testcode = 
-  """
-class CubeClass
-  constructor: (@width=10,@length=20,@height=20, @pos=[0,0,0], @rot=[0,0,0]) ->
-    return @render()
-  
-  render: =>
-    result = new CSG()
-    cube1 =CSG.cube({center: [0, 0, @height/2],radius: [@width/2, @length/2, @height/2]})
-    result = cube1
-    return result.translate(@pos).rotateX(@rot[0]).rotateY(@rot[1]).rotateZ(@rot[2]) 
-
-cubeStuff = new CubeClass(75,50,50,[-20,10,10])
-cubeStuff2 = new CubeClass(50,100,50)
-
-
-return cubeStuff2.subtract(cubeStuff).color([0,1,0])"""
 
   testcode = 
   """
@@ -80,12 +56,6 @@ res= res.translate([0,0,100])
 return res
   """
 
-
-  #testcode = testcode.replace(/^\s*/g, "") #ltrim
-  #testcode = testcode.replace(/\s*$/g, "") #rtrim
-  #testcode = testcode.replace(/^\s*|\s*$/g, "")
-  #testcode = testcode.replace /^\s+|\s+$/g, ""
-
   class TestStuff
     constructor:()->
       @size=10
@@ -100,9 +70,6 @@ return res
 
   app = new marionette.Application
     root: "/opencoffeescad"
-    cadProcessor: null
-    updateSolid: () ->
-      app.cadProcessor.setCoffeeSCad(app.cadEditor.getValue())
       
   
   app.addRegions
@@ -114,17 +81,51 @@ return res
   app.on "start", (opts)->
     console.log "at start"
     
+    
   app.on "initialize:after", ->
     console.log "after init"
-    
+    ###fetch all settings###
+   
   app.addInitializer (options)->
-    ts = new TestStuff()
-    console.log ts
-    ts("sfd")
-    console.log("done")
-    app.settings = new Settings
+    @settingsmgr = new SettingsManager
+    #@settingsmgr.save()
+    @settingsmgr.fetch()
+    
+    @lib  = new Library
+    ###
+    testmodel = new ProjectFile
+      name: "assembly"
+      ext: "coscad"
+      content: testcode   
+      
+    testmodel2 = new ProjectFile
+      name: "part"
+      ext: "coscad"
+      content: "Cube()"  
+      
+    proj = new Project({name:'proj1'})
+    proj.add testmodel
+    proj.add testmodel2
+    
+    proj2 = new Project({name:'proj2'})
+    proj2.add testmodel2
+    
+    @lib  = new Library
+    @lib.add(proj)
+    @lib.add(proj2)
+    @lib.save( )
+    @lib.fetch()
+    ###
+    #proj.save() 
+    
+    #proj3= @lib.fetch({id:"proj1"})
+    #console.log(proj3)
+    #if @lib.get("proj2")?
+    #  alert("OH ma gad, overwrite?")
+    #else
+    #  alert("all is fine")
+    ###############
     app.csgProcessor = new CsgProcessor
-    app.lib = new Library
     
     app.project = new Project
       name: "MyProject"
@@ -134,15 +135,13 @@ return res
       name:"toto"
       content : "something completely different"
     
-    app.lib.add app.project
-    app.lib.add app.project2
+   # app.lib.add app.project
+   # app.lib.add app.project2
      
-      
     app.model = new ProjectFile
       name: "main"
       ext: "coscad"
       content: testcode    
-
 
     ################  
     app.codeEditorView = new CodeEditorView
@@ -151,8 +150,6 @@ return res
       model: @lib
     app.projectView = new ProjectView
       collection:@lib
-      
-    
     app.glThreeView = new GlThreeView
       model: @model
       settings: new GlViewSettings()
@@ -169,19 +166,16 @@ return res
     
     app.modal.app = app
     
-    displayTheThing= (params) =>
+    saveProject= (params) =>
       console.log("SaveRequested")
       console.log "params: #{params}"
-    displayTheThing2= (params) =>
+      console.log params
+    loadProject= (params) =>
       console.log("LoadRequested")
       console.log "params: #{params}"
       
-    #app.modView = new SaveView app:app
-    app.vent.bind("fileSaveRequest", displayTheThing)
-    app.vent.bind("fileLoadRequest", displayTheThing2)
-    #vent = new marionette.EventAggregator()
-    #vent.bindTo("fileSaveRequest", displayTheThing)
-   # app.vent.trigger("fileSaveRequest")
+    app.vent.bind("fileSaveRequest", saveProject)
+    app.vent.bind("fileLoadRequest", loadProject)
     ################
     
     app.mainMenuView.on "project:new:mouseup",=>
@@ -202,24 +196,13 @@ return res
       #return true
       
     app.mainMenuView.on "file:save:mouseup",=>
-      app.modView = new SaveView #app:app
+      app.modView = new SaveView
       app.modal.show(@modView)
-      console.log("savefile")
-      
-      ###
-      @project.save null,
-        success: (project, response) ->
-          console.log "sucess"
-          #console.log project
-        error: (project, response) ->
-          console.log 'failed'
-      ###
     
     app.mainMenuView.on "file:load:mouseup",=>
-      app.modView = new LoadView #app:app
+      app.modView = new LoadView
       app.modal.show(@modView)
       
-      console.log("loadfile")
       ###
       @project.fetch 
         success: (project, response)=> 
@@ -231,7 +214,8 @@ return res
           console.log "error"
        ###   
     app.mainMenuView.on "settings:mouseup",=>
-      app.modView = new SettingsView(model:app.settings)
+      console.log app.settingsmgr
+      app.modView = new SettingsView(model: app.settingsmgr, collection:app.settingsmgr.settings)
       app.modal.show(@modView)      
       
     app.project.on "change", ->
@@ -240,7 +224,6 @@ return res
     app.glThreeView.fromCsg()
       
    
-      
     #app.mainRegion.hide
   # Mix Backbone.Events, modules, and layout management into the app object.
   ###return _.extend app,

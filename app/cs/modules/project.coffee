@@ -26,18 +26,26 @@ define (require)->
     model: ProjectFile
   
   class Project extends Backbone.Model
-    #localStorage: new Backbone.LocalStorage("Projects")
+    idAttribute: 'name'
     defaults:
       name:     "TestProject"
-      content : "bla"
-      
-   # toJSON: ->
-   #   json = {Project : @attributes}
-   #   return _.extend(json, {pfiles: @pfiles.toJSON()})
+      pfiles:   null
     
     constructor:(options)->
       super options
-      @pfiles = new ProjectFiles()
+      @bind("reset", @onReset)
+      
+      if @get("pfiles")?
+        @pfiles = @get("pfiles")
+      else
+        @pfiles = new ProjectFiles()
+        @set("pfiles", @pfiles)
+        
+        
+    onReset:()->
+      console.log "Project model reset" 
+      console.log @
+      console.log "_____________"
     
     remove:(model)=>
       @pfiles.remove(model)
@@ -46,11 +54,58 @@ define (require)->
       @pfiles.add(model)  
       
     export:(format)->
+
       
   class Library extends Backbone.Collection   
     model: Project
     localStorage: new Backbone.LocalStorage("Library")
+    defaults:
+      recentProjects: "truc"
     
+    constructor:(options)->
+      super options
+      @bind("reset", @onReset)
+      @namesFetch = false
+    
+    save:()=>
+      @each (model)-> 
+        model.save()
+    
+    fetch:(options)=>
+      if options?
+        #console.log ("options"+ options)
+        if options.id?
+          id = options.id
+          #console.log "id specified"
+          if @get(id)
+            proj = @get(id)
+          else
+            proj = new Project({name:id})
+            proj.collection = @
+            proj.fetch()
+          return proj
+        else
+          #console.log "NO id specified"
+          res= Library.__super__.fetch.apply(this, options)
+          return res
+      else
+          #console.log "NO id specified2"
+          res = super(options)
+          return res
+        
+    parse: (response)=>
+      #console.log("in lib parse")
+      for i, v of response
+        response[i].pfiles = new ProjectFiles(response[i].pfiles)
+      return response
+      
+    getLatest:()->
+      @namesFetch = true
+      
+    onReset:()->
+      console.log "Library collection reset" 
+      console.log @
+      console.log "_____________"
     
   return {ProjectFile,Project,Library}
   

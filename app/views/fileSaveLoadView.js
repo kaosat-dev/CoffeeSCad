@@ -5,14 +5,13 @@
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   define(function(require) {
-    var $, LoadView, ModalRegion, SaveView, SettingsView, boostrap, lF_template, marionette, sF_template, s_template, _;
+    var $, LoadView, ModalRegion, SaveView, boostrap, lF_template, marionette, sF_template, _;
     $ = require('jquery');
     _ = require('underscore');
     boostrap = require('bootstrap');
     marionette = require('marionette');
     sF_template = require("text!templates/saveFile.tmpl");
     lF_template = require("text!templates/loadFile.tmpl");
-    s_template = require("text!templates/settings.tmpl");
     SaveView = (function(_super) {
 
       __extends(SaveView, _super);
@@ -59,20 +58,6 @@
       return LoadView;
 
     })(marionette.ItemView);
-    SettingsView = (function(_super) {
-
-      __extends(SettingsView, _super);
-
-      SettingsView.prototype.template = s_template;
-
-      function SettingsView(options) {
-        SettingsView.__super__.constructor.call(this, options);
-        this.app = require('app');
-      }
-
-      return SettingsView;
-
-    })(marionette.ItemView);
     ModalRegion = (function(_super) {
 
       __extends(ModalRegion, _super);
@@ -104,7 +89,7 @@
       return ModalRegion;
 
     })(marionette.Region);
-    return [ModalRegion, SaveView, LoadView, SettingsView];
+    return [ModalRegion, SaveView, LoadView];
   });
 
 }).call(this);

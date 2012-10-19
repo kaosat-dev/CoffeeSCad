@@ -5,7 +5,6 @@ define (require)->
   marionette = require 'marionette'
   sF_template = require "text!templates/saveFile.tmpl"
   lF_template = require "text!templates/loadFile.tmpl"
-  s_template = require "text!templates/settings.tmpl"
   
   class SaveView extends marionette.ItemView
     template: sF_template
@@ -34,13 +33,6 @@ define (require)->
         @app.vent.trigger("fileLoadRequest", @)
         @.close()    
 
-  class SettingsView extends marionette.ItemView
-    template: s_template
-      
-    constructor:( options) ->
-      super options
-      @app = require 'app'
-
 
   class ModalRegion extends marionette.Region
     el: "#modal",
@@ -65,4 +57,4 @@ define (require)->
   
   
   
-  return [ModalRegion,SaveView,LoadView,SettingsView]
+  return [ModalRegion,SaveView,LoadView]

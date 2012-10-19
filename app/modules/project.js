@@ -45,9 +45,11 @@
 
       __extends(Project, _super);
 
+      Project.prototype.idAttribute = 'name';
+
       Project.prototype.defaults = {
         name: "TestProject",
-        content: "bla"
+        pfiles: null
       };
 
       function Project(options) {
@@ -55,8 +57,20 @@
 
         this.remove = __bind(this.remove, this);
         Project.__super__.constructor.call(this, options);
-        this.pfiles = new ProjectFiles();
+        this.bind("reset", this.onReset);
+        if (this.get("pfiles") != null) {
+          this.pfiles = this.get("pfiles");
+        } else {
+          this.pfiles = new ProjectFiles();
+          this.set("pfiles", this.pfiles);
+        }
       }
+
+      Project.prototype.onReset = function() {
+        console.log("Project model reset");
+        console.log(this);
+        return console.log("_____________");
+      };
 
       Project.prototype.remove = function(model) {
         return this.pfiles.remove(model);
@@ -75,13 +89,74 @@
 
       __extends(Library, _super);
 
-      function Library() {
-        return Library.__super__.constructor.apply(this, arguments);
-      }
-
       Library.prototype.model = Project;
 
       Library.prototype.localStorage = new Backbone.LocalStorage("Library");
+
+      Library.prototype.defaults = {
+        recentProjects: "truc"
+      };
+
+      function Library(options) {
+        this.parse = __bind(this.parse, this);
+
+        this.fetch = __bind(this.fetch, this);
+
+        this.save = __bind(this.save, this);
+        Library.__super__.constructor.call(this, options);
+        this.bind("reset", this.onReset);
+        this.namesFetch = false;
+      }
+
+      Library.prototype.save = function() {
+        return this.each(function(model) {
+          return model.save();
+        });
+      };
+
+      Library.prototype.fetch = function(options) {
+        var id, proj, res;
+        if (options != null) {
+          if (options.id != null) {
+            id = options.id;
+            if (this.get(id)) {
+              proj = this.get(id);
+            } else {
+              proj = new Project({
+                name: id
+              });
+              proj.collection = this;
+              proj.fetch();
+            }
+            return proj;
+          } else {
+            res = Library.__super__.fetch.apply(this, options);
+            return res;
+          }
+        } else {
+          res = Library.__super__.fetch.call(this, options);
+          return res;
+        }
+      };
+
+      Library.prototype.parse = function(response) {
+        var i, v;
+        for (i in response) {
+          v = response[i];
+          response[i].pfiles = new ProjectFiles(response[i].pfiles);
+        }
+        return response;
+      };
+
+      Library.prototype.getLatest = function() {
+        return this.namesFetch = true;
+      };
+
+      Library.prototype.onReset = function() {
+        console.log("Library collection reset");
+        console.log(this);
+        return console.log("_____________");
+      };
 
       return Library;
 

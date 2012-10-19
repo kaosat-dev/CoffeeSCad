@@ -1,7 +1,0 @@
-###
-       #console.log ("x: #{x}, y: #{y}")
-       experimental: displays a set of random mouse->3d objects ray hits
-        for i in [0...10000]
-         p = new THREE.Vector3(Math.random() * 800,Math.random() * 600,Math.random() * 300-250)
-         @selectObj(p.x,p.y)
-      ###

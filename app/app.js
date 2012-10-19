@@ -3,7 +3,7 @@
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   define(function(require) {
-    var $, CodeEditorView, CsgProcessor, GlThreeView, GlViewSettings, Library, LoadView, MainContentLayout, MainMenuView, ModalRegion, Project, ProjectFile, ProjectView, SaveView, Settings, SettingsView, TestStuff, app, marionette, modTest, testcode, testcode_alt, _, _ref, _ref1;
+    var $, CodeEditorView, CsgProcessor, GlThreeView, GlViewSettings, Library, LoadView, MainContentLayout, MainMenuView, ModalRegion, Project, ProjectFile, ProjectView, SaveView, SettingsManager, SettingsTest, SettingsView, TestStuff, app, marionette, modTest, testcode, _, _ref, _ref1;
     $ = require('jquery');
     _ = require('underscore');
     marionette = require('marionette');
@@ -11,18 +11,17 @@
     CodeEditorView = require("views/codeView");
     MainMenuView = require("views/menuView");
     ProjectView = require("views/projectsview");
-    _ref = require("modules/project"), Library = _ref.Library, Project = _ref.Project, ProjectFile = _ref.ProjectFile;
+    SettingsView = require("views/settingsView");
+    MainContentLayout = require("views/mainContentView");
     modTest = require("views/fileSaveLoadView");
+    _ref = require("modules/project"), Library = _ref.Library, Project = _ref.Project, ProjectFile = _ref.ProjectFile;
     ModalRegion = modTest[0];
     SaveView = modTest[1];
     LoadView = modTest[2];
-    SettingsView = modTest[3];
-    Settings = require("modules/settings");
+    SettingsManager = require("modules/settings");
+    SettingsTest = require("modules/testSettings");
     CsgProcessor = require("modules/csg.processor");
-    MainContentLayout = require("views/mainContentView");
     _ref1 = require("views/glThreeView"), GlViewSettings = _ref1.GlViewSettings, GlThreeView = _ref1.GlThreeView;
-    testcode_alt = "#test with prefix removal (see missing CAG. before the \"fromPoints method\")\nshape1 = fromPoints([[0,0], [150,50], [0,-50]])\n\nshape = shape1.expand(15, 30)\n\nshape=shape.extrude({offset:[0, 0, 50]}) \nreturn shape.setColor(1,0.5,0)";
-    testcode = "class CubeClass\n  constructor: (@width=10,@length=20,@height=20, @pos=[0,0,0], @rot=[0,0,0]) ->\n    return @render()\n  \n  render: =>\n    result = new CSG()\n    cube1 =CSG.cube({center: [0, 0, @height/2],radius: [@width/2, @length/2, @height/2]})\n    result = cube1\n    return result.translate(@pos).rotateX(@rot[0]).rotateY(@rot[1]).rotateZ(@rot[2]) \n\ncubeStuff = new CubeClass(75,50,50,[-20,10,10])\ncubeStuff2 = new CubeClass(50,100,50)\n\n\nreturn cubeStuff2.subtract(cubeStuff).color([0,1,0])";
     testcode = "class Thingy\n  constructor: (@thickness=10, @pos=[0,0,0], @rot=[0,0,0]) ->\n  \n  render: =>\n    result = new CSG()\n    shape1 = fromPoints([[0,0], [150,50], [0,-50]])\n    shape = shape1.expand(20, 25)\n    shape = shape.extrude({offset:[0, 0, @thickness]}) \n    cyl = new Cylinder({start: [0, 0, -50],end: [0, 0, 50],radius:10, resolution:12})\n    result = shape.subtract(cyl)\n    return result.translate(@pos).rotateX(@rot[0]).\n    rotateY(@rot[1]).rotateZ(@rot[2]).color([1,0.5,0])\n\nthing = new Thingy(35)\nthing2 = new Thingy(25)\n\nres = thing.render().union(thing2.render().mirroredX().color([0.2,0.5,0.6]))\nres= res.rotateX(37)\nres= res.rotateZ(190)\nres= res.translate([0,0,100])\nreturn res";
     TestStuff = (function() {
 
@@ -46,11 +45,7 @@
 
     })();
     app = new marionette.Application({
-      root: "/opencoffeescad",
-      cadProcessor: null,
-      updateSolid: function() {
-        return app.cadProcessor.setCoffeeSCad(app.cadEditor.getValue());
-      }
+      root: "/opencoffeescad"
     });
     app.addRegions({
       navigationRegion: "#navigation",
@@ -63,17 +58,42 @@
     });
     app.on("initialize:after", function() {
       return console.log("after init");
+      /*fetch all settings
+      */
+
     });
     app.addInitializer(function(options) {
-      var displayTheThing, displayTheThing2, ts,
+      var loadProject, saveProject,
         _this = this;
-      ts = new TestStuff();
-      console.log(ts);
-      ts("sfd");
-      console.log("done");
-      app.settings = new Settings;
+      this.settingsmgr = new SettingsManager;
+      this.settingsmgr.fetch();
+      this.lib = new Library;
+      /*
+          testmodel = new ProjectFile
+            name: "assembly"
+            ext: "coscad"
+            content: testcode   
+            
+          testmodel2 = new ProjectFile
+            name: "part"
+            ext: "coscad"
+            content: "Cube()"  
+            
+          proj = new Project({name:'proj1'})
+          proj.add testmodel
+          proj.add testmodel2
+          
+          proj2 = new Project({name:'proj2'})
+          proj2.add testmodel2
+          
+          @lib  = new Library
+          @lib.add(proj)
+          @lib.add(proj2)
+          @lib.save( )
+          @lib.fetch()
+      */
+
       app.csgProcessor = new CsgProcessor;
-      app.lib = new Library;
       app.project = new Project({
         name: "MyProject",
         content: "this is the first project's content"
@@ -82,8 +102,6 @@
         name: "toto",
         content: "something completely different"
       });
-      app.lib.add(app.project);
-      app.lib.add(app.project2);
       app.model = new ProjectFile({
         name: "main",
         ext: "coscad",
@@ -109,16 +127,17 @@
       app.navigationRegion.show(app.mainMenuView);
       app.statusRegion.show(app.projectView);
       app.modal.app = app;
-      displayTheThing = function(params) {
+      saveProject = function(params) {
         console.log("SaveRequested");
-        return console.log("params: " + params);
+        console.log("params: " + params);
+        return console.log(params);
       };
-      displayTheThing2 = function(params) {
+      loadProject = function(params) {
         console.log("LoadRequested");
         return console.log("params: " + params);
       };
-      app.vent.bind("fileSaveRequest", displayTheThing);
-      app.vent.bind("fileLoadRequest", displayTheThing2);
+      app.vent.bind("fileSaveRequest", saveProject);
+      app.vent.bind("fileLoadRequest", loadProject);
       app.mainMenuView.on("project:new:mouseup", function() {});
       app.mainMenuView.on("file:new:mouseup", function() {
         console.log("newfile");
@@ -137,22 +156,11 @@
       });
       app.mainMenuView.on("file:save:mouseup", function() {
         app.modView = new SaveView;
-        app.modal.show(_this.modView);
-        return console.log("savefile");
-        /*
-              @project.save null,
-                success: (project, response) ->
-                  console.log "sucess"
-                  #console.log project
-                error: (project, response) ->
-                  console.log 'failed'
-        */
-
+        return app.modal.show(_this.modView);
       });
       app.mainMenuView.on("file:load:mouseup", function() {
         app.modView = new LoadView;
-        app.modal.show(_this.modView);
-        return console.log("loadfile");
+        return app.modal.show(_this.modView);
         /*
               @project.fetch 
                 success: (project, response)=> 
@@ -166,8 +174,10 @@
 
       });
       app.mainMenuView.on("settings:mouseup", function() {
+        console.log(app.settingsmgr);
         app.modView = new SettingsView({
-          model: app.settings
+          model: app.settingsmgr,
+          collection: app.settingsmgr.settings
         });
         return app.modal.show(_this.modView);
       });

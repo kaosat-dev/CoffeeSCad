@@ -26,6 +26,9 @@
       eventbinder: "../assets/js/plugins/backbone.eventbinder.min",
       wreqr: "../assets/js/plugins/backbone.wreqr.min",
       localstorage: "../assets/js/plugins/backbone.localstorage.min",
+      modelbinder: "../assets/js/plugins/backbone.ModelBinder.min",
+      collectionbinder: "../assets/js/plugins/backbone.CollectionBinder.min",
+      forms: "../assets/js/plugins/backbone.forms.min",
       three_csg: "../assets/js/plugins/ThreeCSG"
     },
     shim: {
@@ -48,6 +51,10 @@
       localstorage: {
         deps: ["backbone", "underscore"],
         exports: "localstorage"
+      },
+      forms: {
+        deps: ["backbone", "underscore"],
+        exports: "forms"
       },
       CoffeeScript: {
         exports: "CoffeeScript"
