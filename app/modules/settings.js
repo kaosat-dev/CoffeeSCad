@@ -36,7 +36,7 @@
         renderer: 'webgl',
         antialiasing: true,
         showGrid: true,
-        showAxis: true,
+        showAxes: true,
         shadows: true
       };
 

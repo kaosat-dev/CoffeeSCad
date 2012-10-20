@@ -30,3 +30,16 @@
     @simpleSetting.fetch()
     console.log @simpleSetting
     ###
+    
+ 
+  class TestStuff
+    constructor:()->
+      @size=10
+      @name ="bleh"
+      shortcut = -> @doThat
+      #for key, value of @
+      #    shortcut[key] = value
+      return @doThat
+    
+    doThat:()=>
+      console.log @size+ " "+ @name

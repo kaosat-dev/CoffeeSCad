@@ -60,11 +60,12 @@ define (require)->
     model: Project
     localStorage: new Backbone.LocalStorage("Library")
     defaults:
-      recentProjects: "truc"
+      recentProjects: []
     
     constructor:(options)->
       super options
       @bind("reset", @onReset)
+      
       @namesFetch = false
     
     save:()=>
@@ -108,14 +109,3 @@ define (require)->
       console.log "_____________"
     
   return {ProjectFile,Project,Library}
-  
-  
-  
-###
-  initialize:(options)->
-    @bind "change:name", ()=>
-      name = @get "name"
-      console.log "Changed my name to " + name
-###
-
-#{"Project":{"name":"MyProject","id":"faf67514-f4bd-7b98-0703-db51d8d277a9"},"ProjectFiles":[{"name":"main","ext":"coscad","content":"\nclass CubeClass\n width:20\n length:20\n height:20\n constructor: (@pos=[0,0,0], @rot=[0,0,0]) ->\n return @render()\n \n render: =>\n result = new CSG()\n cube1 =CSG.cube({center: [0, 0, @height/2],radius: [@width/2, @length/2, @height/2]})\n result = cube1\n return result.translate(@pos).rotateX(@rot[0]).rotateY(@rot[1]).rotateZ(@rot[2]) \n\ncubeStuff = new CubeClass()\nreturn cubeStuff"}]}

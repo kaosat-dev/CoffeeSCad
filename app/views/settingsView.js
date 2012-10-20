@@ -5,11 +5,13 @@
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   define(function(require) {
-    var $, SettingView, SettingsView, boostrap, marionette, s_template, st_template, _;
+    var $, EditorSettingsForm, GeneralSettingsForm, GitHubSettingsForm, GlViewSettingsForm, SettingView, SettingsView, boostrap, forms, marionette, s_template, st_template, _;
     $ = require('jquery');
     _ = require('underscore');
     boostrap = require('bootstrap');
     marionette = require('marionette');
+    forms = require('forms');
+    forms = require('forms');
     s_template = require("text!templates/settings.tmpl");
     st_template = require("text!templates/setting.tmpl");
     SettingView = (function(_super) {
@@ -27,7 +29,7 @@
       return SettingView;
 
     })(marionette.ItemView);
-    return SettingsView = (function(_super) {
+    SettingsView = (function(_super) {
 
       __extends(SettingsView, _super);
 
@@ -58,6 +60,79 @@
       return SettingsView;
 
     })(marionette.CollectionView);
+    GeneralSettingsForm = (function(_super) {
+
+      __extends(GeneralSettingsForm, _super);
+
+      function GeneralSettingsForm(options) {
+        if (!options.schema) {
+          options.schema = {
+            'Max nb of recent files': 'Number',
+            'view auto update': 'Checkbox'
+          };
+        }
+        GeneralSettingsForm.__super__.constructor.call(this, options);
+      }
+
+      return GeneralSettingsForm;
+
+    })(Backbone.Form);
+    GlViewSettingsForm = (function(_super) {
+
+      __extends(GlViewSettingsForm, _super);
+
+      function GlViewSettingsForm(options) {
+        if (!options.schema) {
+          options.schema = {
+            showGrid: 'Checkbox',
+            showAxis: 'Checkbox',
+            renderer: {
+              type: 'Select',
+              options: ["webgl", "canvas"]
+            },
+            antialiasing: 'Checkbox',
+            shadows: 'Checkbox'
+          };
+        }
+        GlViewSettingsForm.__super__.constructor.call(this, options);
+      }
+
+      return GlViewSettingsForm;
+
+    })(Backbone.Form);
+    EditorSettingsForm = (function(_super) {
+
+      __extends(EditorSettingsForm, _super);
+
+      function EditorSettingsForm(options) {
+        if (!options.schema) {
+          options.schema = {
+            'Start line': 'Number'
+          };
+        }
+        EditorSettingsForm.__super__.constructor.call(this, options);
+      }
+
+      return EditorSettingsForm;
+
+    })(Backbone.Form);
+    GitHubSettingsForm = (function(_super) {
+
+      __extends(GitHubSettingsForm, _super);
+
+      function GitHubSettingsForm(options) {
+        if (!options.schema) {
+          options.schema = {
+            'Start line': 'Number'
+          };
+        }
+        GitHubSettingsForm.__super__.constructor.call(this, options);
+      }
+
+      return GitHubSettingsForm;
+
+    })(Backbone.Form);
+    return GlViewSettingsForm;
   });
 
 }).call(this);

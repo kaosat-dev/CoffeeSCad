@@ -8,6 +8,8 @@ define (require)->
   
   class SaveView extends marionette.ItemView
     template: sF_template
+    ui:
+      fileNameInput: "#projectFileName"
     
     triggers: 
       "mouseup .saveFile":    "file:save:mouseup"
@@ -16,12 +18,15 @@ define (require)->
       super options
       @app = require 'app'
       @on "file:save:mouseup" ,=>
-        @app.vent.trigger("fileSaveRequest", @)
+        fileName = $(@ui.fileNameInput).val()
+        @app.vent.trigger("fileSaveRequest", fileName)
         @.close()
         
   class LoadView extends marionette.ItemView
     template: lF_template
-    
+    ui:
+      fileNameInput: "#projectFileName"
+      
     triggers: 
       "mouseup .loadFile":    "file:load:mouseup"
       
@@ -30,31 +35,9 @@ define (require)->
       @app = require 'app'
 
       @on "file:load:mouseup" ,=>
-        @app.vent.trigger("fileLoadRequest", @)
+        fileName = $(@ui.fileNameInput).val()
+        @app.vent.trigger("fileLoadRequest", fileName)
         @.close()    
 
-
-  class ModalRegion extends marionette.Region
-    el: "#modal",
-
-    constructor: ->
-      _.bindAll(this)
-      @on("view:show", @showModal, @)
-
-    getEl: (selector)->
-      $el = $(selector)
-      $el.on("hidden", @close)
-      return $el
-
-    showModal: (view)=>
-      #console.log "showing modal"
-      view.on("close", @hideModal, @)
-      @$el.modal('show')
-      
-    hideModal: ->
-      #console.log "hiding modal"
-      @$el.modal 'hide'
   
-  
-  
-  return [ModalRegion,SaveView,LoadView]
+  return {SaveView,LoadView}

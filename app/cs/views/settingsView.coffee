@@ -3,7 +3,8 @@ define (require)->
   _ = require 'underscore'
   boostrap    = require 'bootstrap'
   marionette  = require 'marionette'
-  #modelbinder = require 'modelbinder'
+  forms       = require 'forms'
+  forms       = require 'forms'
   s_template  = require "text!templates/settings.tmpl"
   st_template = require "text!templates/setting.tmpl"
   
@@ -32,3 +33,48 @@ define (require)->
       #console.log @collection.toJSON()
       $(@ui.settingsList).html(r1)
       return @
+  
+  
+  class GeneralSettingsForm extends Backbone.Form
+
+    constructor:(options)->
+      if not options.schema
+        options.schema=
+          'Max nb of recent files'    : 'Number'
+          'view auto update'          : 'Checkbox' 
+      super options
+  
+  class GlViewSettingsForm extends Backbone.Form
+    #Backbone.Form.editors.List.Modal.ModalAdapter = Backbone.BootstrapModal
+    constructor:(options)->
+      if not options.schema
+        options.schema=
+          showGrid     : 'Checkbox'
+          showAxis     : 'Checkbox' 
+          renderer     :
+            type: 'Select'
+            options : ["webgl", "canvas"]
+          antialiasing : 'Checkbox'
+          shadows      : 'Checkbox'
+          
+      super options
+  
+  class EditorSettingsForm extends Backbone.Form
+
+    constructor:(options)->
+      if not options.schema
+        options.schema=
+          'Start line'    : 'Number'
+      super options
+   
+  class GitHubSettingsForm extends Backbone.Form
+    
+    constructor:(options)->
+      if not options.schema
+        options.schema=
+          'Start line'    : 'Number'
+      super options
+  
+      
+
+  return GlViewSettingsForm

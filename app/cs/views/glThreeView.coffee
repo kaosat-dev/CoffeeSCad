@@ -6,7 +6,7 @@ define (require) ->
   THREE.CSG = require 'three_csg'
   detector = require 'detector'
   utils = require 'utils'
-  threedView_template = require "text!templates/3dview.tmpl"
+  threedView_template = require "text!templates/glThree.tmpl"
   requestAnimationFrame = require 'anim'
   
   
@@ -39,7 +39,7 @@ define (require) ->
       material = new THREE.LineBasicMaterial
         vertexColors: THREE.VertexColors
         #depthTest:false
-        linewidth:2
+        linewidth:1
       
       return new THREE.Line(geometry, material, THREE.LinePieces)
   
@@ -47,8 +47,10 @@ define (require) ->
   class GlThreeView extends marionette.ItemView
     template: threedView_template
     ui:
-      renderBlock : "#glArea"
-      overlayBlock: "#glOverlay" 
+      renderBlock :   "#glArea"
+      glOverlayBlock: "#glOverlay" 
+      overlayDiv:     "#overlay" 
+      
     events:
       'mousemove'   : 'mousemove'
       'mouseup'     : 'mouseup'
@@ -56,6 +58,72 @@ define (require) ->
       'mousedown'   : 'mousedown'
       'contextmenu' : 'rightclick'
       'DOMMouseScroll' : 'mousewheel'
+      "mousedown .toggleGrid": "toggleGrid"
+      "mousedown .toggleAxes":    "toggleAxes"
+      "mousedown .toggleShadows": "toggleShadows"
+      "mousedown .toggleAA":      "toggleAA"
+    
+    ###
+    triggers: 
+      "mousedown .toggleGrid":    "toggleGrid:mousedown"
+      "mousedown .toggleAxes":    "toggleAxes:mousedown"
+      "mousedown .toggleShadows": "toggleShadows:mousedown"
+      "mousedown .toggleAA":      "toggleAA:mousedown"
+    ###  
+    
+    toggleGrid: (ev)=>
+        toggled = @settings.get("showGrid")
+        if toggled
+          @settings.set("showGrid",false)
+          @scene.remove @plane
+          $(ev.target).addClass("uicon-off")
+        else
+          @settings.set("showGrid",true)
+          @addPlane()
+          $(ev.target).removeClass("uicon-off")
+        return false
+        
+     
+    toggleAxes:(ev)=>
+        toggled = @settings.get("showAxes")
+        if toggled
+          @settings.set("showAxes",false)
+          @removeAxes()
+          $(ev.target).addClass("uicon-off")
+        else
+          @settings.set("showAxes",true)
+          @addAxes()
+          $(ev.target).removeClass("uicon-off")
+        return false
+     
+    toggleShadows:(ev)=>
+        #FIXME: to deactivate shadows on the plane, regenerate its texture (amongst other things)
+        toggled = @settings.get("shadows")
+        if toggled
+          @settings.set("shadows",false)
+          @renderer.clearTarget(@light.shadowMap)
+          $(ev.target).addClass("uicon-off")
+        else
+          @settings.set("shadows",true)
+          $(ev.target).removeClass("uicon-off")
+          
+        @renderer.shadowMapEnabled = @settings.get("shadows")
+        @renderer.shadowMapAutoUpdate = @settings.get("shadows")
+        planeMat = new THREE.MeshLambertMaterial({color: 0xFFFFFF})
+        @plane.material = planeMat
+        return false
+            
+    toggleAA:(ev)=>
+        toggled = @settings.get("antialiasing")
+        if toggled
+          @settings.set("antialiasing",false)
+          @renderer.antialias= false
+          $(ev.target).addClass("uicon-off")
+        else
+          @settings.set("antialiasing",true)
+          @renderer.antialias= true
+          $(ev.target).removeClass("uicon-off")
+        return false
       
     rightclick:(ev)=>
       normalizeEvent(ev)
@@ -141,33 +209,18 @@ define (require) ->
           @current=null
           
       draw_impact=(position)=>
-        #particle = new THREE.Particle(@particleMaterial)
-        #particle.position = position 
-        #particle.scale.x = particle.scale.y = 80
-        #@scene.add( particle )
-        
         sprite = new THREE.Sprite(
           map: @particleTexture
           transparent: true
           useScreenCoordinates: false
           scaleByViewport:false)
         sprite.position = position
-       # sprite.position.x = sprite.position.Y = sprite.position.z = 100
         @scene.add(sprite)
-        
-        #xLabel=@drawText("X")
-        #xLabel.position=position
-       # @scene.add(xLabel)
-        
           
       if intersects? 
-        #console.log "interesects" 
-        #console.log intersects
         if intersects.length > 0
-          
           #display impact
           #draw_impact(intersects[ 0 ].point)
-          
           if intersects[0].object.name != "workplane"
             if @current != intersects[0].object
               @current = intersects[0].object
@@ -175,7 +228,6 @@ define (require) ->
                 color: 0xCC0000
               #newMat = new THREE.MeshBasicMaterial({color: 0x808080, wireframe: true, shading:THREE.FlatShading})
               #newMat = new THREE.LineBasicMaterial({color: 0xFFFFFF, lineWidth: 1})
-                
               @current.origMaterial = @current.material
               @current.material = newMat
               @addCage @current
@@ -194,8 +246,59 @@ define (require) ->
       
     constructor:(options, settings)->
       super options
-      settings = options.settings
+      @settings = options.settings or new GlViewSettings() #TODO fix this horrible hack
       @bindTo(@model, "change", this.modelChanged)
+      
+      ###
+      @on "toggleGrid:mousedown", (bleh)=>
+        
+        console.log "here"
+        console.log bleh
+        toggled = @settings.get("showGrid")
+        if toggled
+          @settings.set("showGrid",false)
+          @scene.remove @plane
+        else
+          @settings.set("showGrid",true)
+          @addPlane()
+        return false
+       
+      @on "toggleAxes:mousedown" ,=>
+        toggled = @settings.get("showAxes")
+        if toggled
+          @settings.set("showAxes",false)
+          @removeAxes()
+        else
+          @settings.set("showAxes",true)
+          @addAxes()
+        return false
+     
+      @on "toggleShadows:mousedown" ,=>
+        #FIXME: to deactivate shadows on the plane, regenerate its texture (amongst other things)
+        toggled = @settings.get("shadows")
+        if toggled
+          @settings.set("shadows",false)
+          @renderer.clearTarget(@light.shadowMap)
+        else
+          @settings.set("shadows",true)
+          
+        @renderer.shadowMapEnabled = @settings.get("shadows")
+        @renderer.shadowMapAutoUpdate = @settings.get("shadows")
+        planeMat = new THREE.MeshLambertMaterial({color: 0xFFFFFF})
+        @plane.material = planeMat
+        return false
+          
+        
+      @on "toggleAA:mousedown" ,=>
+        toggled = @settings.get("antialiasing")
+        if toggled
+          @settings.set("antialiasing",false)
+          @renderer.antialias= false
+        else
+          @settings.set("antialiasing",true)
+          @renderer.antialias= false
+        return false
+      ###  
       #Controls:
       @dragging = false
       ##########
@@ -207,13 +310,13 @@ define (require) ->
       @setupOverlayScene()
       
       #TODO: do this properly
-      @configure(settings)
-      if settings
-        if settings.get("showGrid")
+      @configure(@settings)
+      if @settings
+        if @settings.get("showGrid")
           @addPlane()
-        if settings.get("showAxis")
+        if @settings.get("showAxes")
           @addAxes()
-        if settings.get("shadows")
+        if @settings.get("shadows")
           @renderer.shadowMapEnabled = true
       
       @controller = new THREE.Object3D()      
@@ -222,7 +325,8 @@ define (require) ->
         
       @controller.objects = []
       @projector = new THREE.Projector()
-    
+      
+      
     configure:(settings)=>
       if settings.get("renderer")
           renderer = settings.get("renderer")
@@ -297,40 +401,19 @@ define (require) ->
       
     setupOverlayScene:()->
       #Experimental overlay
-      ASPECT = @width / @height
+      ASPECT = (@width/2) / (@height/2)
       NEAR = 1
       FAR = 10000
       @overlayCamera =
         new THREE.PerspectiveCamera(@viewAngle,ASPECT, NEAR, FAR)
       
-      @overlayCamera.position.z = @camera.position.z
-      @overlayCamera.position.y = @camera.position.y
-      @overlayCamera.position.x = @camera.position.x
+      @overlayCamera.position.z = @camera.position.z/1.5
+      @overlayCamera.position.y = @camera.position.y/1.5
+      @overlayCamera.position.x = @camera.position.x/1.5
             
       @overlayscene = new THREE.Scene()
       @overlayscene.add(@overlayCamera)
-      
-      @xArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,0),50, 0xFF7700)
-      @yArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(0,0,0),50, 0x77FF00)
-      @zArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,0),50, 0x0077FF)
-     
-      @overlayscene.add(@xArrow)
-      @overlayscene.add(@yArrow)
-      @overlayscene.add(@zArrow)
-      
-      xLabel=@drawText("X")
-      xLabel.position.set(55,0,0)
-      @overlayscene.add(xLabel)
-      
-      yLabel=@drawText("Y")
-      yLabel.position.set(0,0,55)
-      @overlayscene.add(yLabel)
-      
-      zLabel=@drawText("Z")
-      zLabel.position.set(0,55,0)
-      @overlayscene.add(zLabel)
-      
-      
+
     setupLights:()=>
       pointLight =
         new THREE.PointLight(0x333333,5)
@@ -346,30 +429,63 @@ define (require) ->
       spotLight.position.y = 1000
       spotLight.position.z = 0
       #
-      spotLight.castShadow = true
-      
+      spotLight.castShadow =  @settings.get("shadows")
+      @light= spotLight #TODO: clean this up
       @scene.add(ambientLight);
       @scene.add(pointLight)
       @scene.add( spotLight )
       
     addPlane:()=>
-      planeGeo = new THREE.PlaneGeometry(500, 500, 5, 5)
-      planeMat = new THREE.MeshBasicMaterial({color: 0x808080, wireframe: true, shading:THREE.FlatShading})
-      #planeMat = new THREE.LineBasicMaterial({color: 0xFFFFFF, lineWidth: 1})
-      #planeMat = new THREE.MeshLambertMaterial({color: 0xFFFFFF})
-      planeMat = new THREE.MeshLambertMaterial({color: 0xFFFFFF})
-      
-      plane = new THREE.Mesh(planeGeo, planeMat)
-      plane.rotation.x = -Math.PI/2
-      plane.position.y = -30
-      plane.name = "workplane"
-      #
-      plane.receiveShadow = true
-      @scene.add(plane)
+      if not @plane
+        planeGeo = new THREE.PlaneGeometry(500, 500, 5, 5)
+        planeMat = new THREE.MeshBasicMaterial({color: 0x808080, wireframe: true, shading:THREE.FlatShading})
+        #planeMat = new THREE.LineBasicMaterial({color: 0xFFFFFF, lineWidth: 1})
+        #planeMat = new THREE.MeshLambertMaterial({color: 0xFFFFFF})
+        planeMat = new THREE.MeshLambertMaterial({color: 0xFFFFFF})
+        
+        plane = new THREE.Mesh(planeGeo, planeMat)
+        plane.rotation.x = -Math.PI/2
+        plane.position.y = -30
+        plane.name = "workplane"
+        #
+        plane.receiveShadow = @settings.get("shadows")
+        @plane=plane
+        
+      @scene.add(@plane)
       
     addAxes:()->
-      axes = new MyAxisHelper(200,0x666666,0x666666, 0x666666)
-      @scene.add(axes)
+      @axes = new MyAxisHelper(200,0x666666,0x666666, 0x666666)
+      @scene.add(@axes)
+      
+      @xArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,0),50, 0xFF7700)
+      @yArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(0,0,0),50, 0x77FF00)
+      @zArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,0),50, 0x0077FF)
+      @overlayscene.add @xArrow
+      @overlayscene.add @yArrow
+      @overlayscene.add @zArrow
+      
+      @xLabel=@drawText("X")
+      @xLabel.position.set(55,0,0)
+      @overlayscene.add(@xLabel)
+      
+      @yLabel=@drawText("Y")
+      @yLabel.position.set(0,0,55)
+      @overlayscene.add(@yLabel)
+      
+      @zLabel=@drawText("Z")
+      @zLabel.position.set(0,55,0)
+      @overlayscene.add(@zLabel)
+      
+    removeAxes:()->
+      @scene.remove @axes
+      
+      @overlayscene.remove @xArrow
+      @overlayscene.remove @yArrow
+      @overlayscene.remove @zArrow
+      
+      @overlayscene.remove @xLabel
+      @overlayscene.remove @yLabel
+      @overlayscene.remove @zLabel
       
     addCage:(mesh)=>
       bbox = mesh.geometry.boundingBox
@@ -443,16 +559,17 @@ define (require) ->
       @particleMaterial = new THREE.MeshBasicMaterial( { map: texture, transparent: true ,color: 0x000000} );
       
     onRender:()=>
+      selectors = @ui.overlayDiv.children(" .uicons")
+      selectors.tooltip()
+      
       container = $(@ui.renderBlock)
       container.append(@renderer.domElement)
-      
       @controls = new THREE.OrbitControls(@camera,@el)
       @controls.autoRotate = false
       
-      
-      container2 = $(@ui.overlayBlock)
+      ########
+      container2 = $(@ui.glOverlayBlock)
       container2.append(@overlayRenderer.domElement)
-      
       @overlayControls = new THREE.OrbitControls(@overlayCamera,@el)
       @overlayControls.autoRotate = false
       @overlayControls.userZoomSpeed=0
@@ -500,12 +617,12 @@ define (require) ->
           
         @mesh = new THREE.Mesh(geom, mat)
         #
-        @mesh.castShadow = true
+        @mesh.castShadow = @settings.get("shadows")
         #@mesh.receiveShadow = true
-        
+        @curCSG = @mesh
         @scene.add @mesh
         @controller.objects = [@mesh]
-        @addObjs
+        #@addObjs
       catch error
         console.log "error #{error} in from csg conversion"
       #console.log @scene

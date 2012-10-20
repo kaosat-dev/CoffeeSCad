@@ -40,6 +40,7 @@
         CodeEditorView.__super__.constructor.call(this, options);
         this.editor = null;
         this.app = require('app');
+        this.bindTo(this.model, "change", this.modelChanged);
       }
 
       CodeEditorView.prototype.modelChanged = function(model, value) {

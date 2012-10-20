@@ -1,7 +1,15 @@
 <script id="3dViewTmpl" type="text/x-underscore-template">
 	<div id="glArea" style="position: absolute"> </div>
 	<div id="glOverlay" style="position: absolute;top: 500px; left: 850px"></div>
-	<div id="overlay" style="position: absolute">OverlayTest</div>
+	<div id="overlay" class="navbar  active"  style="position: absolute;width: 500px">
+		<a href="#" rel="tooltip" title="show/hide grid" class="toggleGrid uicons"><i class="icon-table icon-large"></i></a>
+		&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="#" rel="tooltip" title="show/hide axes" class="toggleAxes uicons"><i class="icon-plus icon-large"></i></a>
+		&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="#" rel="tooltip" title="toggle shadows" class="toggleShadows uicons"><i class="icon-adjust icon-large"></i></a>
+		&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="#" rel="tooltip" title="toggle anti aliasing" class="toggleAA uicons"><i class="icon-barcode icon-large"></i></a>
+	</div>
 	<script>
 	/*Just tinkering:
 	 * top: 500px; left: 900px

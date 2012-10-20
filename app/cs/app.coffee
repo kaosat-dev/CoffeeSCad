@@ -9,24 +9,14 @@ define (require)->
   ProjectView = require "views/projectsview"
   SettingsView = require "views/settingsView"
   MainContentLayout = (require "views/mainContentView")
-  modTest = require "views/fileSaveLoadView"
-  
+  {LoadView, SaveView} = require "views/fileSaveLoadView"
+  ModalRegion = require "views/modalRegion"
   {Library,Project,ProjectFile} = require "modules/project"
 
-
-  ModalRegion = modTest[0]
-  SaveView = modTest[1]
-  LoadView = modTest[2]
-  
-  
-  
-  SettingsManager = require "modules/settings"
-  SettingsTest = require "modules/testSettings"
-  
-  CsgProcessor = require "modules/csg.processor"
+  Settings = require "modules/settings"
+  CsgProcessor    = require "modules/csg.processor"
   
 
-  
   {GlViewSettings,GlThreeView} = require "views/glThreeView"
   
   ###############################
@@ -56,22 +46,9 @@ res= res.translate([0,0,100])
 return res
   """
 
-  class TestStuff
-    constructor:()->
-      @size=10
-      @name ="bleh"
-      shortcut = -> @doThat
-      #for key, value of @
-      #    shortcut[key] = value
-      return @doThat
-    
-    doThat:()=>
-      console.log @size+ " "+ @name
-
   app = new marionette.Application
     root: "/opencoffeescad"
       
-  
   app.addRegions
     navigationRegion: "#navigation"
     mainRegion: "#mainContent"
@@ -80,6 +57,10 @@ return res
   
   app.on "start", (opts)->
     console.log "at start"
+    $("[rel=tooltip]").tooltip
+      placement:'bottom' 
+    #$(".toggleGrid").tooltip()
+    #$(".tooltip").tooltip()
     
     
   app.on "initialize:after", ->
@@ -87,11 +68,22 @@ return res
     ###fetch all settings###
    
   app.addInitializer (options)->
-    @settingsmgr = new SettingsManager
-    #@settingsmgr.save()
-    @settingsmgr.fetch()
+    @settings = new Settings
+    #@settings.save()
+    @settings.fetch()
+    
+    console.log @settings.at(1)
     
     @lib  = new Library
+    
+    @csgProcessor = new CsgProcessor
+    
+      
+    app.model = new ProjectFile
+      name: "main"
+      ext: "coscad"
+      content: testcode    
+    
     ###
     testmodel = new ProjectFile
       name: "assembly"
@@ -125,46 +117,28 @@ return res
     #else
     #  alert("all is fine")
     ###############
-    app.csgProcessor = new CsgProcessor
     
-    app.project = new Project
-      name: "MyProject"
-      content : "this is the first project's content"
-      
-    app.project2 = new Project
-      name:"toto"
-      content : "something completely different"
-    
-   # app.lib.add app.project
-   # app.lib.add app.project2
-     
-    app.model = new ProjectFile
-      name: "main"
-      ext: "coscad"
-      content: testcode    
 
     ################  
-    app.codeEditorView = new CodeEditorView
+    @codeEditorView = new CodeEditorView
       model: @model 
-    app.mainMenuView = new MainMenuView
+    @mainMenuView = new MainMenuView
       model: @lib
-    app.projectView = new ProjectView
+    @projectView = new ProjectView
       collection:@lib
-    app.glThreeView = new GlThreeView
+    @glThreeView = new GlThreeView
       model: @model
-      settings: new GlViewSettings()
+      settings: @settings.at(1)
       
-    app.mainContentLayout = new MainContentLayout
-    
-    #app.mainRegion.show app.codeEditorView
+    @mainContentLayout = new MainContentLayout
     @mainRegion.show @mainContentLayout
     @mainContentLayout.edit.show @codeEditorView
     @mainContentLayout.gl.show @glThreeView
     
-    app.navigationRegion.show app.mainMenuView
-    app.statusRegion.show app.projectView
+    @navigationRegion.show @mainMenuView
+    @statusRegion.show @projectView
     
-    app.modal.app = app
+    @modal.app = @
     
     saveProject= (params) =>
       console.log("SaveRequested")
@@ -176,6 +150,8 @@ return res
       
     app.vent.bind("fileSaveRequest", saveProject)
     app.vent.bind("fileLoadRequest", loadProject)
+    
+    #app.vent.bind("toggle")
     ################
     
     app.mainMenuView.on "project:new:mouseup",=>
@@ -183,17 +159,29 @@ return res
     app.mainMenuView.on "file:new:mouseup",=>
       #TODO: check if all files are saved etc
       console.log("newfile")
-      @project.remove @model
+      #@project.remove @model
       @model = new ProjectFile
         name: "main"
         ext: "coscad"
         content: ""
-      @project.add @model 
-      @codeEditorView.close()
-      @codeEditorView = new CodeEditorView
-        model: @model
-      @mainRegion.show @codeEditorView
-      #return true
+      #@project.add @model 
+      ########VIEW UPDATES
+      #@mainRegion.close()
+      #@codeEditorView.close()
+      #@glThreeView.close()
+      
+      @codeEditorView.model = @model
+      @glThreeView.model = @model
+      
+      console.log(@codeEditorView.model)
+      @codeEditorView.render()
+      @glThreeView.render()
+      
+      #@mainRegion.show @mainContentLayout
+      #@mainContentLayout.edit.show @codeEditorView
+      #@mainContentLayout.gl.show @glThreeView
+      
+
       
     app.mainMenuView.on "file:save:mouseup",=>
       app.modView = new SaveView
@@ -202,29 +190,20 @@ return res
     app.mainMenuView.on "file:load:mouseup",=>
       app.modView = new LoadView
       app.modal.show(@modView)
-      
-      ###
-      @project.fetch 
-        success: (project, response)=> 
-          console.log "sucess"
-          @codeEditorView = new CodeEditorView
-            model: @model
-          @mainRegion.show @codeEditorView
-        error: -> 
-          console.log "error"
-       ###   
+     
     app.mainMenuView.on "settings:mouseup",=>
-      console.log app.settingsmgr
-      app.modView = new SettingsView(model: app.settingsmgr, collection:app.settingsmgr.settings)
+      setTest = @settings.first()
+      
+      @modView = new SettingsView 
+        model: setTest
+        
+      @modView.render()
+      console.log @modView
+      
       app.modal.show(@modView)      
       
-    app.project.on "change", ->
-      console.log "project changed"
-   
     app.glThreeView.fromCsg()
-      
-   
-    #app.mainRegion.hide
+    
   # Mix Backbone.Events, modules, and layout management into the app object.
   ###return _.extend app,
     module: (additionalProps)->

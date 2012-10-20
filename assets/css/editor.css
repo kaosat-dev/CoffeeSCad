@@ -20,3 +20,16 @@ canvas { cursor: move; }
     min-height: 100%;
     height: 100%;
 }
+
+
+.uicons:hover
+{
+	text-decoration:  none;
+	color: #ff8900;
+}
+
+.uicon-off
+{
+	color: #aaaaaa;
+	
+}

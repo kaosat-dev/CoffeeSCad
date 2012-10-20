@@ -94,7 +94,7 @@
       Library.prototype.localStorage = new Backbone.LocalStorage("Library");
 
       Library.prototype.defaults = {
-        recentProjects: "truc"
+        recentProjects: []
       };
 
       function Library(options) {
@@ -167,13 +167,5 @@
       Library: Library
     };
   });
-
-  /*
-    initialize:(options)->
-      @bind "change:name", ()=>
-        name = @get "name"
-        console.log "Changed my name to " + name
-  */
-
 
 }).call(this);

@@ -21,6 +21,7 @@ define (require)->
       super options
       @editor = null
       @app = require 'app'
+      @bindTo(@model, "change", @modelChanged)
      
       
     modelChanged: (model, value)->

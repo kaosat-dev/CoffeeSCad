@@ -13,7 +13,7 @@
     THREE.CSG = require('three_csg');
     detector = require('detector');
     utils = require('utils');
-    threedView_template = require("text!templates/3dview.tmpl");
+    threedView_template = require("text!templates/glThree.tmpl");
     requestAnimationFrame = require('anim');
     GlViewSettings = (function(_super) {
 
@@ -43,7 +43,7 @@
         geometry.colors.push(new THREE.Color(xcolor || 0xffaa00), new THREE.Color(xcolor || 0xffaa00), new THREE.Color(ycolor || 0xaaff00), new THREE.Color(ycolor || 0xaaff00), new THREE.Color(zcolor || 0x00aaff), new THREE.Color(zcolor || 0x00aaff));
         material = new THREE.LineBasicMaterial({
           vertexColors: THREE.VertexColors,
-          linewidth: 2
+          linewidth: 1
         });
         return new THREE.Line(geometry, material, THREE.LinePieces);
       }
@@ -59,7 +59,8 @@
 
       GlThreeView.prototype.ui = {
         renderBlock: "#glArea",
-        overlayBlock: "#glOverlay"
+        glOverlayBlock: "#glOverlay",
+        overlayDiv: "#overlay"
       };
 
       GlThreeView.prototype.events = {
@@ -68,7 +69,85 @@
         'mousewheel': 'mousewheel',
         'mousedown': 'mousedown',
         'contextmenu': 'rightclick',
-        'DOMMouseScroll': 'mousewheel'
+        'DOMMouseScroll': 'mousewheel',
+        "mousedown .toggleGrid": "toggleGrid",
+        "mousedown .toggleAxes": "toggleAxes",
+        "mousedown .toggleShadows": "toggleShadows",
+        "mousedown .toggleAA": "toggleAA"
+      };
+
+      /*
+          triggers: 
+            "mousedown .toggleGrid":    "toggleGrid:mousedown"
+            "mousedown .toggleAxes":    "toggleAxes:mousedown"
+            "mousedown .toggleShadows": "toggleShadows:mousedown"
+            "mousedown .toggleAA":      "toggleAA:mousedown"
+      */
+
+
+      GlThreeView.prototype.toggleGrid = function(ev) {
+        var toggled;
+        toggled = this.settings.get("showGrid");
+        if (toggled) {
+          this.settings.set("showGrid", false);
+          this.scene.remove(this.plane);
+          $(ev.target).addClass("uicon-off");
+        } else {
+          this.settings.set("showGrid", true);
+          this.addPlane();
+          $(ev.target).removeClass("uicon-off");
+        }
+        return false;
+      };
+
+      GlThreeView.prototype.toggleAxes = function(ev) {
+        var toggled;
+        toggled = this.settings.get("showAxes");
+        if (toggled) {
+          this.settings.set("showAxes", false);
+          this.removeAxes();
+          $(ev.target).addClass("uicon-off");
+        } else {
+          this.settings.set("showAxes", true);
+          this.addAxes();
+          $(ev.target).removeClass("uicon-off");
+        }
+        return false;
+      };
+
+      GlThreeView.prototype.toggleShadows = function(ev) {
+        var planeMat, toggled;
+        toggled = this.settings.get("shadows");
+        if (toggled) {
+          this.settings.set("shadows", false);
+          this.renderer.clearTarget(this.light.shadowMap);
+          $(ev.target).addClass("uicon-off");
+        } else {
+          this.settings.set("shadows", true);
+          $(ev.target).removeClass("uicon-off");
+        }
+        this.renderer.shadowMapEnabled = this.settings.get("shadows");
+        this.renderer.shadowMapAutoUpdate = this.settings.get("shadows");
+        planeMat = new THREE.MeshLambertMaterial({
+          color: 0xFFFFFF
+        });
+        this.plane.material = planeMat;
+        return false;
+      };
+
+      GlThreeView.prototype.toggleAA = function(ev) {
+        var toggled;
+        toggled = this.settings.get("antialiasing");
+        if (toggled) {
+          this.settings.set("antialiasing", false);
+          this.renderer.antialias = false;
+          $(ev.target).addClass("uicon-off");
+        } else {
+          this.settings.set("antialiasing", true);
+          this.renderer.antialias = true;
+          $(ev.target).removeClass("uicon-off");
+        }
+        return false;
       };
 
       GlThreeView.prototype.rightclick = function(ev) {
@@ -228,25 +307,84 @@
 
         this.rightclick = __bind(this.rightclick, this);
 
+        this.toggleAA = __bind(this.toggleAA, this);
+
+        this.toggleShadows = __bind(this.toggleShadows, this);
+
+        this.toggleAxes = __bind(this.toggleAxes, this);
+
+        this.toggleGrid = __bind(this.toggleGrid, this);
+
         var _this = this;
         GlThreeView.__super__.constructor.call(this, options);
-        settings = options.settings;
+        this.settings = options.settings || new GlViewSettings();
         this.bindTo(this.model, "change", this.modelChanged);
+        /*
+              @on "toggleGrid:mousedown", (bleh)=>
+                
+                console.log "here"
+                console.log bleh
+                toggled = @settings.get("showGrid")
+                if toggled
+                  @settings.set("showGrid",false)
+                  @scene.remove @plane
+                else
+                  @settings.set("showGrid",true)
+                  @addPlane()
+                return false
+               
+              @on "toggleAxes:mousedown" ,=>
+                toggled = @settings.get("showAxes")
+                if toggled
+                  @settings.set("showAxes",false)
+                  @removeAxes()
+                else
+                  @settings.set("showAxes",true)
+                  @addAxes()
+                return false
+             
+              @on "toggleShadows:mousedown" ,=>
+                #FIXME: to deactivate shadows on the plane, regenerate its texture (amongst other things)
+                toggled = @settings.get("shadows")
+                if toggled
+                  @settings.set("shadows",false)
+                  @renderer.clearTarget(@light.shadowMap)
+                else
+                  @settings.set("shadows",true)
+                  
+                @renderer.shadowMapEnabled = @settings.get("shadows")
+                @renderer.shadowMapAutoUpdate = @settings.get("shadows")
+                planeMat = new THREE.MeshLambertMaterial({color: 0xFFFFFF})
+                @plane.material = planeMat
+                return false
+                  
+                
+              @on "toggleAA:mousedown" ,=>
+                toggled = @settings.get("antialiasing")
+                if toggled
+                  @settings.set("antialiasing",false)
+                  @renderer.antialias= false
+                else
+                  @settings.set("antialiasing",true)
+                  @renderer.antialias= false
+                return false
+        */
+
         this.dragging = false;
         this.width = 800;
         this.height = 600;
         this.renderer = null;
         this.setupScene();
         this.setupOverlayScene();
-        this.configure(settings);
-        if (settings) {
-          if (settings.get("showGrid")) {
+        this.configure(this.settings);
+        if (this.settings) {
+          if (this.settings.get("showGrid")) {
             this.addPlane();
           }
-          if (settings.get("showAxis")) {
+          if (this.settings.get("showAxes")) {
             this.addAxes();
           }
-          if (settings.get("shadows")) {
+          if (this.settings.get("shadows")) {
             this.renderer.shadowMapEnabled = true;
           }
         }
@@ -334,31 +472,16 @@
       };
 
       GlThreeView.prototype.setupOverlayScene = function() {
-        var ASPECT, FAR, NEAR, xLabel, yLabel, zLabel;
-        ASPECT = this.width / this.height;
+        var ASPECT, FAR, NEAR;
+        ASPECT = (this.width / 2) / (this.height / 2);
         NEAR = 1;
         FAR = 10000;
         this.overlayCamera = new THREE.PerspectiveCamera(this.viewAngle, ASPECT, NEAR, FAR);
-        this.overlayCamera.position.z = this.camera.position.z;
-        this.overlayCamera.position.y = this.camera.position.y;
-        this.overlayCamera.position.x = this.camera.position.x;
+        this.overlayCamera.position.z = this.camera.position.z / 1.5;
+        this.overlayCamera.position.y = this.camera.position.y / 1.5;
+        this.overlayCamera.position.x = this.camera.position.x / 1.5;
         this.overlayscene = new THREE.Scene();
-        this.overlayscene.add(this.overlayCamera);
-        this.xArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 0), 50, 0xFF7700);
-        this.yArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, 0), 50, 0x77FF00);
-        this.zArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 0), 50, 0x0077FF);
-        this.overlayscene.add(this.xArrow);
-        this.overlayscene.add(this.yArrow);
-        this.overlayscene.add(this.zArrow);
-        xLabel = this.drawText("X");
-        xLabel.position.set(55, 0, 0);
-        this.overlayscene.add(xLabel);
-        yLabel = this.drawText("Y");
-        yLabel.position.set(0, 0, 55);
-        this.overlayscene.add(yLabel);
-        zLabel = this.drawText("Z");
-        zLabel.position.set(0, 55, 0);
-        return this.overlayscene.add(zLabel);
+        return this.overlayscene.add(this.overlayCamera);
       };
 
       GlThreeView.prototype.setupLights = function() {
@@ -373,7 +496,8 @@
         spotLight.position.x = 0;
         spotLight.position.y = 1000;
         spotLight.position.z = 0;
-        spotLight.castShadow = true;
+        spotLight.castShadow = this.settings.get("shadows");
+        this.light = spotLight;
         this.scene.add(ambientLight);
         this.scene.add(pointLight);
         return this.scene.add(spotLight);
@@ -381,27 +505,54 @@
 
       GlThreeView.prototype.addPlane = function() {
         var plane, planeGeo, planeMat;
-        planeGeo = new THREE.PlaneGeometry(500, 500, 5, 5);
-        planeMat = new THREE.MeshBasicMaterial({
-          color: 0x808080,
-          wireframe: true,
-          shading: THREE.FlatShading
-        });
-        planeMat = new THREE.MeshLambertMaterial({
-          color: 0xFFFFFF
-        });
-        plane = new THREE.Mesh(planeGeo, planeMat);
-        plane.rotation.x = -Math.PI / 2;
-        plane.position.y = -30;
-        plane.name = "workplane";
-        plane.receiveShadow = true;
-        return this.scene.add(plane);
+        if (!this.plane) {
+          planeGeo = new THREE.PlaneGeometry(500, 500, 5, 5);
+          planeMat = new THREE.MeshBasicMaterial({
+            color: 0x808080,
+            wireframe: true,
+            shading: THREE.FlatShading
+          });
+          planeMat = new THREE.MeshLambertMaterial({
+            color: 0xFFFFFF
+          });
+          plane = new THREE.Mesh(planeGeo, planeMat);
+          plane.rotation.x = -Math.PI / 2;
+          plane.position.y = -30;
+          plane.name = "workplane";
+          plane.receiveShadow = this.settings.get("shadows");
+          this.plane = plane;
+        }
+        return this.scene.add(this.plane);
       };
 
       GlThreeView.prototype.addAxes = function() {
-        var axes;
-        axes = new MyAxisHelper(200, 0x666666, 0x666666, 0x666666);
-        return this.scene.add(axes);
+        this.axes = new MyAxisHelper(200, 0x666666, 0x666666, 0x666666);
+        this.scene.add(this.axes);
+        this.xArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 0), 50, 0xFF7700);
+        this.yArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, 0), 50, 0x77FF00);
+        this.zArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 0), 50, 0x0077FF);
+        this.overlayscene.add(this.xArrow);
+        this.overlayscene.add(this.yArrow);
+        this.overlayscene.add(this.zArrow);
+        this.xLabel = this.drawText("X");
+        this.xLabel.position.set(55, 0, 0);
+        this.overlayscene.add(this.xLabel);
+        this.yLabel = this.drawText("Y");
+        this.yLabel.position.set(0, 0, 55);
+        this.overlayscene.add(this.yLabel);
+        this.zLabel = this.drawText("Z");
+        this.zLabel.position.set(0, 55, 0);
+        return this.overlayscene.add(this.zLabel);
+      };
+
+      GlThreeView.prototype.removeAxes = function() {
+        this.scene.remove(this.axes);
+        this.overlayscene.remove(this.xArrow);
+        this.overlayscene.remove(this.yArrow);
+        this.overlayscene.remove(this.zArrow);
+        this.overlayscene.remove(this.xLabel);
+        this.overlayscene.remove(this.yLabel);
+        return this.overlayscene.remove(this.zLabel);
       };
 
       GlThreeView.prototype.addCage = function(mesh) {
@@ -483,12 +634,14 @@
       };
 
       GlThreeView.prototype.onRender = function() {
-        var container, container2;
+        var container, container2, selectors;
+        selectors = this.ui.overlayDiv.children(" .uicons");
+        selectors.tooltip();
         container = $(this.ui.renderBlock);
         container.append(this.renderer.domElement);
         this.controls = new THREE.OrbitControls(this.camera, this.el);
         this.controls.autoRotate = false;
-        container2 = $(this.ui.overlayBlock);
+        container2 = $(this.ui.glOverlayBlock);
         container2.append(this.overlayRenderer.domElement);
         this.overlayControls = new THREE.OrbitControls(this.overlayCamera, this.el);
         this.overlayControls.autoRotate = false;
@@ -549,10 +702,10 @@
             this.scene.remove(this.mesh);
           }
           this.mesh = new THREE.Mesh(geom, mat);
-          this.mesh.castShadow = true;
+          this.mesh.castShadow = this.settings.get("shadows");
+          this.curCSG = this.mesh;
           this.scene.add(this.mesh);
-          this.controller.objects = [this.mesh];
-          return this.addObjs;
+          return this.controller.objects = [this.mesh];
         } catch (error) {
           return console.log("error " + error + " in from csg conversion");
         }
