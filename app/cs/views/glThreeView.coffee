@@ -240,6 +240,15 @@ define (require) ->
       else
         reset_col()
     
+    switchModel:(newModel)->
+      #replace current model with a new one
+      #@unbindFrom(@model)
+      #@unbindAll()
+      @model = newModel
+      @scene.remove @mesh
+      @bindTo(@model, "change", @modelChanged)
+      
+    
     modelChanged:(model, value)=>
       #console.log "model changed"
       @fromCsg @model
@@ -249,56 +258,6 @@ define (require) ->
       @settings = options.settings or new GlViewSettings() #TODO fix this horrible hack
       @bindTo(@model, "change", this.modelChanged)
       
-      ###
-      @on "toggleGrid:mousedown", (bleh)=>
-        
-        console.log "here"
-        console.log bleh
-        toggled = @settings.get("showGrid")
-        if toggled
-          @settings.set("showGrid",false)
-          @scene.remove @plane
-        else
-          @settings.set("showGrid",true)
-          @addPlane()
-        return false
-       
-      @on "toggleAxes:mousedown" ,=>
-        toggled = @settings.get("showAxes")
-        if toggled
-          @settings.set("showAxes",false)
-          @removeAxes()
-        else
-          @settings.set("showAxes",true)
-          @addAxes()
-        return false
-     
-      @on "toggleShadows:mousedown" ,=>
-        #FIXME: to deactivate shadows on the plane, regenerate its texture (amongst other things)
-        toggled = @settings.get("shadows")
-        if toggled
-          @settings.set("shadows",false)
-          @renderer.clearTarget(@light.shadowMap)
-        else
-          @settings.set("shadows",true)
-          
-        @renderer.shadowMapEnabled = @settings.get("shadows")
-        @renderer.shadowMapAutoUpdate = @settings.get("shadows")
-        planeMat = new THREE.MeshLambertMaterial({color: 0xFFFFFF})
-        @plane.material = planeMat
-        return false
-          
-        
-      @on "toggleAA:mousedown" ,=>
-        toggled = @settings.get("antialiasing")
-        if toggled
-          @settings.set("antialiasing",false)
-          @renderer.antialias= false
-        else
-          @settings.set("antialiasing",true)
-          @renderer.antialias= false
-        return false
-      ###  
       #Controls:
       @dragging = false
       ##########

@@ -2,7 +2,8 @@ CoffeeSCad
 =============
 
 Parametric modeling in your browser, using a coffeescript based syntax.
-
+For now it is in an early experimental stage.
+live demo here : http://kaosat-dev.github.com/OpenCoffeeSCad/
 
 Contributions & ideas are welcome !
 
@@ -18,6 +19,15 @@ Features
 this is mainly limited by the speed of your machine and the complexity of the csg objects your are working on: beyond a certain complexity
 it is ***just not worth using***
 
+
+Future Features
+===============
+- share projects via github (gist)
+- better ui 
+- library system (I consider this absolutely essential: using other people's creations as "parts libraries" is a key
+element
+- better, simpler syntax
+- bill of materials perhaps even "interactive" assembly guides
 
 Dependencies 
 =============

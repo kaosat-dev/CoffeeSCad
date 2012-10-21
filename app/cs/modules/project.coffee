@@ -9,19 +9,24 @@ define (require)->
   #a library contains multiple projects
   
   
+  #TODO: add support for multiple types of storage, settable per project
+  #syncType = Backbone.LocalStorage
+  
   class ProjectFile extends Backbone.Model
+    idAttribute: 'name'
     defaults:
       name:     "main"
       ext:      "coscad"
       content:  ""
-      
+
     constructor:(options)->
       super options
-      @rendered=false
+      @rendered = false
+      @dirty    = false
+      @bind("change", ()=> @dirty=true)
+      @bind("sync",   ()=> @dirty=false)#when save is sucessfull
+    
       
-    #validate: (attributes)->
-    #  console.log "validating"
-  
   class ProjectFiles extends Backbone.Collection
     model: ProjectFile
   
@@ -29,29 +34,45 @@ define (require)->
     idAttribute: 'name'
     defaults:
       name:     "TestProject"
-      pfiles:   null
+      files: []
     
     constructor:(options)->
       super options
       @bind("reset", @onReset)
       
-      if @get("pfiles")?
-        @pfiles = @get("pfiles")
-      else
-        @pfiles = new ProjectFiles()
-        @set("pfiles", @pfiles)
-        
-        
+      @files = @get("files")
+      @pfiles = new ProjectFiles()
+      locStorName = "Library-"+@get("name")+"-parts"
+      @pfiles.localStorage= new Backbone.LocalStorage(locStorName)
+      
     onReset:()->
       console.log "Project model reset" 
       console.log @
       console.log "_____________"
     
-    remove:(model)=>
-      @pfiles.remove(model)
+    onSync:()->
+      console.log "Project sync" 
+      console.log @
+      console.log "_____________"
+    
+    remove:(pFile)=>
+      @pfiles.remove(pFile)
+      @files.remove pFile.get("name")
       
-    add:(model)=>
-      @pfiles.add(model)  
+    add:(pFile)=>
+      @pfiles.add pFile
+      @files.push pFile.get("name")
+    
+    fetch_file:(options)=>
+      id = options.id
+      console.log "id specified: #{id}"
+      if @pfiles.get(id)
+        pFile = @pfiles.get(id)
+      else
+        pFile = new ProjectFile({name:id})
+        pFile.collection = @pfiles
+        pFile.fetch()
+      return pFile
       
     export:(format)->
 
@@ -74,7 +95,7 @@ define (require)->
     
     fetch:(options)=>
       if options?
-        #console.log ("options"+ options)
+        console.log ("options"+ options)
         if options.id?
           id = options.id
           #console.log "id specified"

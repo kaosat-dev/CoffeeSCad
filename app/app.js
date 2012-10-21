@@ -41,18 +41,30 @@
 
     });
     app.addInitializer(function(options) {
-      var loadProject, saveProject,
+      var loadProject, saveProject, testmodel2,
         _this = this;
       this.settings = new Settings;
       this.settings.fetch();
-      console.log(this.settings.at(1));
       this.lib = new Library;
       this.csgProcessor = new CsgProcessor;
-      app.model = new ProjectFile({
+      this.project = new Project({
+        name: 'TestProject'
+      });
+      this.mainPart = new ProjectFile({
         name: "main",
         ext: "coscad",
         content: testcode
       });
+      this.lib.add(this.project);
+      this.project.save();
+      this.project.add(this.mainPart);
+      testmodel2 = new ProjectFile({
+        name: "part",
+        ext: "coscad",
+        content: "Cube()"
+      });
+      this.project.add(testmodel2);
+      testmodel2.save();
       /*
           testmodel = new ProjectFile
             name: "assembly"
@@ -64,7 +76,7 @@
             ext: "coscad"
             content: "Cube()"  
             
-          proj = new Project({name:'proj1'})
+          
           proj.add testmodel
           proj.add testmodel2
           
@@ -79,7 +91,7 @@
       */
 
       this.codeEditorView = new CodeEditorView({
-        model: this.model
+        model: this.mainPart
       });
       this.mainMenuView = new MainMenuView({
         model: this.lib
@@ -88,7 +100,7 @@
         collection: this.lib
       });
       this.glThreeView = new GlThreeView({
-        model: this.model,
+        model: this.mainPart,
         settings: this.settings.at(1)
       });
       this.mainContentLayout = new MainContentLayout;
@@ -99,29 +111,29 @@
       this.statusRegion.show(this.projectView);
       this.modal.app = this;
       saveProject = function(params) {
-        console.log("SaveRequested");
-        console.log("params: " + params);
-        return console.log(params);
+        console.log("Saving part to file : " + params);
+        return _this.mainPart.save();
       };
       loadProject = function(params) {
-        console.log("LoadRequested");
-        return console.log("params: " + params);
+        var part;
+        console.log("Loading part: " + params);
+        part = _this.project.fetch_file({
+          id: "part"
+        });
+        return console.log(part);
       };
       app.vent.bind("fileSaveRequest", saveProject);
       app.vent.bind("fileLoadRequest", loadProject);
       app.mainMenuView.on("project:new:mouseup", function() {});
       app.mainMenuView.on("file:new:mouseup", function() {
         console.log("newfile");
-        _this.model = new ProjectFile({
+        _this.mainPart = new ProjectFile({
           name: "main",
           ext: "coscad",
           content: ""
         });
-        _this.codeEditorView.model = _this.model;
-        _this.glThreeView.model = _this.model;
-        console.log(_this.codeEditorView.model);
-        _this.codeEditorView.render();
-        return _this.glThreeView.render();
+        _this.codeEditorView.switchModel(_this.mainPart);
+        return _this.glThreeView.switchModel(_this.mainPart);
       });
       app.mainMenuView.on("file:save:mouseup", function() {
         app.modView = new SaveView;

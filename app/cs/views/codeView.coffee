@@ -13,19 +13,22 @@ define (require)->
     ui:
       codeBlock : "#codeArea2"
       
-    templateHelpers:
-      showMessage: ->
-        return "Test"  
-
     constructor:(options)->
       super options
       @editor = null
       @app = require 'app'
       @bindTo(@model, "change", @modelChanged)
-     
+    
+    switchModel:(newModel)->
+      #replace current model with a new one
+      #@unbindFrom(@model) or @unbindAll() ?
+      @model = newModel
+      @editor.setValue("")
+      @bindTo(@model, "change", @modelChanged)
       
-    modelChanged: (model, value)->
-      console.log "model changed"
+   # modelChanged: (model, value)->
+   #   console.log "model changed"
+   #   console.log model
       
     #this could also be solved by letting the event listeners access the list of available undos & redos ?
     updateUndoRedo: () =>

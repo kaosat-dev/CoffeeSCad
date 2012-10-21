@@ -23,12 +23,6 @@
         codeBlock: "#codeArea2"
       };
 
-      CodeEditorView.prototype.templateHelpers = {
-        showMessage: function() {
-          return "Test";
-        }
-      };
-
       function CodeEditorView(options) {
         this.onRender = __bind(this.onRender, this);
 
@@ -43,8 +37,10 @@
         this.bindTo(this.model, "change", this.modelChanged);
       }
 
-      CodeEditorView.prototype.modelChanged = function(model, value) {
-        return console.log("model changed");
+      CodeEditorView.prototype.switchModel = function(newModel) {
+        this.model = newModel;
+        this.editor.setValue("");
+        return this.bindTo(this.model, "change", this.modelChanged);
       };
 
       CodeEditorView.prototype.updateUndoRedo = function() {

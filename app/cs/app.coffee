@@ -72,18 +72,25 @@ return res
     #@settings.save()
     @settings.fetch()
     
-    console.log @settings.at(1)
-    
     @lib  = new Library
-    
     @csgProcessor = new CsgProcessor
     
-      
-    app.model = new ProjectFile
+    @project = new Project({name:'TestProject'})  
+    @mainPart = new ProjectFile
       name: "main"
       ext: "coscad"
       content: testcode    
+      
+    @lib.add @project
+    @project.save()
+    @project.add @mainPart
     
+    testmodel2 = new ProjectFile
+      name: "part"
+      ext: "coscad"
+      content: "Cube()"  
+    @project.add testmodel2
+    testmodel2.save()
     ###
     testmodel = new ProjectFile
       name: "assembly"
@@ -95,7 +102,7 @@ return res
       ext: "coscad"
       content: "Cube()"  
       
-    proj = new Project({name:'proj1'})
+    
     proj.add testmodel
     proj.add testmodel2
     
@@ -121,13 +128,13 @@ return res
 
     ################  
     @codeEditorView = new CodeEditorView
-      model: @model 
+      model: @mainPart 
     @mainMenuView = new MainMenuView
       model: @lib
     @projectView = new ProjectView
       collection:@lib
     @glThreeView = new GlThreeView
-      model: @model
+      model: @mainPart
       settings: @settings.at(1)
       
     @mainContentLayout = new MainContentLayout
@@ -141,17 +148,21 @@ return res
     @modal.app = @
     
     saveProject= (params) =>
-      console.log("SaveRequested")
-      console.log "params: #{params}"
-      console.log params
+      console.log("Saving part to file : #{params}")
+      #@mainPart.set("name",params)
+      @mainPart.save()
+      #console.log("saved model")
+      #console.log(@mainPart)
+      #@project.save()
     loadProject= (params) =>
-      console.log("LoadRequested")
-      console.log "params: #{params}"
+      console.log("Loading part: #{params}")
+      part = @project.fetch_file({id:"part"})
+      console.log(part)
+      
       
     app.vent.bind("fileSaveRequest", saveProject)
     app.vent.bind("fileLoadRequest", loadProject)
     
-    #app.vent.bind("toggle")
     ################
     
     app.mainMenuView.on "project:new:mouseup",=>
@@ -159,29 +170,15 @@ return res
     app.mainMenuView.on "file:new:mouseup",=>
       #TODO: check if all files are saved etc
       console.log("newfile")
-      #@project.remove @model
-      @model = new ProjectFile
+      #@project.remove @mainPart
+      @mainPart = new ProjectFile
         name: "main"
         ext: "coscad"
         content: ""
-      #@project.add @model 
+      #@project.add @mainPart 
       ########VIEW UPDATES
-      #@mainRegion.close()
-      #@codeEditorView.close()
-      #@glThreeView.close()
-      
-      @codeEditorView.model = @model
-      @glThreeView.model = @model
-      
-      console.log(@codeEditorView.model)
-      @codeEditorView.render()
-      @glThreeView.render()
-      
-      #@mainRegion.show @mainContentLayout
-      #@mainContentLayout.edit.show @codeEditorView
-      #@mainContentLayout.gl.show @glThreeView
-      
-
+      @codeEditorView.switchModel @mainPart 
+      @glThreeView.switchModel @mainPart
       
     app.mainMenuView.on "file:save:mouseup",=>
       app.modView = new SaveView

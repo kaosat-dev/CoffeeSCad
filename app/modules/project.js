@@ -14,6 +14,8 @@
 
       __extends(ProjectFile, _super);
 
+      ProjectFile.prototype.idAttribute = 'name';
+
       ProjectFile.prototype.defaults = {
         name: "main",
         ext: "coscad",
@@ -21,8 +23,16 @@
       };
 
       function ProjectFile(options) {
+        var _this = this;
         ProjectFile.__super__.constructor.call(this, options);
         this.rendered = false;
+        this.dirty = false;
+        this.bind("change", function() {
+          return _this.dirty = true;
+        });
+        this.bind("sync", function() {
+          return _this.dirty = false;
+        });
       }
 
       return ProjectFile;
@@ -49,21 +59,23 @@
 
       Project.prototype.defaults = {
         name: "TestProject",
-        pfiles: null
+        files: []
       };
 
       function Project(options) {
+        this.fetch_file = __bind(this.fetch_file, this);
+
         this.add = __bind(this.add, this);
 
         this.remove = __bind(this.remove, this);
+
+        var locStorName;
         Project.__super__.constructor.call(this, options);
         this.bind("reset", this.onReset);
-        if (this.get("pfiles") != null) {
-          this.pfiles = this.get("pfiles");
-        } else {
-          this.pfiles = new ProjectFiles();
-          this.set("pfiles", this.pfiles);
-        }
+        this.files = this.get("files");
+        this.pfiles = new ProjectFiles();
+        locStorName = "Library-" + this.get("name") + "-parts";
+        this.pfiles.localStorage = new Backbone.LocalStorage(locStorName);
       }
 
       Project.prototype.onReset = function() {
@@ -72,12 +84,36 @@
         return console.log("_____________");
       };
 
-      Project.prototype.remove = function(model) {
-        return this.pfiles.remove(model);
+      Project.prototype.onSync = function() {
+        console.log("Project sync");
+        console.log(this);
+        return console.log("_____________");
       };
 
-      Project.prototype.add = function(model) {
-        return this.pfiles.add(model);
+      Project.prototype.remove = function(pFile) {
+        this.pfiles.remove(pFile);
+        return this.files.remove(pFile.get("name"));
+      };
+
+      Project.prototype.add = function(pFile) {
+        this.pfiles.add(pFile);
+        return this.files.push(pFile.get("name"));
+      };
+
+      Project.prototype.fetch_file = function(options) {
+        var id, pFile;
+        id = options.id;
+        console.log("id specified: " + id);
+        if (this.pfiles.get(id)) {
+          pFile = this.pfiles.get(id);
+        } else {
+          pFile = new ProjectFile({
+            name: id
+          });
+          pFile.collection = this.pfiles;
+          pFile.fetch();
+        }
+        return pFile;
       };
 
       Project.prototype["export"] = function(format) {};
@@ -117,6 +153,7 @@
       Library.prototype.fetch = function(options) {
         var id, proj, res;
         if (options != null) {
+          console.log("options" + options);
           if (options.id != null) {
             id = options.id;
             if (this.get(id)) {

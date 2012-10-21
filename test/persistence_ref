@@ -1,0 +1,73 @@
+@lib  = new Library
+    
+    @csgProcessor = new CsgProcessor
+    
+    @project = new Project({name:'proj1'})  
+    @model = new ProjectFile
+      name: "main"
+      ext: "coscad"
+      content: testcode    
+      
+    testPart = new ProjectFile
+      name: "testPart"
+      ext: "coscad"
+      content: "Cube()"  
+    
+    @lib.add @project
+    @project.add @model
+    @project.add testPart
+    
+    #console.log @lib
+    #console.log @project
+    #console.log @model
+    
+    @project.save()
+    #@model.save()
+    #testPart.save()
+    console.log("___________")
+    @model.set("content","bla")
+    console.log(@model)
+    console.log("___________")
+    
+    ###
+    testmodel = new ProjectFile
+      name: "assembly"
+      ext: "coscad"
+      content: testcode   
+      
+    testmodel2 = new ProjectFile
+      name: "part"
+      ext: "coscad"
+      content: "Cube()"  
+      
+    
+    proj.add testmodel
+    proj.add testmodel2
+    
+    proj2 = new Project({name:'proj2'})
+    proj2.add testmodel2
+    
+    @lib  = new Library
+    @lib.add(proj)
+    @lib.add(proj2)
+    @lib.save( )
+    @lib.fetch()
+    ###
+    #proj.save() 
+    
+    #proj3= @lib.fetch({id:"proj1"})
+    #console.log(proj3)
+    #if @lib.get("proj2")?
+    #  alert("OH ma gad, overwrite?")
+    #else
+    #  alert("all is fine")
+    ###############
+    
+    @settingsmgr.save null,
+      success: (settingsmgr, response)=> 
+        console.log "save sucess"
+      error: (settingsmgr, response)=> 
+        console.log "save error" 
+    #just to check
+      #proj= @lib.fetch({id:"TestProject"})
+      #console.log(proj)

@@ -270,6 +270,12 @@
         }
       };
 
+      GlThreeView.prototype.switchModel = function(newModel) {
+        this.model = newModel;
+        this.scene.remove(this.mesh);
+        return this.bindTo(this.model, "change", this.modelChanged);
+      };
+
       GlThreeView.prototype.modelChanged = function(model, value) {
         return this.fromCsg(this.model);
       };
@@ -319,57 +325,6 @@
         GlThreeView.__super__.constructor.call(this, options);
         this.settings = options.settings || new GlViewSettings();
         this.bindTo(this.model, "change", this.modelChanged);
-        /*
-              @on "toggleGrid:mousedown", (bleh)=>
-                
-                console.log "here"
-                console.log bleh
-                toggled = @settings.get("showGrid")
-                if toggled
-                  @settings.set("showGrid",false)
-                  @scene.remove @plane
-                else
-                  @settings.set("showGrid",true)
-                  @addPlane()
-                return false
-               
-              @on "toggleAxes:mousedown" ,=>
-                toggled = @settings.get("showAxes")
-                if toggled
-                  @settings.set("showAxes",false)
-                  @removeAxes()
-                else
-                  @settings.set("showAxes",true)
-                  @addAxes()
-                return false
-             
-              @on "toggleShadows:mousedown" ,=>
-                #FIXME: to deactivate shadows on the plane, regenerate its texture (amongst other things)
-                toggled = @settings.get("shadows")
-                if toggled
-                  @settings.set("shadows",false)
-                  @renderer.clearTarget(@light.shadowMap)
-                else
-                  @settings.set("shadows",true)
-                  
-                @renderer.shadowMapEnabled = @settings.get("shadows")
-                @renderer.shadowMapAutoUpdate = @settings.get("shadows")
-                planeMat = new THREE.MeshLambertMaterial({color: 0xFFFFFF})
-                @plane.material = planeMat
-                return false
-                  
-                
-              @on "toggleAA:mousedown" ,=>
-                toggled = @settings.get("antialiasing")
-                if toggled
-                  @settings.set("antialiasing",false)
-                  @renderer.antialias= false
-                else
-                  @settings.set("antialiasing",true)
-                  @renderer.antialias= false
-                return false
-        */
-
         this.dragging = false;
         this.width = 800;
         this.height = 600;
