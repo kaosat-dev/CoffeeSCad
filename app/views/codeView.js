@@ -31,6 +31,8 @@
         this.undo = __bind(this.undo, this);
 
         this.updateUndoRedo = __bind(this.updateUndoRedo, this);
+
+        this.modelChanged = __bind(this.modelChanged, this);
         CodeEditorView.__super__.constructor.call(this, options);
         this.editor = null;
         this.app = require('app');
@@ -43,6 +45,10 @@
         this.app.vent.trigger("clearUndoRedo", this);
         this.editor.clearHistory();
         return this.bindTo(this.model, "change", this.modelChanged);
+      };
+
+      CodeEditorView.prototype.modelChanged = function(model, value) {
+        return this.app.vent.trigger("modelChanged", this);
       };
 
       CodeEditorView.prototype.updateUndoRedo = function() {

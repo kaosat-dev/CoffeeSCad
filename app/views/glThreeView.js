@@ -24,6 +24,7 @@
       }
 
       GlViewSettings.prototype.defaults = {
+        autoUpdate: true,
         renderer: 'webgl',
         antialiasing: true,
         showGrid: true,
@@ -73,7 +74,8 @@
         "mousedown .toggleGrid": "toggleGrid",
         "mousedown .toggleAxes": "toggleAxes",
         "mousedown .toggleShadows": "toggleShadows",
-        "mousedown .toggleAA": "toggleAA"
+        "mousedown .toggleAA": "toggleAA",
+        "mousedown .toggleAutoUpdate": "toggleAutoUpdate"
       };
 
       /*
@@ -145,6 +147,19 @@
         } else {
           this.settings.set("antialiasing", true);
           this.renderer.antialias = true;
+          $(ev.target).removeClass("uicon-off");
+        }
+        return false;
+      };
+
+      GlThreeView.prototype.toggleAutoUpdate = function(ev) {
+        var toggled;
+        toggled = this.settings.get("autoUpdate");
+        if (toggled) {
+          this.settings.set("autoUpdate", false);
+          $(ev.target).addClass("uicon-off");
+        } else {
+          this.settings.set("autoUpdate", true);
           $(ev.target).removeClass("uicon-off");
         }
         return false;
@@ -278,7 +293,9 @@
       };
 
       GlThreeView.prototype.modelChanged = function(model, value) {
-        return this.fromCsg(this.model);
+        if (this.settings.get("autoUpdate")) {
+          return this.fromCsg(this.model);
+        }
       };
 
       function GlThreeView(options, settings) {
@@ -314,6 +331,8 @@
 
         this.rightclick = __bind(this.rightclick, this);
 
+        this.toggleAutoUpdate = __bind(this.toggleAutoUpdate, this);
+
         this.toggleAA = __bind(this.toggleAA, this);
 
         this.toggleShadows = __bind(this.toggleShadows, this);
@@ -321,9 +340,15 @@
         this.toggleAxes = __bind(this.toggleAxes, this);
 
         this.toggleGrid = __bind(this.toggleGrid, this);
+
+        var _this = this;
         GlThreeView.__super__.constructor.call(this, options);
         this.settings = options.settings || new GlViewSettings();
+        this.app = require('app');
         this.bindTo(this.model, "change", this.modelChanged);
+        this.app.vent.bind("parseCsgRequest", function() {
+          return _this.fromCsg(_this.model);
+        });
         this.dragging = false;
         this.width = 800;
         this.height = 600;
@@ -660,6 +685,8 @@
         } catch (error) {
           this.scene.remove(this.mesh);
           return console.log("Csg Generation error: " + error + " ");
+        } finally {
+          this.app.vent.trigger("parseCsgDone", this);
         }
       };
 

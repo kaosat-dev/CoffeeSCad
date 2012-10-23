@@ -28,9 +28,8 @@ define (require)->
       @editor.clearHistory()
       @bindTo(@model, "change", @modelChanged)
       
-   # modelChanged: (model, value)->
-   #   console.log "model changed"
-   #   console.log model
+    modelChanged: (model, value)=>
+      @app.vent.trigger("modelChanged", @)
       
     #this could also be solved by letting the event listeners access the list of available undos & redos ?
     updateUndoRedo: () =>

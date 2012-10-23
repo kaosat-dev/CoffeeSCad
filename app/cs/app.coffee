@@ -8,16 +8,17 @@ define (require)->
   MainMenuView = require "views/menuView"
   ProjectView = require "views/projectsview"
   SettingsView = require "views/settingsView"
-  MainContentLayout = (require "views/mainContentView")
-  {LoadView, SaveView} = require "views/fileSaveLoadView"
+  MainContentLayout = require "views/mainContentView"
   ModalRegion = require "views/modalRegion"
+  {LoadView, SaveView} = require "views/fileSaveLoadView"
+  {GlViewSettings,GlThreeView} = require "views/glThreeView"
   {Library,Project,ProjectFile} = require "modules/project"
 
   Settings = require "modules/settings"
   CsgProcessor    = require "modules/csg.processor"
-  
+  CsgStlExporterMin     = require "modules/csg.stlexporter"
 
-  {GlViewSettings,GlThreeView} = require "views/glThreeView"
+
   
   ###############################
 
@@ -68,6 +69,9 @@ return res
     ###fetch all settings###
    
   app.addInitializer (options)->
+    exporter = new CsgStlExporterMin()
+    
+    
     @settings = new Settings
     #@settings.save()
     @settings.fetch()
@@ -75,7 +79,7 @@ return res
     @lib  = new Library
     @csgProcessor = new CsgProcessor
     
-    @project = new Project({name:'TestProject'})  
+    @project = new Project({name:'MainProject'})  
     @mainPart = new ProjectFile
       name: "main"
       ext: "coscad"
@@ -90,7 +94,10 @@ return res
       ext: "coscad"
       content: "Cube()"  
     @project.add testmodel2
-    testmodel2.save()
+    
+    
+    
+    #testmodel2.save()
     ###
     testmodel = new ProjectFile
       name: "assembly"
@@ -169,7 +176,6 @@ return res
 
     app.mainMenuView.on "file:new:mouseup",=>
       #TODO: check if all files are saved etc
-      console.log("newfile")
       #@project.remove @mainPart
       @mainPart = new ProjectFile
         name: "main"

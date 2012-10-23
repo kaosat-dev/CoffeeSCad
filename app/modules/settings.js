@@ -15,8 +15,7 @@
       __extends(GeneralSettings, _super);
 
       GeneralSettings.prototype.defaults = {
-        maxRecentDisplay: 5,
-        autoUpdateView: true
+        maxRecentDisplay: 5
       };
 
       function GeneralSettings(options) {
@@ -33,6 +32,7 @@
       __extends(GlViewSettings, _super);
 
       GlViewSettings.prototype.defaults = {
+        autoUpdate: true,
         renderer: 'webgl',
         antialiasing: true,
         showGrid: true,

@@ -11,6 +11,7 @@ define (require) ->
   
   class GlViewSettings extends Backbone.Model
       defaults:
+        autoUpdate   : true
         renderer     : 'webgl'
         antialiasing : true
         showGrid     : true
@@ -57,10 +58,12 @@ define (require) ->
       'mousedown'   : 'mousedown'
       'contextmenu' : 'rightclick'
       'DOMMouseScroll' : 'mousewheel'
-      "mousedown .toggleGrid": "toggleGrid"
-      "mousedown .toggleAxes":    "toggleAxes"
-      "mousedown .toggleShadows": "toggleShadows"
-      "mousedown .toggleAA":      "toggleAA"
+      "mousedown .toggleGrid":          "toggleGrid"
+      "mousedown .toggleAxes":          "toggleAxes"
+      "mousedown .toggleShadows":       "toggleShadows"
+      "mousedown .toggleAA":            "toggleAA"
+      "mousedown .toggleAutoUpdate":    "toggleAutoUpdate"
+      
     
     ###
     triggers: 
@@ -121,6 +124,16 @@ define (require) ->
         else
           @settings.set("antialiasing",true)
           @renderer.antialias= true
+          $(ev.target).removeClass("uicon-off")
+        return false
+        
+    toggleAutoUpdate:(ev)=>
+        toggled = @settings.get("autoUpdate")
+        if toggled
+          @settings.set("autoUpdate",false)
+          $(ev.target).addClass("uicon-off")
+        else
+          @settings.set("autoUpdate",true)
           $(ev.target).removeClass("uicon-off")
         return false
       
@@ -251,12 +264,17 @@ define (require) ->
     
     modelChanged:(model, value)=>
       #console.log "model changed"
-      @fromCsg @model
+      if @settings.get("autoUpdate")
+        @fromCsg @model
       
     constructor:(options, settings)->
       super options
       @settings = options.settings or new GlViewSettings() #TODO fix this horrible hack
+      @app = require 'app'
+      
       @bindTo(@model, "change", @modelChanged)
+      @app.vent.bind "parseCsgRequest", =>
+        @fromCsg @model
       
       #Controls:
       @dragging = false
@@ -579,6 +597,8 @@ define (require) ->
       catch error
         @scene.remove @mesh
         console.log "Csg Generation error: #{error} "
+      finally
+        @app.vent.trigger("parseCsgDone", @)
       
     addObjs: () =>
       @cube = new THREE.Mesh(new THREE.CubeGeometry(50,50,50),new THREE.MeshBasicMaterial({color: 0x000000}))

@@ -33,7 +33,7 @@ define (require) ->
         
     compileFormatCoffee:(source)->
       #TODO: typically this would be partially replaced with CSG.Sugar
-      console.log("Compiling & formating coffeescad code")
+      #console.log("Compiling & formating coffeescad code")
       extraLibTest = "var Cube = CSG.cube;\n"
       extraLibTest += "var Sphere = CSG.sphere;\n"
       extraLibTest += "var Cylinder = CSG.cylinder;\n"

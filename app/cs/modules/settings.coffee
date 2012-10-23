@@ -7,7 +7,6 @@ define (require)->
   class GeneralSettings extends Backbone.Model
     defaults:
       maxRecentDisplay:  5
-      autoUpdateView  :  true
       
     constructor:(options)->
       super options
@@ -16,6 +15,7 @@ define (require)->
   
   class GlViewSettings extends Backbone.Model
     defaults:
+      autoUpdate   : true
       renderer     : 'webgl'
       antialiasing : true
       showGrid     : true

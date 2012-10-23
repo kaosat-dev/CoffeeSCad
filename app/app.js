@@ -2,7 +2,7 @@
 (function() {
 
   define(function(require) {
-    var $, CodeEditorView, CsgProcessor, GlThreeView, GlViewSettings, Library, LoadView, MainContentLayout, MainMenuView, ModalRegion, Project, ProjectFile, ProjectView, SaveView, Settings, SettingsView, app, marionette, testcode, _, _ref, _ref1, _ref2;
+    var $, CodeEditorView, CsgProcessor, CsgStlExporterMin, GlThreeView, GlViewSettings, Library, LoadView, MainContentLayout, MainMenuView, ModalRegion, Project, ProjectFile, ProjectView, SaveView, Settings, SettingsView, app, marionette, testcode, _, _ref, _ref1, _ref2;
     $ = require('jquery');
     _ = require('underscore');
     marionette = require('marionette');
@@ -12,12 +12,13 @@
     ProjectView = require("views/projectsview");
     SettingsView = require("views/settingsView");
     MainContentLayout = require("views/mainContentView");
-    _ref = require("views/fileSaveLoadView"), LoadView = _ref.LoadView, SaveView = _ref.SaveView;
     ModalRegion = require("views/modalRegion");
-    _ref1 = require("modules/project"), Library = _ref1.Library, Project = _ref1.Project, ProjectFile = _ref1.ProjectFile;
+    _ref = require("views/fileSaveLoadView"), LoadView = _ref.LoadView, SaveView = _ref.SaveView;
+    _ref1 = require("views/glThreeView"), GlViewSettings = _ref1.GlViewSettings, GlThreeView = _ref1.GlThreeView;
+    _ref2 = require("modules/project"), Library = _ref2.Library, Project = _ref2.Project, ProjectFile = _ref2.ProjectFile;
     Settings = require("modules/settings");
     CsgProcessor = require("modules/csg.processor");
-    _ref2 = require("views/glThreeView"), GlViewSettings = _ref2.GlViewSettings, GlThreeView = _ref2.GlThreeView;
+    CsgStlExporterMin = require("modules/csg.stlexporter");
     testcode = "class Thingy\n  constructor: (@thickness=10, @pos=[0,0,0], @rot=[0,0,0]) ->\n  \n  render: =>\n    result = new CSG()\n    shape1 = fromPoints([[0,0], [150,50], [0,-50]])\n    shape = shape1.expand(20, 25)\n    shape = shape.extrude({offset:[0, 0, @thickness]}) \n    cyl = new Cylinder({start: [0, 0, -50],end: [0, 0, 50],radius:10, resolution:12})\n    result = shape.subtract(cyl)\n    return result.translate(@pos).rotateX(@rot[0]).\n    rotateY(@rot[1]).rotateZ(@rot[2]).color([1,0.5,0])\n\nthing = new Thingy(35)\nthing2 = new Thingy(25)\n\nres = thing.render().union(thing2.render().mirroredX().color([0.2,0.5,0.6]))\nres= res.rotateX(37)\nres= res.rotateZ(190)\nres= res.translate([0,0,100])\nreturn res";
     app = new marionette.Application({
       root: "/opencoffeescad"
@@ -41,14 +42,15 @@
 
     });
     app.addInitializer(function(options) {
-      var loadProject, saveProject, testmodel2,
+      var exporter, loadProject, saveProject, testmodel2,
         _this = this;
+      exporter = new CsgStlExporterMin();
       this.settings = new Settings;
       this.settings.fetch();
       this.lib = new Library;
       this.csgProcessor = new CsgProcessor;
       this.project = new Project({
-        name: 'TestProject'
+        name: 'MainProject'
       });
       this.mainPart = new ProjectFile({
         name: "main",
@@ -64,7 +66,6 @@
         content: "Cube()"
       });
       this.project.add(testmodel2);
-      testmodel2.save();
       /*
           testmodel = new ProjectFile
             name: "assembly"
@@ -126,7 +127,6 @@
       app.vent.bind("fileLoadRequest", loadProject);
       app.mainMenuView.on("project:new:mouseup", function() {});
       app.mainMenuView.on("file:new:mouseup", function() {
-        console.log("newfile");
         _this.mainPart = new ProjectFile({
           name: "main",
           ext: "coscad",

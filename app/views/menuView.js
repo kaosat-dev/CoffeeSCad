@@ -23,7 +23,8 @@
         "mouseup .newProject": "project:new:mouseup",
         "mouseup .settings": "settings:mouseup",
         "mouseup .undo": "file:undo:mouseup",
-        "mouseup .redo": "file:redo:mouseup"
+        "mouseup .redo": "file:redo:mouseup",
+        "mouseup .parseCSG": "csg:parserender:mouseup"
       };
 
       function MainMenuView(options) {
@@ -43,6 +44,11 @@
             return _this.app.vent.trigger("redoRequest", _this);
           }
         });
+        this.on("csg:parserender:mouseup", function() {
+          if (!$('#updateBtn').hasClass("disabled")) {
+            return _this.app.vent.trigger("parseCsgRequest", _this);
+          }
+        });
         this.app.vent.bind("undoAvailable", function() {
           return $('#undoBtn').removeClass("disabled");
         });
@@ -58,6 +64,12 @@
         this.app.vent.bind("clearUndoRedo", function() {
           $('#undoBtn').addClass("disabled");
           return $('#redoBtn').addClass("disabled");
+        });
+        this.app.vent.bind("modelChanged", function() {
+          return $('#updateBtn').removeClass("disabled");
+        });
+        this.app.vent.bind("parseCsgDone", function() {
+          return $('#updateBtn').addClass("disabled");
         });
       }
 

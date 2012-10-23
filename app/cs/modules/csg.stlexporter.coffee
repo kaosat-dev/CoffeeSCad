@@ -24,12 +24,56 @@ define (require) ->
       throw new Error("createObjectURL() failed") 
     return blobURL
 
-
   revokeBlobUrl = (url)->
     if(window.URL) then window.URL.revokeObjectURL(url)
     else if(window.webkitURL)  then window.webkitURL.revokeObjectURL(url)
     else throw new Error("Your browser doesn't support window.URL")
 
+  ################################
+  
+  getBlob:()=>
+    window.URL = window.URL or window.webkitURL;
+    blob = new Blob(['body { color: red; }'], {type: 'text/css'});
+    link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = window.URL.createObjectURL(blob);
+    document.body.appendChild(link);
+
+  revokeBlobUrl:()=>
+    
+  class CsgStlExporterMin
+    ##A: make blob with data
+    ##B: write blob + download link
+    
+    constructor:(currentobj)->
+      @currentObject=currentobj
+      app = require 'app'
+      
+      #@app.vent.bind("undoRequest", @undo)
+      
+    
+    step1:()->
+      @currentObject = null
+      @mimeType = "application/sla"
+      
+      @data = @currentObject.fixTJunctions().toStlBinary(bb)
+      
+      blob = new Blob([@data], {type: @mimeType});
+      return blob
+    
+    step2:()->
+      blob = @step1()
+      windowURL=getWindowURL()
+      @outputFileBlobUrl = windowURL.createObjectURL(blob)
+      if !@outputFileBlobUrl then throw new Error("createObjectURL() failed") 
+      @hasOutputFile = true
+      @downloadOutputFileLink.href = @outputFileBlobUrl
+      @downloadOutputFileLink.innerHTML = "Download "+"stl".toUpperCase()
+    
+    process:()->
+      
+  return CsgStlExporterMin
+  ###############################
 
   class CsgStlExporter
     constructor:()->
@@ -143,3 +187,4 @@ define (require) ->
         function(fileerror){OpenJsCad.FileSystemApiErrorHandler(fileerror, "requestFileSystem")}
       )
     ###
+  

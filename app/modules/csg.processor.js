@@ -33,7 +33,6 @@
 
       CsgProcessorMin.prototype.compileFormatCoffee = function(source) {
         var endsplitter, extraLibTest, formated, lines, textblock;
-        console.log("Compiling & formating coffeescad code");
         extraLibTest = "var Cube = CSG.cube;\n";
         extraLibTest += "var Sphere = CSG.sphere;\n";
         extraLibTest += "var Cylinder = CSG.cylinder;\n";

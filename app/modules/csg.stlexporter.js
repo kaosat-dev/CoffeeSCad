@@ -2,7 +2,8 @@
 (function() {
 
   define(function(require) {
-    var CsgStlExporter, csg, getBlobBuilder, getWindowURL, revokeBlobUrl, textToBlobUrl;
+    var CsgStlExporter, CsgStlExporterMin, csg, getBlobBuilder, getWindowURL, revokeBlobUrl, textToBlobUrl,
+      _this = this;
     csg = require('csg');
     getBlobBuilder = function() {
       bb;
@@ -49,6 +50,58 @@
         throw new Error("Your browser doesn't support window.URL");
       }
     };
+    ({
+      getBlob: function() {
+        var blob, link;
+        window.URL = window.URL || window.webkitURL;
+        blob = new Blob(['body { color: red; }'], {
+          type: 'text/css'
+        });
+        link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = window.URL.createObjectURL(blob);
+        return document.body.appendChild(link);
+      },
+      revokeBlobUrl: function() {}
+    });
+    CsgStlExporterMin = (function() {
+
+      function CsgStlExporterMin(currentobj) {
+        var app;
+        this.currentObject = currentobj;
+        app = require('app');
+      }
+
+      CsgStlExporterMin.prototype.step1 = function() {
+        var blob;
+        this.currentObject = null;
+        this.mimeType = "application/sla";
+        this.data = this.currentObject.fixTJunctions().toStlBinary(bb);
+        blob = new Blob([this.data], {
+          type: this.mimeType
+        });
+        return blob;
+      };
+
+      CsgStlExporterMin.prototype.step2 = function() {
+        var blob, windowURL;
+        blob = this.step1();
+        windowURL = getWindowURL();
+        this.outputFileBlobUrl = windowURL.createObjectURL(blob);
+        if (!this.outputFileBlobUrl) {
+          throw new Error("createObjectURL() failed");
+        }
+        this.hasOutputFile = true;
+        this.downloadOutputFileLink.href = this.outputFileBlobUrl;
+        return this.downloadOutputFileLink.innerHTML = "Download " + "stl".toUpperCase();
+      };
+
+      CsgStlExporterMin.prototype.process = function() {};
+
+      return CsgStlExporterMin;
+
+    })();
+    return CsgStlExporterMin;
     return CsgStlExporter = (function() {
 
       function CsgStlExporter() {

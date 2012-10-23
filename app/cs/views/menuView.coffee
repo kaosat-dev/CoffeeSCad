@@ -16,8 +16,10 @@ define (require)->
       "mouseup .settings":    "settings:mouseup"
       "mouseup .undo":        "file:undo:mouseup"
       "mouseup .redo":        "file:redo:mouseup"
+      "mouseup .parseCSG"  :  "csg:parserender:mouseup"
     
     #events:
+      
     
     constructor:(options)->
       super options
@@ -31,6 +33,9 @@ define (require)->
       @on "file:redo:mouseup" ,=>
         if not  $('#redoBtn').hasClass "disabled"
           @app.vent.trigger("redoRequest", @)
+      @on "csg:parserender:mouseup" ,=>
+        if not  $('#updateBtn').hasClass "disabled"
+          @app.vent.trigger("parseCsgRequest", @)
         
       @app.vent.bind "undoAvailable", ->
         $('#undoBtn').removeClass("disabled")
@@ -43,5 +48,10 @@ define (require)->
       @app.vent.bind "clearUndoRedo", ->
         $('#undoBtn').addClass("disabled")
         $('#redoBtn').addClass("disabled")
+      @app.vent.bind "modelChanged", ->
+        $('#updateBtn').removeClass("disabled")
+      @app.vent.bind "parseCsgDone", ->
+          $('#updateBtn').addClass("disabled")
+      
       
   return MainMenuView
