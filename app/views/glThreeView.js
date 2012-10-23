@@ -27,7 +27,7 @@
         renderer: 'webgl',
         antialiasing: true,
         showGrid: true,
-        showAxis: true,
+        showAxes: true,
         shadows: true
       };
 
@@ -271,8 +271,9 @@
       };
 
       GlThreeView.prototype.switchModel = function(newModel) {
-        this.model = newModel;
         this.scene.remove(this.mesh);
+        this.controller.objects = [];
+        this.model = newModel;
         return this.bindTo(this.model, "change", this.modelChanged);
       };
 
@@ -320,8 +321,6 @@
         this.toggleAxes = __bind(this.toggleAxes, this);
 
         this.toggleGrid = __bind(this.toggleGrid, this);
-
-        var _this = this;
         GlThreeView.__super__.constructor.call(this, options);
         this.settings = options.settings || new GlViewSettings();
         this.bindTo(this.model, "change", this.modelChanged);
@@ -344,9 +343,7 @@
           }
         }
         this.controller = new THREE.Object3D();
-        this.controller.setCurrent = function(current) {
-          return _this.current = current;
-        };
+        this.controller.name = "picker";
         this.controller.objects = [];
         this.projector = new THREE.Projector();
       }
@@ -626,8 +623,7 @@
         var app, geom, mat, resultCSG, shine, spec;
         try {
           app = require('app');
-          app.csgProcessor.setCoffeeSCad(this.model.get("content"));
-          resultCSG = app.csgProcessor.csg;
+          resultCSG = app.csgProcessor.processScript(this.model.get("content"));
           geom = THREE.CSG.fromCSG(resultCSG);
           mat = new THREE.MeshBasicMaterial({
             color: 0xffffff,
@@ -658,11 +654,12 @@
           }
           this.mesh = new THREE.Mesh(geom, mat);
           this.mesh.castShadow = this.settings.get("shadows");
-          this.curCSG = this.mesh;
+          this.mesh.name = "CSG_OBJ";
           this.scene.add(this.mesh);
           return this.controller.objects = [this.mesh];
         } catch (error) {
-          return console.log("error " + error + " in from csg conversion");
+          this.scene.remove(this.mesh);
+          return console.log("Csg Generation error: " + error + " ");
         }
       };
 

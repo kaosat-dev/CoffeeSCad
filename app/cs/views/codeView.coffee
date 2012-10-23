@@ -23,7 +23,9 @@ define (require)->
       #replace current model with a new one
       #@unbindFrom(@model) or @unbindAll() ?
       @model = newModel
-      @editor.setValue("")
+      @editor.setValue(@model.get("content"))
+      @app.vent.trigger("clearUndoRedo", @)
+      @editor.clearHistory()
       @bindTo(@model, "change", @modelChanged)
       
    # modelChanged: (model, value)->
@@ -54,8 +56,6 @@ define (require)->
         @editor.redo()
      
     onRender: =>
-      #if not @editor?
-      #console.log "Editor not instanciated"
       @editor = CodeMirror.fromTextArea @ui.codeBlock.get(0),
         mode:"coffeescript"
         lineNumbers:true
@@ -65,8 +65,6 @@ define (require)->
         onChange:(arg, arg2)  =>   
           @model.set "content", @editor.getValue()
           @updateUndoRedo()
-      #else
-      #  console.log "Editor already instanciated"
       
       setTimeout @editor.refresh, 0 
       

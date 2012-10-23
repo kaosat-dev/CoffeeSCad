@@ -11,7 +11,6 @@
     require('bootstrap');
     mainMenu_template = require("text!templates/mainMenu.tmpl");
     MainMenuView = (function(_super) {
-      var get_recentProjects;
 
       __extends(MainMenuView, _super);
 
@@ -35,10 +34,14 @@
           return _this.app.vent.trigger("fileNewRequest", _this);
         });
         this.on("file:undo:mouseup", function() {
-          return _this.app.vent.trigger("undoRequest", _this);
+          if (!$('#undoBtn').hasClass("disabled")) {
+            return _this.app.vent.trigger("undoRequest", _this);
+          }
         });
         this.on("file:redo:mouseup", function() {
-          return _this.app.vent.trigger("redoRequest", _this);
+          if (!$('#redoBtn').hasClass("disabled")) {
+            return _this.app.vent.trigger("redoRequest", _this);
+          }
         });
         this.app.vent.bind("undoAvailable", function() {
           return $('#undoBtn').removeClass("disabled");
@@ -52,21 +55,11 @@
         this.app.vent.bind("redoUnAvailable", function() {
           return $('#redoBtn').addClass("disabled");
         });
+        this.app.vent.bind("clearUndoRedo", function() {
+          $('#undoBtn').addClass("disabled");
+          return $('#redoBtn').addClass("disabled");
+        });
       }
-
-      get_recentProjects = function() {
-        var index, item, project, value, _ref, _results;
-        _ref = store.get_files("local");
-        _results = [];
-        for (index in _ref) {
-          project = _ref[index];
-          value = project;
-          item = "<li><a tabindex='-1' href='#' >" + value + "</a></li>";
-          $('#recentFilesList').append(item);
-          _results.push($('#fileLoadModalFileList').append(item));
-        }
-        return _results;
-      };
 
       return MainMenuView;
 

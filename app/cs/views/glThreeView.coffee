@@ -9,13 +9,12 @@ define (require) ->
   threedView_template = require "text!templates/glThree.tmpl"
   requestAnimationFrame = require 'anim'
   
-  
   class GlViewSettings extends Backbone.Model
       defaults:
         renderer     : 'webgl'
         antialiasing : true
         showGrid     : true
-        showAxis     : true 
+        showAxes     : true 
         shadows      : true
   
   #just for testing
@@ -244,8 +243,9 @@ define (require) ->
       #replace current model with a new one
       #@unbindFrom(@model)
       #@unbindAll()
+      @scene.remove(@mesh)
+      @controller.objects = []
       @model = newModel
-      @scene.remove @mesh
       @bindTo(@model, "change", @modelChanged)
       
     
@@ -256,7 +256,7 @@ define (require) ->
     constructor:(options, settings)->
       super options
       @settings = options.settings or new GlViewSettings() #TODO fix this horrible hack
-      @bindTo(@model, "change", this.modelChanged)
+      @bindTo(@model, "change", @modelChanged)
       
       #Controls:
       @dragging = false
@@ -278,11 +278,10 @@ define (require) ->
         if @settings.get("shadows")
           @renderer.shadowMapEnabled = true
       
-      @controller = new THREE.Object3D()      
-      @controller.setCurrent = (current)=>
-        @current = current
-        
+      @controller = new THREE.Object3D()     
+      @controller.name = "picker" 
       @controller.objects = []
+      
       @projector = new THREE.Projector()
       
       
@@ -556,37 +555,30 @@ define (require) ->
     fromCsg:(csg)=>
       try
         app = require 'app'
-        app.csgProcessor.setCoffeeSCad(@model.get("content"))
-        resultCSG = app.csgProcessor.csg
+        resultCSG = app.csgProcessor.processScript(@model.get("content"))
+        
         geom = THREE.CSG.fromCSG(resultCSG)
-        #console.log "resultCSG:"
-        #console.log resultCSG
-        #console.log "result geom"
-        #console.log geom
+        
         mat = new THREE.MeshBasicMaterial({color: 0xffffff,shading:THREE.FlatShading, vertexColors: THREE.VertexColors })
         mat = new THREE.LineBasicMaterial({color: 0xFFFFFF, lineWidth: 1})
         mat = new THREE.MeshLambertMaterial({color: 0xFFFFFF,shading:THREE.FlatShading, vertexColors: THREE.VertexColors})
-        
-        shine= 1500#10+  Math.random() * 1000 
-        spec= 10000000000#Math.random() * 10000000000
+        shine= 1500
+        spec= 10000000000
         mat = new THREE.MeshPhongMaterial({color:  0xFFFFFF , shading: THREE.SmoothShading,  shininess: shine, specular: spec, metal: true, vertexColors: THREE.VertexColors}) 
         
         if @mesh?
           @scene.remove @mesh
           
         @mesh = new THREE.Mesh(geom, mat)
-        #
         @mesh.castShadow = @settings.get("shadows")
         #@mesh.receiveShadow = true
-        @curCSG = @mesh
+        @mesh.name = "CSG_OBJ"
+        
         @scene.add @mesh
         @controller.objects = [@mesh]
-        #@addObjs
       catch error
-        console.log "error #{error} in from csg conversion"
-      #console.log @scene
-      
-      
+        @scene.remove @mesh
+        console.log "Csg Generation error: #{error} "
       
     addObjs: () =>
       @cube = new THREE.Mesh(new THREE.CubeGeometry(50,50,50),new THREE.MeshBasicMaterial({color: 0x000000}))

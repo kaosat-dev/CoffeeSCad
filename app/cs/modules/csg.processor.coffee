@@ -14,42 +14,35 @@ define (require) ->
     construtor:()->
       @debug=true
       
-    setCoffeeSCad: (script, filename) ->
+    processScript:(script, filename) ->
+      csg=null
       # script: coffeescript code
-      # filename: optional, the name of the .cocad file
-      filename = if !filename then "openjscad.jscad"
-      filename = filename.replace(/\.jscad$/i, "")
-      #@clearViewer()
+      # filename: optional, the name of the .coscad file
+      filename = if !filename then "coffeescad.coscad"
+      filename = filename.replace(/\.coscad$/i, "")
       @paramDefinitions = []
       @paramControls = []
       @script = null
-      scripthaserrors = false
-      try
-       # @createParamControls() : TODO work on this parametrization
-      catch e 
-        scripthaserrors = true
-  
-      if(!scripthaserrors)
-        #console.log("script: #{script}")
-        @script = @compileFormatCoffee(script)
-        @filename = filename
-        @rebuildSolid()
-        console.log("No errors in script")
-      else
-        console.log("Errors in script")
+      
+      # @createParamControls() : TODO work on this parametrization
+      @script = @compileFormatCoffee(script)
+      @filename = filename
+      csg=@rebuildSolid()
+      
+      return csg
         
     compileFormatCoffee:(source)->
+      #TODO: typically this would be partially replaced with CSG.Sugar
       console.log("Compiling & formating coffeescad code")
       extraLibTest = "var Cube = CSG.cube;\n"
       extraLibTest += "var Sphere = CSG.sphere;\n"
       extraLibTest += "var Cylinder = CSG.cylinder;\n"
       extraLibTest += "var fromPoints = CAG.fromPoints;\n"
       
-      #console.log("source: #{source}")
       #TODO: replace this with compile --bare 
       source+=".mirroredY().rotateX(-90)"     
       textblock = CoffeeScript.compile(source)
-      console.log("-->base compile done")
+      #console.log("-->base compile done")
       
       lines = textblock.split('\n')
       if @debug_ing#TODO correct this
@@ -70,31 +63,22 @@ define (require) ->
     rebuildSolid:() =>
       @debug = true
       if @debug ==true
-        console.log("Starting solid rebuild")
-        #@clearViewer()
         @processing = true
-        
         #TODO: clean way to handle these type of messages
         #@statusspan.text = "Processing, please wait..."
-    
         paramValues = null
         try
           obj = @parseJsCadScriptSync(@script, paramValues, @debugging)
-          @setCurrentObject(obj)
+          obj = @convertToSolid(obj)
           @processing = false
-        catch e 
+          return obj
+        catch error
+          #console.log "failed to rebuild solid: #{error}"
           @processing = false
-          
-    setCurrentObject: (obj) =>
-      #the threeCSG.fromCSG method needs to take the csg from here 
-      @currentObject = obj
-      @csg = @convertToSolid(obj)
-      #@viewer.setCsg(csg)
-      return 
-    
+          throw error
+      
     
     parseJsCadScriptSync: (script, mainParameters, debugging) -> 
-      #console.log("Synch Parsing")
       workerscript = ""
       workerscript += script;
       if @debuging
@@ -108,17 +92,16 @@ define (require) ->
         workerscript += "debugger;\n"
     
       workerscript += "return main("+JSON.stringify(mainParameters)+");"  
-      #console.log("workerscript #{workerscript}")
       f = new Function(workerscript)
       #OpenCoffeeScad.log.prevLogTime = Date.now()
       result = f()
       return result
       
     convertToSolid : (obj) ->
-      if( (typeof(obj) == "object") && ((obj instanceof CAG)) )
+      if( (typeof(obj) == "object") and ((obj instanceof CAG)) )
         # convert a 2D shape to a thin solid:
         obj=obj.extrude({offset: [0,0,0.1]})
-      else if( (typeof(obj) == "object") && ((obj instanceof CSG)) )
+      else if( (typeof(obj) == "object") and ((obj instanceof CSG)) )
         # obj already is a solid
       else
         throw new Error("Cannot convert to solid");

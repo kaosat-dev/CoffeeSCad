@@ -26,9 +26,11 @@ define (require)->
       @on "file:new:mouseup" ,=>
         @app.vent.trigger("fileNewRequest", @)
       @on "file:undo:mouseup" ,=>
-        @app.vent.trigger("undoRequest", @)
+        if not  $('#undoBtn').hasClass "disabled"
+          @app.vent.trigger("undoRequest", @)
       @on "file:redo:mouseup" ,=>
-        @app.vent.trigger("redoRequest", @)
+        if not  $('#redoBtn').hasClass "disabled"
+          @app.vent.trigger("redoRequest", @)
         
       @app.vent.bind "undoAvailable", ->
         $('#undoBtn').removeClass("disabled")
@@ -38,15 +40,8 @@ define (require)->
         $('#undoBtn').addClass("disabled")
       @app.vent.bind "redoUnAvailable", ->
         $('#redoBtn').addClass("disabled")
-      
-      
- 
-    get_recentProjects = () ->
-      for index, project of store.get_files("local")
-        value = project
-        item = "<li><a tabindex='-1' href='#' >#{value}</a></li>"
-        $('#recentFilesList').append(item)
-        $('#fileLoadModalFileList').append(item)     
-      
+      @app.vent.bind "clearUndoRedo", ->
+        $('#undoBtn').addClass("disabled")
+        $('#redoBtn').addClass("disabled")
       
   return MainMenuView

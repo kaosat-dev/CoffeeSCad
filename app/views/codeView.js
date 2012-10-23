@@ -39,7 +39,9 @@
 
       CodeEditorView.prototype.switchModel = function(newModel) {
         this.model = newModel;
-        this.editor.setValue("");
+        this.editor.setValue(this.model.get("content"));
+        this.app.vent.trigger("clearUndoRedo", this);
+        this.editor.clearHistory();
         return this.bindTo(this.model, "change", this.modelChanged);
       };
 

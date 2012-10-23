@@ -9,8 +9,6 @@
     CsgProcessorMin = (function() {
 
       function CsgProcessorMin() {
-        this.setCurrentObject = __bind(this.setCurrentObject, this);
-
         this.rebuildSolid = __bind(this.rebuildSolid, this);
 
       }
@@ -19,27 +17,18 @@
         return this.debug = true;
       };
 
-      CsgProcessorMin.prototype.setCoffeeSCad = function(script, filename) {
-        var scripthaserrors;
-        filename = !filename ? "openjscad.jscad" : void 0;
-        filename = filename.replace(/\.jscad$/i, "");
+      CsgProcessorMin.prototype.processScript = function(script, filename) {
+        var csg;
+        csg = null;
+        filename = !filename ? "coffeescad.coscad" : void 0;
+        filename = filename.replace(/\.coscad$/i, "");
         this.paramDefinitions = [];
         this.paramControls = [];
         this.script = null;
-        scripthaserrors = false;
-        try {
-
-        } catch (e) {
-          scripthaserrors = true;
-        }
-        if (!scripthaserrors) {
-          this.script = this.compileFormatCoffee(script);
-          this.filename = filename;
-          this.rebuildSolid();
-          return console.log("No errors in script");
-        } else {
-          return console.log("Errors in script");
-        }
+        this.script = this.compileFormatCoffee(script);
+        this.filename = filename;
+        csg = this.rebuildSolid();
+        return csg;
       };
 
       CsgProcessorMin.prototype.compileFormatCoffee = function(source) {
@@ -51,7 +40,6 @@
         extraLibTest += "var fromPoints = CAG.fromPoints;\n";
         source += ".mirroredY().rotateX(-90)";
         textblock = CoffeeScript.compile(source);
-        console.log("-->base compile done");
         lines = textblock.split('\n');
         if (this.debug_ing) {
           console.log("Raw Lines" + (lines.length - 1));
@@ -74,22 +62,18 @@
         var obj, paramValues;
         this.debug = true;
         if (this.debug === true) {
-          console.log("Starting solid rebuild");
           this.processing = true;
           paramValues = null;
           try {
             obj = this.parseJsCadScriptSync(this.script, paramValues, this.debugging);
-            this.setCurrentObject(obj);
-            return this.processing = false;
-          } catch (e) {
-            return this.processing = false;
+            obj = this.convertToSolid(obj);
+            this.processing = false;
+            return obj;
+          } catch (error) {
+            this.processing = false;
+            throw error;
           }
         }
-      };
-
-      CsgProcessorMin.prototype.setCurrentObject = function(obj) {
-        this.currentObject = obj;
-        this.csg = this.convertToSolid(obj);
       };
 
       CsgProcessorMin.prototype.parseJsCadScriptSync = function(script, mainParameters, debugging) {
