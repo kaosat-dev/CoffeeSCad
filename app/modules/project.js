@@ -58,21 +58,20 @@
       Project.prototype.idAttribute = 'name';
 
       Project.prototype.defaults = {
-        name: "TestProject",
-        files: []
+        name: "TestProject"
       };
 
       function Project(options) {
         this.fetch_file = __bind(this.fetch_file, this);
 
-        this.add = __bind(this.add, this);
-
         this.remove = __bind(this.remove, this);
+
+        this.add = __bind(this.add, this);
 
         var locStorName;
         Project.__super__.constructor.call(this, options);
         this.bind("reset", this.onReset);
-        this.files = this.get("files");
+        this.files = [];
         this.pfiles = new ProjectFiles();
         locStorName = "Library-" + this.get("name") + "-parts";
         this.pfiles.localStorage = new Backbone.LocalStorage(locStorName);
@@ -90,14 +89,16 @@
         return console.log("_____________");
       };
 
-      Project.prototype.remove = function(pFile) {
-        this.pfiles.remove(pFile);
-        return this.files.remove(pFile.get("name"));
-      };
-
       Project.prototype.add = function(pFile) {
         this.pfiles.add(pFile);
         return this.files.push(pFile.get("name"));
+      };
+
+      Project.prototype.remove = function(pFile) {
+        var index;
+        index = this.files.indexOf(pFile.get("name"));
+        this.files.splice(index, 1);
+        return this.pfiles.remove(pFile);
       };
 
       Project.prototype.fetch_file = function(options) {

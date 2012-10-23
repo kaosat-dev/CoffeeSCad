@@ -34,13 +34,12 @@ define (require)->
     idAttribute: 'name'
     defaults:
       name:     "TestProject"
-      files: []
     
     constructor:(options)->
       super options
       @bind("reset", @onReset)
       
-      @files = @get("files")
+      @files = []
       @pfiles = new ProjectFiles()
       locStorName = "Library-"+@get("name")+"-parts"
       @pfiles.localStorage= new Backbone.LocalStorage(locStorName)
@@ -55,13 +54,14 @@ define (require)->
       console.log @
       console.log "_____________"
     
-    remove:(pFile)=>
-      @pfiles.remove(pFile)
-      @files.remove pFile.get("name")
-      
     add:(pFile)=>
       @pfiles.add pFile
       @files.push pFile.get("name")
+    
+    remove:(pFile)=>
+      index = @files.indexOf(pFile.get("name"))
+      @files.splice(index, 1) 
+      @pfiles.remove(pFile)
     
     fetch_file:(options)=>
       id = options.id
