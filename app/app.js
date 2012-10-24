@@ -42,7 +42,7 @@
 
     });
     app.addInitializer(function(options) {
-      var exporter, loadProject, saveProject, testmodel2,
+      var exporter, loadProject, saveProject, stlexport, testmodel2,
         _this = this;
       exporter = new CsgStlExporterMin();
       this.settings = new Settings;
@@ -91,6 +91,14 @@
           @lib.fetch()
       */
 
+      CsgStlExporterMin = require("modules/csg.stlexporter");
+      stlexport = function() {
+        var blobUrl, stlExp;
+        stlExp = new CsgStlExporterMin(_this.mainPart.csg);
+        blobUrl = stlExp["export"]();
+        return _this.vent.trigger("stlGenDone", blobUrl);
+      };
+      this.vent.bind("downloadStlRequest", stlexport);
       this.codeEditorView = new CodeEditorView({
         model: this.mainPart
       });
@@ -123,8 +131,8 @@
         });
         return console.log(part);
       };
-      app.vent.bind("fileSaveRequest", saveProject);
-      app.vent.bind("fileLoadRequest", loadProject);
+      this.vent.bind("fileSaveRequest", saveProject);
+      this.vent.bind("fileLoadRequest", loadProject);
       app.mainMenuView.on("project:new:mouseup", function() {});
       app.mainMenuView.on("file:new:mouseup", function() {
         _this.mainPart = new ProjectFile({

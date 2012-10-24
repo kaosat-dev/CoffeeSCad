@@ -17,10 +17,10 @@ define (require)->
       "mouseup .undo":        "file:undo:mouseup"
       "mouseup .redo":        "file:redo:mouseup"
       "mouseup .parseCSG"  :  "csg:parserender:mouseup"
+      "mouseup .downloadStl" :"download:stl:mouseup"
     
     #events:
       
-    
     constructor:(options)->
       super options
       @app = require 'app'
@@ -36,6 +36,9 @@ define (require)->
       @on "csg:parserender:mouseup" ,=>
         if not  $('#updateBtn').hasClass "disabled"
           @app.vent.trigger("parseCsgRequest", @)
+      @on "download:stl:mouseup" ,=>
+        if not $('#exportStl').hasClass "disabled"
+          @app.vent.trigger("downloadStlRequest", @) 
         
       @app.vent.bind "undoAvailable", ->
         $('#undoBtn').removeClass("disabled")
@@ -50,8 +53,22 @@ define (require)->
         $('#redoBtn').addClass("disabled")
       @app.vent.bind "modelChanged", ->
         $('#updateBtn').removeClass("disabled")
+        $('#exportStl').addClass("disabled")
       @app.vent.bind "parseCsgDone", ->
-          $('#updateBtn').addClass("disabled")
+        $('#updateBtn').addClass("disabled")
+        $('#exportStl').removeClass("disabled")
       
+      @app.vent.bind "stlGenDone", (blob)->
+        console.log ("STL gen done")
+        console.log blob
+        
+        tmpLnk = $("#exportStlLink")
+        console.log (tmpLnk)
+        tmpLnk.prop("download", "exportTest.stl")
+        tmpLnk.prop("href", blob)
+        
+        #tmpLnk.href = @outputFileBlobUrl
+        #tmpLnk.innerHTML = "Download "+"stl".toUpperCase()
+        #$("#exportStl a").attr("href","tutu")
       
   return MainMenuView

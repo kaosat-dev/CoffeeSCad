@@ -24,7 +24,8 @@
         "mouseup .settings": "settings:mouseup",
         "mouseup .undo": "file:undo:mouseup",
         "mouseup .redo": "file:redo:mouseup",
-        "mouseup .parseCSG": "csg:parserender:mouseup"
+        "mouseup .parseCSG": "csg:parserender:mouseup",
+        "mouseup .downloadStl": "download:stl:mouseup"
       };
 
       function MainMenuView(options) {
@@ -49,6 +50,11 @@
             return _this.app.vent.trigger("parseCsgRequest", _this);
           }
         });
+        this.on("download:stl:mouseup", function() {
+          if (!$('#exportStl').hasClass("disabled")) {
+            return _this.app.vent.trigger("downloadStlRequest", _this);
+          }
+        });
         this.app.vent.bind("undoAvailable", function() {
           return $('#undoBtn').removeClass("disabled");
         });
@@ -66,10 +72,21 @@
           return $('#redoBtn').addClass("disabled");
         });
         this.app.vent.bind("modelChanged", function() {
-          return $('#updateBtn').removeClass("disabled");
+          $('#updateBtn').removeClass("disabled");
+          return $('#exportStl').addClass("disabled");
         });
         this.app.vent.bind("parseCsgDone", function() {
-          return $('#updateBtn').addClass("disabled");
+          $('#updateBtn').addClass("disabled");
+          return $('#exportStl').removeClass("disabled");
+        });
+        this.app.vent.bind("stlGenDone", function(blob) {
+          var tmpLnk;
+          console.log("STL gen done");
+          console.log(blob);
+          tmpLnk = $("#exportStlLink");
+          console.log(tmpLnk);
+          tmpLnk.prop("download", "exportTest.stl");
+          return tmpLnk.prop("href", blob);
         });
       }
 

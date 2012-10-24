@@ -649,6 +649,7 @@
         try {
           app = require('app');
           resultCSG = app.csgProcessor.processScript(this.model.get("content"));
+          this.model.csg = resultCSG;
           geom = THREE.CSG.fromCSG(resultCSG);
           mat = new THREE.MeshBasicMaterial({
             color: 0xffffff,
@@ -684,6 +685,7 @@
           return this.controller.objects = [this.mesh];
         } catch (error) {
           this.scene.remove(this.mesh);
+          this.model.csg = null;
           return console.log("Csg Generation error: " + error + " ");
         } finally {
           this.app.vent.trigger("parseCsgDone", this);

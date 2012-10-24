@@ -131,8 +131,19 @@ return res
     #else
     #  alert("all is fine")
     ###############
+    CsgStlExporterMin = require "modules/csg.stlexporter"
     
+    stlexport=()=>
+      #console.log "export stl"
+      stlExp = new CsgStlExporterMin @mainPart.csg
+      blobUrl = stlExp.export()
+      #toto.step1()
+      
+      @vent.trigger("stlGenDone", blobUrl)
+    
+    @vent.bind("downloadStlRequest", stlexport)
 
+      
     ################  
     @codeEditorView = new CodeEditorView
       model: @mainPart 
@@ -167,8 +178,8 @@ return res
       console.log(part)
       
       
-    app.vent.bind("fileSaveRequest", saveProject)
-    app.vent.bind("fileLoadRequest", loadProject)
+    @vent.bind("fileSaveRequest", saveProject)
+    @vent.bind("fileLoadRequest", loadProject)
     
     ################
     

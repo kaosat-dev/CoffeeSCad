@@ -6,15 +6,6 @@
     app = require('app');
     Router = require('router');
     app.router = new Router();
-    /*
-      file = new projectMod.ProjectFile()
-      file.bla("yeah")
-      console.log(file)
-      file.bli("yop")
-      console.log(file)
-      file.set "name", "uuuurgh"
-    */
-
     Backbone.history.start({
       pushState: true,
       root: app.root

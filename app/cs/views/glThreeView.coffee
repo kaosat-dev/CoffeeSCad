@@ -574,6 +574,7 @@ define (require) ->
       try
         app = require 'app'
         resultCSG = app.csgProcessor.processScript(@model.get("content"))
+        @model.csg = resultCSG #FIXME: remove this at all costs (needs overall reorganization perhaps), but a view should not modify a model like this ? or should it?
         
         geom = THREE.CSG.fromCSG(resultCSG)
         
@@ -596,6 +597,7 @@ define (require) ->
         @controller.objects = [@mesh]
       catch error
         @scene.remove @mesh
+        @model.csg = null
         console.log "Csg Generation error: #{error} "
       finally
         @app.vent.trigger("parseCsgDone", @)
