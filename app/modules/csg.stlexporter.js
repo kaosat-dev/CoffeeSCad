@@ -3,193 +3,33 @@
   var __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   define(function(require) {
-    var CsgStlExporter, CsgStlExporterMin, csg, getBlobBuilder, getWindowURL, revokeBlobUrl, textToBlobUrl,
-      _this = this;
+    var CsgStlExporterMin, csg, utils;
     csg = require('csg');
-    getBlobBuilder = function() {
-      bb;
-
-      var bb;
-      if (window.BlobBuilder) {
-        bb = new window.BlobBuilder();
-      } else if (window.WebKitBlobBuilder) {
-        bb = new window.WebKitBlobBuilder();
-      } else if (window.MozBlobBuilder) {
-        bb = new window.MozBlobBuilder();
-      } else {
-        throw new Error("Your browser doesn't support BlobBuilder");
-      }
-      return bb;
-    };
-    getWindowURL = function() {
-      if (window.URL) {
-        return window.URL;
-      } else if (window.webkitURL) {
-        return window.webkitURL;
-      } else {
-        throw new Error("Your browser doesn't support window.URL");
-      }
-    };
-    textToBlobUrl = function(txt) {
-      var bb, blob, blobURL, windowURL;
-      bb = getBlobBuilder();
-      windowURL = getWindowURL();
-      bb.append(txt);
-      blob = bb.getBlob();
-      blobURL = windowURL.createObjectURL(blob);
-      if (!blobURL) {
-        throw new Error("createObjectURL() failed");
-      }
-      return blobURL;
-    };
-    revokeBlobUrl = function(url) {
-      if (window.URL) {
-        return window.URL.revokeObjectURL(url);
-      } else if (window.webkitURL) {
-        return window.webkitURL.revokeObjectURL(url);
-      } else {
-        throw new Error("Your browser doesn't support window.URL");
-      }
-    };
-    ({
-      getBlob: function() {
-        var blob, link;
-        window.URL = window.URL || window.webkitURL;
-        blob = new Blob(['body { color: red }'], {
-          type: 'text/css'
-        });
-        link = document.createElement('link');
-        link.rel = 'stylesheet';
-        link.href = window.URL.createObjectURL(blob);
-        return document.body.appendChild(link);
-      },
-      revokeBlobUrl: function() {}
-    });
+    utils = require("modules/utils");
     CsgStlExporterMin = (function() {
 
       function CsgStlExporterMin(csgObject) {
-        this.export_n1 = __bind(this.export_n1, this);
-
         this["export"] = __bind(this["export"], this);
 
         var app;
-        console.log(csgObject);
         this.csgObject = csgObject;
+        this.mimeType = "application/sla";
         app = require('app');
       }
 
-      CsgStlExporterMin.prototype.export_o = function() {
-        var bb, blob, windowURL;
-        try {
-          bb = getBlobBuilder();
-          this.mimeType = "application/sla";
-          this.csgObject.fixTJunctions().toStlBinary(bb);
-          blob = bb.getBlob(this.mimeType);
-          console.log(blob);
-        } catch (error) {
-          console.log("Failed to generate stl blob data: " + error);
-        }
-        windowURL = getWindowURL();
-        this.outputFileBlobUrl = windowURL.createObjectURL(blob);
-        if (!this.outputFileBlobUrl) {
-          throw new Error("createObjectURL() failed");
-        }
-        return this.outputFileBlobUrl;
-      };
-
       CsgStlExporterMin.prototype["export"] = function() {
-        var bb, blob, windowURL;
-        try {
-          bb = getBlobBuilder();
-          this.mimeType = "application/sla";
-          this.currentObject = this.csgObject.fixTJunctions();
-          this.raw2(bb);
-          console.log("data");
-          console.log(bb);
-          blob = bb.getBlob(this.mimeType);
-          console.log(blob);
-        } catch (error) {
-          console.log("Failed to generate stl blob data: " + error);
-        }
-        windowURL = getWindowURL();
-        this.outputFileBlobUrl = windowURL.createObjectURL(blob);
-        if (!this.outputFileBlobUrl) {
-          throw new Error("createObjectURL() failed");
-        }
-        return this.outputFileBlobUrl;
-      };
-
-      CsgStlExporterMin.prototype.raw2 = function(blobbuilder) {
-        var ar1, buffer, byteoffset, headerarray, i, int32buffer, int8buffer, numtriangles, _i;
-        buffer = new ArrayBuffer(4);
-        int32buffer = new Int32Array(buffer, 0, 1);
-        int8buffer = new Int8Array(buffer, 0, 4);
-        int32buffer[0] = 0x11223344;
-        if (int8buffer[0] !== 0x44) {
-          throw new Error("Binary STL output is currently only supported on little-endian (Intel) processors");
-        }
-        numtriangles = 0;
-        this.currentObject.polygons.map(function(p) {
-          var numvertices, thisnumtriangles;
-          numvertices = p.vertices.length;
-          thisnumtriangles = numvertices >= 3 ? numvertices - 2 : 0;
-          return numtriangles += thisnumtriangles;
-        });
-        console.log("Total num tris" + numtriangles);
-        headerarray = new Uint8Array(80);
-        for (i = _i = 0; _i < 80; i = ++_i) {
-          headerarray[i] = 65;
-        }
-        blobbuilder.append(headerarray.buffer);
-        ar1 = new Uint32Array(1);
-        ar1[0] = numtriangles;
-        blobbuilder.append(ar1.buffer);
-        buffer = new ArrayBuffer(50);
-        byteoffset = 0;
-        return this.currentObject.polygons.map(function(p) {
-          var arindex, float32array, normal, numvertices, uint16array, v, vertexpos, vv, _j, _k, _ref, _results;
-          numvertices = p.vertices.length;
-          _results = [];
-          for (i = _j = 0, _ref = numvertices - 2; 0 <= _ref ? _j < _ref : _j > _ref; i = 0 <= _ref ? ++_j : --_j) {
-            float32array = new Float32Array(buffer, 0, 12);
-            normal = p.plane.normal;
-            float32array[0] = normal._x;
-            float32array[1] = normal._y;
-            float32array[2] = normal._z;
-            arindex = 3;
-            for (v = _k = 0; _k < 3; v = ++_k) {
-              vv = v + (v > 0 ? i : 0);
-              vertexpos = p.vertices[vv].pos;
-              float32array[arindex++] = vertexpos._x;
-              float32array[arindex++] = vertexpos._y;
-              float32array[arindex++] = vertexpos._z;
-            }
-            uint16array = new Uint16Array(buffer, 48, 1);
-            uint16array[0] = 0;
-            _results.push(blobbuilder.append(buffer));
-          }
-          return _results;
-        });
-      };
-
-      CsgStlExporterMin.prototype.export_n1 = function() {
         var blob, data, windowURL;
         this.currentObject = null;
-        this.mimeType = "application/sla";
         try {
           this.currentObject = this.csgObject.fixTJunctions();
-          data = this.raw();
+          data = this._generateBinary();
           blob = new Blob(data, {
             type: this.mimeType
           });
-          console.log("stl blob:");
-          console.log(blob);
-          console.log("data");
-          console.log(data);
         } catch (error) {
           console.log("Failed to generate stl blob data: " + error);
         }
-        windowURL = getWindowURL();
+        windowURL = utils.getWindowURL();
         this.outputFileBlobUrl = windowURL.createObjectURL(blob);
         if (!this.outputFileBlobUrl) {
           throw new Error("createObjectURL() failed");
@@ -197,8 +37,8 @@
         return this.outputFileBlobUrl;
       };
 
-      CsgStlExporterMin.prototype.raw = function() {
-        var ar1, blobData, buffer, byteoffset, headerarray, i, int32buffer, int8buffer, numtriangles, _i;
+      CsgStlExporterMin.prototype._generateBinary = function() {
+        var ar1, arindex, attribDataArray, blobData, buffer, headerarray, i, index, int32buffer, int8buffer, normal, numtriangles, numvertices, polygon, pos, v, vertexDataArray, vv, _i, _j, _k, _ref, _ref1;
         blobData = [];
         buffer = new ArrayBuffer(4);
         int32buffer = new Int32Array(buffer, 0, 1);
@@ -214,43 +54,38 @@
           thisnumtriangles = numvertices >= 3 ? numvertices - 2 : 0;
           return numtriangles += thisnumtriangles;
         });
-        console.log("Total num tris" + numtriangles);
         headerarray = new Uint8Array(80);
         for (i = _i = 0; _i < 80; i = ++_i) {
           headerarray[i] = 65;
         }
-        blobData.push(headerarray.buffer);
+        blobData.push(headerarray);
         ar1 = new Uint32Array(1);
         ar1[0] = numtriangles;
-        blobData.push(ar1.buffer);
-        buffer = new ArrayBuffer(50);
-        byteoffset = 0;
-        this.currentObject.polygons.map(function(p) {
-          var arindex, float32array, normal, numvertices, uint16array, v, vertexpos, vv, _j, _k, _ref, _results;
-          numvertices = p.vertices.length;
-          _results = [];
-          for (i = _j = 0, _ref = numvertices - 2; 0 <= _ref ? _j < _ref : _j > _ref; i = 0 <= _ref ? ++_j : --_j) {
-            float32array = new Float32Array(buffer, 0, 12);
-            normal = p.plane.normal;
-            float32array[0] = normal._x;
-            float32array[1] = normal._y;
-            float32array[2] = normal._z;
+        blobData.push(ar1);
+        _ref = this.currentObject.polygons;
+        for (index in _ref) {
+          polygon = _ref[index];
+          numvertices = polygon.vertices.length;
+          for (i = _j = 0, _ref1 = numvertices - 2; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; i = 0 <= _ref1 ? ++_j : --_j) {
+            vertexDataArray = new Float32Array(12);
+            normal = polygon.plane.normal;
+            vertexDataArray[0] = normal._x;
+            vertexDataArray[1] = normal._y;
+            vertexDataArray[2] = normal._z;
             arindex = 3;
             for (v = _k = 0; _k < 3; v = ++_k) {
               vv = v + (v > 0 ? i : 0);
-              vertexpos = p.vertices[vv].pos;
-              float32array[arindex++] = vertexpos._x;
-              float32array[arindex++] = vertexpos._y;
-              float32array[arindex++] = vertexpos._z;
+              pos = polygon.vertices[vv].pos;
+              vertexDataArray[arindex++] = pos._x;
+              vertexDataArray[arindex++] = pos._y;
+              vertexDataArray[arindex++] = pos._z;
             }
-            uint16array = new Uint16Array(buffer, 48, 1);
-            uint16array[0] = 0;
-            _results.push(blobData.push(buffer));
+            attribDataArray = new Uint16Array(1);
+            attribDataArray[0] = 0;
+            blobData.push(vertexDataArray);
+            blobData.push(attribDataArray);
           }
-          return _results;
-        });
-        console.log("BLOB data");
-        console.log(blobData);
+        }
         return blobData;
       };
 
@@ -258,143 +93,51 @@
 
     })();
     return CsgStlExporterMin;
-    return CsgStlExporter = (function() {
-
-      function CsgStlExporter() {
-        this.hasOutputFile;
-      }
-
-      CsgStlExporter.prototype.clearOutputFile = function() {
-        if (this.hasOutputFile) {
-          this.hasOutputFile(false);
+    /*
+      generateOutputFileFileSystem: ()-> 
+        
+        window.requestFileSystem  = window.requestFileSystem || window.webkitRequestFileSystem
+        if(!window.requestFileSystem)
+        {
+          throw new Error("Your browser does not support the HTML5 FileSystem API. Please try the Chrome browser instead.")
         }
-        if (this.outputFileDirEntry) {
-          this.outputFileDirEntry.removeRecursively(function() {
-            return {};
-          });
-          this.outputFileDirEntry = null;
-        }
-        if (this.outputFileBlobUrl) {
-          revokeBlobUrl(this.outputFileBlobUrl);
-          this.outputFileBlobUrl = null;
-        }
-        return this.enableItems();
-      };
-
-      CsgStlExporter.prototype.generateOutputFile = function() {
-        this.clearOutputFile();
-        if (this.hasValidCurrentObject) {
-          try {
-            return this.generateOutputFileFileSystem();
-          } catch (e) {
-            return this.generateOutputFileBlobUrl();
-          }
-        }
-      };
-
-      CsgStlExporter.prototype.currentObjectToBlob = function() {
-        var bb, blob, mimetype;
-        bb = getBlobBuilder();
-        mimetype = this.mimeTypeForCurrentObject();
-        if (this.currentObject instanceof CSG) {
-          this.currentObject.fixTJunctions().toStlBinary(bb);
-          mimetype = "application/sla";
-        } else if (this.currentObject instanceof CAG) {
-          this.currentObject.toDxf(bb);
-          mimetype = "application/dxf";
-        } else {
-          throw new Error("Not supported");
-        }
-        blob = bb.getBlob(mimetype);
-        return blob;
-      };
-
-      CsgStlExporter.prototype.mimeTypeForCurrentObject = function() {
-        var ext;
-        return ext = this.extensionForCurrentObject();
-      };
-
-      CsgStlExporter.prototype.extensionForCurrentObject = function() {
-        var extension;
-        if (this.currentObject instanceof CSG) {
-          extension = "stl";
-        } else if (this.currentObject instanceof CAG) {
-          extension = "dxf";
-        } else {
-          throw new Error("Not supported");
-        }
-        return extension;
-      };
-
-      CsgStlExporter.prototype.downloadLinkTextForCurrentObject = function() {
-        var ext;
-        ext = this.extensionForCurrentObject();
-        return "Download " + ext.toUpperCase();
-      };
-
-      CsgStlExporter.prototype.generateOutputFileBlobUrl = function() {
-        var blob, windowURL;
-        blob = this.currentObjectToBlob();
-        windowURL = getWindowURL();
-        this.outputFileBlobUrl = windowURL.createObjectURL(blob);
-        if (!this.outputFileBlobUrl) {
-          throw new Error("createObjectURL() failed");
-        }
-        this.hasOutputFile = true;
-        this.downloadOutputFileLink.href = this.outputFileBlobUrl;
-        this.downloadOutputFileLink.innerHTML = this.downloadLinkTextForCurrentObject();
-        return this.enableItems();
-      };
-
-      /*
-          generateOutputFileFileSystem: ()-> 
-            
-            window.requestFileSystem  = window.requestFileSystem || window.webkitRequestFileSystem
-            if(!window.requestFileSystem)
-            {
-              throw new Error("Your browser does not support the HTML5 FileSystem API. Please try the Chrome browser instead.")
-            }
-            // create a random directory name:
-            dirname = "OpenJsCadOutput1_"+parseInt(Math.random()*1000000000, 10)+"."+extension
-            extension = @extensionForCurrentObject()
-            filename = @filename+"."+extension
-            that = this
-            window.requestFileSystem(TEMPORARY, 20*1024*1024, function(fs){
-                fs.root.getDirectory(dirname, {create: true, exclusive: true}, function(dirEntry) {
-                    that.outputFileDirEntry = dirEntry
-                    dirEntry.getFile(filename, {create: true, exclusive: true}, function(fileEntry) {
-                         fileEntry.createWriter(function(fileWriter) {
-                            fileWriter.onwriteend = function(e) {
-                              that.hasOutputFile = true
-                              that.downloadOutputFileLink.href = fileEntry.toURL()
-                              that.downloadOutputFileLink.type = that.mimeTypeForCurrentObject() 
-                              that.downloadOutputFileLink.innerHTML = that.downloadLinkTextForCurrentObject()
-                              that.enableItems()
-                              if(that.onchange) that.onchange()
-                            }
-                            fileWriter.onerror = function(e) {
-                              throw new Error('Write failed: ' + e.toString())
-                            }
-                            blob = that.currentObjectToBlob()
-                            fileWriter.write(blob)                
-                          }, 
-                          function(fileerror){OpenJsCad.FileSystemApiErrorHandler(fileerror, "createWriter")} 
-                        )
-                      },
-                      function(fileerror){OpenJsCad.FileSystemApiErrorHandler(fileerror, "getFile('"+filename+"')")} 
+        // create a random directory name:
+        dirname = "OpenJsCadOutput1_"+parseInt(Math.random()*1000000000, 10)+"."+extension
+        extension = @extensionForCurrentObject()
+        filename = @filename+"."+extension
+        that = this
+        window.requestFileSystem(TEMPORARY, 20*1024*1024, function(fs){
+            fs.root.getDirectory(dirname, {create: true, exclusive: true}, function(dirEntry) {
+                that.outputFileDirEntry = dirEntry
+                dirEntry.getFile(filename, {create: true, exclusive: true}, function(fileEntry) {
+                     fileEntry.createWriter(function(fileWriter) {
+                        fileWriter.onwriteend = function(e) {
+                          that.hasOutputFile = true
+                          that.downloadOutputFileLink.href = fileEntry.toURL()
+                          that.downloadOutputFileLink.type = that.mimeTypeForCurrentObject() 
+                          that.downloadOutputFileLink.innerHTML = that.downloadLinkTextForCurrentObject()
+                          that.enableItems()
+                          if(that.onchange) that.onchange()
+                        }
+                        fileWriter.onerror = function(e) {
+                          throw new Error('Write failed: ' + e.toString())
+                        }
+                        blob = that.currentObjectToBlob()
+                        fileWriter.write(blob)                
+                      }, 
+                      function(fileerror){OpenJsCad.FileSystemApiErrorHandler(fileerror, "createWriter")} 
                     )
                   },
-                  function(fileerror){OpenJsCad.FileSystemApiErrorHandler(fileerror, "getDirectory('"+dirname+"')")} 
-                )         
-              }, 
-              function(fileerror){OpenJsCad.FileSystemApiErrorHandler(fileerror, "requestFileSystem")}
-            )
-      */
+                  function(fileerror){OpenJsCad.FileSystemApiErrorHandler(fileerror, "getFile('"+filename+"')")} 
+                )
+              },
+              function(fileerror){OpenJsCad.FileSystemApiErrorHandler(fileerror, "getDirectory('"+dirname+"')")} 
+            )         
+          }, 
+          function(fileerror){OpenJsCad.FileSystemApiErrorHandler(fileerror, "requestFileSystem")}
+        )
+    */
 
-
-      return CsgStlExporter;
-
-    })();
   });
 
 }).call(this);

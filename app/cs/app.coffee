@@ -81,7 +81,7 @@ return res
     
     @project = new Project({name:'MainProject'})  
     @mainPart = new ProjectFile
-      name: "main"
+      name: "mainPart"
       ext: "coscad"
       content: testcode    
       
@@ -134,11 +134,8 @@ return res
     CsgStlExporterMin = require "modules/csg.stlexporter"
     
     stlexport=()=>
-      #console.log "export stl"
       stlExp = new CsgStlExporterMin @mainPart.csg
       blobUrl = stlExp.export()
-      #toto.step1()
-      
       @vent.trigger("stlGenDone", blobUrl)
     
     @vent.bind("downloadStlRequest", stlexport)
@@ -188,10 +185,7 @@ return res
     app.mainMenuView.on "file:new:mouseup",=>
       #TODO: check if all files are saved etc
       #@project.remove @mainPart
-      @mainPart = new ProjectFile
-        name: "main"
-        ext: "coscad"
-        content: ""
+      @mainPart = new ProjectFile()
       #@project.add @mainPart 
       ########VIEW UPDATES
       @codeEditorView.switchModel @mainPart 

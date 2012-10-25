@@ -17,7 +17,7 @@
       ProjectFile.prototype.idAttribute = 'name';
 
       ProjectFile.prototype.defaults = {
-        name: "main",
+        name: "mainPart",
         ext: "coscad",
         content: ""
       };

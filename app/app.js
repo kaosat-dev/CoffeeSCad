@@ -53,7 +53,7 @@
         name: 'MainProject'
       });
       this.mainPart = new ProjectFile({
-        name: "main",
+        name: "mainPart",
         ext: "coscad",
         content: testcode
       });
@@ -135,11 +135,7 @@
       this.vent.bind("fileLoadRequest", loadProject);
       app.mainMenuView.on("project:new:mouseup", function() {});
       app.mainMenuView.on("file:new:mouseup", function() {
-        _this.mainPart = new ProjectFile({
-          name: "main",
-          ext: "coscad",
-          content: ""
-        });
+        _this.mainPart = new ProjectFile();
         _this.codeEditorView.switchModel(_this.mainPart);
         return _this.glThreeView.switchModel(_this.mainPart);
       });

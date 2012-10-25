@@ -15,7 +15,7 @@ define (require)->
   class ProjectFile extends Backbone.Model
     idAttribute: 'name'
     defaults:
-      name:     "main"
+      name:     "mainPart"
       ext:      "coscad"
       content:  ""
 

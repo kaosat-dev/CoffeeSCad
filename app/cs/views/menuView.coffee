@@ -58,17 +58,10 @@ define (require)->
         $('#updateBtn').addClass("disabled")
         $('#exportStl').removeClass("disabled")
       
-      @app.vent.bind "stlGenDone", (blob)->
-        console.log ("STL gen done")
-        console.log blob
-        
+      @app.vent.bind "stlGenDone", (blob)=>
         tmpLnk = $("#exportStlLink")
-        console.log (tmpLnk)
-        tmpLnk.prop("download", "exportTest.stl")
+        fileName = @app.mainPart.get("name")
+        tmpLnk.prop("download", "#{fileName}.stl")
         tmpLnk.prop("href", blob)
-        
-        #tmpLnk.href = @outputFileBlobUrl
-        #tmpLnk.innerHTML = "Download "+"stl".toUpperCase()
-        #$("#exportStl a").attr("href","tutu")
       
   return MainMenuView

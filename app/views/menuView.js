@@ -80,12 +80,10 @@
           return $('#exportStl').removeClass("disabled");
         });
         this.app.vent.bind("stlGenDone", function(blob) {
-          var tmpLnk;
-          console.log("STL gen done");
-          console.log(blob);
+          var fileName, tmpLnk;
           tmpLnk = $("#exportStlLink");
-          console.log(tmpLnk);
-          tmpLnk.prop("download", "exportTest.stl");
+          fileName = _this.app.mainPart.get("name");
+          tmpLnk.prop("download", "" + fileName + ".stl");
           return tmpLnk.prop("href", blob);
         });
       }
