@@ -11,7 +11,7 @@ define (require)->
   MainContentLayout = require "views/mainContentView"
   ModalRegion = require "views/modalRegion"
   {LoadView, SaveView} = require "views/fileSaveLoadView"
-  {GlViewSettings,GlThreeView} = require "views/glThreeView"
+  GlThreeView = require "views/glThreeView"
   {Library,Project,ProjectFile} = require "modules/project"
 
   Settings = require "modules/settings"
@@ -71,13 +71,11 @@ return res
   app.addInitializer (options)->
     exporter = new CsgStlExporterMin()
     
-    
-    @settings = new Settings
-    #@settings.save()
+    @settings = new Settings()
     @settings.fetch()
     
-    @lib  = new Library
-    @csgProcessor = new CsgProcessor
+    @lib  = new Library()
+    @csgProcessor = new CsgProcessor()
     
     @project = new Project({name:'MainProject'})  
     @mainPart = new ProjectFile
@@ -144,6 +142,7 @@ return res
     ################  
     @codeEditorView = new CodeEditorView
       model: @mainPart 
+      settings: @settings.at(2)
     @mainMenuView = new MainMenuView
       model: @lib
     @projectView = new ProjectView
@@ -192,21 +191,16 @@ return res
       @glThreeView.switchModel @mainPart
       
     app.mainMenuView.on "file:save:mouseup",=>
-      app.modView = new SaveView
-      app.modal.show(@modView)
+      @modView = new SaveView
+      @modal.show(@modView)
     
     app.mainMenuView.on "file:load:mouseup",=>
-      app.modView = new LoadView
-      app.modal.show(@modView)
+      @modView = new LoadView
+      @modal.show(@modView)
      
     app.mainMenuView.on "settings:mouseup",=>
-      setTest = @settings.first()
-      
       @modView = new SettingsView 
-        model: setTest
-        
-      @modView.render()
-      console.log @modView
+        model: @settings
       
       app.modal.show(@modView)      
       

@@ -31,7 +31,7 @@
 
       ModalRegion.prototype.showModal = function(view) {
         view.on("close", this.hideModal, this);
-        return this.$el.modal('show');
+        return this.$el.modal('show').addClass('modal-big');
       };
 
       ModalRegion.prototype.hideModal = function() {

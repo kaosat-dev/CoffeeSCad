@@ -15,9 +15,11 @@ define (require)->
       
     constructor:(options)->
       super options
+      @settings= options.settings
       @editor = null
       @app = require 'app'
       @bindTo(@model, "change", @modelChanged)
+      @bindTo(@settings, "change", @settingsChanged)
     
     switchModel:(newModel)->
       #replace current model with a new one
@@ -30,7 +32,15 @@ define (require)->
       
     modelChanged: (model, value)=>
       @app.vent.trigger("modelChanged", @)
-      
+    
+    settingsChanged:(settings, value)=> 
+      console.log("Settings changed")
+      for key, val of @settings.changedAttributes()
+        switch key
+          when "startLine"
+            @editor.setOption("firstLineNumber",val)
+            @render()
+    
     #this could also be solved by letting the event listeners access the list of available undos & redos ?
     updateUndoRedo: () =>
       redos = @editor.historySize().redo
@@ -60,7 +70,7 @@ define (require)->
         lineNumbers:true
         gutter:true
         matchBrackets:true
-        firstLineNumber:1
+        firstLineNumber:@settings.get("startLine")
         onChange:(arg, arg2)  =>   
           @model.set "content", @editor.getValue()
           @updateUndoRedo()

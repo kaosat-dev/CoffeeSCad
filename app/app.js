@@ -2,7 +2,7 @@
 (function() {
 
   define(function(require) {
-    var $, CodeEditorView, CsgProcessor, CsgStlExporterMin, GlThreeView, GlViewSettings, Library, LoadView, MainContentLayout, MainMenuView, ModalRegion, Project, ProjectFile, ProjectView, SaveView, Settings, SettingsView, app, marionette, testcode, _, _ref, _ref1, _ref2;
+    var $, CodeEditorView, CsgProcessor, CsgStlExporterMin, GlThreeView, Library, LoadView, MainContentLayout, MainMenuView, ModalRegion, Project, ProjectFile, ProjectView, SaveView, Settings, SettingsView, app, marionette, testcode, _, _ref, _ref1;
     $ = require('jquery');
     _ = require('underscore');
     marionette = require('marionette');
@@ -14,8 +14,8 @@
     MainContentLayout = require("views/mainContentView");
     ModalRegion = require("views/modalRegion");
     _ref = require("views/fileSaveLoadView"), LoadView = _ref.LoadView, SaveView = _ref.SaveView;
-    _ref1 = require("views/glThreeView"), GlViewSettings = _ref1.GlViewSettings, GlThreeView = _ref1.GlThreeView;
-    _ref2 = require("modules/project"), Library = _ref2.Library, Project = _ref2.Project, ProjectFile = _ref2.ProjectFile;
+    GlThreeView = require("views/glThreeView");
+    _ref1 = require("modules/project"), Library = _ref1.Library, Project = _ref1.Project, ProjectFile = _ref1.ProjectFile;
     Settings = require("modules/settings");
     CsgProcessor = require("modules/csg.processor");
     CsgStlExporterMin = require("modules/csg.stlexporter");
@@ -45,10 +45,10 @@
       var exporter, loadProject, saveProject, stlexport, testmodel2,
         _this = this;
       exporter = new CsgStlExporterMin();
-      this.settings = new Settings;
+      this.settings = new Settings();
       this.settings.fetch();
-      this.lib = new Library;
-      this.csgProcessor = new CsgProcessor;
+      this.lib = new Library();
+      this.csgProcessor = new CsgProcessor();
       this.project = new Project({
         name: 'MainProject'
       });
@@ -100,7 +100,8 @@
       };
       this.vent.bind("downloadStlRequest", stlexport);
       this.codeEditorView = new CodeEditorView({
-        model: this.mainPart
+        model: this.mainPart,
+        settings: this.settings.at(2)
       });
       this.mainMenuView = new MainMenuView({
         model: this.lib
@@ -140,21 +141,17 @@
         return _this.glThreeView.switchModel(_this.mainPart);
       });
       app.mainMenuView.on("file:save:mouseup", function() {
-        app.modView = new SaveView;
-        return app.modal.show(_this.modView);
+        _this.modView = new SaveView;
+        return _this.modal.show(_this.modView);
       });
       app.mainMenuView.on("file:load:mouseup", function() {
-        app.modView = new LoadView;
-        return app.modal.show(_this.modView);
+        _this.modView = new LoadView;
+        return _this.modal.show(_this.modView);
       });
       app.mainMenuView.on("settings:mouseup", function() {
-        var setTest;
-        setTest = _this.settings.first();
         _this.modView = new SettingsView({
-          model: setTest
+          model: _this.settings
         });
-        _this.modView.render();
-        console.log(_this.modView);
         return app.modal.show(_this.modView);
       });
       return app.glThreeView.fromCsg();

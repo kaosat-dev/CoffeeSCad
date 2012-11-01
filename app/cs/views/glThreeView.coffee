@@ -9,6 +9,7 @@ define (require) ->
   threedView_template = require "text!templates/glThree.tmpl"
   requestAnimationFrame = require 'anim'
   
+  ###
   class GlViewSettings extends Backbone.Model
       defaults:
         autoUpdate   : true
@@ -17,7 +18,7 @@ define (require) ->
         showGrid     : true
         showAxes     : true 
         shadows      : true
-  
+  ###
   #just for testing
   
   class MyAxisHelper
@@ -77,11 +78,9 @@ define (require) ->
         toggled = @settings.get("showGrid")
         if toggled
           @settings.set("showGrid",false)
-          @scene.remove @plane
           $(ev.target).addClass("uicon-off")
         else
           @settings.set("showGrid",true)
-          @addPlane()
           $(ev.target).removeClass("uicon-off")
         return false
         
@@ -90,11 +89,9 @@ define (require) ->
         toggled = @settings.get("showAxes")
         if toggled
           @settings.set("showAxes",false)
-          @removeAxes()
           $(ev.target).addClass("uicon-off")
         else
           @settings.set("showAxes",true)
-          @addAxes()
           $(ev.target).removeClass("uicon-off")
         return false
      
@@ -103,27 +100,19 @@ define (require) ->
         toggled = @settings.get("shadows")
         if toggled
           @settings.set("shadows",false)
-          @renderer.clearTarget(@light.shadowMap)
           $(ev.target).addClass("uicon-off")
         else
           @settings.set("shadows",true)
           $(ev.target).removeClass("uicon-off")
-          
-        @renderer.shadowMapEnabled = @settings.get("shadows")
-        @renderer.shadowMapAutoUpdate = @settings.get("shadows")
-        planeMat = new THREE.MeshLambertMaterial({color: 0xFFFFFF})
-        @plane.material = planeMat
         return false
             
     toggleAA:(ev)=>
         toggled = @settings.get("antialiasing")
         if toggled
           @settings.set("antialiasing",false)
-          @renderer.antialias= false
           $(ev.target).addClass("uicon-off")
         else
           @settings.set("antialiasing",true)
-          @renderer.antialias= true
           $(ev.target).removeClass("uicon-off")
         return false
         
@@ -266,48 +255,97 @@ define (require) ->
       #console.log "model changed"
       if @settings.get("autoUpdate")
         @fromCsg @model
-      
+        
+    settingsChanged:(settings, value)=> 
+      for key, val of @settings.changedAttributes()
+        switch key
+          when "renderer"
+            delete @renderer
+            @init()
+            @fromCsg @model
+            @render()
+          when "autoUpdate"
+            if val
+              @fromCsg @model
+          when "showGrid"
+            if val
+              @addPlane()
+            else
+              @removePlane()
+          when "showAxes"
+            if val
+              @addAxes()
+            else
+              @removeAxes()
+          when "shadows"
+            if not val
+              @renderer.clearTarget(@light.shadowMap)
+              @fromCsg @model
+              @render()
+              @renderer.shadowMapAutoUpdate = false
+              if @settings.get("showGrid")
+                @removePlane()
+                @addPlane()
+            else
+              @renderer.shadowMapAutoUpdate = true
+              @fromCsg @model
+              @render()
+              if @settings.get("showGrid")
+                @removePlane()
+                @addPlane()
+            
+          when "selfShadows"
+            @fromCsg @model
+            @render()
+            
+       
     constructor:(options, settings)->
       super options
-      @settings = options.settings or new GlViewSettings() #TODO fix this horrible hack
+      @settings = options.settings #or new GlViewSettings() #TODO fix this horrible hack
       @app = require 'app'
       
       @bindTo(@model, "change", @modelChanged)
       @app.vent.bind "parseCsgRequest", =>
         @fromCsg @model
       
+      @bindTo(@settings, "change", @settingsChanged)
       #Controls:
       @dragging = false
       ##########
       @width = 800
       @height = 600
+      @init()
       
+      
+    init:()=>
       @renderer=null
-      @setupScene()
-      @setupOverlayScene()
-      
       #TODO: do this properly
       @configure(@settings)
-      if @settings
-        if @settings.get("showGrid")
-          @addPlane()
-        if @settings.get("showAxes")
-          @addAxes()
-        if @settings.get("shadows")
-          @renderer.shadowMapEnabled = true
+      @renderer.shadowMapEnabled = true
+      @renderer.shadowMapAutoUpdate = true
       
       @controller = new THREE.Object3D()     
       @controller.name = "picker" 
       @controller.objects = []
       
       @projector = new THREE.Projector()
+      @setupScene()
+      @setupOverlayScene()
       
-      
+      if @settings.get("shadows")
+        @renderer.shadowMapAutoUpdate = @settings.get("shadows")
+      if @settings.get("showGrid")
+        @addPlane()
+      if @settings.get("showAxes")
+        @addAxes()
+        
+        
     configure:(settings)=>
       if settings.get("renderer")
           renderer = settings.get("renderer")
           if renderer =="webgl"
             if detector.webgl
+              console.log "Gl Renderer"
               @renderer = new THREE.WebGLRenderer 
                 clearColor: 0x00000000
                 clearAlpha: 0
@@ -405,7 +443,7 @@ define (require) ->
       spotLight.position.y = 1000
       spotLight.position.z = 0
       #
-      spotLight.castShadow =  @settings.get("shadows")
+      spotLight.castShadow = true# @settings.get("shadows")
       @light= spotLight #TODO: clean this up
       @scene.add(ambientLight);
       @scene.add(pointLight)
@@ -424,10 +462,13 @@ define (require) ->
         plane.position.y = -30
         plane.name = "workplane"
         #
-        plane.receiveShadow = @settings.get("shadows")
+        plane.receiveShadow = true
         @plane=plane
         
       @scene.add(@plane)
+      
+    removePlane:()=>
+      @scene.remove(@plane)
       
     addAxes:()->
       @axes = new MyAxisHelper(200,0x666666,0x666666, 0x666666)
@@ -565,10 +606,8 @@ define (require) ->
     
     toCsgTest:(mesh)->
       csgResult = THREE.CSG.toCSG(mesh)
-      
       if csgResult?
         console.log "CSG conversion result ok:"
-      #console.log csgResult
       
     fromCsg:(csg)=>
       try
@@ -589,8 +628,12 @@ define (require) ->
           @scene.remove @mesh
           
         @mesh = new THREE.Mesh(geom, mat)
-        @mesh.castShadow = @settings.get("shadows")
-        #@mesh.receiveShadow = true
+        #@mesh.castShadow = @settings.get("shadows")
+        #@mesh.receiveShadow = @settings.get("selfShadows")
+        
+        @mesh.castShadow =  @settings.get("shadows")
+        @mesh.receiveShadow = @settings.get("selfShadows") and @settings.get("shadows")
+        
         @mesh.name = "CSG_OBJ"
         
         @scene.add @mesh
@@ -626,4 +669,4 @@ define (require) ->
       @scene.add(sphere)
       
 
-  return {GlThreeView, GlViewSettings}
+  return GlThreeView

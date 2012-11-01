@@ -18,7 +18,7 @@ define (require)->
 
     showModal: (view)=>
       view.on("close", @hideModal, @)
-      @$el.modal('show')
+      @$el.modal('show').addClass('modal-big')
       
     hideModal: ->
       @$el.modal 'hide'

@@ -31,7 +31,8 @@ require.config
     localstorage:     "../assets/js/plugins/backbone.localstorage.min"
     modelbinder :     "../assets/js/plugins/backbone.ModelBinder.min"
     collectionbinder :"../assets/js/plugins/backbone.CollectionBinder.min"
-    forms :           "../assets/js/plugins/backbone.forms.min"
+    forms :           "../assets/js/plugins/backbone.forms"
+    forms_bootstrap : "../assets/js/plugins/backbone.forms.bootstrap"
     
     three_csg:        "../assets/js/plugins/ThreeCSG"
     

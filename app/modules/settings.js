@@ -14,14 +14,16 @@
 
       __extends(GeneralSettings, _super);
 
+      GeneralSettings.prototype.idAttribute = 'name';
+
       GeneralSettings.prototype.defaults = {
-        maxRecentDisplay: 5
+        name: "General",
+        title: "General",
+        maxRecentFilesDisplay: 5
       };
 
       function GeneralSettings(options) {
         GeneralSettings.__super__.constructor.call(this, options);
-        this.title = "General";
-        this.set("title", this.title);
       }
 
       return GeneralSettings;
@@ -31,18 +33,22 @@
 
       __extends(GlViewSettings, _super);
 
+      GlViewSettings.prototype.idAttribute = 'name';
+
       GlViewSettings.prototype.defaults = {
+        name: "GlView",
+        title: "3d view",
         autoUpdate: true,
         renderer: 'webgl',
         antialiasing: true,
         showGrid: true,
         showAxes: true,
-        shadows: true
+        shadows: true,
+        selfShadows: true
       };
 
       function GlViewSettings(options) {
         GlViewSettings.__super__.constructor.call(this, options);
-        this.title = "3d view";
       }
 
       return GlViewSettings;
@@ -52,14 +58,17 @@
 
       __extends(EditorSettings, _super);
 
+      EditorSettings.prototype.idAttribute = 'name';
+
       EditorSettings.prototype.defaults = {
+        name: "Editor",
+        title: "Code editor",
         startLine: 1,
         theme: "default"
       };
 
       function EditorSettings(options) {
         EditorSettings.__super__.constructor.call(this, options);
-        this.title = "Code editor";
       }
 
       return EditorSettings;
@@ -69,14 +78,17 @@
 
       __extends(KeyBindings, _super);
 
+      KeyBindings.prototype.idAttribute = 'name';
+
       KeyBindings.prototype.defaults = {
+        name: "Keys",
+        title: "Key Bindings",
         "undo": "CTRL+Z",
         "redo": "CTRL+Y"
       };
 
       function KeyBindings(options) {
         KeyBindings.__super__.constructor.call(this, options);
-        this.title = "Key Bindings";
       }
 
       return KeyBindings;
@@ -86,13 +98,16 @@
 
       __extends(GitHubSettings, _super);
 
+      GitHubSettings.prototype.idAttribute = 'name';
+
       GitHubSettings.prototype.defaults = {
+        name: "Gists",
+        title: "Gist integration",
         configured: false
       };
 
       function GitHubSettings(options) {
         GitHubSettings.__super__.constructor.call(this, options);
-        this.title = "GitHub Gist integration";
       }
 
       return GitHubSettings;
@@ -106,6 +121,8 @@
 
       function Settings(options) {
         this.clear = __bind(this.clear, this);
+
+        this.parse = __bind(this.parse, this);
 
         this.save = __bind(this.save, this);
 
@@ -129,6 +146,30 @@
         });
       };
 
+      Settings.prototype.parse = function(response) {
+        var i, v;
+        for (i in response) {
+          v = response[i];
+          switch (v.name) {
+            case "General":
+              response[i] = new GeneralSettings(v);
+              break;
+            case "GlView":
+              response[i] = new GlViewSettings(v);
+              break;
+            case "Editor":
+              response[i] = new EditorSettings(v);
+              break;
+            case "Keys":
+              response[i] = new KeyBindings(v);
+              break;
+            case "Gists":
+              response[i] = new GitHubSettings(v);
+          }
+        }
+        return response;
+      };
+
       Settings.prototype.clear = function() {
         return this.each(function(model) {
           return model.destroy();
@@ -136,9 +177,15 @@
       };
 
       Settings.prototype.onReset = function() {
-        console.log("collection reset");
-        console.log(this);
-        return console.log("_____________");
+        if (this.models.length === 0) {
+          return this.init();
+        }
+        /*
+              console.log "collection reset" 
+              console.log @
+              console.log "_____________"
+        */
+
       };
 
       return Settings;

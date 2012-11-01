@@ -32,11 +32,15 @@
 
         this.updateUndoRedo = __bind(this.updateUndoRedo, this);
 
+        this.settingsChanged = __bind(this.settingsChanged, this);
+
         this.modelChanged = __bind(this.modelChanged, this);
         CodeEditorView.__super__.constructor.call(this, options);
+        this.settings = options.settings;
         this.editor = null;
         this.app = require('app');
         this.bindTo(this.model, "change", this.modelChanged);
+        this.bindTo(this.settings, "change", this.settingsChanged);
       }
 
       CodeEditorView.prototype.switchModel = function(newModel) {
@@ -49,6 +53,25 @@
 
       CodeEditorView.prototype.modelChanged = function(model, value) {
         return this.app.vent.trigger("modelChanged", this);
+      };
+
+      CodeEditorView.prototype.settingsChanged = function(settings, value) {
+        var key, val, _ref, _results;
+        console.log("Settings changed");
+        _ref = this.settings.changedAttributes();
+        _results = [];
+        for (key in _ref) {
+          val = _ref[key];
+          switch (key) {
+            case "startLine":
+              this.editor.setOption("firstLineNumber", val);
+              _results.push(this.render());
+              break;
+            default:
+              _results.push(void 0);
+          }
+        }
+        return _results;
       };
 
       CodeEditorView.prototype.updateUndoRedo = function() {
@@ -90,7 +113,7 @@
           lineNumbers: true,
           gutter: true,
           matchBrackets: true,
-          firstLineNumber: 1,
+          firstLineNumber: this.settings.get("startLine"),
           onChange: function(arg, arg2) {
             _this.model.set("content", _this.editor.getValue());
             return _this.updateUndoRedo();

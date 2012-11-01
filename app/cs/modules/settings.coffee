@@ -5,56 +5,67 @@ define (require)->
   LocalStorage = require 'localstorage'
   
   class GeneralSettings extends Backbone.Model
+    idAttribute: 'name'
     defaults:
-      maxRecentDisplay:  5
+      name: "General"
+      title: "General"
+      maxRecentFilesDisplay:  5
       
     constructor:(options)->
       super options
-      @title = "General"
-      @set "title", @title
+      #@set "title", @title
   
   class GlViewSettings extends Backbone.Model
+    idAttribute: 'name'
     defaults:
+      name: "GlView"
+      title: "3d view"
       autoUpdate   : true
       renderer     : 'webgl'
       antialiasing : true
       showGrid     : true
       showAxes     : true 
       shadows      : true
+      selfShadows  : true
       
     constructor:(options)->
       super options
-      @title = "3d view"
   
   class EditorSettings extends Backbone.Model
+    idAttribute: 'name'
     defaults:
+      name: "Editor"
+      title: "Code editor"
       startLine    :  1
       theme        : "default"
       
     constructor:(options)->
       super options
-      @title = "Code editor"
        
   class KeyBindings extends Backbone.Model
+    idAttribute: 'name'
     defaults:
+      name: "Keys"
+      title: "Key Bindings"
       "undo":   "CTRL+Z"
       "redo":   "CTRL+Y"
       
     constructor:(options)->
       super options
-      @title = "Key Bindings"
   
   class GitHubSettings extends Backbone.Model
+    idAttribute: 'name'
     defaults:
+      name: "Gists"
+      title: "Gist integration"
       configured  : false
     constructor:(options)->
       super options
-      @title = "GitHub Gist integration"
   
   
   class Settings extends Backbone.Collection
     localStorage: new Backbone.LocalStorage("Settings")
-
+    
     constructor:(options)->
       super options
       @bind("reset", @onReset)
@@ -70,14 +81,35 @@ define (require)->
     save:()=>
       @each (model)-> 
         model.save()
+    
+    parse: (response)=>
+      #TODO yuck, do we really need custom classes for each piece of settings?
+      for i, v of response
+        switch v.name
+          when "General"
+            response[i]= new  GeneralSettings(v)
+          when "GlView"
+            response[i]= new  GlViewSettings(v)
+          when "Editor"
+            response[i]= new  EditorSettings(v)
+          when "Keys"
+            response[i]= new  KeyBindings(v)
+          when "Gists"
+            response[i]= new  GitHubSettings(v)
+      return response
       
     clear:()=>
       @each (model)-> 
         model.destroy()
       
     onReset:()->
+      if @models.length == 0
+        #console.log "fetched empty collection"
+        @init()
+      ###
       console.log "collection reset" 
       console.log @
       console.log "_____________"
+      ###
    
   return Settings

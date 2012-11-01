@@ -5,61 +5,195 @@
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   define(function(require) {
-    var $, EditorSettingsForm, GeneralSettingsForm, GitHubSettingsForm, GlViewSettingsForm, SettingView, SettingsView, boostrap, forms, marionette, s_template, st_template, _;
+    var $, EditorSettingsForm, EditorSettingsWrapper, GeneralSettingsForm, GeneralSettingsWrapper, GitHubSettingsForm, GitHubSettingsWrapper, GlViewSettingsForm, GlViewSettingsWrapper, SettingContent, SettingContentItemView, SettingHeader, SettingHeaderItemView, SettingsView, boostrap, forms, forms_bstrap, marionette, s_template, sc_template, sca_template, sh_template, sha_template, _;
     $ = require('jquery');
     _ = require('underscore');
     boostrap = require('bootstrap');
     marionette = require('marionette');
     forms = require('forms');
-    forms = require('forms');
+    forms_bstrap = require('forms_bootstrap');
     s_template = require("text!templates/settings.tmpl");
-    st_template = require("text!templates/setting.tmpl");
-    SettingView = (function(_super) {
+    sh_template = require("text!templates/settingsHeader.tmpl");
+    sha_template = require("text!templates/settingsHeaderAll.tmpl");
+    sc_template = require("text!templates/settingsContent.tmpl");
+    sca_template = require("text!templates/settingsContentAll.tmpl");
+    SettingHeaderItemView = (function(_super) {
 
-      __extends(SettingView, _super);
+      __extends(SettingHeaderItemView, _super);
 
-      function SettingView() {
-        return SettingView.__super__.constructor.apply(this, arguments);
+      function SettingHeaderItemView() {
+        return SettingHeaderItemView.__super__.constructor.apply(this, arguments);
       }
 
-      SettingView.prototype.template = st_template;
+      SettingHeaderItemView.prototype.template = sh_template;
 
-      SettingView.prototype.tagName = "li";
+      SettingHeaderItemView.prototype.tagName = "li";
 
-      return SettingView;
+      return SettingHeaderItemView;
 
     })(marionette.ItemView);
+    SettingHeader = (function(_super) {
+
+      __extends(SettingHeader, _super);
+
+      SettingHeader.prototype.itemView = SettingHeaderItemView;
+
+      SettingHeader.prototype.tagName = "ul";
+
+      SettingHeader.prototype.template = sha_template;
+
+      SettingHeader.prototype.itemViewContainer = "#settingsHeaderUl";
+
+      SettingHeader.prototype.ui = {
+        globalContainer: "#settingsHeaderUl"
+      };
+
+      function SettingHeader(options) {
+        this.onRender = __bind(this.onRender, this);
+        SettingHeader.__super__.constructor.call(this, options);
+      }
+
+      SettingHeader.prototype.onRender = function() {
+        return $(this.ui.globalContainer).find('li:first').tab('show');
+      };
+
+      return SettingHeader;
+
+    })(Backbone.Marionette.CompositeView);
+    SettingContentItemView = (function(_super) {
+
+      __extends(SettingContentItemView, _super);
+
+      function SettingContentItemView() {
+        this.onRender = __bind(this.onRender, this);
+        return SettingContentItemView.__super__.constructor.apply(this, arguments);
+      }
+
+      SettingContentItemView.prototype.template = sc_template;
+
+      SettingContentItemView.prototype.onRender = function() {
+        this.$el.addClass("tab-pane");
+        this.$el.addClass("fade");
+        return this.$el.attr('id', this.model.get("name"));
+      };
+
+      return SettingContentItemView;
+
+    })(Backbone.Marionette.ItemView);
+    SettingContent = (function(_super) {
+
+      __extends(SettingContent, _super);
+
+      SettingContent.prototype.itemView = SettingContentItemView;
+
+      SettingContent.prototype.template = sca_template;
+
+      SettingContent.prototype.itemViewContainer = "#settingsContentAll";
+
+      function SettingContent(options) {
+        this.onRender = __bind(this.onRender, this);
+
+        this.getItemView = __bind(this.getItemView, this);
+        SettingContent.__super__.constructor.call(this, options);
+        this.forms = [];
+        this.specificViews = {
+          "GeneralSettings": GeneralSettingsWrapper,
+          "GlViewSettings": GlViewSettingsWrapper,
+          "EditorSettings": EditorSettingsWrapper,
+          "GitHubSettings": GitHubSettingsWrapper
+        };
+      }
+
+      SettingContent.prototype.getItemView = function(item) {
+        var view;
+        view = SettingContentItemView;
+        if (item != null) {
+          try {
+            if (this.specificViews.hasOwnProperty(item.constructor.name)) {
+              view = this.specificViews[item.constructor.name];
+            }
+          } catch (error) {
+            console.log("error: " + error);
+          }
+        }
+        return view;
+      };
+
+      SettingContent.prototype.onRender = function() {
+        var childView, index, _ref, _results;
+        _ref = this.children;
+        _results = [];
+        for (index in _ref) {
+          childView = _ref[index];
+          if (childView.wrappedForm != null) {
+            _results.push(this.forms.push(childView.wrappedForm));
+          } else {
+            _results.push(void 0);
+          }
+        }
+        return _results;
+      };
+
+      return SettingContent;
+
+    })(Backbone.Marionette.CompositeView);
     SettingsView = (function(_super) {
 
       __extends(SettingsView, _super);
 
       SettingsView.prototype.template = s_template;
 
-      SettingsView.prototype.itemView = SettingView;
-
-      SettingsView.prototype.tagName = "ul";
+      SettingsView.prototype.regions = {
+        tabHeaders: "#tabHeaders",
+        tabContent: "#tabContent"
+      };
 
       SettingsView.prototype.ui = {
-        settingsList: "#settings"
+        tabHeaders: "#tabHeaders",
+        tabContent: "#tabContent"
+      };
+
+      SettingsView.prototype.events = {
+        "mouseup .applySettings": "applySettings"
+      };
+
+      SettingsView.prototype.applySettings = function(ev) {
+        var form, index, _ref;
+        _ref = this.tabContent.currentView.forms;
+        for (index in _ref) {
+          form = _ref[index];
+          form.commit();
+        }
+        return this.model.save();
       };
 
       function SettingsView(options) {
-        this.render = __bind(this.render, this);
+        this.onRender = __bind(this.onRender, this);
+
+        this.applySettings = __bind(this.applySettings, this);
         SettingsView.__super__.constructor.call(this, options);
         this.app = require('app');
       }
 
-      SettingsView.prototype.render = function() {
-        var r1, tmpl;
-        tmpl = _.template(this.template);
-        r1 = tmpl(this.collection.toJSON());
-        $(this.ui.settingsList).html(r1);
-        return this;
+      SettingsView.prototype.onRender = function() {
+        var defaultItem, sContentView, sHeaderView;
+        sHeaderView = new SettingHeader({
+          collection: this.model
+        });
+        this.tabHeaders.show(sHeaderView);
+        sContentView = new SettingContent({
+          collection: this.model
+        });
+        this.tabContent.show(sContentView);
+        $(this.ui.tabHeaders).find('li:first').addClass('active');
+        defaultItem = $(this.ui.tabContent).find('div .tab-pane:first');
+        defaultItem.addClass('active');
+        return defaultItem.removeClass('fade');
       };
 
       return SettingsView;
 
-    })(marionette.CollectionView);
+    })(Backbone.Marionette.Layout);
     GeneralSettingsForm = (function(_super) {
 
       __extends(GeneralSettingsForm, _super);
@@ -67,8 +201,10 @@
       function GeneralSettingsForm(options) {
         if (!options.schema) {
           options.schema = {
-            'Max nb of recent files': 'Number',
-            'view auto update': 'Checkbox'
+            maxRecentFilesDisplay: {
+              type: 'Number',
+              title: 'Nb of recent files to display (Feature N/A)'
+            }
           };
         }
         GeneralSettingsForm.__super__.constructor.call(this, options);
@@ -77,6 +213,31 @@
       return GeneralSettingsForm;
 
     })(Backbone.Form);
+    GeneralSettingsWrapper = (function(_super) {
+
+      __extends(GeneralSettingsWrapper, _super);
+
+      function GeneralSettingsWrapper(options) {
+        this.render = __bind(this.render, this);
+        GeneralSettingsWrapper.__super__.constructor.call(this, options);
+        this.wrappedForm = new GeneralSettingsForm({
+          model: this.model
+        });
+      }
+
+      GeneralSettingsWrapper.prototype.render = function() {
+        var tmp;
+        tmp = this.wrappedForm.render();
+        this.$el.append(tmp.el);
+        this.$el.addClass("tab-pane");
+        this.$el.addClass("fade");
+        this.$el.attr('id', this.model.get("name"));
+        return this.el;
+      };
+
+      return GeneralSettingsWrapper;
+
+    })(Backbone.Marionette.ItemView);
     GlViewSettingsForm = (function(_super) {
 
       __extends(GlViewSettingsForm, _super);
@@ -85,13 +246,18 @@
         if (!options.schema) {
           options.schema = {
             showGrid: 'Checkbox',
-            showAxis: 'Checkbox',
+            showAxes: 'Checkbox',
             renderer: {
               type: 'Select',
               options: ["webgl", "canvas"]
             },
             antialiasing: 'Checkbox',
-            shadows: 'Checkbox'
+            shadows: 'Checkbox',
+            selfShadows: {
+              type: 'Checkbox',
+              title: 'Object self shadowing'
+            },
+            autoUpdate: 'Checkbox'
           };
         }
         GlViewSettingsForm.__super__.constructor.call(this, options);
@@ -100,6 +266,31 @@
       return GlViewSettingsForm;
 
     })(Backbone.Form);
+    GlViewSettingsWrapper = (function(_super) {
+
+      __extends(GlViewSettingsWrapper, _super);
+
+      function GlViewSettingsWrapper(options) {
+        this.render = __bind(this.render, this);
+        GlViewSettingsWrapper.__super__.constructor.call(this, options);
+        this.wrappedForm = new GlViewSettingsForm({
+          model: this.model
+        });
+      }
+
+      GlViewSettingsWrapper.prototype.render = function() {
+        var tmp;
+        tmp = this.wrappedForm.render();
+        this.$el.append(tmp.el);
+        this.$el.addClass("tab-pane");
+        this.$el.addClass("fade");
+        this.$el.attr('id', this.model.get("name"));
+        return this.el;
+      };
+
+      return GlViewSettingsWrapper;
+
+    })(Backbone.Marionette.ItemView);
     EditorSettingsForm = (function(_super) {
 
       __extends(EditorSettingsForm, _super);
@@ -107,7 +298,7 @@
       function EditorSettingsForm(options) {
         if (!options.schema) {
           options.schema = {
-            'Start line': 'Number'
+            startLine: 'Number'
           };
         }
         EditorSettingsForm.__super__.constructor.call(this, options);
@@ -116,6 +307,31 @@
       return EditorSettingsForm;
 
     })(Backbone.Form);
+    EditorSettingsWrapper = (function(_super) {
+
+      __extends(EditorSettingsWrapper, _super);
+
+      function EditorSettingsWrapper(options) {
+        this.render = __bind(this.render, this);
+        EditorSettingsWrapper.__super__.constructor.call(this, options);
+        this.wrappedForm = new EditorSettingsForm({
+          model: this.model
+        });
+      }
+
+      EditorSettingsWrapper.prototype.render = function() {
+        var tmp;
+        tmp = this.wrappedForm.render();
+        this.$el.append(tmp.el);
+        this.$el.addClass("tab-pane");
+        this.$el.addClass("fade");
+        this.$el.attr('id', this.model.get("name"));
+        return this.el;
+      };
+
+      return EditorSettingsWrapper;
+
+    })(Backbone.Marionette.ItemView);
     GitHubSettingsForm = (function(_super) {
 
       __extends(GitHubSettingsForm, _super);
@@ -123,7 +339,10 @@
       function GitHubSettingsForm(options) {
         if (!options.schema) {
           options.schema = {
-            'Start line': 'Number'
+            'configured': {
+              type: 'Checkbox',
+              title: 'Configured (Feature N/A)'
+            }
           };
         }
         GitHubSettingsForm.__super__.constructor.call(this, options);
@@ -132,7 +351,32 @@
       return GitHubSettingsForm;
 
     })(Backbone.Form);
-    return GlViewSettingsForm;
+    GitHubSettingsWrapper = (function(_super) {
+
+      __extends(GitHubSettingsWrapper, _super);
+
+      function GitHubSettingsWrapper(options) {
+        this.render = __bind(this.render, this);
+        GitHubSettingsWrapper.__super__.constructor.call(this, options);
+        this.wrappedForm = new GitHubSettingsForm({
+          model: this.model
+        });
+      }
+
+      GitHubSettingsWrapper.prototype.render = function() {
+        var tmp;
+        tmp = this.wrappedForm.render();
+        this.$el.append(tmp.el);
+        this.$el.addClass("tab-pane");
+        this.$el.addClass("fade");
+        this.$el.attr('id', this.model.get("name"));
+        return this.el;
+      };
+
+      return GitHubSettingsWrapper;
+
+    })(Backbone.Marionette.ItemView);
+    return SettingsView;
   });
 
 }).call(this);
