@@ -11,6 +11,7 @@ define (require)->
   MainContentLayout = require "views/mainContentView"
   ModalRegion = require "views/modalRegion"
   {LoadView, SaveView} = require "views/fileSaveLoadView"
+  AlertView = require "views/alertView"
   GlThreeView = require "views/glThreeView"
   {Library,Project,ProjectFile} = require "modules/project"
 
@@ -18,7 +19,7 @@ define (require)->
   CsgProcessor    = require "modules/csg.processor"
   CsgStlExporterMin     = require "modules/csg.stlexporter"
 
-
+  
   
   ###############################
 
@@ -55,6 +56,8 @@ return res
     mainRegion: "#mainContent"
     statusRegion: "#statusBar"
     modal: ModalRegion
+    alertModal: ModalRegion
+    
   
   app.on "start", (opts)->
     console.log "at start"
@@ -75,59 +78,18 @@ return res
     @settings.fetch()
     
     @lib  = new Library()
+    @lib.fetch()
     @csgProcessor = new CsgProcessor()
     
-    @project = new Project({name:'MainProject'})  
+    @project = new Project({name:'TestProject'})  
     @mainPart = new ProjectFile
       name: "mainPart"
       ext: "coscad"
       content: testcode    
       
     @lib.add @project
-    @project.save()
     @project.add @mainPart
     
-    testmodel2 = new ProjectFile
-      name: "part"
-      ext: "coscad"
-      content: "Cube()"  
-    @project.add testmodel2
-    
-    
-    
-    #testmodel2.save()
-    ###
-    testmodel = new ProjectFile
-      name: "assembly"
-      ext: "coscad"
-      content: testcode   
-      
-    testmodel2 = new ProjectFile
-      name: "part"
-      ext: "coscad"
-      content: "Cube()"  
-      
-    
-    proj.add testmodel
-    proj.add testmodel2
-    
-    proj2 = new Project({name:'proj2'})
-    proj2.add testmodel2
-    
-    @lib  = new Library
-    @lib.add(proj)
-    @lib.add(proj2)
-    @lib.save( )
-    @lib.fetch()
-    ###
-    #proj.save() 
-    
-    #proj3= @lib.fetch({id:"proj1"})
-    #console.log(proj3)
-    #if @lib.get("proj2")?
-    #  alert("OH ma gad, overwrite?")
-    #else
-    #  alert("all is fine")
     ###############
     CsgStlExporterMin = require "modules/csg.stlexporter"
     
@@ -159,15 +121,30 @@ return res
     @navigationRegion.show @mainMenuView
     @statusRegion.show @projectView
     
+    @alertModal.el= alertmodal
     @modal.app = @
     
     saveProject= (params) =>
-      console.log("Saving part to file : #{params}")
-      #@mainPart.set("name",params)
+      #console.log("Saving part to file : #{params}")
+      
+      foundProjects =@lib.fetch({id:params})
+      #console.log "foundProjects"
+      #console.log foundProjects
+      if foundProjects?
+        console.log "project exists"
+        #bla = new AlertView
+        #@alertModal.show(bla)
+        
+      @project.set("name",params)
+      @project.save()
+      #hack to ensure the various sub files are saved aswell: this should be done within the project class'
+      #save method
       @mainPart.save()
-      #console.log("saved model")
-      #console.log(@mainPart)
-      #@project.save()
+      #@mainPart.set("name",params)
+      #@mainPart.save()
+      
+      
+      
     loadProject= (params) =>
       console.log("Loading part: #{params}")
       part = @project.fetch_file({id:"part"})
@@ -191,6 +168,14 @@ return res
       @glThreeView.switchModel @mainPart
       
     app.mainMenuView.on "file:save:mouseup",=>
+      if @project.isNew2()
+        @modView = new SaveView
+        @modal.show(@modView)
+      else
+        console.log "save existing"
+        @vent.trigger("fileSaveRequest",@project.get("name"))
+      
+    app.mainMenuView.on "file:saveas:mouseup",=>
       @modView = new SaveView
       @modal.show(@modView)
     
@@ -201,8 +186,7 @@ return res
     app.mainMenuView.on "settings:mouseup",=>
       @modView = new SettingsView 
         model: @settings
-      
-      app.modal.show(@modView)      
+      @modal.show(@modView)      
       
     app.glThreeView.fromCsg()
     

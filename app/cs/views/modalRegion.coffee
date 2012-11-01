@@ -19,6 +19,7 @@ define (require)->
     showModal: (view)=>
       view.on("close", @hideModal, @)
       @$el.modal('show').addClass('modal-big')
+      #"keyboard"  : true,
       
     hideModal: ->
       @$el.modal 'hide'

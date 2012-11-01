@@ -37,12 +37,15 @@ define (require)->
     
     constructor:(options)->
       super options
+      @new    = true
       @bind("reset", @onReset)
+      @bind("sync",  @onSync)
       
       @files = []
       @pfiles = new ProjectFiles()
-      locStorName = "Library-"+@get("name")+"-parts"
+      locStorName = @get("name")+"-parts"
       @pfiles.localStorage= new Backbone.LocalStorage(locStorName)
+      
       
     onReset:()->
       console.log "Project model reset" 
@@ -50,10 +53,17 @@ define (require)->
       console.log "_____________"
     
     onSync:()->
+      @new = false
       console.log "Project sync" 
       console.log @
       console.log "_____________"
-    
+      #locStorName = "Library-"+@id+"-parts"
+      #@pfiles.localStorage= new Backbone.LocalStorage(locStorName)
+      #@collection.bli()
+      
+    isNew2:()->
+      return @new 
+      
     add:(pFile)=>
       @pfiles.add pFile
       @files.push pFile.get("name")
@@ -75,6 +85,7 @@ define (require)->
       return pFile
       
     export:(format)->
+      
 
       
   class Library extends Backbone.Collection   
@@ -89,22 +100,30 @@ define (require)->
       
       @namesFetch = false
     
+    bli:()=>
+      console.log("calling bli")
+    
     save:()=>
       @each (model)-> 
         model.save()
     
     fetch:(options)=>
+      console.log "collection"
+      console.log @
       if options?
-        console.log ("options"+ options)
+        console.log "options" 
+        console.log options
         if options.id?
           id = options.id
           #console.log "id specified"
+          proj=null
           if @get(id)
+            console.log("found")
             proj = @get(id)
-          else
-            proj = new Project({name:id})
-            proj.collection = @
-            proj.fetch()
+          #else
+          #  proj = new Project({name:id})
+          #  proj.collection = @
+          #  proj.fetch()
           return proj
         else
           #console.log "NO id specified"
@@ -125,8 +144,11 @@ define (require)->
       @namesFetch = true
       
     onReset:()->
+      #if @models.length == 0
+      #  @save()
+      
       console.log "Library collection reset" 
       console.log @
       console.log "_____________"
-    
+      
   return {ProjectFile,Project,Library}

@@ -70,10 +70,12 @@
 
         var locStorName;
         Project.__super__.constructor.call(this, options);
+        this["new"] = true;
         this.bind("reset", this.onReset);
+        this.bind("sync", this.onSync);
         this.files = [];
         this.pfiles = new ProjectFiles();
-        locStorName = "Library-" + this.get("name") + "-parts";
+        locStorName = this.get("name") + "-parts";
         this.pfiles.localStorage = new Backbone.LocalStorage(locStorName);
       }
 
@@ -84,9 +86,14 @@
       };
 
       Project.prototype.onSync = function() {
+        this["new"] = false;
         console.log("Project sync");
         console.log(this);
         return console.log("_____________");
+      };
+
+      Project.prototype.isNew2 = function() {
+        return this["new"];
       };
 
       Project.prototype.add = function(pFile) {
@@ -140,10 +147,16 @@
         this.fetch = __bind(this.fetch, this);
 
         this.save = __bind(this.save, this);
+
+        this.bli = __bind(this.bli, this);
         Library.__super__.constructor.call(this, options);
         this.bind("reset", this.onReset);
         this.namesFetch = false;
       }
+
+      Library.prototype.bli = function() {
+        return console.log("calling bli");
+      };
 
       Library.prototype.save = function() {
         return this.each(function(model) {
@@ -153,18 +166,17 @@
 
       Library.prototype.fetch = function(options) {
         var id, proj, res;
+        console.log("collection");
+        console.log(this);
         if (options != null) {
-          console.log("options" + options);
+          console.log("options");
+          console.log(options);
           if (options.id != null) {
             id = options.id;
+            proj = null;
             if (this.get(id)) {
+              console.log("found");
               proj = this.get(id);
-            } else {
-              proj = new Project({
-                name: id
-              });
-              proj.collection = this;
-              proj.fetch();
             }
             return proj;
           } else {

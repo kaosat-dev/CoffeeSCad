@@ -11,6 +11,7 @@ define (require)->
     triggers: 
       "mouseup .newFile":     "file:new:mouseup"
       "mouseup .saveFile":    "file:save:mouseup"
+      "mouseup .saveFileAs":  "file:saveas:mouseup"
       "mouseup .loadFile":    "file:load:mouseup"
       "mouseup .newProject":  "project:new:mouseup"
       "mouseup .settings":    "settings:mouseup"

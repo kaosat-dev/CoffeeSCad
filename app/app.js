@@ -2,7 +2,7 @@
 (function() {
 
   define(function(require) {
-    var $, CodeEditorView, CsgProcessor, CsgStlExporterMin, GlThreeView, Library, LoadView, MainContentLayout, MainMenuView, ModalRegion, Project, ProjectFile, ProjectView, SaveView, Settings, SettingsView, app, marionette, testcode, _, _ref, _ref1;
+    var $, AlertView, CodeEditorView, CsgProcessor, CsgStlExporterMin, GlThreeView, Library, LoadView, MainContentLayout, MainMenuView, ModalRegion, Project, ProjectFile, ProjectView, SaveView, Settings, SettingsView, app, marionette, testcode, _, _ref, _ref1;
     $ = require('jquery');
     _ = require('underscore');
     marionette = require('marionette');
@@ -14,6 +14,7 @@
     MainContentLayout = require("views/mainContentView");
     ModalRegion = require("views/modalRegion");
     _ref = require("views/fileSaveLoadView"), LoadView = _ref.LoadView, SaveView = _ref.SaveView;
+    AlertView = require("views/alertView");
     GlThreeView = require("views/glThreeView");
     _ref1 = require("modules/project"), Library = _ref1.Library, Project = _ref1.Project, ProjectFile = _ref1.ProjectFile;
     Settings = require("modules/settings");
@@ -27,7 +28,8 @@
       navigationRegion: "#navigation",
       mainRegion: "#mainContent",
       statusRegion: "#statusBar",
-      modal: ModalRegion
+      modal: ModalRegion,
+      alertModal: ModalRegion
     });
     app.on("start", function(opts) {
       console.log("at start");
@@ -42,15 +44,16 @@
 
     });
     app.addInitializer(function(options) {
-      var exporter, loadProject, saveProject, stlexport, testmodel2,
+      var exporter, loadProject, saveProject, stlexport,
         _this = this;
       exporter = new CsgStlExporterMin();
       this.settings = new Settings();
       this.settings.fetch();
       this.lib = new Library();
+      this.lib.fetch();
       this.csgProcessor = new CsgProcessor();
       this.project = new Project({
-        name: 'MainProject'
+        name: 'TestProject'
       });
       this.mainPart = new ProjectFile({
         name: "mainPart",
@@ -58,39 +61,7 @@
         content: testcode
       });
       this.lib.add(this.project);
-      this.project.save();
       this.project.add(this.mainPart);
-      testmodel2 = new ProjectFile({
-        name: "part",
-        ext: "coscad",
-        content: "Cube()"
-      });
-      this.project.add(testmodel2);
-      /*
-          testmodel = new ProjectFile
-            name: "assembly"
-            ext: "coscad"
-            content: testcode   
-            
-          testmodel2 = new ProjectFile
-            name: "part"
-            ext: "coscad"
-            content: "Cube()"  
-            
-          
-          proj.add testmodel
-          proj.add testmodel2
-          
-          proj2 = new Project({name:'proj2'})
-          proj2.add testmodel2
-          
-          @lib  = new Library
-          @lib.add(proj)
-          @lib.add(proj2)
-          @lib.save( )
-          @lib.fetch()
-      */
-
       CsgStlExporterMin = require("modules/csg.stlexporter");
       stlexport = function() {
         var blobUrl, stlExp;
@@ -119,9 +90,18 @@
       this.mainContentLayout.gl.show(this.glThreeView);
       this.navigationRegion.show(this.mainMenuView);
       this.statusRegion.show(this.projectView);
+      this.alertModal.el = alertmodal;
       this.modal.app = this;
       saveProject = function(params) {
-        console.log("Saving part to file : " + params);
+        var foundProjects;
+        foundProjects = _this.lib.fetch({
+          id: params
+        });
+        if (foundProjects != null) {
+          console.log("project exists");
+        }
+        _this.project.set("name", params);
+        _this.project.save();
         return _this.mainPart.save();
       };
       loadProject = function(params) {
@@ -141,6 +121,15 @@
         return _this.glThreeView.switchModel(_this.mainPart);
       });
       app.mainMenuView.on("file:save:mouseup", function() {
+        if (_this.project.isNew2()) {
+          _this.modView = new SaveView;
+          return _this.modal.show(_this.modView);
+        } else {
+          console.log("save existing");
+          return _this.vent.trigger("fileSaveRequest", _this.project.get("name"));
+        }
+      });
+      app.mainMenuView.on("file:saveas:mouseup", function() {
         _this.modView = new SaveView;
         return _this.modal.show(_this.modView);
       });
@@ -152,7 +141,7 @@
         _this.modView = new SettingsView({
           model: _this.settings
         });
-        return app.modal.show(_this.modView);
+        return _this.modal.show(_this.modView);
       });
       return app.glThreeView.fromCsg();
     });

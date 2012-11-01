@@ -12,7 +12,7 @@ define (require)->
   sc_template = require "text!templates/settingsContent.tmpl"
   sca_template = require "text!templates/settingsContentAll.tmpl"
   
-  class SettingHeaderItemView extends marionette.ItemView
+  class SettingHeaderItemView extends Backbone.Marionette.ItemView
     template: sh_template
     tagName: "li"
   

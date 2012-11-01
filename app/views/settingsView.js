@@ -31,7 +31,7 @@
 
       return SettingHeaderItemView;
 
-    })(marionette.ItemView);
+    })(Backbone.Marionette.ItemView);
     SettingHeader = (function(_super) {
 
       __extends(SettingHeader, _super);
