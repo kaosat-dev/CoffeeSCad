@@ -5,11 +5,12 @@
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   define(function(require) {
-    var $, Backbone, Library, LocalStorage, Project, ProjectFile, ProjectFiles, _;
+    var $, Backbone, Library, LocalStorage, Project, ProjectFile, ProjectFiles, debug, _;
     $ = require('jquery');
     _ = require('underscore');
     Backbone = require('backbone');
     LocalStorage = require('localstorage');
+    debug = false;
     ProjectFile = (function(_super) {
 
       __extends(ProjectFile, _super);
@@ -48,6 +49,18 @@
 
       ProjectFiles.prototype.model = ProjectFile;
 
+      /*
+          parse: (response)=>
+            console.log("in projFiles parse")
+            for i, v of response
+              response[i] = new ProjectFile(v)
+              response[i].collection = @
+              
+            console.log response      
+            return response
+      */
+
+
       return ProjectFiles;
 
     })(Backbone.Collection);
@@ -73,6 +86,7 @@
         this["new"] = true;
         this.bind("reset", this.onReset);
         this.bind("sync", this.onSync);
+        this.bind("change", this.onChanged);
         this.files = [];
         this.pfiles = new ProjectFiles();
         locStorName = this.get("name") + "-parts";
@@ -80,16 +94,39 @@
       }
 
       Project.prototype.onReset = function() {
-        console.log("Project model reset");
-        console.log(this);
-        return console.log("_____________");
+        if (debug) {
+          console.log("Project model reset");
+          console.log(this);
+          return console.log("_____________");
+        }
       };
 
       Project.prototype.onSync = function() {
         this["new"] = false;
-        console.log("Project sync");
-        console.log(this);
-        return console.log("_____________");
+        if (debug) {
+          console.log("Project sync");
+          console.log(this);
+          return console.log("_____________");
+        }
+      };
+
+      Project.prototype.onChanged = function(settings, value) {
+        var key, locStorName, val, _ref, _results;
+        console.log("changed");
+        _ref = this.changedAttributes();
+        _results = [];
+        for (key in _ref) {
+          val = _ref[key];
+          switch (key) {
+            case "name":
+              locStorName = val + "-parts";
+              _results.push(this.pfiles.localStorage = new Backbone.LocalStorage(locStorName));
+              break;
+            default:
+              _results.push(void 0);
+          }
+        }
+        return _results;
       };
 
       Project.prototype.isNew2 = function() {
@@ -125,6 +162,15 @@
       };
 
       Project.prototype["export"] = function(format) {};
+
+      /*
+          parse: (response)=>
+            console.log("in proj parse")
+            console.log response
+            
+            return response
+      */
+
 
       return Project;
 
@@ -166,17 +212,15 @@
 
       Library.prototype.fetch = function(options) {
         var id, proj, res;
-        console.log("collection");
-        console.log(this);
         if (options != null) {
-          console.log("options");
-          console.log(options);
           if (options.id != null) {
             id = options.id;
+            console.log("id specified");
             proj = null;
             if (this.get(id)) {
-              console.log("found");
               proj = this.get(id);
+              proj["new"] = false;
+              proj.pfiles.fetch();
             }
             return proj;
           } else {
@@ -203,9 +247,11 @@
       };
 
       Library.prototype.onReset = function() {
-        console.log("Library collection reset");
-        console.log(this);
-        return console.log("_____________");
+        if (debug) {
+          console.log("Library reset");
+          console.log(this);
+          return console.log("_____________");
+        }
       };
 
       return Library;

@@ -8,7 +8,7 @@ define (require)->
   #a project can reference another project (includes?)
   #a library contains multiple projects
   
-  
+  debug  = false
   #TODO: add support for multiple types of storage, settable per project
   #syncType = Backbone.LocalStorage
   
@@ -25,11 +25,21 @@ define (require)->
       @dirty    = false
       @bind("change", ()=> @dirty=true)
       @bind("sync",   ()=> @dirty=false)#when save is sucessfull
-    
       
   class ProjectFiles extends Backbone.Collection
     model: ProjectFile
-  
+    #localStorage: new Backbone.LocalStorage("_")
+    ###
+    parse: (response)=>
+      console.log("in projFiles parse")
+      for i, v of response
+        response[i] = new ProjectFile(v)
+        response[i].collection = @
+        
+      console.log response      
+      return response  
+    ###
+    
   class Project extends Backbone.Model
     idAttribute: 'name'
     defaults:
@@ -40,26 +50,35 @@ define (require)->
       @new    = true
       @bind("reset", @onReset)
       @bind("sync",  @onSync)
-      
+      @bind("change",@onChanged)
       @files = []
       @pfiles = new ProjectFiles()
+      
       locStorName = @get("name")+"-parts"
       @pfiles.localStorage= new Backbone.LocalStorage(locStorName)
       
-      
     onReset:()->
-      console.log "Project model reset" 
-      console.log @
-      console.log "_____________"
+      if debug
+        console.log "Project model reset" 
+        console.log @
+        console.log "_____________"
     
     onSync:()->
       @new = false
-      console.log "Project sync" 
-      console.log @
-      console.log "_____________"
-      #locStorName = "Library-"+@id+"-parts"
+      if debug
+        console.log "Project sync" 
+        console.log @
+        console.log "_____________"
+      #locStorName = @get("name")+"-parts"
       #@pfiles.localStorage= new Backbone.LocalStorage(locStorName)
-      #@collection.bli()
+      
+    onChanged:(settings, value)->
+      console.log "changed"
+      for key, val of @changedAttributes()
+        switch key
+          when "name"
+            locStorName = val+"-parts"
+            @pfiles.localStorage= new Backbone.LocalStorage(locStorName)
       
     isNew2:()->
       return @new 
@@ -86,8 +105,14 @@ define (require)->
       
     export:(format)->
       
-
+    ###
+    parse: (response)=>
+      console.log("in proj parse")
+      console.log response
       
+      return response
+    ###
+    
   class Library extends Backbone.Collection   
     model: Project
     localStorage: new Backbone.LocalStorage("Library")
@@ -107,19 +132,17 @@ define (require)->
       @each (model)-> 
         model.save()
     
+    
     fetch:(options)=>
-      console.log "collection"
-      console.log @
       if options?
-        console.log "options" 
-        console.log options
         if options.id?
           id = options.id
-          #console.log "id specified"
+          console.log "id specified"
           proj=null
           if @get(id)
-            console.log("found")
             proj = @get(id)
+            proj.new = false
+            proj.pfiles.fetch()
           #else
           #  proj = new Project({name:id})
           #  proj.collection = @
@@ -146,9 +169,9 @@ define (require)->
     onReset:()->
       #if @models.length == 0
       #  @save()
-      
-      console.log "Library collection reset" 
-      console.log @
-      console.log "_____________"
+      if debug
+        console.log "Library reset" 
+        console.log @
+        console.log "_____________"
       
   return {ProjectFile,Project,Library}

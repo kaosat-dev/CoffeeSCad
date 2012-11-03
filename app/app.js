@@ -32,7 +32,7 @@
       alertModal: ModalRegion
     });
     app.on("start", function(opts) {
-      console.log("at start");
+      console.log("App Started");
       return $("[rel=tooltip]").tooltip({
         placement: 'bottom'
       });
@@ -44,14 +44,13 @@
 
     });
     app.addInitializer(function(options) {
-      var exporter, loadProject, saveProject, stlexport,
+      var deleteProject, exporter, loadProject, saveProject, stlexport,
         _this = this;
       exporter = new CsgStlExporterMin();
       this.settings = new Settings();
       this.settings.fetch();
       this.lib = new Library();
       this.lib.fetch();
-      this.csgProcessor = new CsgProcessor();
       this.project = new Project({
         name: 'TestProject'
       });
@@ -60,8 +59,25 @@
         ext: "coscad",
         content: testcode
       });
-      this.lib.add(this.project);
       this.project.add(this.mainPart);
+      /*
+          TODO: replace this hack with an actual reload of the LATEST project
+          if @lib.length > 0
+            @project = @lib.at(0)
+            name = @project.get("name")
+            @project = @lib.fetch({id:name})
+            @mainPart = @project.pfiles.at(0)
+            @project.add @mainPart
+          else
+            @project = new Project({name:'TestProject'})  
+            @mainPart = new ProjectFile
+              name: "mainPart"
+              ext: "coscad"
+              content: testcode    
+            @project.add @mainPart
+      */
+
+      this.csgProcessor = new CsgProcessor();
       CsgStlExporterMin = require("modules/csg.stlexporter");
       stlexport = function() {
         var blobUrl, stlExp;
@@ -75,7 +91,7 @@
         settings: this.settings.at(2)
       });
       this.mainMenuView = new MainMenuView({
-        model: this.lib
+        collection: this.lib
       });
       this.projectView = new ProjectView({
         collection: this.lib
@@ -89,34 +105,72 @@
       this.mainContentLayout.edit.show(this.codeEditorView);
       this.mainContentLayout.gl.show(this.glThreeView);
       this.navigationRegion.show(this.mainMenuView);
-      this.statusRegion.show(this.projectView);
       this.alertModal.el = alertmodal;
       this.modal.app = this;
       saveProject = function(params) {
         var foundProjects;
-        foundProjects = _this.lib.fetch({
-          id: params
-        });
+        foundProjects = _this.lib.get(params);
         if (foundProjects != null) {
           console.log("project exists");
+          _this.project.set("name", params);
+          _this.lib.add(_this.project);
+        } else {
+          console.log("new project");
+          _this.project.set("name", params);
+          _this.lib.add(_this.project);
         }
-        _this.project.set("name", params);
         _this.project.save();
-        return _this.mainPart.save();
+        _this.mainPart.save();
+        console.log("Saved Elems");
+        console.log(_this.project);
+        console.log(_this.mainPart);
       };
-      loadProject = function(params) {
-        var part;
-        console.log("Loading part: " + params);
-        part = _this.project.fetch_file({
-          id: "part"
+      loadProject = function(name) {
+        var project;
+        console.log("Loading part: " + name);
+        if (name !== _this.project.get("name")) {
+          project = _this.lib.fetch({
+            id: name
+          });
+          _this.project = project;
+          _this.mainPart = project.pfiles.at(0);
+          _this.project.add(_this.mainPart);
+          _this.lib.add(_this.project);
+          _this.codeEditorView.switchModel(_this.mainPart);
+          _this.glThreeView.switchModel(_this.mainPart);
+        } else {
+          console.log("Project already loaded");
+        }
+      };
+      deleteProject = function(name) {
+        var i, model, _ref2;
+        console.log("deleting project " + name);
+        _this.project.destroy();
+        _this.lib.remove(_this.project);
+        _ref2 = _this.project.pfiles.models;
+        for (i in _ref2) {
+          model = _ref2[i];
+          model.destroy();
+        }
+        localStorage.removeItem(_this.project.pfiles.localStorage.name);
+        _this.project = new Project({
+          name: 'TestProject'
         });
-        return console.log(part);
+        _this.mainPart = new ProjectFile();
+        _this.project.add(_this.mainPart);
+        _this.codeEditorView.switchModel(_this.mainPart);
+        _this.glThreeView.switchModel(_this.mainPart);
       };
       this.vent.bind("fileSaveRequest", saveProject);
       this.vent.bind("fileLoadRequest", loadProject);
+      this.vent.bind("fileDeleteRequest", deleteProject);
       app.mainMenuView.on("project:new:mouseup", function() {});
       app.mainMenuView.on("file:new:mouseup", function() {
+        _this.project = new Project({
+          name: 'TestProject'
+        });
         _this.mainPart = new ProjectFile();
+        _this.project.add(_this.mainPart);
         _this.codeEditorView.switchModel(_this.mainPart);
         return _this.glThreeView.switchModel(_this.mainPart);
       });
@@ -134,7 +188,9 @@
         return _this.modal.show(_this.modView);
       });
       app.mainMenuView.on("file:load:mouseup", function() {
-        _this.modView = new LoadView;
+        _this.modView = new LoadView({
+          collection: _this.lib
+        });
         return _this.modal.show(_this.modView);
       });
       app.mainMenuView.on("settings:mouseup", function() {

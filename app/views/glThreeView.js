@@ -267,10 +267,12 @@
         this.scene.remove(this.mesh);
         this.controller.objects = [];
         this.model = newModel;
-        return this.bindTo(this.model, "change", this.modelChanged);
+        this.bindTo(this.model, "change", this.modelChanged);
+        return this.fromCsg(this.model);
       };
 
       GlThreeView.prototype.modelChanged = function(model, value) {
+        console.log("model changed");
         if (this.settings.get("autoUpdate")) {
           return this.fromCsg(this.model);
         }
@@ -278,6 +280,7 @@
 
       GlThreeView.prototype.settingsChanged = function(settings, value) {
         var key, val, _ref, _results;
+        console.log("settings changed");
         _ref = this.settings.changedAttributes();
         _results = [];
         for (key in _ref) {

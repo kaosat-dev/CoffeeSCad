@@ -21,6 +21,10 @@ canvas { cursor: move; }
     height: 100%;
 }
 
+body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+      }
 
 .uicons:hover
 {

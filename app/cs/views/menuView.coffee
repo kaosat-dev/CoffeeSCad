@@ -4,9 +4,20 @@ define (require)->
   marionette = require 'marionette'
   require 'bootstrap'
   mainMenu_template = require "text!templates/mainMenu.tmpl"
+  sF_template = require "text!templates/menuFiles.tmpl"
+  
+  class RecentFilesView extends Backbone.Marionette.ItemView
+    template: sF_template
+    tagName:  "li"
+    
+    onRender:()=>
+      @$el.attr("id",@model.get("name"))
   
   class MainMenuView extends marionette.CompositeView
     template: mainMenu_template
+    tagName:  "ul"
+    itemView: RecentFilesView
+    itemViewContainer: "#recentFilesList"
 
     triggers: 
       "mouseup .newFile":     "file:new:mouseup"
@@ -20,7 +31,12 @@ define (require)->
       "mouseup .parseCSG"  :  "csg:parserender:mouseup"
       "mouseup .downloadStl" :"download:stl:mouseup"
     
-    #events:
+     events: 
+      "mouseup .loadFileDirect":    "requestFileLoad"
+    
+    requestFileLoad:(ev)=>
+      fileName = $(ev.currentTarget).html()
+      @app.vent.trigger("fileLoadRequest", fileName)
       
     constructor:(options)->
       super options
@@ -61,7 +77,7 @@ define (require)->
       
       @app.vent.bind "stlGenDone", (blob)=>
         tmpLnk = $("#exportStlLink")
-        fileName = @app.mainPart.get("name")
+        fileName = @app.project.get("name")
         tmpLnk.prop("download", "#{fileName}.stl")
         tmpLnk.prop("href", blob)
       

@@ -58,17 +58,14 @@ return res
     modal: ModalRegion
     alertModal: ModalRegion
     
-  
   app.on "start", (opts)->
-    console.log "at start"
+    console.log "App Started"
     $("[rel=tooltip]").tooltip
       placement:'bottom' 
-    #$(".toggleGrid").tooltip()
-    #$(".tooltip").tooltip()
-    
     
   app.on "initialize:after", ->
     console.log "after init"
+    
     ###fetch all settings###
    
   app.addInitializer (options)->
@@ -79,18 +76,32 @@ return res
     
     @lib  = new Library()
     @lib.fetch()
-    @csgProcessor = new CsgProcessor()
     
     @project = new Project({name:'TestProject'})  
     @mainPart = new ProjectFile
-      name: "mainPart"
-      ext: "coscad"
-      content: testcode    
-      
-    @lib.add @project
+        name: "mainPart"
+        ext: "coscad"
+        content: testcode    
     @project.add @mainPart
+    ###
+    TODO: replace this hack with an actual reload of the LATEST project
+    if @lib.length > 0
+      @project = @lib.at(0)
+      name = @project.get("name")
+      @project = @lib.fetch({id:name})
+      @mainPart = @project.pfiles.at(0)
+      @project.add @mainPart
+    else
+      @project = new Project({name:'TestProject'})  
+      @mainPart = new ProjectFile
+        name: "mainPart"
+        ext: "coscad"
+        content: testcode    
+      @project.add @mainPart
+    ###
     
     ###############
+    @csgProcessor = new CsgProcessor()
     CsgStlExporterMin = require "modules/csg.stlexporter"
     
     stlexport=()=>
@@ -106,7 +117,7 @@ return res
       model: @mainPart 
       settings: @settings.at(2)
     @mainMenuView = new MainMenuView
-      model: @lib
+      collection: @lib
     @projectView = new ProjectView
       collection:@lib
     @glThreeView = new GlThreeView
@@ -119,40 +130,76 @@ return res
     @mainContentLayout.gl.show @glThreeView
     
     @navigationRegion.show @mainMenuView
-    @statusRegion.show @projectView
+    #@statusRegion.show @projectView
     
     @alertModal.el= alertmodal
     @modal.app = @
     
     saveProject= (params) =>
       #console.log("Saving part to file : #{params}")
-      
-      foundProjects =@lib.fetch({id:params})
-      #console.log "foundProjects"
-      #console.log foundProjects
+      foundProjects = @lib.get(params)
       if foundProjects?
         console.log "project exists"
+        @project.set("name",params)
+        @lib.add @project
         #bla = new AlertView
         #@alertModal.show(bla)
-        
-      @project.set("name",params)
+      else
+        console.log "new project"
+        @project.set("name",params)
+        @lib.add @project
+      
       @project.save()
-      #hack to ensure the various sub files are saved aswell: this should be done within the project class'
+      #hack to ensure the various sub files(only the one for now) are saved aswell: this should be done within the project class'
       #save method
       @mainPart.save()
-      #@mainPart.set("name",params)
-      #@mainPart.save()
       
+      console.log "Saved Elems"
+      console.log @project
+      console.log @mainPart
       
+      return      
       
-    loadProject= (params) =>
-      console.log("Loading part: #{params}")
-      part = @project.fetch_file({id:"part"})
-      console.log(part)
+    loadProject= (name) =>
+      console.log("Loading part: #{name}")
+      if name != @project.get("name")
+        project = @lib.fetch({id:name})
+        @project = project
+        @mainPart = project.pfiles.at(0)
+        @project.add @mainPart
+        @lib.add @project
+        @codeEditorView.switchModel @mainPart 
+        @glThreeView.switchModel @mainPart
+      else
+        console.log "Project already loaded"
+      return
+      #console.log "Loaded Elems"
+      #console.log @project
+      #console.log @mainPart
+    
+    deleteProject=(name)=>
+      console.log("deleting project #{name}")
+      @project.destroy()
+      @lib.remove(@project)
+      for i,model of @project.pfiles.models
+        model.destroy()
+      #FIXME: yuck, ugly hack to remove the complete collection too
+      localStorage.removeItem(@project.pfiles.localStorage.name)
+      
+      #ReCreate Fresh project and part
+      @project = new Project({name:'TestProject'}) 
+      @mainPart = new ProjectFile()
+      @project.add @mainPart 
+      
+      @codeEditorView.switchModel @mainPart 
+      @glThreeView.switchModel @mainPart
+      
+      return
       
       
     @vent.bind("fileSaveRequest", saveProject)
     @vent.bind("fileLoadRequest", loadProject)
+    @vent.bind("fileDeleteRequest", deleteProject)
     
     ################
     
@@ -160,9 +207,9 @@ return res
 
     app.mainMenuView.on "file:new:mouseup",=>
       #TODO: check if all files are saved etc
-      #@project.remove @mainPart
+      @project = new Project({name:'TestProject'}) 
       @mainPart = new ProjectFile()
-      #@project.add @mainPart 
+      @project.add @mainPart 
       ########VIEW UPDATES
       @codeEditorView.switchModel @mainPart 
       @glThreeView.switchModel @mainPart
@@ -181,6 +228,7 @@ return res
     
     app.mainMenuView.on "file:load:mouseup",=>
       @modView = new LoadView
+        collection: @lib
       @modal.show(@modView)
      
     app.mainMenuView.on "settings:mouseup",=>

@@ -32,6 +32,7 @@ define (require)->
         content: ""    
       project.add(part)
       expect(project.files.length).toBe 1
+      expect(project.pfiles.length).toBe 1
       expect(project.files[0]).toBe("a part")
      
     it 'can remove files from itself' , ->

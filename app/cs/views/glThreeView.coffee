@@ -243,20 +243,21 @@ define (require) ->
     
     switchModel:(newModel)->
       #replace current model with a new one
-      #@unbindFrom(@model)
       #@unbindAll()
       @scene.remove(@mesh)
       @controller.objects = []
       @model = newModel
       @bindTo(@model, "change", @modelChanged)
+      @fromCsg @model
       
     
     modelChanged:(model, value)=>
-      #console.log "model changed"
+      console.log "model changed"
       if @settings.get("autoUpdate")
         @fromCsg @model
         
     settingsChanged:(settings, value)=> 
+      console.log "settings changed"
       for key, val of @settings.changedAttributes()
         switch key
           when "renderer"
