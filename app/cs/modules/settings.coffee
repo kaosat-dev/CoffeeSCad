@@ -23,10 +23,19 @@ define (require)->
       autoUpdate   : true
       renderer     : 'webgl'
       antialiasing : true
-      showGrid     : true
+      
       showAxes     : true 
+      
       shadows      : true
       selfShadows  : true
+      
+      showGrid     : true
+      gridSize     : 1000
+      gridStep     : 100
+      
+      showStats    : false
+      
+      
       
     constructor:(options)->
       super options

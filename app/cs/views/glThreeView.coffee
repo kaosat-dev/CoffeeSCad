@@ -5,20 +5,11 @@ define (require) ->
   THREE = require 'three'
   THREE.CSG = require 'three_csg'
   detector = require 'detector'
+  stats = require  'stats'
   utils = require 'utils'
   threedView_template = require "text!templates/glThree.tmpl"
   requestAnimationFrame = require 'anim'
   
-  ###
-  class GlViewSettings extends Backbone.Model
-      defaults:
-        autoUpdate   : true
-        renderer     : 'webgl'
-        antialiasing : true
-        showGrid     : true
-        showAxes     : true 
-        shadows      : true
-  ###
   #just for testing
   
   class MyAxisHelper
@@ -143,6 +134,7 @@ define (require) ->
       else
         wheelDelta = ev.wheelDelta
       
+      ###
       if wheelDelta > 0
         @controls.zoomOut()
       else 
@@ -150,9 +142,11 @@ define (require) ->
       ev.preventDefault()
       ev.stopPropagation()
       return false
+      ###
       
-      #@controls.onMouseWheel(ev)
+      
       ###ev = window.event or ev; # old IE support  
+      #@controls.onMouseWheel(ev)
       delta = Math.max(-1, Math.min(1, (ev.wheelDelta or -ev.detail)))
       delta*=75
       if delta - @camera.position.z <= 100
@@ -240,6 +234,7 @@ define (require) ->
           reset_col()
       else
         reset_col()
+      @_render()
     
     switchModel:(newModel)->
       #replace current model with a new one
@@ -270,9 +265,15 @@ define (require) ->
               @fromCsg @model
           when "showGrid"
             if val
-              @addPlane()
+              @addGrid()
             else
-              @removePlane()
+              @removeGrid()
+          when "gridSize"
+            @removeGrid()
+            @addGrid()
+          when "gridStep"
+            @removeGrid()
+            @addGrid()
           when "showAxes"
             if val
               @addAxes()
@@ -285,20 +286,27 @@ define (require) ->
               @render()
               @renderer.shadowMapAutoUpdate = false
               if @settings.get("showGrid")
-                @removePlane()
-                @addPlane()
+                @removeGrid()
+                @addGrid()
             else
               @renderer.shadowMapAutoUpdate = true
               @fromCsg @model
               @render()
               if @settings.get("showGrid")
-                @removePlane()
-                @addPlane()
+                @removeGrid()
+                @addGrid()
             
           when "selfShadows"
             @fromCsg @model
             @render()
             
+          when "showStats"
+            if val
+              @ui.overlayDiv.append(@stats.domElement)
+            else
+              $(@stats.domElement).remove()
+            
+      @_render()  
        
     constructor:(options, settings)->
       super options
@@ -308,6 +316,12 @@ define (require) ->
       @bindTo(@model, "change", @modelChanged)
       @app.vent.bind "parseCsgRequest", =>
         @fromCsg @model
+      
+      @stats = new stats()
+      @stats.domElement.style.position = 'absolute'
+      @stats.domElement.style.top = '30px'
+      @stats.domElement.style.zIndex = 100
+        
       
       @bindTo(@settings, "change", @settingsChanged)
       #Controls:
@@ -336,10 +350,9 @@ define (require) ->
       if @settings.get("shadows")
         @renderer.shadowMapAutoUpdate = @settings.get("shadows")
       if @settings.get("showGrid")
-        @addPlane()
+        @addGrid()
       if @settings.get("showAxes")
         @addAxes()
-        
         
     configure:(settings)=>
       if settings.get("renderer")
@@ -437,39 +450,94 @@ define (require) ->
       pointLight.position.z = 3000
 
       @ambientColor = '0x253565'
-      ambientLight = new THREE.AmbientLight(@ambientColor);
+      ambientLight = new THREE.AmbientLight(@ambientColor)
       
       spotLight = new THREE.SpotLight( 0xbbbbbb, 2 )    
       spotLight.position.x = 0
-      spotLight.position.y = 1000
+      spotLight.position.y = 2000
       spotLight.position.z = 0
       #
-      spotLight.castShadow = true# @settings.get("shadows")
-      @light= spotLight #TODO: clean this up
-      @scene.add(ambientLight);
+      spotLight.castShadow = true
+      @light= spotLight 
+      @scene.add(ambientLight)
       @scene.add(pointLight)
-      @scene.add( spotLight )
+      @scene.add(spotLight)
       
-    addPlane:()=>
-      if not @plane
-        planeGeo = new THREE.PlaneGeometry(500, 500, 5, 5)
-        planeMat = new THREE.MeshBasicMaterial({color: 0x808080, wireframe: true, shading:THREE.FlatShading})
-        #planeMat = new THREE.LineBasicMaterial({color: 0xFFFFFF, lineWidth: 1})
-        #planeMat = new THREE.MeshLambertMaterial({color: 0xFFFFFF})
-        planeMat = new THREE.MeshLambertMaterial({color: 0xFFFFFF})
-        
-        plane = new THREE.Mesh(planeGeo, planeMat)
-        plane.rotation.x = -Math.PI/2
-        plane.position.y = -30
-        plane.name = "workplane"
-        #
-        plane.receiveShadow = true
-        @plane=plane
-        
-      @scene.add(@plane)
       
-    removePlane:()=>
-      @scene.remove(@plane)
+    addGrid:()=>
+      ###
+      Adds both grid & plane (for shadow casting), based on the parameters from the settings object
+      ###
+      if not @grid 
+        gridSize = @settings.get("gridSize")
+        gridStep = @settings.get("gridStep")
+        
+        gridGeometry = new THREE.Geometry()
+        gridMaterial = new THREE.LineBasicMaterial({ color: 0xcccccc, opacity: 0.5 })
+        
+        for i in [-gridSize/2..gridSize/2] by gridStep
+          gridGeometry.vertices.push(new THREE.Vector3(-gridSize/2, 0, i))
+          gridGeometry.vertices.push(new THREE.Vector3(gridSize/2, 0, i))
+          
+          gridGeometry.vertices.push(new THREE.Vector3(i, 0, -gridSize/2))
+          gridGeometry.vertices.push(new THREE.Vector3(i, 0, gridSize/2))
+        @grid = new THREE.Line(gridGeometry, gridMaterial, THREE.LinePieces)
+        @scene.add @grid
+        #######
+        planeGeometry = new THREE.PlaneGeometry(-gridSize, gridSize, 5, 5)
+        #taken from http://stackoverflow.com/questions/12876854/three-js-casting-a-shadow-onto-a-webpage
+        planeFragmentShader = [
+            "uniform vec3 diffuse;",
+            "uniform float opacity;",
+
+            THREE.ShaderChunk[ "color_pars_fragment" ],
+            THREE.ShaderChunk[ "map_pars_fragment" ],
+            THREE.ShaderChunk[ "lightmap_pars_fragment" ],
+            THREE.ShaderChunk[ "envmap_pars_fragment" ],
+            THREE.ShaderChunk[ "fog_pars_fragment" ],
+            THREE.ShaderChunk[ "shadowmap_pars_fragment" ],
+            THREE.ShaderChunk[ "specularmap_pars_fragment" ],
+
+            "void main() {",
+
+                "gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 );",
+
+                THREE.ShaderChunk[ "map_fragment" ],
+                THREE.ShaderChunk[ "alphatest_fragment" ],
+                THREE.ShaderChunk[ "specularmap_fragment" ],
+                THREE.ShaderChunk[ "lightmap_fragment" ],
+                THREE.ShaderChunk[ "color_fragment" ],
+                THREE.ShaderChunk[ "envmap_fragment" ],
+                THREE.ShaderChunk[ "shadowmap_fragment" ],
+                THREE.ShaderChunk[ "linear_to_gamma_fragment" ],
+                THREE.ShaderChunk[ "fog_fragment" ],
+
+                "gl_FragColor = vec4( 0.0, 0.0, 0.0, 1.0 - shadowColor.x );",
+
+            "}"
+
+        ].join("\n")
+
+        planeMaterial = new THREE.ShaderMaterial
+            uniforms: THREE.ShaderLib['basic'].uniforms,
+            vertexShader: THREE.ShaderLib['basic'].vertexShader,
+            fragmentShader: planeFragmentShader,
+            color: 0x0000FF
+        
+        @plane = new THREE.Mesh(planeGeometry, planeMaterial)
+        @plane.rotation.x = Math.PI/2
+        @plane.position.y = -0.01
+        @plane.name = "workplane"
+        @plane.receiveShadow = true
+        
+        @scene.add(@plane)
+       
+    removeGrid:()=>
+      if @grid
+        @scene.remove(@plane)
+        @scene.remove(@grid)
+        delete @grid
+        delete @plane
       
     addAxes:()->
       @axes = new MyAxisHelper(200,0x666666,0x666666, 0x666666)
@@ -575,34 +643,65 @@ define (require) ->
       @particleTexture = new THREE.Texture(canvas)
       @particleTexture.needsUpdate = true
       @particleMaterial = new THREE.MeshBasicMaterial( { map: texture, transparent: true ,color: 0x000000} );
-      
+    
+    
     onRender:()=>
       selectors = @ui.overlayDiv.children(" .uicons")
       selectors.tooltip()
       
+      if @settings.get("showStats")
+        @ui.overlayDiv.append(@stats.domElement)
+      
       container = $(@ui.renderBlock)
       container.append(@renderer.domElement)
-      @controls = new THREE.OrbitControls(@camera,@el)
+      @controls = new THREE.TrackballControls(@camera,@el)
       @controls.autoRotate = false
+      
+      @controls.rotateSpeed = 1.8
+      @controls.zoomSpeed = 4.2
+      @controls.panSpeed = 1.8
+
+      @controls.noZoom = false
+      @controls.noPan = false
+
+      @controls.staticMoving = true
+      @controls.dynamicDampingFactor = 0.3
+      
+      @controls.addEventListener( 'change', @_render )
       
       ########
       container2 = $(@ui.glOverlayBlock)
       container2.append(@overlayRenderer.domElement)
-      @overlayControls = new THREE.OrbitControls(@overlayCamera,@el)
+      @overlayControls = new THREE.TrackballControls(@overlayCamera,@el)
       @overlayControls.autoRotate = false
       @overlayControls.userZoomSpeed=0
       
+      @overlayControls.rotateSpeed = 1.8
+      @overlayControls.zoomSpeed = 0
+      @overlayControls.panSpeed = 0
+
+      @overlayControls.noZoom = false
+      @overlayControls.noPan = false
+
+      @overlayControls.staticMoving = true
+      @overlayControls.dynamicDampingFactor = 0.3
+      
       @animate()
+    
+    _render:()=>
+      @renderer.render(@scene, @camera)
+      @overlayRenderer.render(@overlayscene, @overlayCamera)
+      
+      if @settings.get("showStats")
+        @stats.update()
       
     animate:()=>
       @camera.lookAt(@scene.position)
       @controls.update()
-      @renderer.render(@scene, @camera)
       
       @overlayCamera.lookAt(@overlayscene.position)
       @overlayControls.update()
-      @overlayRenderer.render(@overlayscene, @overlayCamera)
-      
+
       requestAnimationFrame(@animate)
     
     toCsgTest:(mesh)->
@@ -645,6 +744,7 @@ define (require) ->
         console.log "Csg Generation error: #{error} "
       finally
         @app.vent.trigger("parseCsgDone", @)
+        @_render()
       
     addObjs: () =>
       @cube = new THREE.Mesh(new THREE.CubeGeometry(50,50,50),new THREE.MeshBasicMaterial({color: 0x000000}))

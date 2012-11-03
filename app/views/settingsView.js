@@ -245,19 +245,22 @@
       function GlViewSettingsForm(options) {
         if (!options.schema) {
           options.schema = {
-            showGrid: 'Checkbox',
-            showAxes: 'Checkbox',
+            autoUpdate: 'Checkbox',
             renderer: {
               type: 'Select',
               options: ["webgl", "canvas"]
             },
             antialiasing: 'Checkbox',
+            showAxes: 'Checkbox',
             shadows: 'Checkbox',
             selfShadows: {
               type: 'Checkbox',
               title: 'Object self shadowing'
             },
-            autoUpdate: 'Checkbox'
+            showGrid: 'Checkbox',
+            gridSize: 'Number',
+            gridStep: 'Number',
+            showStats: 'Checkbox'
           };
         }
         GlViewSettingsForm.__super__.constructor.call(this, options);

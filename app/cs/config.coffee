@@ -17,11 +17,14 @@ require.config
     lightgl:          "../assets/js/libs/lightgl"
     three:            "../assets/js/libs/three.min"
     detector:         "../assets/js/libs/detector"
+    stats:            "../assets/js/libs/Stats"
     utils:            "../assets/js/libs/utils"
     
     #plugins
     jquery_hotkeys:   "../assets/js/plugins/jquery.hotkeys"
-    jquery_codemirror:"../assets/js/plugins/jquery.codemirror"
+    jquery_ui:        "../assets/js/plugins/jquery-ui-1.9.0.custom.min"
+    jquery_layout:    "../assets/js/plugins/jquery.layout-latest"
+    
     foldcode:         "../assets/js/plugins/foldcode"
     coffee_synhigh:   "../assets/js/libs/codeMirror/mode/coffeescript/coffeescript"
     
@@ -73,9 +76,20 @@ require.config
       exports : "THREE.CSG"
     detector: 
       exports : "Detector"
+    stats:
+      exports : "Stats"
     utils: 
       deps:    ["jquery"]
       exports : "normalizeEvent"
+    jquery_ui:
+      deps:    ["jquery"]
+      exports : "jquery_ui"   
+    jquery_layout:
+      deps:    ["jquery","jquery_ui"]
+      exports : "jquery_layout" 
+    
+    
+    
       
 ###
 require ["CoffeeScript"], (CoffeeScript)->

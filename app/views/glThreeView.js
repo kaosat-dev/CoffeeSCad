@@ -5,27 +5,17 @@
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   define(function(require) {
-    var $, GlThreeView, MyAxisHelper, THREE, csg, detector, marionette, requestAnimationFrame, threedView_template, utils;
+    var $, GlThreeView, MyAxisHelper, THREE, csg, detector, marionette, requestAnimationFrame, stats, threedView_template, utils;
     $ = require('jquery');
     marionette = require('marionette');
     csg = require('csg');
     THREE = require('three');
     THREE.CSG = require('three_csg');
     detector = require('detector');
+    stats = require('stats');
     utils = require('utils');
     threedView_template = require("text!templates/glThree.tmpl");
     requestAnimationFrame = require('anim');
-    /*
-      class GlViewSettings extends Backbone.Model
-          defaults:
-            autoUpdate   : true
-            renderer     : 'webgl'
-            antialiasing : true
-            showGrid     : true
-            showAxes     : true 
-            shadows      : true
-    */
-
     MyAxisHelper = (function() {
 
       function MyAxisHelper(size, xcolor, ycolor, zcolor) {
@@ -158,19 +148,22 @@
         ev = window.event || ev;
         wheelDelta = null;
         if (ev.originalEvent != null) {
-          wheelDelta = ev.originalEvent.detail != null ? ev.originalEvent.detail * (-120) : void 0;
+          return wheelDelta = ev.originalEvent.detail != null ? ev.originalEvent.detail * (-120) : void 0;
         } else {
-          wheelDelta = ev.wheelDelta;
+          return wheelDelta = ev.wheelDelta;
         }
-        if (wheelDelta > 0) {
-          this.controls.zoomOut();
-        } else {
-          this.controls.zoomIn();
-        }
-        ev.preventDefault();
-        ev.stopPropagation();
-        return false;
+        /*
+              if wheelDelta > 0
+                @controls.zoomOut()
+              else 
+                @controls.zoomIn()
+              ev.preventDefault()
+              ev.stopPropagation()
+              return false
+        */
+
         /*ev = window.event or ev; # old IE support  
+        #@controls.onMouseWheel(ev)
         delta = Math.max(-1, Math.min(1, (ev.wheelDelta or -ev.detail)))
         delta*=75
         if delta - @camera.position.z <= 100
@@ -249,18 +242,19 @@
                 this.current.material = newMat;
                 this.addCage(this.current);
                 if (this.current.cageView != null) {
-                  return this.scene.add(this.current.cageView);
+                  this.scene.add(this.current.cageView);
                 }
               }
             } else {
-              return reset_col();
+              reset_col();
             }
           } else {
-            return reset_col();
+            reset_col();
           }
         } else {
-          return reset_col();
+          reset_col();
         }
+        return this._render();
       };
 
       GlThreeView.prototype.switchModel = function(newModel) {
@@ -279,10 +273,9 @@
       };
 
       GlThreeView.prototype.settingsChanged = function(settings, value) {
-        var key, val, _ref, _results;
+        var key, val, _ref;
         console.log("settings changed");
         _ref = this.settings.changedAttributes();
-        _results = [];
         for (key in _ref) {
           val = _ref[key];
           switch (key) {
@@ -290,27 +283,33 @@
               delete this.renderer;
               this.init();
               this.fromCsg(this.model);
-              _results.push(this.render());
+              this.render();
               break;
             case "autoUpdate":
               if (val) {
-                _results.push(this.fromCsg(this.model));
-              } else {
-                _results.push(void 0);
+                this.fromCsg(this.model);
               }
               break;
             case "showGrid":
               if (val) {
-                _results.push(this.addPlane());
+                this.addGrid();
               } else {
-                _results.push(this.removePlane());
+                this.removeGrid();
               }
+              break;
+            case "gridSize":
+              this.removeGrid();
+              this.addGrid();
+              break;
+            case "gridStep":
+              this.removeGrid();
+              this.addGrid();
               break;
             case "showAxes":
               if (val) {
-                _results.push(this.addAxes());
+                this.addAxes();
               } else {
-                _results.push(this.removeAxes());
+                this.removeAxes();
               }
               break;
             case "shadows":
@@ -320,32 +319,32 @@
                 this.render();
                 this.renderer.shadowMapAutoUpdate = false;
                 if (this.settings.get("showGrid")) {
-                  this.removePlane();
-                  _results.push(this.addPlane());
-                } else {
-                  _results.push(void 0);
+                  this.removeGrid();
+                  this.addGrid();
                 }
               } else {
                 this.renderer.shadowMapAutoUpdate = true;
                 this.fromCsg(this.model);
                 this.render();
                 if (this.settings.get("showGrid")) {
-                  this.removePlane();
-                  _results.push(this.addPlane());
-                } else {
-                  _results.push(void 0);
+                  this.removeGrid();
+                  this.addGrid();
                 }
               }
               break;
             case "selfShadows":
               this.fromCsg(this.model);
-              _results.push(this.render());
+              this.render();
               break;
-            default:
-              _results.push(void 0);
+            case "showStats":
+              if (val) {
+                this.ui.overlayDiv.append(this.stats.domElement);
+              } else {
+                $(this.stats.domElement).remove();
+              }
           }
         }
-        return _results;
+        return this._render();
       };
 
       function GlThreeView(options, settings) {
@@ -355,15 +354,17 @@
 
         this.animate = __bind(this.animate, this);
 
+        this._render = __bind(this._render, this);
+
         this.onRender = __bind(this.onRender, this);
 
         this.drawText = __bind(this.drawText, this);
 
         this.addCage = __bind(this.addCage, this);
 
-        this.removePlane = __bind(this.removePlane, this);
+        this.removeGrid = __bind(this.removeGrid, this);
 
-        this.addPlane = __bind(this.addPlane, this);
+        this.addGrid = __bind(this.addGrid, this);
 
         this.setupLights = __bind(this.setupLights, this);
 
@@ -405,6 +406,10 @@
         this.app.vent.bind("parseCsgRequest", function() {
           return _this.fromCsg(_this.model);
         });
+        this.stats = new stats();
+        this.stats.domElement.style.position = 'absolute';
+        this.stats.domElement.style.top = '30px';
+        this.stats.domElement.style.zIndex = 100;
         this.bindTo(this.settings, "change", this.settingsChanged);
         this.dragging = false;
         this.width = 800;
@@ -427,7 +432,7 @@
           this.renderer.shadowMapAutoUpdate = this.settings.get("shadows");
         }
         if (this.settings.get("showGrid")) {
-          this.addPlane();
+          this.addGrid();
         }
         if (this.settings.get("showAxes")) {
           return this.addAxes();
@@ -533,7 +538,7 @@
         ambientLight = new THREE.AmbientLight(this.ambientColor);
         spotLight = new THREE.SpotLight(0xbbbbbb, 2);
         spotLight.position.x = 0;
-        spotLight.position.y = 1000;
+        spotLight.position.y = 2000;
         spotLight.position.z = 0;
         spotLight.castShadow = true;
         this.light = spotLight;
@@ -542,30 +547,52 @@
         return this.scene.add(spotLight);
       };
 
-      GlThreeView.prototype.addPlane = function() {
-        var plane, planeGeo, planeMat;
-        if (!this.plane) {
-          planeGeo = new THREE.PlaneGeometry(500, 500, 5, 5);
-          planeMat = new THREE.MeshBasicMaterial({
-            color: 0x808080,
-            wireframe: true,
-            shading: THREE.FlatShading
+      GlThreeView.prototype.addGrid = function() {
+        /*
+              Adds both grid & plane (for shadow casting), based on the parameters from the settings object
+        */
+
+        var gridGeometry, gridMaterial, gridSize, gridStep, i, planeFragmentShader, planeGeometry, planeMaterial, _i, _ref, _ref1;
+        if (!this.grid) {
+          gridSize = this.settings.get("gridSize");
+          gridStep = this.settings.get("gridStep");
+          gridGeometry = new THREE.Geometry();
+          gridMaterial = new THREE.LineBasicMaterial({
+            color: 0xcccccc,
+            opacity: 0.5
           });
-          planeMat = new THREE.MeshLambertMaterial({
-            color: 0xFFFFFF
+          for (i = _i = _ref = -gridSize / 2, _ref1 = gridSize / 2; _ref <= _ref1 ? _i <= _ref1 : _i >= _ref1; i = _i += gridStep) {
+            gridGeometry.vertices.push(new THREE.Vector3(-gridSize / 2, 0, i));
+            gridGeometry.vertices.push(new THREE.Vector3(gridSize / 2, 0, i));
+            gridGeometry.vertices.push(new THREE.Vector3(i, 0, -gridSize / 2));
+            gridGeometry.vertices.push(new THREE.Vector3(i, 0, gridSize / 2));
+          }
+          this.grid = new THREE.Line(gridGeometry, gridMaterial, THREE.LinePieces);
+          this.scene.add(this.grid);
+          planeGeometry = new THREE.PlaneGeometry(-gridSize, gridSize, 5, 5);
+          planeFragmentShader = ["uniform vec3 diffuse;", "uniform float opacity;", THREE.ShaderChunk["color_pars_fragment"], THREE.ShaderChunk["map_pars_fragment"], THREE.ShaderChunk["lightmap_pars_fragment"], THREE.ShaderChunk["envmap_pars_fragment"], THREE.ShaderChunk["fog_pars_fragment"], THREE.ShaderChunk["shadowmap_pars_fragment"], THREE.ShaderChunk["specularmap_pars_fragment"], "void main() {", "gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 );", THREE.ShaderChunk["map_fragment"], THREE.ShaderChunk["alphatest_fragment"], THREE.ShaderChunk["specularmap_fragment"], THREE.ShaderChunk["lightmap_fragment"], THREE.ShaderChunk["color_fragment"], THREE.ShaderChunk["envmap_fragment"], THREE.ShaderChunk["shadowmap_fragment"], THREE.ShaderChunk["linear_to_gamma_fragment"], THREE.ShaderChunk["fog_fragment"], "gl_FragColor = vec4( 0.0, 0.0, 0.0, 1.0 - shadowColor.x );", "}"].join("\n");
+          planeMaterial = new THREE.ShaderMaterial({
+            uniforms: THREE.ShaderLib['basic'].uniforms,
+            vertexShader: THREE.ShaderLib['basic'].vertexShader,
+            fragmentShader: planeFragmentShader,
+            color: 0x0000FF
           });
-          plane = new THREE.Mesh(planeGeo, planeMat);
-          plane.rotation.x = -Math.PI / 2;
-          plane.position.y = -30;
-          plane.name = "workplane";
-          plane.receiveShadow = true;
-          this.plane = plane;
+          this.plane = new THREE.Mesh(planeGeometry, planeMaterial);
+          this.plane.rotation.x = Math.PI / 2;
+          this.plane.position.y = -0.01;
+          this.plane.name = "workplane";
+          this.plane.receiveShadow = true;
+          return this.scene.add(this.plane);
         }
-        return this.scene.add(this.plane);
       };
 
-      GlThreeView.prototype.removePlane = function() {
-        return this.scene.remove(this.plane);
+      GlThreeView.prototype.removeGrid = function() {
+        if (this.grid) {
+          this.scene.remove(this.plane);
+          this.scene.remove(this.grid);
+          delete this.grid;
+          return delete this.plane;
+        }
       };
 
       GlThreeView.prototype.addAxes = function() {
@@ -680,25 +707,49 @@
         var container, container2, selectors;
         selectors = this.ui.overlayDiv.children(" .uicons");
         selectors.tooltip();
+        if (this.settings.get("showStats")) {
+          this.ui.overlayDiv.append(this.stats.domElement);
+        }
         container = $(this.ui.renderBlock);
         container.append(this.renderer.domElement);
-        this.controls = new THREE.OrbitControls(this.camera, this.el);
+        this.controls = new THREE.TrackballControls(this.camera, this.el);
         this.controls.autoRotate = false;
+        this.controls.rotateSpeed = 1.8;
+        this.controls.zoomSpeed = 4.2;
+        this.controls.panSpeed = 1.8;
+        this.controls.noZoom = false;
+        this.controls.noPan = false;
+        this.controls.staticMoving = true;
+        this.controls.dynamicDampingFactor = 0.3;
+        this.controls.addEventListener('change', this._render);
         container2 = $(this.ui.glOverlayBlock);
         container2.append(this.overlayRenderer.domElement);
-        this.overlayControls = new THREE.OrbitControls(this.overlayCamera, this.el);
+        this.overlayControls = new THREE.TrackballControls(this.overlayCamera, this.el);
         this.overlayControls.autoRotate = false;
         this.overlayControls.userZoomSpeed = 0;
+        this.overlayControls.rotateSpeed = 1.8;
+        this.overlayControls.zoomSpeed = 0;
+        this.overlayControls.panSpeed = 0;
+        this.overlayControls.noZoom = false;
+        this.overlayControls.noPan = false;
+        this.overlayControls.staticMoving = true;
+        this.overlayControls.dynamicDampingFactor = 0.3;
         return this.animate();
+      };
+
+      GlThreeView.prototype._render = function() {
+        this.renderer.render(this.scene, this.camera);
+        this.overlayRenderer.render(this.overlayscene, this.overlayCamera);
+        if (this.settings.get("showStats")) {
+          return this.stats.update();
+        }
       };
 
       GlThreeView.prototype.animate = function() {
         this.camera.lookAt(this.scene.position);
         this.controls.update();
-        this.renderer.render(this.scene, this.camera);
         this.overlayCamera.lookAt(this.overlayscene.position);
         this.overlayControls.update();
-        this.overlayRenderer.render(this.overlayscene, this.overlayCamera);
         return requestAnimationFrame(this.animate);
       };
 
@@ -756,6 +807,7 @@
           return console.log("Csg Generation error: " + error + " ");
         } finally {
           this.app.vent.trigger("parseCsgDone", this);
+          this._render();
         }
       };
 
