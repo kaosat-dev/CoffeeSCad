@@ -259,6 +259,10 @@
 
       GlThreeView.prototype.switchModel = function(newModel) {
         this.scene.remove(this.mesh);
+        try {
+          this.scene.remove(this.current.cageView);
+          this.current = null;
+        } catch (_error) {}
         this.controller.objects = [];
         this.model = newModel;
         this.bindTo(this.model, "change", this.modelChanged);
@@ -357,6 +361,8 @@
         this._render = __bind(this._render, this);
 
         this.onRender = __bind(this.onRender, this);
+
+        this.onResize = __bind(this.onResize, this);
 
         this.drawText = __bind(this.drawText, this);
 
@@ -507,23 +513,32 @@
         NEAR = 1;
         FAR = 10000;
         this.camera = new THREE.PerspectiveCamera(this.viewAngle, ASPECT, NEAR, FAR);
-        this.camera.position.z = 500;
-        this.camera.position.y = 250;
-        this.camera.position.x = -250;
+        this.camera.position.z = 450;
+        this.camera.position.y = 700;
+        this.camera.position.x = 450;
         this.scene = new THREE.Scene();
         this.scene.add(this.camera);
         return this.setupLights();
+        /*
+              xArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(100,0,0),50, 0xFF7700)
+              yArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(100,0,0),50, 0x77FF00)
+              zArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(100,0,0),50, 0x0077FF)
+              @scene.add xArrow
+              @scene.add yArrow
+              @scene.add zArrow
+        */
+
       };
 
       GlThreeView.prototype.setupOverlayScene = function() {
         var ASPECT, FAR, NEAR;
-        ASPECT = (this.width / 2) / (this.height / 2);
+        ASPECT = 350 / 250;
         NEAR = 1;
         FAR = 10000;
         this.overlayCamera = new THREE.PerspectiveCamera(this.viewAngle, ASPECT, NEAR, FAR);
-        this.overlayCamera.position.z = this.camera.position.z / 1.5;
-        this.overlayCamera.position.y = this.camera.position.y / 1.5;
-        this.overlayCamera.position.x = this.camera.position.x / 1.5;
+        this.overlayCamera.position.z = this.camera.position.z / 3;
+        this.overlayCamera.position.y = this.camera.position.y / 3;
+        this.overlayCamera.position.x = this.camera.position.x / 3;
         this.overlayscene = new THREE.Scene();
         return this.overlayscene.add(this.overlayCamera);
       };
@@ -552,13 +567,13 @@
               Adds both grid & plane (for shadow casting), based on the parameters from the settings object
         */
 
-        var gridGeometry, gridMaterial, gridSize, gridStep, i, planeFragmentShader, planeGeometry, planeMaterial, _i, _ref, _ref1;
+        var gridGeometry, gridMaterial, gridSize, gridStep, i, planeFragmentShader, planeGeometry, planeMaterial, _i, _j, _ref, _ref1, _ref2, _ref3, _ref4;
         if (!this.grid) {
           gridSize = this.settings.get("gridSize");
           gridStep = this.settings.get("gridStep");
           gridGeometry = new THREE.Geometry();
           gridMaterial = new THREE.LineBasicMaterial({
-            color: 0xcccccc,
+            color: 0x888888,
             opacity: 0.5
           });
           for (i = _i = _ref = -gridSize / 2, _ref1 = gridSize / 2; _ref <= _ref1 ? _i <= _ref1 : _i >= _ref1; i = _i += gridStep) {
@@ -569,6 +584,19 @@
           }
           this.grid = new THREE.Line(gridGeometry, gridMaterial, THREE.LinePieces);
           this.scene.add(this.grid);
+          gridGeometry = new THREE.Geometry();
+          gridMaterial = new THREE.LineBasicMaterial({
+            color: 0xcccccc,
+            opacity: 0.5
+          });
+          for (i = _j = _ref2 = -gridSize / 2, _ref3 = gridSize / 2, _ref4 = gridStep / 10; _ref2 <= _ref3 ? _j <= _ref3 : _j >= _ref3; i = _j += _ref4) {
+            gridGeometry.vertices.push(new THREE.Vector3(-gridSize / 2, 0, i));
+            gridGeometry.vertices.push(new THREE.Vector3(gridSize / 2, 0, i));
+            gridGeometry.vertices.push(new THREE.Vector3(i, 0, -gridSize / 2));
+            gridGeometry.vertices.push(new THREE.Vector3(i, 0, gridSize / 2));
+          }
+          this.subGrid = new THREE.Line(gridGeometry, gridMaterial, THREE.LinePieces);
+          this.scene.add(this.subGrid);
           planeGeometry = new THREE.PlaneGeometry(-gridSize, gridSize, 5, 5);
           planeFragmentShader = ["uniform vec3 diffuse;", "uniform float opacity;", THREE.ShaderChunk["color_pars_fragment"], THREE.ShaderChunk["map_pars_fragment"], THREE.ShaderChunk["lightmap_pars_fragment"], THREE.ShaderChunk["envmap_pars_fragment"], THREE.ShaderChunk["fog_pars_fragment"], THREE.ShaderChunk["shadowmap_pars_fragment"], THREE.ShaderChunk["specularmap_pars_fragment"], "void main() {", "gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 );", THREE.ShaderChunk["map_fragment"], THREE.ShaderChunk["alphatest_fragment"], THREE.ShaderChunk["specularmap_fragment"], THREE.ShaderChunk["lightmap_fragment"], THREE.ShaderChunk["color_fragment"], THREE.ShaderChunk["envmap_fragment"], THREE.ShaderChunk["shadowmap_fragment"], THREE.ShaderChunk["linear_to_gamma_fragment"], THREE.ShaderChunk["fog_fragment"], "gl_FragColor = vec4( 0.0, 0.0, 0.0, 1.0 - shadowColor.x );", "}"].join("\n");
           planeMaterial = new THREE.ShaderMaterial({
@@ -590,7 +618,9 @@
         if (this.grid) {
           this.scene.remove(this.plane);
           this.scene.remove(this.grid);
+          this.scene.remove(this.subGrid);
           delete this.grid;
+          delete this.subGrid;
           return delete this.plane;
         }
       };
@@ -703,6 +733,18 @@
         });
       };
 
+      GlThreeView.prototype.onResize = function() {
+        this.width = $("#glArea").width();
+        this.height = window.innerHeight - 100;
+        this.camera.aspect = this.width / this.height;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(this.width, this.height);
+        this.overlayCamera.position.z = this.camera.position.z / 3;
+        this.overlayCamera.position.y = this.camera.position.y / 3;
+        this.overlayCamera.position.x = this.camera.position.x / 3;
+        return this._render();
+      };
+
       GlThreeView.prototype.onRender = function() {
         var container, container2, selectors;
         selectors = this.ui.overlayDiv.children(" .uicons");
@@ -710,6 +752,17 @@
         if (this.settings.get("showStats")) {
           this.ui.overlayDiv.append(this.stats.domElement);
         }
+        this.width = $("#gl").width();
+        this.height = window.innerHeight - 100;
+        this.camera.aspect = this.width / this.height;
+        this.camera.updateProjectionMatrix();
+        this.renderer.setSize(this.width, this.height);
+        this.overlayCamera.position.z = this.camera.position.z / 3;
+        this.overlayCamera.position.y = this.camera.position.y / 3;
+        this.overlayCamera.position.x = this.camera.position.x / 3;
+        this._render();
+        this.$el.resize(this.onResize);
+        window.addEventListener('resize', this.onResize, false);
         container = $(this.ui.renderBlock);
         container.append(this.renderer.domElement);
         this.controls = new THREE.TrackballControls(this.camera, this.el);
@@ -746,9 +799,7 @@
       };
 
       GlThreeView.prototype.animate = function() {
-        this.camera.lookAt(this.scene.position);
         this.controls.update();
-        this.overlayCamera.lookAt(this.overlayscene.position);
         this.overlayControls.update();
         return requestAnimationFrame(this.animate);
       };
@@ -794,6 +845,10 @@
           });
           if (this.mesh != null) {
             this.scene.remove(this.mesh);
+            try {
+              this.scene.remove(this.current.cageView);
+              this.current = null;
+            } catch (_error) {}
           }
           this.mesh = new THREE.Mesh(geom, mat);
           this.mesh.castShadow = this.settings.get("shadows");

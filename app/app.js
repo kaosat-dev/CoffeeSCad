@@ -2,7 +2,7 @@
 (function() {
 
   define(function(require) {
-    var $, AlertView, CodeEditorView, CsgProcessor, CsgStlExporterMin, GlThreeView, Library, LoadView, MainContentLayout, MainMenuView, ModalRegion, Project, ProjectFile, ProjectView, SaveView, Settings, SettingsView, app, marionette, testcode, _, _ref, _ref1;
+    var $, AlertView, CodeEditorView, CsgProcessor, CsgStlExporterMin, DialogRegion, GlThreeView, Library, LoadView, MainContentLayout, MainMenuView, ModalRegion, Project, ProjectFile, ProjectView, SaveView, Settings, SettingsView, app, marionette, testcode, _, _ref, _ref1;
     $ = require('jquery');
     _ = require('underscore');
     marionette = require('marionette');
@@ -13,6 +13,7 @@
     SettingsView = require("views/settingsView");
     MainContentLayout = require("views/mainContentView");
     ModalRegion = require("views/modalRegion");
+    DialogRegion = require("views/dialogRegion");
     _ref = require("views/fileSaveLoadView"), LoadView = _ref.LoadView, SaveView = _ref.SaveView;
     AlertView = require("views/alertView");
     GlThreeView = require("views/glThreeView");
@@ -29,7 +30,8 @@
       mainRegion: "#mainContent",
       statusRegion: "#statusBar",
       modal: ModalRegion,
-      alertModal: ModalRegion
+      alertModal: ModalRegion,
+      dialogRegion: DialogRegion
     });
     app.on("start", function(opts) {
       console.log("App Started");
@@ -44,7 +46,7 @@
 
     });
     app.addInitializer(function(options) {
-      var deleteProject, exporter, loadProject, saveProject, stlexport,
+      var deleteProject, exporter, loadProject, saveProject, showEditor, stlexport,
         _this = this;
       exporter = new CsgStlExporterMin();
       this.settings = new Settings();
@@ -102,8 +104,8 @@
       });
       this.mainContentLayout = new MainContentLayout;
       this.mainRegion.show(this.mainContentLayout);
-      this.mainContentLayout.edit.show(this.codeEditorView);
       this.mainContentLayout.gl.show(this.glThreeView);
+      this.dialogRegion.show(this.codeEditorView);
       this.navigationRegion.show(this.mainMenuView);
       this.alertModal.el = alertmodal;
       this.modal.app = this;
@@ -161,9 +163,14 @@
         _this.codeEditorView.switchModel(_this.mainPart);
         _this.glThreeView.switchModel(_this.mainPart);
       };
+      showEditor = function() {
+        console.log("show editor");
+        return _this.dialogRegion.show(_this.codeEditorView);
+      };
       this.vent.bind("fileSaveRequest", saveProject);
       this.vent.bind("fileLoadRequest", loadProject);
       this.vent.bind("fileDeleteRequest", deleteProject);
+      this.vent.bind("editorShowRequest", showEditor);
       app.mainMenuView.on("project:new:mouseup", function() {});
       app.mainMenuView.on("file:new:mouseup", function() {
         _this.project = new Project({

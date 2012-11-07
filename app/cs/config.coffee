@@ -26,6 +26,7 @@ require.config
     jquery_layout:    "../assets/js/plugins/jquery.layout-latest"
     
     foldcode:         "../assets/js/plugins/foldcode"
+    jsHint:           "../assets/js/plugins/javascript-hint"
     coffee_synhigh:   "../assets/js/libs/codeMirror/mode/coffeescript/coffeescript"
     
     marionette:       "../assets/js/plugins/backbone.marionette.min"
@@ -67,6 +68,8 @@ require.config
       deps:    ["CodeMirror"]
     coffee_synhigh:
       deps:    ["CodeMirror"]
+    jsHint:
+      deps:    ["CodeMirror"]
     jquery_codemirror:
       deps:    ["CodeMirror","jquery"]
     three: 
@@ -85,8 +88,8 @@ require.config
       deps:    ["jquery"]
       exports : "jquery_ui"   
     jquery_layout:
-      deps:    ["jquery","jquery_ui"]
-      exports : "jquery_layout" 
+      deps:    ["jquery"]
+      exports : "jquery_layout"
     
     
     

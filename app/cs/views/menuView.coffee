@@ -33,10 +33,16 @@ define (require)->
     
      events: 
       "mouseup .loadFileDirect":    "requestFileLoad"
+      "mouseup .showEditor":        "showEditor"
     
     requestFileLoad:(ev)=>
       fileName = $(ev.currentTarget).html()
       @app.vent.trigger("fileLoadRequest", fileName)
+    
+    showEditor:(ev)=>
+      #fileName = $(ev.currentTarget).html()
+      console.log ("show editor1")
+      @app.vent.trigger("editorShowRequest")
       
     constructor:(options)->
       super options

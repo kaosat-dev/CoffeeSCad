@@ -5,3 +5,4 @@ define (require)->
   
 
   class CoffeeScad extends Backbone.Marionette.Application
+    

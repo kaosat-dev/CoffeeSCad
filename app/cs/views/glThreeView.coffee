@@ -10,6 +10,10 @@ define (require) ->
   threedView_template = require "text!templates/glThree.tmpl"
   requestAnimationFrame = require 'anim'
   
+  #TODO:
+  #FIXME: memory leaks: When removing objects from scene do we really need: renderer.deallocateObject(Object); ?
+  
+  
   #just for testing
   
   class MyAxisHelper
@@ -240,6 +244,11 @@ define (require) ->
       #replace current model with a new one
       #@unbindAll()
       @scene.remove(@mesh)
+      
+      try
+        @scene.remove @current.cageView
+        @current=null
+      
       @controller.objects = []
       @model = newModel
       @bindTo(@model, "change", @modelChanged)
@@ -316,6 +325,7 @@ define (require) ->
       @bindTo(@model, "change", @modelChanged)
       @app.vent.bind "parseCsgRequest", =>
         @fromCsg @model
+      
       
       @stats = new stats()
       @stats.domElement.style.position = 'absolute'
@@ -418,27 +428,34 @@ define (require) ->
           ASPECT,
           NEAR,
           FAR)
-      @camera.position.z = 500
-      @camera.position.y = 250
-      @camera.position.x = -250
+      @camera.position.z = 450
+      @camera.position.y = 700
+      @camera.position.x = 450
           
       @scene = new THREE.Scene()
       @scene.add(@camera)
-      
       @setupLights()
+      
+      ###
+      xArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(100,0,0),50, 0xFF7700)
+      yArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(100,0,0),50, 0x77FF00)
+      zArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(100,0,0),50, 0x0077FF)
+      @scene.add xArrow
+      @scene.add yArrow
+      @scene.add zArrow
+      ###
       
     setupOverlayScene:()->
       #Experimental overlay
-      ASPECT = (@width/2) / (@height/2)
+      ASPECT = 350 / 250
       NEAR = 1
       FAR = 10000
       @overlayCamera =
         new THREE.PerspectiveCamera(@viewAngle,ASPECT, NEAR, FAR)
+      @overlayCamera.position.z = @camera.position.z/3
+      @overlayCamera.position.y = @camera.position.y/3
+      @overlayCamera.position.x = @camera.position.x/3
       
-      @overlayCamera.position.z = @camera.position.z/1.5
-      @overlayCamera.position.y = @camera.position.y/1.5
-      @overlayCamera.position.x = @camera.position.x/1.5
-            
       @overlayscene = new THREE.Scene()
       @overlayscene.add(@overlayCamera)
 
@@ -473,7 +490,7 @@ define (require) ->
         gridStep = @settings.get("gridStep")
         
         gridGeometry = new THREE.Geometry()
-        gridMaterial = new THREE.LineBasicMaterial({ color: 0xcccccc, opacity: 0.5 })
+        gridMaterial = new THREE.LineBasicMaterial({ color: 0x888888, opacity: 0.5 })
         
         for i in [-gridSize/2..gridSize/2] by gridStep
           gridGeometry.vertices.push(new THREE.Vector3(-gridSize/2, 0, i))
@@ -483,6 +500,19 @@ define (require) ->
           gridGeometry.vertices.push(new THREE.Vector3(i, 0, gridSize/2))
         @grid = new THREE.Line(gridGeometry, gridMaterial, THREE.LinePieces)
         @scene.add @grid
+        
+        gridGeometry = new THREE.Geometry()
+        gridMaterial = new THREE.LineBasicMaterial({ color: 0xcccccc, opacity: 0.5 })
+        
+        for i in [-gridSize/2..gridSize/2] by gridStep/10
+          gridGeometry.vertices.push(new THREE.Vector3(-gridSize/2, 0, i))
+          gridGeometry.vertices.push(new THREE.Vector3(gridSize/2, 0, i))
+          
+          gridGeometry.vertices.push(new THREE.Vector3(i, 0, -gridSize/2))
+          gridGeometry.vertices.push(new THREE.Vector3(i, 0, gridSize/2))
+        @subGrid = new THREE.Line(gridGeometry, gridMaterial, THREE.LinePieces)
+        @scene.add @subGrid
+        
         #######
         planeGeometry = new THREE.PlaneGeometry(-gridSize, gridSize, 5, 5)
         #taken from http://stackoverflow.com/questions/12876854/three-js-casting-a-shadow-onto-a-webpage
@@ -534,9 +564,11 @@ define (require) ->
        
     removeGrid:()=>
       if @grid
-        @scene.remove(@plane)
-        @scene.remove(@grid)
+        @scene.remove @plane
+        @scene.remove @grid
+        @scene.remove @subGrid
         delete @grid
+        delete @subGrid
         delete @plane
       
     addAxes:()->
@@ -644,6 +676,24 @@ define (require) ->
       @particleTexture.needsUpdate = true
       @particleMaterial = new THREE.MeshBasicMaterial( { map: texture, transparent: true ,color: 0x000000} );
     
+    onResize:()=>
+      #console.log("resized")
+      
+      @width =  $("#glArea").width()
+      @height = window.innerHeight-100
+      
+      @camera.aspect = @width / @height
+      @camera.updateProjectionMatrix()
+      @renderer.setSize(@width, @height)
+      
+      
+      @overlayCamera.position.z = @camera.position.z/3
+      @overlayCamera.position.y = @camera.position.y/3
+      @overlayCamera.position.x = @camera.position.x/3
+      
+      @_render()
+      #console.log @camera.position
+      #console.log "width #{width} height #{height}"
     
     onRender:()=>
       selectors = @ui.overlayDiv.children(" .uicons")
@@ -651,10 +701,29 @@ define (require) ->
       
       if @settings.get("showStats")
         @ui.overlayDiv.append(@stats.domElement)
+        
+      @width = $("#gl").width()
+      @height = window.innerHeight-100#$("#gl").height()
+     
+      @camera.aspect = @width / @height
+      @camera.updateProjectionMatrix()
+      @renderer.setSize(@width, @height)
+      
+      #FIXME: remove this totally random stuff
+      @overlayCamera.position.z = @camera.position.z/3
+      @overlayCamera.position.y = @camera.position.y/3
+      @overlayCamera.position.x = @camera.position.x/3
+            
+      @_render()
+      
+      
+      @$el.resize @onResize
+      window.addEventListener('resize', @onResize, false)
+      ##########
       
       container = $(@ui.renderBlock)
       container.append(@renderer.domElement)
-      @controls = new THREE.TrackballControls(@camera,@el)
+      @controls = new THREE.TrackballControls(@camera, @el)
       @controls.autoRotate = false
       
       @controls.rotateSpeed = 1.8
@@ -672,7 +741,7 @@ define (require) ->
       ########
       container2 = $(@ui.glOverlayBlock)
       container2.append(@overlayRenderer.domElement)
-      @overlayControls = new THREE.TrackballControls(@overlayCamera,@el)
+      @overlayControls = new THREE.TrackballControls(@overlayCamera, @el)
       @overlayControls.autoRotate = false
       @overlayControls.userZoomSpeed=0
       
@@ -696,10 +765,10 @@ define (require) ->
         @stats.update()
       
     animate:()=>
-      @camera.lookAt(@scene.position)
+      #@camera.lookAt(@scene.position)
       @controls.update()
       
-      @overlayCamera.lookAt(@overlayscene.position)
+     #@overlayCamera.lookAt(@overlayscene.position)
       @overlayControls.update()
 
       requestAnimationFrame(@animate)
@@ -726,11 +795,11 @@ define (require) ->
         
         if @mesh?
           @scene.remove @mesh
+          try
+            @scene.remove @current.cageView
+            @current=null
           
         @mesh = new THREE.Mesh(geom, mat)
-        #@mesh.castShadow = @settings.get("shadows")
-        #@mesh.receiveShadow = @settings.get("selfShadows")
-        
         @mesh.castShadow =  @settings.get("shadows")
         @mesh.receiveShadow = @settings.get("selfShadows") and @settings.get("shadows")
         

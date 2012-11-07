@@ -10,6 +10,7 @@ define (require)->
   SettingsView = require "views/settingsView"
   MainContentLayout = require "views/mainContentView"
   ModalRegion = require "views/modalRegion"
+  DialogRegion = require "views/dialogRegion"
   {LoadView, SaveView} = require "views/fileSaveLoadView"
   AlertView = require "views/alertView"
   GlThreeView = require "views/glThreeView"
@@ -57,17 +58,20 @@ return res
     statusRegion: "#statusBar"
     modal: ModalRegion
     alertModal: ModalRegion
+    dialogRegion: DialogRegion
     
   app.on "start", (opts)->
     console.log "App Started"
     $("[rel=tooltip]").tooltip
       placement:'bottom' 
     
+   # jquery_layout = require 'jquery_layout' 
+   # $("body").layout({ applyDemoStyles: true })  
+    
   app.on "initialize:after", ->
     console.log "after init"
     
     ###fetch all settings###
-   
   app.addInitializer (options)->
     exporter = new CsgStlExporterMin()
     
@@ -126,11 +130,13 @@ return res
       
     @mainContentLayout = new MainContentLayout
     @mainRegion.show @mainContentLayout
-    @mainContentLayout.edit.show @codeEditorView
+    #@mainContentLayout.edit.show @codeEditorView
     @mainContentLayout.gl.show @glThreeView
     
+    #@modal.show(@codeEditorView)
+    @dialogRegion.show @codeEditorView
+    
     @navigationRegion.show @mainMenuView
-    #@statusRegion.show @projectView
     
     @alertModal.el= alertmodal
     @modal.app = @
@@ -196,10 +202,14 @@ return res
       
       return
       
+    showEditor=()=>
+      console.log ("show editor")
+      @dialogRegion.show @codeEditorView
       
     @vent.bind("fileSaveRequest", saveProject)
     @vent.bind("fileLoadRequest", loadProject)
     @vent.bind("fileDeleteRequest", deleteProject)
+    @vent.bind("editorShowRequest", showEditor)
     
     ################
     

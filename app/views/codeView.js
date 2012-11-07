@@ -32,6 +32,8 @@
 
         this.updateUndoRedo = __bind(this.updateUndoRedo, this);
 
+        this.updateHints = __bind(this.updateHints, this);
+
         this.settingsChanged = __bind(this.settingsChanged, this);
 
         this.modelChanged = __bind(this.modelChanged, this);
@@ -74,6 +76,48 @@
         return _results;
       };
 
+      CodeEditorView.prototype.updateHints = function() {
+        var after, info;
+        console.log("tutu");
+        /*modified version of  codemirror.net/3/demo/widget.html
+        */
+
+        editor.operation(function() {
+          var err, i, icon, msg, _i, _j, _ref, _ref1, _results;
+          for (i = _i = 0, _ref = widgets.length; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
+            editor.removeLineWidget(widgets[i]);
+          }
+          widgets.length = 0;
+          JSHINT(editor.getValue());
+          _results = [];
+          for (i = _j = 0, _ref1 = JSHINT.errors.length; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; i = 0 <= _ref1 ? ++_j : --_j) {
+            err = JSHINT.errors[i];
+            if (!err) {
+              continue;
+            }
+            msg = document.createElement("div");
+            icon = msg.appendChild(document.createElement("span"));
+            icon.innerHTML = "!!";
+            icon.className = "lint-error-icon";
+            msg.appendChild(document.createTextNode(err.reason));
+            msg.className = "lint-error";
+            _results.push(widgets.push(editor.addLineWidget(err.line - 1, msg, {
+              coverGutter: false,
+              noHScroll: true
+            })));
+          }
+          return _results;
+        });
+        info = editor.getScrollInfo();
+        after = editor.charCoords({
+          line: editor.getCursor().line + 1,
+          ch: 0
+        }, "local").top;
+        if (info.top + info.clientHeight < after) {
+          return editor.scrollTo(null, after - info.clientHeight + 3);
+        }
+      };
+
       CodeEditorView.prototype.updateUndoRedo = function() {
         var redos, undos;
         redos = this.editor.historySize().redo;
@@ -114,6 +158,7 @@
           gutter: true,
           matchBrackets: true,
           firstLineNumber: this.settings.get("startLine"),
+          lineWrapping: true,
           onChange: function(arg, arg2) {
             _this.model.set("content", _this.editor.getValue());
             return _this.updateUndoRedo();

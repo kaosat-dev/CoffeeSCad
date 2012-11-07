@@ -23,6 +23,7 @@
       jquery_ui: "../assets/js/plugins/jquery-ui-1.9.0.custom.min",
       jquery_layout: "../assets/js/plugins/jquery.layout-latest",
       foldcode: "../assets/js/plugins/foldcode",
+      jsHint: "../assets/js/plugins/javascript-hint",
       coffee_synhigh: "../assets/js/libs/codeMirror/mode/coffeescript/coffeescript",
       marionette: "../assets/js/plugins/backbone.marionette.min",
       eventbinder: "../assets/js/plugins/backbone.eventbinder.min",
@@ -71,6 +72,9 @@
       coffee_synhigh: {
         deps: ["CodeMirror"]
       },
+      jsHint: {
+        deps: ["CodeMirror"]
+      },
       jquery_codemirror: {
         deps: ["CodeMirror", "jquery"]
       },
@@ -96,7 +100,7 @@
         exports: "jquery_ui"
       },
       jquery_layout: {
-        deps: ["jquery", "jquery_ui"],
+        deps: ["jquery"],
         exports: "jquery_layout"
       }
     }

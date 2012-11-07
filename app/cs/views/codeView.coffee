@@ -5,6 +5,7 @@ define (require)->
   CodeMirror = require 'CodeMirror'
   require 'foldcode'
   require 'coffee_synhigh'
+  #require 'jsHint'
   codeEdit_template = require "text!templates/codeedit.tmpl"
   
       
@@ -41,6 +42,34 @@ define (require)->
             @editor.setOption("firstLineNumber",val)
             @render()
     
+    updateHints:=>
+      console.log "tutu"
+      #widgets = []
+      ###modified version of  codemirror.net/3/demo/widget.html###
+      #coffeescriptHint
+      editor.operation( ()->
+        for i in [0...widgets.length]
+          editor.removeLineWidget(widgets[i])
+        widgets.length = 0
+        
+        #TODO: fetch errors from csg compiler?
+        JSHINT(editor.getValue())
+        for i in [0...JSHINT.errors.length]
+          err = JSHINT.errors[i]
+          if (!err) then continue
+          msg = document.createElement("div");
+          icon = msg.appendChild(document.createElement("span"))
+          icon.innerHTML = "!!";
+          icon.className = "lint-error-icon";
+          msg.appendChild(document.createTextNode(err.reason))
+          msg.className = "lint-error"
+          widgets.push(editor.addLineWidget(err.line - 1, msg, {coverGutter: false, noHScroll: true}));
+      )
+      info = editor.getScrollInfo()
+      after = editor.charCoords({line: editor.getCursor().line + 1, ch: 0}, "local").top
+      if (info.top + info.clientHeight < after)
+        editor.scrollTo(null, after - info.clientHeight + 3)
+    
     #this could also be solved by letting the event listeners access the list of available undos & redos ?
     updateUndoRedo: () =>
       redos = @editor.historySize().redo
@@ -63,7 +92,7 @@ define (require)->
       redoes = @editor.historySize().redo
       if redoes >0
         @editor.redo()
-     
+         
     onRender: =>
       @editor = CodeMirror.fromTextArea @ui.codeBlock.get(0),
         mode:"coffeescript"
@@ -71,6 +100,7 @@ define (require)->
         gutter:true
         matchBrackets:true
         firstLineNumber:@settings.get("startLine")
+        lineWrapping : true
         onChange:(arg, arg2)  =>   
           @model.set "content", @editor.getValue()
           @updateUndoRedo()

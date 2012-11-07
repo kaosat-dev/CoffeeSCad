@@ -58,7 +58,8 @@
       };
 
       MainMenuView.prototype.events = {
-        "mouseup .loadFileDirect": "requestFileLoad"
+        "mouseup .loadFileDirect": "requestFileLoad",
+        "mouseup .showEditor": "showEditor"
       };
 
       MainMenuView.prototype.requestFileLoad = function(ev) {
@@ -67,7 +68,14 @@
         return this.app.vent.trigger("fileLoadRequest", fileName);
       };
 
+      MainMenuView.prototype.showEditor = function(ev) {
+        console.log("show editor1");
+        return this.app.vent.trigger("editorShowRequest");
+      };
+
       function MainMenuView(options) {
+        this.showEditor = __bind(this.showEditor, this);
+
         this.requestFileLoad = __bind(this.requestFileLoad, this);
 
         var _this = this;

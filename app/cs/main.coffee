@@ -1,4 +1,3 @@
-#require (["app", "router"]), (app, Router)->
 define (require)->
   app      = require 'app'
   Router   = require 'router'
@@ -11,7 +10,7 @@ define (require)->
 
   app.start()
 
-  ###
+###
   $(document).on "click", "a[href]:not([data-bypass])", (evt)->
     href = 
       prop: $(this).prop("href")
@@ -22,4 +21,14 @@ define (require)->
       evt.preventDefault()
       Backbone.history.navigate(href.attr, true)
       return
-  ###
+###
+
+###
+require ["jquery", "underscore", "backbone", "marionette", 'router', "MyApp"], ($, _, Backbone, Marionette, Router, MyApp) ->
+  MyApp.router = new Router()
+  Backbone.history.start
+    pushState: true
+    root: MyApp.root
+
+  MyApp.start()
+###

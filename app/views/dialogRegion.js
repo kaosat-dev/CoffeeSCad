@@ -5,46 +5,58 @@
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   define(function(require) {
-    var $, ModalRegion, boostrap, marionette, _;
+    var $, DialogRegion, boostrap, jquery_ui, marionette, _;
     $ = require('jquery');
     _ = require('underscore');
     boostrap = require('bootstrap');
     marionette = require('marionette');
-    ModalRegion = (function(_super) {
+    jquery_ui = require('jquery_ui');
+    DialogRegion = (function(_super) {
 
-      __extends(ModalRegion, _super);
+      __extends(DialogRegion, _super);
 
-      ModalRegion.prototype.el = "#modal";
+      DialogRegion.prototype.el = "#dialogRegion";
 
-      function ModalRegion() {
+      function DialogRegion() {
         this.showModal = __bind(this.showModal, this);
         _.bindAll(this);
         this.on("view:show", this.showModal, this);
       }
 
-      ModalRegion.prototype.getEl = function(selector) {
+      DialogRegion.prototype.getEl = function(selector) {
         var $el;
         $el = $(selector);
         $el.on("hidden", this.close);
         return $el;
       };
 
-      ModalRegion.prototype.showModal = function(view) {
+      DialogRegion.prototype.showModal = function(view) {
         view.on("close", this.hideModal, this);
-        return this.$el.modal({
-          'show': true,
-          'backdrop': false
-        }).addClass('modal-big');
+        $("#dialog").dialog({
+          title: view.model.get("name"),
+          width: 550,
+          height: 700,
+          position: {
+            my: "right center",
+            at: "right center"
+          }
+        });
+        $(".draggable").draggable({
+          grid: [1, 1]
+        });
+        return $(".draggable").resizable({
+          handles: "se"
+        });
       };
 
-      ModalRegion.prototype.hideModal = function() {
+      DialogRegion.prototype.hideModal = function() {
         return this.$el.modal('hide');
       };
 
-      return ModalRegion;
+      return DialogRegion;
 
     })(Backbone.Marionette.Region);
-    return ModalRegion;
+    return DialogRegion;
   });
 
 }).call(this);
