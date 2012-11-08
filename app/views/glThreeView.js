@@ -859,7 +859,8 @@
         } catch (error) {
           this.scene.remove(this.mesh);
           this.model.csg = null;
-          return console.log("Csg Generation error: " + error + " ");
+          console.log("Csg Generation error: " + error + " ");
+          return this.app.vent.trigger("csgParseError", error);
         } finally {
           this.app.vent.trigger("parseCsgDone", this);
           this._render();

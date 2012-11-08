@@ -20,7 +20,8 @@
       CodeEditorView.prototype.template = codeEdit_template;
 
       CodeEditorView.prototype.ui = {
-        codeBlock: "#codeArea2"
+        codeBlock: "#codeArea",
+        errorBlock: "#errorConsole"
       };
 
       function CodeEditorView(options) {
@@ -34,6 +35,8 @@
 
         this.updateHints = __bind(this.updateHints, this);
 
+        this.showError = __bind(this.showError, this);
+
         this.settingsChanged = __bind(this.settingsChanged, this);
 
         this.modelChanged = __bind(this.modelChanged, this);
@@ -43,6 +46,7 @@
         this.app = require('app');
         this.bindTo(this.model, "change", this.modelChanged);
         this.bindTo(this.settings, "change", this.settingsChanged);
+        this.app.vent.bind("csgParseError", this.showError);
       }
 
       CodeEditorView.prototype.switchModel = function(newModel) {
@@ -54,6 +58,9 @@
       };
 
       CodeEditorView.prototype.modelChanged = function(model, value) {
+        $(this.ui.errorBlock).addClass("well");
+        $(this.ui.errorBlock).removeClass("alert alert-error");
+        $(this.ui.errorBlock).html("");
         return this.app.vent.trigger("modelChanged", this);
       };
 
@@ -74,6 +81,21 @@
           }
         }
         return _results;
+      };
+
+      CodeEditorView.prototype.showError = function(error) {
+        var errLine, errMsg;
+        try {
+          $(this.ui.errorBlock).removeClass("well");
+          $(this.ui.errorBlock).addClass("alert alert-error");
+          $(this.ui.errorBlock).html("<div> <h4>" + error.name + ":</h4>  " + error.message + "</div>");
+          errLine = error.message.split("line ");
+          errLine = errLine[errLine.length - 1];
+          return errMsg = error.message;
+        } catch (err) {
+          console.log("Inner err: " + err);
+          return $(this.ui.errorBlock).text(error);
+        }
       };
 
       CodeEditorView.prototype.updateHints = function() {
@@ -158,7 +180,6 @@
           gutter: true,
           matchBrackets: true,
           firstLineNumber: this.settings.get("startLine"),
-          lineWrapping: true,
           onChange: function(arg, arg2) {
             _this.model.set("content", _this.editor.getValue());
             return _this.updateUndoRedo();

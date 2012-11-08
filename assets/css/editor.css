@@ -6,15 +6,15 @@
 	left: 0;
 	right: 0;
 	bottom: 0;
-	width: 95%;
-	height: 95%;
+	width: 100%;
+	height: 85%;
 }
 
-.CodeMirror-scroll
+.CodeMirror-scroll 
 {
-	height:inherit;
-	overflow: visible;
-	
+        height: auto;
+        overflow-y: hidden;
+        overflow-x: auto;
 }
 
 

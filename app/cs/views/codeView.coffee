@@ -12,7 +12,8 @@ define (require)->
   class CodeEditorView extends marionette.ItemView
     template: codeEdit_template
     ui:
-      codeBlock : "#codeArea2"
+      codeBlock : "#codeArea"
+      errorBlock: "#errorConsole"
       
     constructor:(options)->
       super options
@@ -21,6 +22,7 @@ define (require)->
       @app = require 'app'
       @bindTo(@model, "change", @modelChanged)
       @bindTo(@settings, "change", @settingsChanged)
+      @app.vent.bind("csgParseError", @showError)
     
     switchModel:(newModel)->
       #replace current model with a new one
@@ -32,6 +34,9 @@ define (require)->
       @bindTo(@model, "change", @modelChanged)
       
     modelChanged: (model, value)=>
+      $(@ui.errorBlock).addClass("well")
+      $(@ui.errorBlock).removeClass("alert alert-error")
+      $(@ui.errorBlock).html("")
       @app.vent.trigger("modelChanged", @)
     
     settingsChanged:(settings, value)=> 
@@ -42,6 +47,21 @@ define (require)->
             @editor.setOption("firstLineNumber",val)
             @render()
     
+    showError:(error)=>
+      #TODO: should be its own view, not a hack
+      try
+        $(@ui.errorBlock).removeClass("well")
+        $(@ui.errorBlock).addClass("alert alert-error")
+        $(@ui.errorBlock).html("<div> <h4>#{error.name}:</h4>  #{error.message}</div>")
+        errLine = error.message.split("line ")
+        errLine = errLine[errLine.length - 1]
+        errMsg = error.message
+        #console.log("errLine"+errLine)
+        #@editor.addLineWidget(errLine - 1, errMsg, {coverGutter: false, noHScroll: true})
+      catch err
+        console.log("Inner err: "+ err)
+        $(@ui.errorBlock).text(error)
+      
     updateHints:=>
       console.log "tutu"
       #widgets = []
@@ -100,7 +120,7 @@ define (require)->
         gutter:true
         matchBrackets:true
         firstLineNumber:@settings.get("startLine")
-        lineWrapping : true
+        #lineWrapping : true
         onChange:(arg, arg2)  =>   
           @model.set "content", @editor.getValue()
           @updateUndoRedo()

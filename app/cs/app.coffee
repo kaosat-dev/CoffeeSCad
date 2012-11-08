@@ -33,16 +33,24 @@ class Thingy
     result = new CSG()
     shape1 = fromPoints([[0,0], [150,50], [0,-50]])
     shape = shape1.expand(20, 25)
-    shape = shape.extrude({offset:[0, 0, @thickness]}) 
-    cyl = new Cylinder({start: [0, 0, -50],end: [0, 0, 50],radius:10, resolution:12})
-    result = shape.subtract(cyl)
+    shape = shape.extrude
+      offset:[0, 0, @thickness]
+      
+    cyl = new Cylinder(
+      start: [0, 0, -50]
+      end: [0, 0, 50],radius:10,resolution:12)
+      
+    result = shape.subtract cyl
     return result.translate(@pos).rotateX(@rot[0]).
     rotateY(@rot[1]).rotateZ(@rot[2]).color([1,0.5,0])
 
 thing = new Thingy(35)
 thing2 = new Thingy(25)
 
-res = thing.render().union(thing2.render().mirroredX().color([0.2,0.5,0.6]))
+res = thing.render().union(
+  thing2.render()
+  .mirroredX()
+    .color([0.2,0.5,0.6]))
 res= res.rotateX(37)
 res= res.rotateZ(190)
 res= res.translate([0,0,100])

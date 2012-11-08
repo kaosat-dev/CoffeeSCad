@@ -811,6 +811,7 @@ define (require) ->
         @scene.remove @mesh
         @model.csg = null
         console.log "Csg Generation error: #{error} "
+        @app.vent.trigger("csgParseError", error)
       finally
         @app.vent.trigger("parseCsgDone", @)
         @_render()
