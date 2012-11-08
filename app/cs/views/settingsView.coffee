@@ -143,17 +143,28 @@ define (require)->
             options : ["webgl", "canvas"]
           antialiasing : 'Checkbox'
           
-          showAxes     : 'Checkbox' 
-          
           shadows      : 'Checkbox'
           selfShadows  : 
             type:       'Checkbox'
             title:      'Object self shadowing'
           
+          showAxes     : 'Checkbox' 
+          
           showGrid     : 'Checkbox' 
           gridSize     : 'Number'  
           gridStep     : 'Number'
+          
           showStats    : 'Checkbox'
+          
+          position     :
+            type: 'Select'
+            options: ['diagonal', 'top', 'bottom', 'front', 'back', 'left', 'right'] 
+          
+          projection   :
+            type: 'Select'
+            options: ['perspective', 'orthographic']
+          
+          wireFrame    : 'Checkbox'
           
       super options
   

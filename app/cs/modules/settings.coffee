@@ -24,10 +24,10 @@ define (require)->
       renderer     : 'webgl'
       antialiasing : true
       
-      showAxes     : true 
-      
       shadows      : true
       selfShadows  : true
+      
+      showAxes     : true
       
       showGrid     : true
       gridSize     : 1000
@@ -35,7 +35,10 @@ define (require)->
       
       showStats    : false
       
+      position     : "diagonal"
+      projection   : "perspective" #orthogonal
       
+      wireFrame    : false
       
     constructor:(options)->
       super options

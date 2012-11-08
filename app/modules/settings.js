@@ -41,13 +41,16 @@
         autoUpdate: true,
         renderer: 'webgl',
         antialiasing: true,
-        showAxes: true,
         shadows: true,
         selfShadows: true,
+        showAxes: true,
         showGrid: true,
         gridSize: 1000,
         gridStep: 100,
-        showStats: false
+        showStats: false,
+        position: "diagonal",
+        projection: "perspective",
+        wireFrame: false
       };
 
       function GlViewSettings(options) {

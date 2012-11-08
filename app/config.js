@@ -33,7 +33,8 @@
       collectionbinder: "../assets/js/plugins/backbone.CollectionBinder.min",
       forms: "../assets/js/plugins/backbone.forms",
       forms_bootstrap: "../assets/js/plugins/backbone.forms.bootstrap",
-      three_csg: "../assets/js/plugins/ThreeCSG"
+      three_csg: "../assets/js/plugins/ThreeCSG",
+      combo_cam: "../assets/js/plugins/CombinedCamera"
     },
     shim: {
       underscore: {
@@ -84,6 +85,10 @@
       three_csg: {
         deps: ["three"],
         exports: "THREE.CSG"
+      },
+      combo_cam: {
+        deps: ["three"],
+        exports: "combo_cam"
       },
       detector: {
         exports: "Detector"

@@ -39,7 +39,7 @@ require.config
     forms_bootstrap : "../assets/js/plugins/backbone.forms.bootstrap"
     
     three_csg:        "../assets/js/plugins/ThreeCSG"
-    
+    combo_cam:        "../assets/js/plugins/CombinedCamera"
 
   shim:
     underscore:
@@ -77,6 +77,9 @@ require.config
     three_csg: 
       deps:    ["three"]
       exports : "THREE.CSG"
+    combo_cam: 
+      deps:    ["three"]
+      exports : "combo_cam"
     detector: 
       exports : "Detector"
     stats:

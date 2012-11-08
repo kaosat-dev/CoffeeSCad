@@ -4,6 +4,7 @@ define (require) ->
   csg = require 'csg'
   THREE = require 'three'
   THREE.CSG = require 'three_csg'
+  combo_cam = require 'combo_cam'
   detector = require 'detector'
   stats = require  'stats'
   utils = require 'utils'
@@ -314,6 +315,14 @@ define (require) ->
               @ui.overlayDiv.append(@stats.domElement)
             else
               $(@stats.domElement).remove()
+              
+          when  "projection"
+            if val == "orthographic"
+              @camera.toOrthographic()
+              @camera.setZoom(6)
+            else
+              @camera.toPerspective()
+              @camera.setZoom(1)
             
       @_render()  
        
@@ -363,6 +372,11 @@ define (require) ->
         @addGrid()
       if @settings.get("showAxes")
         @addAxes()
+      if @settings.get("projection") == "orthographic"
+        @camera.toOrthographic()
+        @camera.setZoom(6)
+      else
+        @camera.toPerspective()
         
     configure:(settings)=>
       if settings.get("renderer")
@@ -421,13 +435,25 @@ define (require) ->
       ASPECT = @width / @height
       NEAR = 1
       FAR = 10000
-      
+      ### 
       @camera =
-        new THREE.PerspectiveCamera(
+      new THREE.PerspectiveCamera(
           @viewAngle,
           ASPECT,
           NEAR,
           FAR)
+      ###
+      @camera =
+       new THREE.CombinedCamera(
+          @width,
+          @height,
+          @viewAngle,
+          NEAR,
+          FAR,
+          NEAR,
+          FAR)
+      #function ( width, height, fov, near, far, orthoNear, orthoFar )
+      #function ( @width, @height, @viewAngle, NEAR, FAR, NEAR, FAR ) 
       @camera.position.z = 450
       @camera.position.y = 700
       @camera.position.x = 450
@@ -682,8 +708,12 @@ define (require) ->
       @width =  $("#glArea").width()
       @height = window.innerHeight-100
       
-      @camera.aspect = @width / @height
+      #@camera.aspect = @width / @height
+      #@camera.updateProjectionMatrix()
+      
+      @camera.setSize(@width,@height)
       @camera.updateProjectionMatrix()
+      
       @renderer.setSize(@width, @height)
       
       
@@ -705,7 +735,9 @@ define (require) ->
       @width = $("#gl").width()
       @height = window.innerHeight-100#$("#gl").height()
      
-      @camera.aspect = @width / @height
+      #@camera.aspect = @width / @height
+      #@camera.updateProjectionMatrix()
+      @camera.setSize(@width,@height)
       @camera.updateProjectionMatrix()
       @renderer.setSize(@width, @height)
       

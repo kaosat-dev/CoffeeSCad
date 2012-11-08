@@ -5,12 +5,13 @@
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   define(function(require) {
-    var $, GlThreeView, MyAxisHelper, THREE, csg, detector, marionette, requestAnimationFrame, stats, threedView_template, utils;
+    var $, GlThreeView, MyAxisHelper, THREE, combo_cam, csg, detector, marionette, requestAnimationFrame, stats, threedView_template, utils;
     $ = require('jquery');
     marionette = require('marionette');
     csg = require('csg');
     THREE = require('three');
     THREE.CSG = require('three_csg');
+    combo_cam = require('combo_cam');
     detector = require('detector');
     stats = require('stats');
     utils = require('utils');
@@ -346,6 +347,15 @@
               } else {
                 $(this.stats.domElement).remove();
               }
+              break;
+            case "projection":
+              if (val === "orthographic") {
+                this.camera.toOrthographic();
+                this.camera.setZoom(6);
+              } else {
+                this.camera.toPerspective();
+                this.camera.setZoom(1);
+              }
           }
         }
         return this._render();
@@ -441,7 +451,13 @@
           this.addGrid();
         }
         if (this.settings.get("showAxes")) {
-          return this.addAxes();
+          this.addAxes();
+        }
+        if (this.settings.get("projection") === "orthographic") {
+          this.camera.toOrthographic();
+          return this.camera.setZoom(6);
+        } else {
+          return this.camera.toPerspective();
         }
       };
 
@@ -512,7 +528,16 @@
         ASPECT = this.width / this.height;
         NEAR = 1;
         FAR = 10000;
-        this.camera = new THREE.PerspectiveCamera(this.viewAngle, ASPECT, NEAR, FAR);
+        /* 
+        @camera =
+        new THREE.PerspectiveCamera(
+            @viewAngle,
+            ASPECT,
+            NEAR,
+            FAR)
+        */
+
+        this.camera = new THREE.CombinedCamera(this.width, this.height, this.viewAngle, NEAR, FAR, NEAR, FAR);
         this.camera.position.z = 450;
         this.camera.position.y = 700;
         this.camera.position.x = 450;
@@ -736,7 +761,7 @@
       GlThreeView.prototype.onResize = function() {
         this.width = $("#glArea").width();
         this.height = window.innerHeight - 100;
-        this.camera.aspect = this.width / this.height;
+        this.camera.setSize(this.width, this.height);
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(this.width, this.height);
         this.overlayCamera.position.z = this.camera.position.z / 3;
@@ -754,7 +779,7 @@
         }
         this.width = $("#gl").width();
         this.height = window.innerHeight - 100;
-        this.camera.aspect = this.width / this.height;
+        this.camera.setSize(this.width, this.height);
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(this.width, this.height);
         this.overlayCamera.position.z = this.camera.position.z / 3;
