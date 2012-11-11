@@ -47,10 +47,6 @@
       };
 
       GlThreeView.prototype.events = {
-        'mousemove': 'mousemove',
-        'mouseup': 'mouseup',
-        'mousewheel': 'mousewheel',
-        'mousedown': 'mousedown',
         'contextmenu': 'rightclick',
         'DOMMouseScroll': 'mousewheel',
         "mousedown .toggleGrid": "toggleGrid",
@@ -351,11 +347,13 @@
             case "projection":
               if (val === "orthographic") {
                 this.camera.toOrthographic();
-                this.camera.setZoom(6);
               } else {
                 this.camera.toPerspective();
                 this.camera.setZoom(1);
               }
+              break;
+            case "position":
+              this.setupView(val);
           }
         }
         return this._render();
@@ -381,6 +379,8 @@
         this.removeGrid = __bind(this.removeGrid, this);
 
         this.addGrid = __bind(this.addGrid, this);
+
+        this.setupView = __bind(this.setupView, this);
 
         this.setupLights = __bind(this.setupLights, this);
 
@@ -434,6 +434,7 @@
       }
 
       GlThreeView.prototype.init = function() {
+        var val;
         this.renderer = null;
         this.configure(this.settings);
         this.renderer.shadowMapEnabled = true;
@@ -455,10 +456,12 @@
         }
         if (this.settings.get("projection") === "orthographic") {
           this.camera.toOrthographic();
-          return this.camera.setZoom(6);
+          this.camera.setZoom(6);
         } else {
-          return this.camera.toPerspective();
+          this.camera.toPerspective();
         }
+        val = this.settings.get("position");
+        return this.setupView(val);
       };
 
       GlThreeView.prototype.configure = function(settings) {
@@ -587,6 +590,51 @@
         return this.scene.add(spotLight);
       };
 
+      GlThreeView.prototype.setupView = function(val) {
+        var resetCam,
+          _this = this;
+        resetCam = function() {
+          _this.camera.position.z = 0;
+          _this.camera.position.y = 0;
+          return _this.camera.position.x = 0;
+        };
+        switch (val) {
+          case 'diagonal':
+            this.camera.position.z = 450;
+            this.camera.position.y = 700;
+            this.camera.position.x = 450;
+            return this.camera.lookAt(this.scene.position);
+          case 'top':
+            resetCam();
+            this.camera.toTopView();
+            return this.camera.position.y = 700;
+          case 'bottom':
+            resetCam();
+            this.camera.toBottomView();
+            return this.camera.position.y = -700;
+          case 'front':
+            resetCam();
+            this.camera.toFrontView();
+            this.camera.position.z = 800;
+            return this.camera.position.x = 0;
+          case 'back':
+            resetCam();
+            this.camera.toBackView();
+            this.camera.position.z = -800;
+            return this.camera.position.x = 0;
+          case 'left':
+            resetCam();
+            this.camera.toLeftView();
+            this.camera.position.z = 0;
+            return this.camera.position.x = -800;
+          case 'right':
+            resetCam();
+            this.camera.toRightView();
+            this.camera.position.z = 0;
+            return this.camera.position.x = 800;
+        }
+      };
+
       GlThreeView.prototype.addGrid = function() {
         /*
               Adds both grid & plane (for shadow casting), based on the parameters from the settings object
@@ -692,7 +740,7 @@
         };
         lineMat = new THREE.LineBasicMaterial({
           color: 0x808080,
-          lineWidth: 1,
+          lineWidth: 2,
           wireframe: true
         });
         lineMat = new THREE.MeshBasicMaterial({
@@ -711,7 +759,7 @@
         };
         delta = middlePoint(mesh.geometry);
         cage.position = delta;
-        truc = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(-length / 2, -width / 2, height / 2), width - 15, 0xFF7700);
+        truc = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(-length / 2, -width / 2, height / 2), width, 0xFF7700);
         cage.add(truc);
         return mesh.cageView = cage;
       };
@@ -792,6 +840,9 @@
         container.append(this.renderer.domElement);
         this.controls = new THREE.TrackballControls(this.camera, this.el);
         this.controls.autoRotate = false;
+        /*TrackballControls
+        */
+
         this.controls.rotateSpeed = 1.8;
         this.controls.zoomSpeed = 4.2;
         this.controls.panSpeed = 1.8;

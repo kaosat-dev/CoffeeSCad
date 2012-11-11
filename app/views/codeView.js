@@ -5,13 +5,17 @@
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   define(function(require) {
-    var $, CodeEditorView, CodeMirror, codeEdit_template, marionette, _;
+    var $, CodeEditorView, CodeMirror, CoffeeScript, codeEdit_template, marionette, _;
     $ = require('jquery');
     _ = require('underscore');
+    require('bootstrap');
     marionette = require('marionette');
     CodeMirror = require('CodeMirror');
     require('foldcode');
     require('coffee_synhigh');
+    require('match_high');
+    CoffeeScript = require('CoffeeScript');
+    require('coffeelint');
     codeEdit_template = require("text!templates/codeedit.tmpl");
     CodeEditorView = (function(_super) {
 
@@ -43,6 +47,20 @@
         CodeEditorView.__super__.constructor.call(this, options);
         this.settings = options.settings;
         this.editor = null;
+        this.markers = [];
+        this.lintConf = {
+          "max_line_length": {
+            "value": 80,
+            "level": "warning"
+          },
+          "no_tabs": {
+            "level": "warning"
+          },
+          "indentation": {
+            "value": 4,
+            "level": "ignore"
+          }
+        };
         this.app = require('app');
         this.bindTo(this.model, "change", this.modelChanged);
         this.bindTo(this.settings, "change", this.settingsChanged);
@@ -61,7 +79,10 @@
         $(this.ui.errorBlock).addClass("well");
         $(this.ui.errorBlock).removeClass("alert alert-error");
         $(this.ui.errorBlock).html("");
-        return this.app.vent.trigger("modelChanged", this);
+        this.app.vent.trigger("modelChanged", this);
+        return $("[rel=tooltip]").tooltip({
+          placement: 'bottom'
+        });
       };
 
       CodeEditorView.prototype.settingsChanged = function(settings, value) {
@@ -99,45 +120,36 @@
       };
 
       CodeEditorView.prototype.updateHints = function() {
-        var after, info;
-        console.log("tutu");
-        /*modified version of  codemirror.net/3/demo/widget.html
-        */
-
-        editor.operation(function() {
-          var err, i, icon, msg, _i, _j, _ref, _ref1, _results;
-          for (i = _i = 0, _ref = widgets.length; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
-            editor.removeLineWidget(widgets[i]);
-          }
-          widgets.length = 0;
-          JSHINT(editor.getValue());
-          _results = [];
-          for (i = _j = 0, _ref1 = JSHINT.errors.length; 0 <= _ref1 ? _j < _ref1 : _j > _ref1; i = 0 <= _ref1 ? ++_j : --_j) {
-            err = JSHINT.errors[i];
-            if (!err) {
-              continue;
-            }
-            msg = document.createElement("div");
-            icon = msg.appendChild(document.createElement("span"));
-            icon.innerHTML = "!!";
-            icon.className = "lint-error-icon";
-            msg.appendChild(document.createTextNode(err.reason));
-            msg.className = "lint-error";
-            _results.push(widgets.push(editor.addLineWidget(err.line - 1, msg, {
-              coverGutter: false,
-              noHScroll: true
-            })));
-          }
-          return _results;
-        });
-        info = editor.getScrollInfo();
-        after = editor.charCoords({
-          line: editor.getCursor().line + 1,
-          ch: 0
-        }, "local").top;
-        if (info.top + info.clientHeight < after) {
-          return editor.scrollTo(null, after - info.clientHeight + 3);
+        var i, marker, _ref,
+          _this = this;
+        _ref = this.markers;
+        for (i in _ref) {
+          marker = _ref[i];
+          this.editor.clearMarker(marker);
         }
+        this.markers = [];
+        return this.editor.operation(function() {
+          var errLine, errMsg, error, errors, markerDiv, _results;
+          try {
+            errors = coffeelint.lint(_this.editor.getValue(), _this.lintConf);
+            _results = [];
+            for (i in errors) {
+              error = errors[i];
+              errMsg = error.message;
+              markerDiv = "<span class='CodeErrorMarker'> <a href='#' rel='tooltip' title=\" " + errMsg + "\" > <i class='icon-remove-sign'></i></a></span> %N%";
+              marker = _this.editor.setMarker(error.lineNumber - 1, markerDiv);
+              _results.push(_this.markers.push(marker));
+            }
+            return _results;
+          } catch (error) {
+            errLine = error.message.split("line ");
+            errLine = errLine[errLine.length - 1];
+            errMsg = error.message;
+            markerDiv = "<span class='CodeErrorMarker'> <a href='#' rel='tooltip' title=\" " + errMsg + "\" > <i class='icon-remove-sign'></i></a></span> %N%";
+            marker = _this.editor.setMarker(errLine - 1, markerDiv);
+            return _this.markers.push(marker);
+          }
+        });
       };
 
       CodeEditorView.prototype.updateUndoRedo = function() {
@@ -173,7 +185,9 @@
       };
 
       CodeEditorView.prototype.onRender = function() {
-        var _this = this;
+        var foldFunc,
+          _this = this;
+        foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder);
         this.editor = CodeMirror.fromTextArea(this.ui.codeBlock.get(0), {
           mode: "coffeescript",
           lineNumbers: true,
@@ -181,10 +195,23 @@
           matchBrackets: true,
           firstLineNumber: this.settings.get("startLine"),
           onChange: function(arg, arg2) {
+            _this.updateHints();
             _this.model.set("content", _this.editor.getValue());
-            return _this.updateUndoRedo();
+            _this.updateUndoRedo();
+          },
+          onGutterClick: foldFunc,
+          extraKeys: {
+            "Ctrl-Q": function(cm) {
+              return foldFunc(cm, cm.getCursor().line);
+            }
+          },
+          onCursorActivity: function() {
+            _this.editor.matchHighlight("CodeMirror-matchhighlight");
+            _this.editor.setLineClass(_this.hlLine, null, null);
+            return _this.hlLine = _this.editor.setLineClass(_this.editor.getCursor().line, null, "activeline");
           }
         });
+        this.hlLine = this.editor.setLineClass(0, "activeline");
         setTimeout(this.editor.refresh, 0);
         this.app.vent.bind("undoRequest", this.undo);
         return this.app.vent.bind("redoRequest", this.redo);

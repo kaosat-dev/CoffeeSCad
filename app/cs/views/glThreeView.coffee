@@ -49,10 +49,10 @@ define (require) ->
       overlayDiv:     "#overlay" 
       
     events:
-      'mousemove'   : 'mousemove'
-      'mouseup'     : 'mouseup'
-      'mousewheel'  : 'mousewheel'
-      'mousedown'   : 'mousedown'
+      #'mousemove'   : 'mousemove'
+      #'mouseup'     : 'mouseup'
+      #'mousewheel'  : 'mousewheel'
+      #'mousedown'   : 'mousedown'
       'contextmenu' : 'rightclick'
       'DOMMouseScroll' : 'mousewheel'
       "mousedown .toggleGrid":          "toggleGrid"
@@ -319,10 +319,14 @@ define (require) ->
           when  "projection"
             if val == "orthographic"
               @camera.toOrthographic()
-              @camera.setZoom(6)
+              #@camera.setZoom(6)
             else
               @camera.toPerspective()
               @camera.setZoom(1)
+              
+          when "position"
+            @setupView(val)
+            
             
       @_render()  
        
@@ -377,6 +381,9 @@ define (require) ->
         @camera.setZoom(6)
       else
         @camera.toPerspective()
+      
+      val = @settings.get("position")
+      @setupView(val)
         
     configure:(settings)=>
       if settings.get("renderer")
@@ -506,6 +513,47 @@ define (require) ->
       @scene.add(pointLight)
       @scene.add(spotLight)
       
+    setupView:(val)=>
+      resetCam=()=>
+        @camera.position.z = 0
+        @camera.position.y = 0
+        @camera.position.x = 0
+      switch val
+        when 'diagonal'
+          @camera.position.z = 450
+          @camera.position.y = 700
+          @camera.position.x = 450
+          @camera.lookAt(@scene.position)
+        when 'top'
+          resetCam()
+          @camera.toTopView()
+          @camera.position.y = 700
+          #@camera.lookAt(@scene.position)
+        when 'bottom'
+          resetCam()
+          @camera.toBottomView()
+          @camera.position.y = -700
+          #@camera.lookAt(@scene.position)
+        when 'front'
+          resetCam()
+          @camera.toFrontView()
+          @camera.position.z = 800
+          @camera.position.x = 0
+        when 'back'
+          resetCam()
+          @camera.toBackView()
+          @camera.position.z = -800
+          @camera.position.x = 0
+        when 'left'
+          resetCam()
+          @camera.toLeftView()
+          @camera.position.z = 0
+          @camera.position.x = -800
+        when 'right'
+          resetCam()
+          @camera.toRightView()
+          @camera.position.z = 0
+          @camera.position.x = 800
       
     addGrid:()=>
       ###
@@ -638,19 +686,15 @@ define (require) ->
       height = bbox.max.z-bbox.min.z
       
       cageGeo= new THREE.CubeGeometry(length,width,height)
-      #console.log @current.geometry.boundingBox
       v=(x,y,z)->
          return new THREE.Vector3(x,y,z)
      
-      lineMat = new THREE.LineBasicMaterial({color: 0x808080, lineWidth: 1,wireframe: true})
+      lineMat = new THREE.LineBasicMaterial({color: 0x808080, lineWidth: 2,wireframe: true})
       lineMat = new THREE.MeshBasicMaterial({color: 0x808080, wireframe: true, shading:THREE.FlatShading})
       cage = new THREE.Mesh(cageGeo, lineMat)
       #cage.type = THREE.Lines
-      ##bla middlepoint
       middlePoint=(geometry)->
-        
         #console.log geometry.boundingBox
-        
         middle  = new THREE.Vector3()
         middle.x  = ( geometry.boundingBox.max.x + geometry.boundingBox.min.x ) / 2
         middle.y  = ( geometry.boundingBox.max.y + geometry.boundingBox.min.y ) / 2
@@ -661,7 +705,7 @@ define (require) ->
       #cage.translate(mesh.geometry, delta)
       cage.position = delta
       
-      truc = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(-length/2,-width/2,height/2),width-15,0xFF7700)
+      truc = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(-length/2,-width/2,height/2),width,0xFF7700)
       cage.add truc
       mesh.cageView= cage #children = []
       
@@ -716,7 +760,6 @@ define (require) ->
       
       @renderer.setSize(@width, @height)
       
-      
       @overlayCamera.position.z = @camera.position.z/3
       @overlayCamera.position.y = @camera.position.y/3
       @overlayCamera.position.x = @camera.position.x/3
@@ -757,6 +800,9 @@ define (require) ->
       container.append(@renderer.domElement)
       @controls = new THREE.TrackballControls(@camera, @el)
       @controls.autoRotate = false
+        
+      #OrbitControls
+      ###TrackballControls###
       
       @controls.rotateSpeed = 1.8
       @controls.zoomSpeed = 4.2

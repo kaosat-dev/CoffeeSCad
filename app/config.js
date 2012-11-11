@@ -23,8 +23,11 @@
       jquery_ui: "../assets/js/plugins/jquery-ui-1.9.0.custom.min",
       jquery_layout: "../assets/js/plugins/jquery.layout-latest",
       foldcode: "../assets/js/plugins/foldcode",
+      coffeelint: "../assets/js/plugins/coffeelint",
       jsHint: "../assets/js/plugins/javascript-hint",
       coffee_synhigh: "../assets/js/libs/codeMirror/mode/coffeescript/coffeescript",
+      search_cursor: "../assets/js/plugins/codemirror_searchcursor",
+      match_high: "../assets/js/plugins/codemirror_match-high",
       marionette: "../assets/js/plugins/backbone.marionette.min",
       eventbinder: "../assets/js/plugins/backbone.eventbinder.min",
       wreqr: "../assets/js/plugins/backbone.wreqr.min",
@@ -64,6 +67,10 @@
       CoffeeScript: {
         exports: "CoffeeScript"
       },
+      coffeelint: {
+        deps: ["CoffeeScript"],
+        exports: "coffeelint"
+      },
       CodeMirror: {
         exports: "CodeMirror"
       },
@@ -75,6 +82,12 @@
       },
       jsHint: {
         deps: ["CodeMirror"]
+      },
+      search_cursor: {
+        deps: ["CodeMirror"]
+      },
+      match_high: {
+        deps: ["CodeMirror", "search_cursor"]
       },
       jquery_codemirror: {
         deps: ["CodeMirror", "jquery"]

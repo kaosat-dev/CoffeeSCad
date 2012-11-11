@@ -1,14 +1,17 @@
 define (require)->
   $ = require 'jquery'
   _ = require 'underscore'
+  require 'bootstrap'
   marionette = require 'marionette'
   CodeMirror = require 'CodeMirror'
   require 'foldcode'
   require 'coffee_synhigh'
-  #require 'jsHint'
+  require 'match_high'
+  
+  CoffeeScript = require 'CoffeeScript'
+  require 'coffeelint'
   codeEdit_template = require "text!templates/codeedit.tmpl"
   
-      
   class CodeEditorView extends marionette.ItemView
     template: codeEdit_template
     ui:
@@ -19,6 +22,16 @@ define (require)->
       super options
       @settings= options.settings
       @editor = null
+      @markers = []
+      @lintConf = {
+        "max_line_length": {"value": 80, "level": "warning"},
+        "no_tabs":{"level": "warning"}
+        "indentation" : {
+          "value" : 4,
+          "level" : "ignore"
+        }
+        }
+      
       @app = require 'app'
       @bindTo(@model, "change", @modelChanged)
       @bindTo(@settings, "change", @settingsChanged)
@@ -38,6 +51,9 @@ define (require)->
       $(@ui.errorBlock).removeClass("alert alert-error")
       $(@ui.errorBlock).html("")
       @app.vent.trigger("modelChanged", @)
+      
+      $("[rel=tooltip]").tooltip
+            placement:'bottom' 
     
     settingsChanged:(settings, value)=> 
       console.log("Settings changed")
@@ -48,6 +64,7 @@ define (require)->
             @render()
     
     showError:(error)=>
+      #console.log("In show error")
       #TODO: should be its own view, not a hack
       try
         $(@ui.errorBlock).removeClass("well")
@@ -56,39 +73,40 @@ define (require)->
         errLine = error.message.split("line ")
         errLine = errLine[errLine.length - 1]
         errMsg = error.message
-        #console.log("errLine"+errLine)
-        #@editor.addLineWidget(errLine - 1, errMsg, {coverGutter: false, noHScroll: true})
       catch err
         console.log("Inner err: "+ err)
         $(@ui.errorBlock).text(error)
       
-    updateHints:=>
-      console.log "tutu"
-      #widgets = []
-      ###modified version of  codemirror.net/3/demo/widget.html###
-      #coffeescriptHint
-      editor.operation( ()->
-        for i in [0...widgets.length]
-          editor.removeLineWidget(widgets[i])
-        widgets.length = 0
-        
+    updateHints: ()=>
+      #console.log "updating hints: errors "+@markers.length
+      for i, marker of @markers
+        @editor.clearMarker(marker)
+      @markers = []
+      @editor.operation( ()=>
         #TODO: fetch errors from csg compiler?
-        JSHINT(editor.getValue())
-        for i in [0...JSHINT.errors.length]
-          err = JSHINT.errors[i]
-          if (!err) then continue
-          msg = document.createElement("div");
-          icon = msg.appendChild(document.createElement("span"))
-          icon.innerHTML = "!!";
-          icon.className = "lint-error-icon";
-          msg.appendChild(document.createTextNode(err.reason))
-          msg.className = "lint-error"
-          widgets.push(editor.addLineWidget(err.line - 1, msg, {coverGutter: false, noHScroll: true}));
+        try
+          errors = coffeelint.lint(@editor.getValue(), @lintConf)
+          for i, error of errors
+            errMsg = error.message
+            markerDiv= "<span class='CodeErrorMarker'> <a href='#' rel='tooltip' title=\" #{errMsg}\" > <i class='icon-remove-sign'></i></a></span> %N%"
+            marker = @editor.setMarker(error.lineNumber - 1, markerDiv)
+            @markers.push(marker)
+        catch error
+            #here handle any error not already managed by coffeelint
+            errLine = error.message.split("line ")
+            errLine = errLine[errLine.length - 1]
+            errMsg = error.message
+            markerDiv= "<span class='CodeErrorMarker'> <a href='#' rel='tooltip' title=\" #{errMsg}\" > <i class='icon-remove-sign'></i></a></span> %N%"
+            marker = @editor.setMarker(errLine - 1, markerDiv)
+            @markers.push(marker)
+        
+          
       )
-      info = editor.getScrollInfo()
-      after = editor.charCoords({line: editor.getCursor().line + 1, ch: 0}, "local").top
-      if (info.top + info.clientHeight < after)
-        editor.scrollTo(null, after - info.clientHeight + 3)
+      
+     # info = @editor.getScrollInfo()
+     # after = @editor.charCoords({line: @editor.getCursor().line + 1, ch: 0}, "local").top
+     # if (info.top + info.clientHeight < after)
+     #   @editor.scrollTo(null, after - info.clientHeight + 3)
     
     #this could also be solved by letting the event listeners access the list of available undos & redos ?
     updateUndoRedo: () =>
@@ -112,21 +130,33 @@ define (require)->
       redoes = @editor.historySize().redo
       if redoes >0
         @editor.redo()
-         
+    
     onRender: =>
+      foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder)
+      
       @editor = CodeMirror.fromTextArea @ui.codeBlock.get(0),
         mode:"coffeescript"
         lineNumbers:true
-        gutter:true
+        gutter: true
         matchBrackets:true
         firstLineNumber:@settings.get("startLine")
-        #lineWrapping : true
-        onChange:(arg, arg2)  =>   
+        onChange:(arg, arg2)  =>
+          @updateHints()
           @model.set "content", @editor.getValue()
           @updateUndoRedo()
+          return
+        onGutterClick:
+          foldFunc 
+        extraKeys: 
+            "Ctrl-Q": (cm) ->
+              foldFunc(cm, cm.getCursor().line)
+        onCursorActivity:() =>
+          @editor.matchHighlight("CodeMirror-matchhighlight")
+          @editor.setLineClass(@hlLine, null, null)
+          @hlLine = @editor.setLineClass(@editor.getCursor().line, null, "activeline")
+      @hlLine=  @editor.setLineClass(0, "activeline")
       
-      setTimeout @editor.refresh, 0 
-      
+      setTimeout @editor.refresh, 0 #necessary hack
       #TODO : find  a way to put this in the init/constructor
       @app.vent.bind("undoRequest", @undo)
       @app.vent.bind("redoRequest", @redo)
