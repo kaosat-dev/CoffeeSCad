@@ -146,8 +146,12 @@
             errLine = errLine[errLine.length - 1];
             errMsg = error.message;
             markerDiv = "<span class='CodeErrorMarker'> <a href='#' rel='tooltip' title=\" " + errMsg + "\" > <i class='icon-remove-sign'></i></a></span> %N%";
-            marker = _this.editor.setMarker(errLine - 1, markerDiv);
-            return _this.markers.push(marker);
+            try {
+              marker = _this.editor.setMarker(errLine - 1, markerDiv);
+              return _this.markers.push(marker);
+            } catch (error) {
+              return console.log("ERROR " + error + " in adding error marker");
+            }
           }
         });
       };

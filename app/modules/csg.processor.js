@@ -32,24 +32,23 @@
       };
 
       CsgProcessorMin.prototype.compileFormatCoffee = function(source) {
-        var endsplitter, extraLibTest, formated, lines, textblock;
+        var csgSugar, extraLibTest, formated, textblock;
         extraLibTest = "var Cube = CSG.cube;\n";
         extraLibTest += "var Sphere = CSG.sphere;\n";
-        extraLibTest += "var Cylinder = CSG.cylinder;\n";
         extraLibTest += "var fromPoints = CAG.fromPoints;\n";
+        csgSugar = require("modules/csg.sugar");
+        console.log(csgSugar);
+        source = csgSugar + source;
         source += ".mirroredY().rotateX(-90)";
-        textblock = CoffeeScript.compile(source);
-        lines = textblock.split('\n');
-        if (this.debug_ing) {
-          console.log("Raw Lines" + (lines.length - 1));
-        }
-        endsplitter = lines.length - 2;
-        lines.splice(endsplitter, 2);
-        lines.splice(0, 1);
-        formated = "function main()";
+        textblock = CoffeeScript.compile(source, {
+          bare: true
+        });
+        console.log(textblock);
+        formated = "";
+        formated += "function main()";
         formated += "{";
         formated += extraLibTest;
-        formated += lines.join('\n');
+        formated += textblock;
         formated += "}\n";
         if (this.debug_ing) {
           console.log("Formated scad " + formated);
@@ -489,40 +488,6 @@
         }
         */
 
-      };
-
-      CsgProcessor.prototype.compileFormatCoffee = function(source) {
-        /*var extraLibTest2= "fromPoints = "+CAG.fromPoints+ "\n";
-        extraLibTest2 += "cube = "+CSG.cube + "\n";
-        */
-
-        var endsplitter, extraLibTest, formated, lines, textblock;
-        extraLibTest = "var cube = CSG.cube;\n";
-        extraLibTest += "var fromPoints = CAG.fromPoints;\n";
-        /*var textblock= codeEditor.getValue();
-        var lines = textblock.split('\n');
-        lines.splice(0,1);
-        textblock= lines.join('\n');
-        console.log(textblock);
-        */
-
-        textblock = CoffeeScript.compile(source);
-        lines = textblock.split('\n');
-        if (this.debug_ing) {
-          console.log("Raw Lines" + (lines.length - 1));
-        }
-        endsplitter = lines.length - 2;
-        lines.splice(endsplitter, 2);
-        lines.splice(0, 1);
-        formated = "function main()";
-        formated += "{";
-        formated += extraLibTest;
-        formated += lines.join('\n');
-        formated += "}\n";
-        if (this.debug_ing) {
-          console.log("Formated scad " + formated);
-        }
-        return formated;
       };
 
       return CsgProcessor;

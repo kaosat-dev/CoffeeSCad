@@ -8,7 +8,6 @@ define (require) ->
   #   1-3 rebuildSolid
   #     useSynch= debug 
    
-   
   class CsgProcessorMin
     #minimal version of csg processor, for future cleanup of the rest
     construtor:()->
@@ -36,25 +35,26 @@ define (require) ->
       #console.log("Compiling & formating coffeescad code")
       extraLibTest = "var Cube = CSG.cube;\n"
       extraLibTest += "var Sphere = CSG.sphere;\n"
-      extraLibTest += "var Cylinder = CSG.cylinder;\n"
       extraLibTest += "var fromPoints = CAG.fromPoints;\n"
       
-      #TODO: replace this with compile --bare 
-      source+=".mirroredY().rotateX(-90)"     
-      textblock = CoffeeScript.compile(source)
+      csgSugar = require "modules/csg.sugar"
+      console.log csgSugar
+      source = csgSugar + source
+      #source = "Cylinder = CSG.cylinder\n" + source
+      source +=".mirroredY().rotateX(-90)"
+      
+      
+      textblock = CoffeeScript.compile(source, {bare: true})
+      console.log textblock
+
       #console.log("-->base compile done")
       
-      lines = textblock.split('\n')
-      if @debug_ing#TODO correct this
-        console.log("Raw Lines" + (lines.length-1))
-      endsplitter = lines.length-2
-      lines.splice(endsplitter,2)
-      lines.splice(0,1)
-      formated = "function main()"
+      formated =""
+      formated += "function main()"
       formated += "{"
-      formated += extraLibTest; #TODO: work on this, this is just a "namespace removing" / dependency injection test to get rid of CSG. and CAG. 
+      formated += extraLibTest #TODO: work on this, this is just a "namespace removing" / dependency injection test to get rid of CSG. and CAG. 
       #in the actual coffeescad projects/scripts
-      formated += lines.join('\n')
+      formated += textblock#lines.join('\n')
       formated += "}\n"
       if @debug_ing#TODO correct this
         console.log("Formated scad #{formated}")
@@ -459,36 +459,6 @@ define (require) ->
       for(var i in objs ){
         console.log(objs[i]);
       }###
-    compileFormatCoffee:(source)->
-      ###var extraLibTest2= "fromPoints = "+CAG.fromPoints+ "\n";
-      extraLibTest2 += "cube = "+CSG.cube + "\n";###
-      extraLibTest = "var cube = CSG.cube;\n"; 
-      extraLibTest += "var fromPoints = CAG.fromPoints;\n"; 
-      #console.log("fromPoints"+extraLibTest);
-      
-      ###var textblock= codeEditor.getValue();
-      var lines = textblock.split('\n');
-      lines.splice(0,1);
-      textblock= lines.join('\n');
-      console.log(textblock);###
-      
-      
-      
-      textblock = CoffeeScript.compile(source)
-      lines = textblock.split('\n')
-      if @debug_ing#TODO correct this
-        console.log("Raw Lines" + (lines.length-1))
-      endsplitter = lines.length-2
-      lines.splice(endsplitter,2)
-      lines.splice(0,1)
-      formated = "function main()"
-      formated += "{"
-      formated += extraLibTest; #TODO: work on this, this is just a "namespace removing" / dependency injection test to get rid of CSG. and CAG. 
-      #in the actual coffeescad projects/scripts
-      formated += lines.join('\n')
-      formated += "}\n"
-      if @debug_ing#TODO correct this
-        console.log("Formated scad #{formated}")
-      return formated
+
       
   return CsgProcessorMin#CsgProcessor

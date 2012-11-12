@@ -2,22 +2,37 @@
 (function() {
 
   define(function(require) {
-    var $, Backbone, Cube, Cylinder, LocalStorage, Sphere, roundedCube, roundedCylinder, _;
+    var $, Backbone, Cylinder, csgSugar, _;
     $ = require('jquery');
     _ = require('underscore');
     Backbone = require('backbone');
-    LocalStorage = require('localstorage');
+    require('csg');
     /*here we define various shorthands, wrappers etc for the base csg.js syntax,
     all in the mindset of "simple, clearer better"
     Some of these can eventually be migrated into csg.js as modified /added methods
     and classes .
     */
 
-    Cube = CSG.cube;
-    Sphere = CSG.Sphere;
-    Cylinder = CSG.cylinder;
-    roundedCylinder = CSG.roundedCylinder;
-    return roundedCube = CSG.roundedCube;
+    /*experimenting
+          
+        class Cylinder 
+          constructor:(start=[0, -1, 0],end=[0, 1, 0],radius=1,radiusEnd=1,radiusStart=1)->
+            return CSG.cylinder
+              start:start
+              end:end
+              radius:radius
+              radiusEnd:radiusEnd
+              radiusStart:radiusStart
+    */
+
+    /*CSG
+    Cube = CSG.cube
+    Sphere = CSG.Sphere
+    Cylinder = CSG.cylinder
+    roundedCylinder = CSG.roundedCylinder
+    roundedCube = CSG.roundedCube
+    */
+
     /*CAG
     fromPoints= CAG.fromPoints
     Circle= CAG.circle
@@ -25,6 +40,18 @@
     roundedRectangle = CAG.roundedRectangle
     */
 
+    Cylinder = "(options)=>\nif \"size\" of options\n  console.log \"tutu\"\nreturn CSG.cylinder options";
+    csgSugar = "";
+    csgSugar += "Cube=(options)=> \n  console.log options\n  if \"size\" of options\n    console.log \"found\"\n    options.radius = options.size\n  if \"center\" of options\n    if options.center == true\n      console.log \"pouet\"\n      options.center= [0,0,0]\n  console.log options\n  return CSG.cube options\n\n";
+    csgSugar += "RoundedCube = CSG.roundedCube\n";
+    csgSugar += "Sphere = CSG.sphere\n";
+    csgSugar += "Cylinder=(options)=> \n  if \"size\" of options\n    console.log \"tutu\"\n  return CSG.cylinder options\n\n";
+    csgSugar += "RoundedCylinder = CSG.roundedCylinder\n";
+    csgSugar += "fromPoints = CAG.fromPoints\n";
+    csgSugar += "Circle = CAG.circle\n";
+    csgSugar += "Rectangle = CAG.rectangle\n";
+    csgSugar += "RoundedRectangle = CAG.roundedRectangle\n";
+    return csgSugar;
   });
 
 }).call(this);

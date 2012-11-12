@@ -97,8 +97,11 @@ define (require)->
             errLine = errLine[errLine.length - 1]
             errMsg = error.message
             markerDiv= "<span class='CodeErrorMarker'> <a href='#' rel='tooltip' title=\" #{errMsg}\" > <i class='icon-remove-sign'></i></a></span> %N%"
-            marker = @editor.setMarker(errLine - 1, markerDiv)
-            @markers.push(marker)
+            try
+              marker = @editor.setMarker(errLine - 1, markerDiv)
+              @markers.push(marker)
+            catch error
+              console.log "ERROR #{error} in adding error marker"
         
           
       )
