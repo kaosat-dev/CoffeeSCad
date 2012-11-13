@@ -31,29 +31,26 @@ define (require) ->
       return csg
         
     compileFormatCoffee:(source)->
-      #TODO: typically this would be partially replaced with CSG.Sugar
       #console.log("Compiling & formating coffeescad code")
-      extraLibTest = "var Cube = CSG.cube;\n"
-      extraLibTest += "var Sphere = CSG.sphere;\n"
-      extraLibTest += "var fromPoints = CAG.fromPoints;\n"
-      
       csgSugar = require "modules/csg.sugar"
-      console.log csgSugar
+      ###
+      csgSugar += """include=(options)=> 
+      console.log "including " +options
+      \n"""
+      ###
+      window.include= (options, source)=>
+        console.log "including " +options
+        console.log "source:" + source
+        if options == "toto"
+          console.log "check"
+          
       source = csgSugar + source
-      #source = "Cylinder = CSG.cylinder\n" + source
       source +=".mirroredY().rotateX(-90)"
-      
-      
       textblock = CoffeeScript.compile(source, {bare: true})
-      console.log textblock
 
-      #console.log("-->base compile done")
-      
       formated =""
       formated += "function main()"
       formated += "{"
-      formated += extraLibTest #TODO: work on this, this is just a "namespace removing" / dependency injection test to get rid of CSG. and CAG. 
-      #in the actual coffeescad projects/scripts
       formated += textblock#lines.join('\n')
       formated += "}\n"
       if @debug_ing#TODO correct this

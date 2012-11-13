@@ -32,22 +32,30 @@
       };
 
       CsgProcessorMin.prototype.compileFormatCoffee = function(source) {
-        var csgSugar, extraLibTest, formated, textblock;
-        extraLibTest = "var Cube = CSG.cube;\n";
-        extraLibTest += "var Sphere = CSG.sphere;\n";
-        extraLibTest += "var fromPoints = CAG.fromPoints;\n";
+        var csgSugar, formated, textblock,
+          _this = this;
         csgSugar = require("modules/csg.sugar");
-        console.log(csgSugar);
+        /*
+              csgSugar += """include=(options)=> 
+              console.log "including " +options
+              \n"""
+        */
+
+        window.include = function(options, source) {
+          console.log("including " + options);
+          console.log("source:" + source);
+          if (options === "toto") {
+            return console.log("check");
+          }
+        };
         source = csgSugar + source;
         source += ".mirroredY().rotateX(-90)";
         textblock = CoffeeScript.compile(source, {
           bare: true
         });
-        console.log(textblock);
         formated = "";
         formated += "function main()";
         formated += "{";
-        formated += extraLibTest;
         formated += textblock;
         formated += "}\n";
         if (this.debug_ing) {

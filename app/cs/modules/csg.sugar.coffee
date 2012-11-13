@@ -69,7 +69,7 @@ define (require)->
   \n"""
   #csgSugar += "Cylinder = CSG.cylinder\n"
   csgSugar += "RoundedCylinder = CSG.roundedCylinder\n"
-  
+
   csgSugar += "fromPoints = CAG.fromPoints\n"
   csgSugar += "Circle = CAG.circle\n"
   csgSugar += "Rectangle = CAG.rectangle\n"
