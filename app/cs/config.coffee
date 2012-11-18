@@ -43,6 +43,8 @@ require.config
     
     three_csg:        "../assets/js/plugins/ThreeCSG"
     combo_cam:        "../assets/js/plugins/CombinedCamera"
+    orbit_ctrl:       "../assets/js/plugins/CustomOrbitControls"
+    
 
   shim:
     underscore:
@@ -92,10 +94,14 @@ require.config
     combo_cam: 
       deps:    ["three"]
       exports : "combo_cam"
+    orbit_ctrl:
+      deps:    ["three"]
+      exports : "orbit_ctrl"
     detector: 
       exports : "Detector"
     stats:
       exports : "Stats"
+     
     utils: 
       deps:    ["jquery"]
       exports : "normalizeEvent"

@@ -50,7 +50,7 @@
         showStats: false,
         position: "diagonal",
         projection: "perspective",
-        wireFrame: false
+        wireframe: false
       };
 
       function GlViewSettings(options) {

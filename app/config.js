@@ -37,7 +37,8 @@
       forms: "../assets/js/plugins/backbone.forms",
       forms_bootstrap: "../assets/js/plugins/backbone.forms.bootstrap",
       three_csg: "../assets/js/plugins/ThreeCSG",
-      combo_cam: "../assets/js/plugins/CombinedCamera"
+      combo_cam: "../assets/js/plugins/CombinedCamera",
+      orbit_ctrl: "../assets/js/plugins/CustomOrbitControls"
     },
     shim: {
       underscore: {
@@ -102,6 +103,10 @@
       combo_cam: {
         deps: ["three"],
         exports: "combo_cam"
+      },
+      orbit_ctrl: {
+        deps: ["three"],
+        exports: "orbit_ctrl"
       },
       detector: {
         exports: "Detector"

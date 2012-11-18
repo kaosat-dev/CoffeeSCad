@@ -164,7 +164,7 @@ define (require)->
             type: 'Select'
             options: ['perspective', 'orthographic']
           
-          wireFrame    : 'Checkbox'
+          wireframe    : 'Checkbox'
           
       super options
   

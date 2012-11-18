@@ -269,7 +269,7 @@
               type: 'Select',
               options: ['perspective', 'orthographic']
             },
-            wireFrame: 'Checkbox'
+            wireframe: 'Checkbox'
           };
         }
         GlViewSettingsForm.__super__.constructor.call(this, options);

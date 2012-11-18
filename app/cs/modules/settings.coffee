@@ -38,7 +38,7 @@ define (require)->
       position     : "diagonal"
       projection   : "perspective" #orthogonal
       
-      wireFrame    : false
+      wireframe    : false
       
     constructor:(options)->
       super options

@@ -5,7 +5,7 @@
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   define(function(require) {
-    var $, GlThreeView, MyAxisHelper, THREE, combo_cam, csg, detector, marionette, requestAnimationFrame, stats, threedView_template, utils;
+    var $, GlThreeView, MyAxisHelper, THREE, combo_cam, csg, detector, marionette, orbit_ctrl, requestAnimationFrame, stats, threedView_template, utils;
     $ = require('jquery');
     marionette = require('marionette');
     csg = require('csg');
@@ -17,6 +17,7 @@
     utils = require('utils');
     threedView_template = require("text!templates/glThree.tmpl");
     requestAnimationFrame = require('anim');
+    orbit_ctrl = require('orbit_ctrl');
     MyAxisHelper = (function() {
 
       function MyAxisHelper(size, xcolor, ycolor, zcolor) {
@@ -48,7 +49,6 @@
 
       GlThreeView.prototype.events = {
         'contextmenu': 'rightclick',
-        'DOMMouseScroll': 'mousewheel',
         "mousedown .toggleGrid": "toggleGrid",
         "mousedown .toggleAxes": "toggleAxes",
         "mousedown .toggleShadows": "toggleShadows",
@@ -145,10 +145,11 @@
         ev = window.event || ev;
         wheelDelta = null;
         if (ev.originalEvent != null) {
-          return wheelDelta = ev.originalEvent.detail != null ? ev.originalEvent.detail * (-120) : void 0;
+          wheelDelta = ev.originalEvent.detail != null ? ev.originalEvent.detail * (-120) : void 0;
         } else {
-          return wheelDelta = ev.wheelDelta;
+          wheelDelta = ev.wheelDelta;
         }
+        return console.log("tet" + wheelDelta);
         /*
               if wheelDelta > 0
                 @controls.zoomOut()
@@ -354,6 +355,11 @@
               break;
             case "position":
               this.setupView(val);
+              break;
+            case "wireframe":
+              if (this.mesh != null) {
+                this.mesh.material.wireframe = val;
+              }
           }
         }
         return this._render();
@@ -460,6 +466,9 @@
         } else {
           this.camera.toPerspective();
         }
+        if (this.mesh != null) {
+          this.mesh.material.wireframe = this.settings.get("wireframe");
+        }
         val = this.settings.get("position");
         return this.setupView(val);
       };
@@ -529,7 +538,7 @@
         var ASPECT, FAR, NEAR;
         this.viewAngle = 45;
         ASPECT = this.width / this.height;
-        NEAR = 1;
+        NEAR = 0.1;
         FAR = 10000;
         /* 
         @camera =
@@ -542,7 +551,7 @@
 
         this.camera = new THREE.CombinedCamera(this.width, this.height, this.viewAngle, NEAR, FAR, NEAR, FAR);
         this.camera.position.z = 450;
-        this.camera.position.y = 700;
+        this.camera.position.y = 750;
         this.camera.position.x = 450;
         this.scene = new THREE.Scene();
         this.scene.add(this.camera);
@@ -563,10 +572,10 @@
         ASPECT = 350 / 250;
         NEAR = 1;
         FAR = 10000;
-        this.overlayCamera = new THREE.PerspectiveCamera(this.viewAngle, ASPECT, NEAR, FAR);
-        this.overlayCamera.position.z = this.camera.position.z / 3;
-        this.overlayCamera.position.y = this.camera.position.y / 3;
-        this.overlayCamera.position.x = this.camera.position.x / 3;
+        this.overlayCamera = new THREE.CombinedCamera(350, 250, this.viewAngle, NEAR, FAR, NEAR, FAR);
+        this.overlayCamera.position.z = 150;
+        this.overlayCamera.position.y = 250;
+        this.overlayCamera.position.x = 150;
         this.overlayscene = new THREE.Scene();
         return this.overlayscene.add(this.overlayCamera);
       };
@@ -591,7 +600,7 @@
       };
 
       GlThreeView.prototype.setupView = function(val) {
-        var resetCam,
+        var nPost, offset, resetCam,
           _this = this;
         resetCam = function() {
           _this.camera.position.z = 0;
@@ -601,37 +610,84 @@
         switch (val) {
           case 'diagonal':
             this.camera.position.z = 450;
-            this.camera.position.y = 700;
+            this.camera.position.y = 750;
             this.camera.position.x = 450;
-            return this.camera.lookAt(this.scene.position);
+            this.camera.lookAt(this.scene.position);
+            this.overlayCamera.position.z = 150;
+            this.overlayCamera.position.y = 250;
+            this.overlayCamera.position.x = 150;
+            return this.overlayCamera.lookAt(this.overlayscene.position);
           case 'top':
-            resetCam();
             this.camera.toTopView();
-            return this.camera.position.y = 700;
+            this.overlayCamera.toTopView();
+            try {
+              offset = this.camera.position.clone().subSelf(this.controls.center);
+              nPost = new THREE.Vector3();
+              nPost.y = offset.length();
+              this.camera.position = nPost;
+            } catch (error) {
+              this.camera.position = new THREE.Vector3(0, 200, 0);
+            }
+            this.camera.rotationAutoUpdate = true;
+            return this.overlayCamera.rotationAutoUpdate = true;
           case 'bottom':
-            resetCam();
             this.camera.toBottomView();
-            return this.camera.position.y = -700;
+            this.overlayCamera.toBottomView();
+            try {
+              offset = this.camera.position.clone().subSelf(this.controls.center);
+              nPost = new THREE.Vector3();
+              nPost.y = -offset.length();
+              this.camera.position = nPost;
+            } catch (error) {
+              this.camera.position = new THREE.Vector3(0, -200, 0);
+            }
+            return this.camera.rotationAutoUpdate = true;
           case 'front':
-            resetCam();
             this.camera.toFrontView();
-            this.camera.position.z = 800;
-            return this.camera.position.x = 0;
+            this.overlayCamera.toFrontView();
+            try {
+              offset = this.camera.position.clone().subSelf(this.controls.center);
+              nPost = new THREE.Vector3();
+              nPost.z = offset.length();
+              this.camera.position = nPost;
+            } catch (error) {
+              this.camera.position = new THREE.Vector3(0, 0, 200);
+            }
+            return this.camera.rotationAutoUpdate = true;
           case 'back':
-            resetCam();
             this.camera.toBackView();
-            this.camera.position.z = -800;
-            return this.camera.position.x = 0;
+            this.overlayCamera.toBackView();
+            try {
+              offset = this.camera.position.clone().subSelf(this.controls.center);
+              nPost = new THREE.Vector3();
+              nPost.z = -offset.length();
+              this.camera.position = nPost;
+            } catch (error) {
+              this.camera.position = new THREE.Vector3(0, 0, -200);
+            }
+            return this.camera.rotationAutoUpdate = true;
           case 'left':
-            resetCam();
             this.camera.toLeftView();
-            this.camera.position.z = 0;
-            return this.camera.position.x = -800;
+            try {
+              offset = this.camera.position.clone().subSelf(this.controls.center);
+              nPost = new THREE.Vector3();
+              nPost.x = offset.length();
+              this.camera.position = nPost;
+            } catch (error) {
+              this.camera.position = new THREE.Vector3(200, 0, 0);
+            }
+            return this.camera.rotationAutoUpdate = true;
           case 'right':
-            resetCam();
             this.camera.toRightView();
-            this.camera.position.z = 0;
-            return this.camera.position.x = 800;
+            try {
+              offset = this.camera.position.clone().subSelf(this.controls.center);
+              nPost = new THREE.Vector3();
+              nPost.x = -offset.length();
+              this.camera.position = nPost;
+            } catch (error) {
+              this.camera.position = new THREE.Vector3(-200, 0, 0);
+            }
+            return this.camera.rotationAutoUpdate = true;
         }
       };
 
@@ -838,31 +894,36 @@
         window.addEventListener('resize', this.onResize, false);
         container = $(this.ui.renderBlock);
         container.append(this.renderer.domElement);
-        this.controls = new THREE.TrackballControls(this.camera, this.el);
-        this.controls.autoRotate = false;
-        /*TrackballControls
-        */
-
+        this.controls = new THREE.CustomOrbitControls(this.camera, this.el);
         this.controls.rotateSpeed = 1.8;
         this.controls.zoomSpeed = 4.2;
         this.controls.panSpeed = 1.8;
-        this.controls.noZoom = false;
-        this.controls.noPan = false;
-        this.controls.staticMoving = true;
-        this.controls.dynamicDampingFactor = 0.3;
+        /*TrackballControls
+        @controls.autoRotate = false
+        
+        
+        @controls.noZoom = false
+        @controls.noPan = false
+        
+        @controls.staticMoving = true
+        @controls.dynamicDampingFactor = 0.3
+        */
+
         this.controls.addEventListener('change', this._render);
         container2 = $(this.ui.glOverlayBlock);
         container2.append(this.overlayRenderer.domElement);
-        this.overlayControls = new THREE.TrackballControls(this.overlayCamera, this.el);
-        this.overlayControls.autoRotate = false;
-        this.overlayControls.userZoomSpeed = 0;
+        this.overlayControls = new THREE.CustomOrbitControls(this.overlayCamera, this.el);
+        this.overlayControls.noPan = true;
         this.overlayControls.rotateSpeed = 1.8;
         this.overlayControls.zoomSpeed = 0;
         this.overlayControls.panSpeed = 0;
-        this.overlayControls.noZoom = false;
-        this.overlayControls.noPan = false;
-        this.overlayControls.staticMoving = true;
-        this.overlayControls.dynamicDampingFactor = 0.3;
+        this.overlayControls.userZoomSpeed = 0;
+        /* 
+        @overlayControls.autoRotate = false
+        @overlayControls.staticMoving = true
+        @overlayControls.dynamicDampingFactor = 0.3
+        */
+
         return this.animate();
       };
 
@@ -895,20 +956,6 @@
           resultCSG = app.csgProcessor.processScript(this.model.get("content"));
           this.model.csg = resultCSG;
           geom = THREE.CSG.fromCSG(resultCSG);
-          mat = new THREE.MeshBasicMaterial({
-            color: 0xffffff,
-            shading: THREE.FlatShading,
-            vertexColors: THREE.VertexColors
-          });
-          mat = new THREE.LineBasicMaterial({
-            color: 0xFFFFFF,
-            lineWidth: 1
-          });
-          mat = new THREE.MeshLambertMaterial({
-            color: 0xFFFFFF,
-            shading: THREE.FlatShading,
-            vertexColors: THREE.VertexColors
-          });
           shine = 1500;
           spec = 10000000000;
           mat = new THREE.MeshPhongMaterial({
@@ -929,6 +976,7 @@
           this.mesh = new THREE.Mesh(geom, mat);
           this.mesh.castShadow = this.settings.get("shadows");
           this.mesh.receiveShadow = this.settings.get("selfShadows") && this.settings.get("shadows");
+          this.mesh.material.wireframe = this.settings.get("wireframe");
           this.mesh.name = "CSG_OBJ";
           this.scene.add(this.mesh);
           return this.controller.objects = [this.mesh];
