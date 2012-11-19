@@ -1,0 +1,15 @@
+class CubeClass
+  constructor: (@width=10,@length=20,@height=20, @pos=[0,0,0], @rot=[0,0,0]) ->
+    return @render()
+  
+  render: =>
+    result = new CSG()
+    cube1 =CSG.cube({center: [0, 0, @height/2],radius: [@width/2, @length/2, @height/2]})
+    result = cube1
+    return result.translate(@pos).rotateX(@rot[0]).rotateY(@rot[1]).rotateZ(@rot[2]) 
+
+cubeStuff = new CubeClass(75,50,50,[-20,10,10])
+cubeStuff2 = new CubeClass(50,100,50)
+
+
+return cubeStuff2.subtract(cubeStuff).color([0,1,0])

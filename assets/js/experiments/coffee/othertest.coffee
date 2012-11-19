@@ -1,0 +1,2 @@
+main: ->
+  console.log "tutu"

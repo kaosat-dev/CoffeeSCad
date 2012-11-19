@@ -1,0 +1,76 @@
+<script id="mainMenuTmpl" type="text/x-underscore-template">
+	<div  class="navbar navbar-fixed-top " style="padding-right: 30px; padding-left: 10px">
+					<a class="brand"> CoffeeSCad</a>
+					<!--<a class="brand"> MyProject</a>-->
+				    <div class="btn-toolbar"  style="height: 25px; padding-top: 0px">
+				    	<div class="btn-group">
+				    		<a class="btn btn-small dropdown-toggle btn-inverse" data-toggle="dropdown" href="#" rel="tooltip" title="File"><i class="icon-file icon-large"></i>
+				    			<span class="caret"></span>
+				    		</a>
+				    		<ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+				    			<li id ="newFileBtn" class="newFile"><a tabindex="-1" href="#"><i class="icon-file"></i>New</a></li>
+				    			<li id ="saveFileBtn" class="saveFile"><a tabindex="-1" href="#"><i class="icon-save"></i>Save</a></li>
+				    			<li id ="saveFileAsBtn" class="saveFileAs"><a tabindex="-1" href="#"><i class="icon-save"></i>Save As</a></li>
+				    			<!--<li id ="saveToBtn" class="dropdown-submenu">
+				    				<a tabindex="-1" href="#"><i class="icon-save"></i>Save To</a>
+				    				<ul class="dropdown-menu">
+                    					<li><a href="#" class="btn disabled"><i class="icon-hdd"></i> Local file (download) </a></li>
+                    					<li><a href="#" class="btn disabled"><i class="icon-github"></i> Gist (versionned) </a></li>
+				    				</ul>
+				    			</li>-->
+				    			<li id ="loadFileBtn" class="loadFile"><a tabindex="-1" href="#"><i class="icon-file"></i>Load</a></li>
+				    			<li class="divider"></li>
+				    			<li id ="importBtn" class="dropdown-submenu">
+				    				<a tabindex="-1" href="#"><i class="icon-download-alt"></i>Import</a>
+				    				<ul class="dropdown-menu">
+                    					<li><a href="#" class="btn disabled"><i class="icon-download disabled"></i> Openscad</a></li>
+				    				</ul>
+				    			</li>
+				    			<li id ="exportBtn" class="dropdown-submenu">
+				    				<a tabindex="-1" href="#"><i class="icon-upload-alt"></i>Export</a>
+				    				<ul class="dropdown-menu"> 
+                    					<li id="exportStl" class="disabled downloadStl"> <a id="exportStlLink"   href="#" class="btn"><i class="icon-download"></i> Stl</a></li>
+                    					<li id="exportDxf" class="disabled" > <a href="#" class="btn"><i class="icon-download-alt disabled"></i> Dxf</a></li>
+				    				</ul>
+				    			</li>
+		                        <li class="divider"></li>
+		                        <ul id="recentFilesList"></ul>
+		                       	
+		                        <li class="divider"></li>
+		                        <li><a tabindex="-1" href="#"><i class="icon-bullhorn"></i>About</a></li> 
+				    		</ul>
+				    		
+				    	</div>
+				    	<div class="btn-group">
+				    		<a class="btn btn-small btn-inverse showEditor" href="#" rel="tooltip" title="Editor" ><i class="icon-edit icon-large"></i>
+				    		</a>
+				    	</div>
+				    	<!--
+				    	<div class="btn-group">
+				    		<a class="btn btn-small dropdown-toggle " data-toggle="dropdown" href="#" rel="tooltip" title="Project"><i class="icon-beaker icon-large"></i>
+				    			<span class="caret"></span>
+				    		</a>
+				    		<ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+				    			<li id ="newFileBtn" class="newProject"><a tabindex="-1" href="#"><i class="icon-file"></i>New</a></li>			
+				    		</ul>
+				    	</div>
+				    	-->	
+				    	<div class="btn-group">	
+				    		<a id="undoBtn" class="btn btn-small disabled undo btn-inverse" href="#" rel="tooltip" title="Undo (CTRL+Z)"><i class="icon-undo icon-large"></i></a>
+					  		<a id="redoBtn" class="btn btn-small disabled redo btn-inverse" href="#" rel="tooltip" title="Redo (CTRL+Y)"><i class="icon-repeat icon-large"></i></a>
+				    	</div>
+					    <div class="btn-group">
+						    <a id="updateBtn" class="btn btn-small disabled parseCSG btn-inverse" href="#" rel="tooltip" title="Update view" ><i class="icon-refresh icon-large"></i></a>
+						  	<a id="abortBtn" class="btn hide" href="#" rel="tooltip" title="Abort"><i class="icon-remove icon-large"></i></a>
+
+						</div>
+						<div class="btn-group">
+					    <a id="settingsBtn" class="btn btn-small settings btn-inverse" href="#" rel="tooltip" title="Settings"><i class="icon-cogs icon-large"></i></a>
+						</div>
+						<div class="btn-group  pull-right">
+							<a class="btn btn-small btn-inverse" href="https://github.com/kaosat-dev/OpenCoffeeSCad" target="_blank" rel="tooltip" title="Help"><i class="icon-question-sign icon-large"></i></a>
+							<a class="btn btn-small btn-inverse" href="https://github.com/kaosat-dev/OpenCoffeeSCad" target="_blank" rel="tooltip" title="Fork me on GitHub!"><i class="icon-github icon-large"></i></a>
+						</div>
+					</div>
+				</div>
+</script>

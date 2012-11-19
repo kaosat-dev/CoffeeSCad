@@ -1,0 +1,59 @@
+
+
+#  ([\w.]+)
+#  |#or
+#  (\[ ([\w.]+),([\w.]+),([\w.]+) \])
+# ;#end
+#this works , somewhat:  (\[ (([\w.]+),?)* \])
+#(\= | \!= | \+= | -=) ->works
+
+###
+pattern = ///
+  (
+    ([\w]+) 
+      [\= \+ \- \*  \/ \%]+ 
+    ([\w.]+);
+  )+
+///g
+###
+
+###
+pattern = ///
+ [^;]+
+///g
+###
+
+
+  params_pattern:
+    ///
+     ([\w]+)
+     \=?
+     
+     [\w.]+
+      |  # or
+     \[ (.*?)?? \]
+    
+    ///g
+
+
+
+matches = test_string.match(pattern)
+
+console.log("All Matches: "+matches)
+
+for match in matches
+  console.log("Match: "+match)
+  submatches = match.match(pattern2)
+  for submatch in submatches
+    console.log("submatch: "+submatch)
+
+
+
+
+#casting: (Number) 
+
+###className = modules[1].replace " ", ""
+params = modules[2]
+console.log("Module/class name: " + className)
+console.log("Module/class params: " + params)
+###

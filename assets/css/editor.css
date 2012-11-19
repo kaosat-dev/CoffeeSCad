@@ -1,0 +1,125 @@
+/*-------------------------------------*/		
+/*Code Editor*/
+
+.CodeMirror {
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	width: 100%;
+	height: 85%;
+}
+
+.CodeMirror-scroll 
+{
+        height: auto;
+        overflow-y: hidden;
+        overflow-x: auto;
+}
+
+.activeline {background: #e8f2ff !important;}
+span.CodeMirror-matchhighlight { background: #e9e9e9 }
+.CodeMirror-focused span.CodeMirror-matchhighlight { background: #e7e4ff !important; }
+
+
+.CodeErrorMarker
+{
+	color: #EE3333 ;
+	float:left;
+	margin: 0;
+    padding: 0;
+}
+.CodeErrorMarker a
+{
+	color:inherit;
+	text-decoration:  none;
+}
+
+.CodeWarningMarker
+{
+	color: #EE9933 ;
+	float:left;
+}
+.CodeWarningMarker a
+{
+	color:inherit;
+	text-decoration:  none;
+}
+
+
+/*-------------------------------------*/	
+/*viewer*/
+canvas { cursor: move; }
+	.navbar .container { height: 1em; }
+	
+.uicons:hover
+{
+	text-decoration:  none;
+	color: #ff8900;
+}
+.uicon-off
+{
+	color: #aaaaaa;
+}
+
+/*-------------------------------------*/	
+/*layout*/
+
+.simple {
+	height: 600px;
+	width: 1600px;
+}
+.simple div {
+	/*overflow: auto;*/
+}
+.vsplitbar {
+	width: 2px;
+	background: #AAAAAA;
+}
+
+
+/*-------------------------------------*/	
+/*misc*/
+
+
+
+
+
+
+
+.fill { 
+    min-height: 100%;
+    height: 100%;
+}
+
+body {
+        padding-top: 60px;
+        /*padding-bottom: 40px;*/
+      }
+
+
+.modal-backdrop {background-color: #aaaaaa;}
+.modal-backdrop, .modal-backdrop.fade.in {
+    opacity: 0.35;
+}
+
+/*taken from https://github.com/twitter/bootstrap/issues/675*/
+.modal-big {
+    width: 700px;
+    margin-left: -350px;
+}
+/*
+.bbf-field .bbf-editor {
+    margin-left: 40%;
+    width: 49%;
+  }
+      
+    .bbf-field input, .bbf-field textarea, .bbf-field select {
+      width: 50%;
+    }
+  
+  .bbf-field .bbf-help {
+    margin-left: 25%;
+    width: 74%;
+    color: #999;
+  }*/

@@ -1,0 +1,45 @@
+###
+       #console.log ("x: #{x}, y: #{y}")
+       experimental: displays a set of random mouse->3d objects ray hits
+        for i in [0...10000]
+         p = new THREE.Vector3(Math.random() * 800,Math.random() * 600,Math.random() * 300-250)
+         @selectObj(p.x,p.y)
+      ###
+      
+      
+  ###
+    @settingsmgr.save null,
+      success: (settingsmgr, response)=> 
+        console.log "save sucess"
+      error: (settingsmgr, response)=> 
+        console.log "save error" 
+    ###
+    ###
+    @settingsmgr.fetch 
+      success: (settingsmgr, response)=> 
+        console.log "load sucess"
+        #console.log response
+      error: (settingsmgr, response)=> 
+        console.log "load error"
+        console.log response
+    ###
+
+    ###
+    @simpleSetting = new SettingsTest()
+    @simpleSetting.save()
+    @simpleSetting.fetch()
+    console.log @simpleSetting
+    ###
+    
+ 
+  class TestStuff
+    constructor:()->
+      @size=10
+      @name ="bleh"
+      shortcut = -> @doThat
+      #for key, value of @
+      #    shortcut[key] = value
+      return @doThat
+    
+    doThat:()=>
+      console.log @size+ " "+ @name

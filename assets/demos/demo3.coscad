@@ -1,0 +1,7 @@
+#test with prefix removal (see missing CAG. before the "fromPoints method")
+shape1 = fromPoints([[0,0], [150,50], [0,-50]])
+
+shape = shape1.expand(15, 30)
+
+shape=shape.extrude({offset:[0, 0, 50]}) 
+return shape.setColor(1,0.5,0)
