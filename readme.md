@@ -1,11 +1,12 @@
 CoffeeSCad
 =============
 
-Parametric modeling in your browser, using a coffeescript based syntax.
-For now it is in an early experimental stage.
-live demo here : http://kaosat-dev.github.com/OpenCoffeeSCad/
+Browser based 3D solid CAD editor, Openscad style, with a Coffeescript based syntax, using only Coffeescript + Javascript
 
-Contributions & ideas are welcome !
+For now it is in an early experimental stage.
+live demo here : http://kaosat-dev.github.com/CoffeeSCad/
+
+Feedback, bug reports, ideas and contributions are welcome !
 
 
 CoffeeSCad was originally built on the great OpenJsCad project but is *not* compatible with it anymore at this point!
@@ -76,6 +77,8 @@ Inspiration
 - a lot of webgl demos & tutorials
 	- many of the Three.js demos
 	- http://workshop.chromeexperiments.com/machines/
+	- learning Three.js
+- a lot more stuff
 
 Disclaimer
 =============
