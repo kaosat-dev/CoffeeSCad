@@ -210,30 +210,12 @@ THREE.CustomOrbitControls = function ( object, domElement ) {
 
     };
     
-    this.update_new= function () {
 
-        this.object.lookAt( this.target );
-        //hack for camera
-        
-        //scale*=2;
-        //console.log(scale);
-        this.object.setZoom(scale);
-        
-        if ( scale != lastPosition ) {
-
-            this.dispatchEvent( changeEvent );
-
-            lastPosition.copy( scale );
-
-        }
-
-    };
-    
-    this.update =function(){
+    this.update = function(){
         
         if ( !this.noRotate ) {
 
-            this.rotateCamera();
+           this.rotateCamera();
 
         }
         
@@ -242,15 +224,13 @@ THREE.CustomOrbitControls = function ( object, domElement ) {
             this.zoomCamera();
 
         }
-        
-        if ( !this.noPan ) {
-            
+        if ( !this.noPan )
+        {
             this.panCamera();
-
         }
         
-        //this.object.position.add( this.target, this.eye );
-        this.object.position.copy( this.target ).addSelf( this.eye  );
+        this.object.position.add( this.target, this.eye );
+        //this.object.position.copy( this.target ).addSelf( this.eye  );
         this.object.lookAt( this.target );
 
         
@@ -288,17 +268,18 @@ THREE.CustomOrbitControls = function ( object, domElement ) {
 
         // angle from z-axis around y-axis
 
-        var theta = Math.atan2( offset.x, offset.z );
+        var theta = Math.atan2( offset.x, offset.y );
 
         // angle from y-axis
 
-        var phi = Math.atan2( Math.sqrt( offset.x * offset.x + offset.z * offset.z ), offset.y );
+        var phi = Math.atan2( Math.sqrt( offset.x * offset.x + offset.y * offset.y ), offset.z );
 
+        /*
         if ( this.autoRotate ) {
 
             this.rotateLeft( getAutoRotationAngle() );
 
-        }
+        }*/
 
         theta += thetaDelta;
         phi += phiDelta;
@@ -311,8 +292,8 @@ THREE.CustomOrbitControls = function ( object, domElement ) {
 
         
         offset.x = Math.sin( phi ) * Math.sin( theta );
-        offset.y = Math.cos( phi );
-        offset.z = Math.sin( phi ) * Math.cos( theta );
+        offset.z = Math.cos( phi );
+        offset.y = Math.sin( phi ) * Math.cos( theta );
 
         this.eye = offset
         
@@ -328,28 +309,43 @@ THREE.CustomOrbitControls = function ( object, domElement ) {
         
         if ( mouseChange.lengthSq() ) {
             
-            //console.log (this.target.length());
             //mouseChange.multiplyScalar( this.target.length() * this.panSpeed );
             mouseChange.multiplyScalar(this.panSpeed );
             //mouseChange.multiplyScalar( this.eye.length() * this.panSpeed );
-            //console.log ("mousechange");
-            //console.log (mouseChange.x+" "+mouseChange.y);
             
             var pan = this.target.clone().crossSelf(this.object.up ).setLength( mouseChange.x );
             pan.addSelf( this.object.up.clone().setLength( mouseChange.y ) );
             
-            var offs=1.8;
-            var pan = new THREE.Vector3(offs,offs,0);
             
-            var xOffs = mouseChange.x;
-            var yOffs = mouseChange.y;
-            var pan = new THREE.Vector3(0,yOffs,0 );
+            var pan2 = this.object.up.clone()
+            //console.log("up vector: ("+pan2.x+", "+pan2.y+", ",+pan2.z+")")
+            this.object.matrixWorld.multiplyVector3( pan2 );
+            //console.log("up vector 2: ("+pan2.x+", "+pan2.y+", ",+pan2.z+")")
+
+            /*we need two vectors relative to the camera: up and left 
+             *  for this we need the "eye vector (see below) and either cam.up or cam.left to get the other"
+             * and scale these two by mousechange values
+             * */
+            //get "eye vector" (ray from cam to target)
+            var eyeVector = this.object.position.clone().subSelf( this.target );
+            //get cam up vector 
+            var upVector = this.object.up.clone();
+            //left/right vector
+            //var sideVector = new THREE.Vector3(1,0,0);
+            //var panVector = new THREE.Vector3(mouseChange.x,0,mouseChange.y).crossSelf(eyeVector);
             
-            //this.object.position.addSelf(mouseChange);
-            //pan.addSelf( this.object.up.clone().setLength( mouseChange.y ) );
+            var panVector = eyeVector.crossSelf(upVector).setLength( mouseChange.x );
+            panVector.addSelf(upVector.setLength( mouseChange.y ) );
             
-            //this.object.position.addSelf( pan );
+            //console.log("eyeVector: ("+eyeVector.x+", "+eyeVector.y+", ",+eyeVector.z+")");
+            //console.log("pan vector: ("+panVector.x+", "+panVector.y+", ",+panVector.z+")");
+            
+            pan=panVector;
+            this.object.position.addSelf( pan);
             this.target.addSelf(pan);
+            
+            //console.log("mouse: ("+mouseChange.x+ ", "+ mouseChange.y +") Pan:("+pan.x+ ", " + pan.y + ", "+pan.z+")");
+       
             
             _panStart = _panEnd;
             /*
@@ -442,7 +438,6 @@ THREE.CustomOrbitControls = function ( object, domElement ) {
         }else if (state === STATE.PAN){
             
             _panEnd = new THREE.Vector2( event.clientX, event.clientY );
-            scope.panCamera();
         }
         
 

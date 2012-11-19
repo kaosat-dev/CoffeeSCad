@@ -49,7 +49,6 @@
           }
         };
         source = csgSugar + source;
-        source += ".mirroredY().rotateX(-90)";
         textblock = CoffeeScript.compile(source, {
           bare: true
         });

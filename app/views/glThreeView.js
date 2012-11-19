@@ -550,12 +550,14 @@
         */
 
         this.camera = new THREE.CombinedCamera(this.width, this.height, this.viewAngle, NEAR, FAR, NEAR, FAR);
-        this.camera.position.z = 450;
-        this.camera.position.y = 750;
+        this.camera.up = new THREE.Vector3(0, 0, 1);
         this.camera.position.x = 450;
+        this.camera.position.y = 450;
+        this.camera.position.z = 750;
         this.scene = new THREE.Scene();
         this.scene.add(this.camera);
-        return this.setupLights();
+        this.setupLights();
+        return this.cameraHelper = new THREE.CameraHelper(this.camera);
         /*
               xArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(100,0,0),50, 0xFF7700)
               yArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(100,0,0),50, 0x77FF00)
@@ -573,9 +575,7 @@
         NEAR = 1;
         FAR = 10000;
         this.overlayCamera = new THREE.CombinedCamera(350, 250, this.viewAngle, NEAR, FAR, NEAR, FAR);
-        this.overlayCamera.position.z = 150;
-        this.overlayCamera.position.y = 250;
-        this.overlayCamera.position.x = 150;
+        this.overlayCamera.up = new THREE.Vector3(0, 0, 1);
         this.overlayscene = new THREE.Scene();
         return this.overlayscene.add(this.overlayCamera);
       };
@@ -584,14 +584,14 @@
         var ambientLight, pointLight, spotLight;
         pointLight = new THREE.PointLight(0x333333, 5);
         pointLight.position.x = -2200;
-        pointLight.position.y = -2200;
-        pointLight.position.z = 3000;
+        pointLight.position.y = 3000;
+        pointLight.position.z = -2200;
         this.ambientColor = '0x253565';
         ambientLight = new THREE.AmbientLight(this.ambientColor);
         spotLight = new THREE.SpotLight(0xbbbbbb, 2);
         spotLight.position.x = 0;
-        spotLight.position.y = 2000;
-        spotLight.position.z = 0;
+        spotLight.position.y = 0;
+        spotLight.position.z = 2000;
         spotLight.castShadow = true;
         this.light = spotLight;
         this.scene.add(ambientLight);
@@ -609,86 +609,94 @@
         };
         switch (val) {
           case 'diagonal':
-            this.camera.position.z = 450;
-            this.camera.position.y = 750;
             this.camera.position.x = 450;
-            this.camera.lookAt(this.scene.position);
-            this.overlayCamera.position.z = 150;
-            this.overlayCamera.position.y = 250;
+            this.camera.position.y = 450;
+            this.camera.position.z = 750;
             this.overlayCamera.position.x = 150;
-            return this.overlayCamera.lookAt(this.overlayscene.position);
+            this.overlayCamera.position.y = 150;
+            this.overlayCamera.position.z = 250;
+            this.camera.lookAt(this.scene.position);
+            this.overlayCamera.lookAt(this.overlayscene.position);
+            break;
           case 'top':
-            this.camera.toTopView();
-            this.overlayCamera.toTopView();
             try {
-              offset = this.camera.position.clone().subSelf(this.controls.center);
-              nPost = new THREE.Vector3();
-              nPost.y = offset.length();
-              this.camera.position = nPost;
-            } catch (error) {
-              this.camera.position = new THREE.Vector3(0, 200, 0);
-            }
-            this.camera.rotationAutoUpdate = true;
-            return this.overlayCamera.rotationAutoUpdate = true;
-          case 'bottom':
-            this.camera.toBottomView();
-            this.overlayCamera.toBottomView();
-            try {
-              offset = this.camera.position.clone().subSelf(this.controls.center);
-              nPost = new THREE.Vector3();
-              nPost.y = -offset.length();
-              this.camera.position = nPost;
-            } catch (error) {
-              this.camera.position = new THREE.Vector3(0, -200, 0);
-            }
-            return this.camera.rotationAutoUpdate = true;
-          case 'front':
-            this.camera.toFrontView();
-            this.overlayCamera.toFrontView();
-            try {
-              offset = this.camera.position.clone().subSelf(this.controls.center);
+              offset = this.camera.position.clone().subSelf(this.controls.target);
               nPost = new THREE.Vector3();
               nPost.z = offset.length();
               this.camera.position = nPost;
             } catch (error) {
-              this.camera.position = new THREE.Vector3(0, 0, 200);
+              this.camera.position = new THREE.Vector3(0, 0, 750);
             }
-            return this.camera.rotationAutoUpdate = true;
-          case 'back':
-            this.camera.toBackView();
-            this.overlayCamera.toBackView();
+            this.overlayCamera.position = new THREE.Vector3(0, 0, 250);
+            this.camera.lookAt(this.scene.position);
+            this.overlayCamera.lookAt(this.overlayscene.position);
+            break;
+          case 'bottom':
             try {
-              offset = this.camera.position.clone().subSelf(this.controls.center);
+              offset = this.camera.position.clone().subSelf(this.controls.target);
               nPost = new THREE.Vector3();
               nPost.z = -offset.length();
               this.camera.position = nPost;
             } catch (error) {
-              this.camera.position = new THREE.Vector3(0, 0, -200);
+              this.camera.position = new THREE.Vector3(0, 0, -750);
             }
-            return this.camera.rotationAutoUpdate = true;
-          case 'left':
-            this.camera.toLeftView();
+            this.overlayCamera.position = new THREE.Vector3(0, 0, -250);
+            this.camera.lookAt(this.scene.position);
+            this.overlayCamera.lookAt(this.overlayscene.position);
+            break;
+          case 'front':
             try {
-              offset = this.camera.position.clone().subSelf(this.controls.center);
+              offset = this.camera.position.clone().subSelf(this.controls.target);
+              nPost = new THREE.Vector3();
+              nPost.y = offset.length();
+              this.camera.position = nPost;
+            } catch (error) {
+              this.camera.position = new THREE.Vector3(0, 450, 0);
+            }
+            this.overlayCamera.position = new THREE.Vector3(0, 250, 0);
+            this.camera.lookAt(this.scene.position);
+            this.overlayCamera.lookAt(this.overlayscene.position);
+            break;
+          case 'back':
+            try {
+              offset = this.camera.position.clone().subSelf(this.controls.target);
+              nPost = new THREE.Vector3();
+              nPost.y = -offset.length();
+              this.camera.position = nPost;
+            } catch (error) {
+              this.camera.position = new THREE.Vector3(0, -450, 0);
+            }
+            this.overlayCamera.position = new THREE.Vector3(0, -250, 0);
+            this.camera.lookAt(this.scene.position);
+            this.overlayCamera.lookAt(this.overlayscene.position);
+            break;
+          case 'left':
+            try {
+              offset = this.camera.position.clone().subSelf(this.controls.target);
               nPost = new THREE.Vector3();
               nPost.x = offset.length();
               this.camera.position = nPost;
             } catch (error) {
-              this.camera.position = new THREE.Vector3(200, 0, 0);
+              this.camera.position = new THREE.Vector3(450, 0, 0);
             }
-            return this.camera.rotationAutoUpdate = true;
+            this.overlayCamera.position = new THREE.Vector3(250, 0, 0);
+            this.camera.lookAt(this.scene.position);
+            this.overlayCamera.lookAt(this.overlayscene.position);
+            break;
           case 'right':
-            this.camera.toRightView();
             try {
-              offset = this.camera.position.clone().subSelf(this.controls.center);
+              offset = this.camera.position.clone().subSelf(this.controls.target);
               nPost = new THREE.Vector3();
               nPost.x = -offset.length();
               this.camera.position = nPost;
             } catch (error) {
-              this.camera.position = new THREE.Vector3(-200, 0, 0);
+              this.camera.position = new THREE.Vector3(-450, 0, 0);
             }
-            return this.camera.rotationAutoUpdate = true;
+            this.overlayCamera.position = new THREE.Vector3(-250, 0, 0);
+            this.camera.lookAt(this.scene.position);
+            this.overlayCamera.lookAt(this.overlayscene.position);
         }
+        return this._render();
       };
 
       GlThreeView.prototype.addGrid = function() {
@@ -706,10 +714,10 @@
             opacity: 0.5
           });
           for (i = _i = _ref = -gridSize / 2, _ref1 = gridSize / 2; _ref <= _ref1 ? _i <= _ref1 : _i >= _ref1; i = _i += gridStep) {
-            gridGeometry.vertices.push(new THREE.Vector3(-gridSize / 2, 0, i));
-            gridGeometry.vertices.push(new THREE.Vector3(gridSize / 2, 0, i));
-            gridGeometry.vertices.push(new THREE.Vector3(i, 0, -gridSize / 2));
-            gridGeometry.vertices.push(new THREE.Vector3(i, 0, gridSize / 2));
+            gridGeometry.vertices.push(new THREE.Vector3(-gridSize / 2, i, 0));
+            gridGeometry.vertices.push(new THREE.Vector3(gridSize / 2, i, 0));
+            gridGeometry.vertices.push(new THREE.Vector3(i, -gridSize / 2, 0));
+            gridGeometry.vertices.push(new THREE.Vector3(i, gridSize / 2, 0));
           }
           this.grid = new THREE.Line(gridGeometry, gridMaterial, THREE.LinePieces);
           this.scene.add(this.grid);
@@ -719,10 +727,10 @@
             opacity: 0.5
           });
           for (i = _j = _ref2 = -gridSize / 2, _ref3 = gridSize / 2, _ref4 = gridStep / 10; _ref2 <= _ref3 ? _j <= _ref3 : _j >= _ref3; i = _j += _ref4) {
-            gridGeometry.vertices.push(new THREE.Vector3(-gridSize / 2, 0, i));
-            gridGeometry.vertices.push(new THREE.Vector3(gridSize / 2, 0, i));
-            gridGeometry.vertices.push(new THREE.Vector3(i, 0, -gridSize / 2));
-            gridGeometry.vertices.push(new THREE.Vector3(i, 0, gridSize / 2));
+            gridGeometry.vertices.push(new THREE.Vector3(-gridSize / 2, i, 0));
+            gridGeometry.vertices.push(new THREE.Vector3(gridSize / 2, i, 0));
+            gridGeometry.vertices.push(new THREE.Vector3(i, -gridSize / 2, 0));
+            gridGeometry.vertices.push(new THREE.Vector3(i, gridSize / 2, 0));
           }
           this.subGrid = new THREE.Line(gridGeometry, gridMaterial, THREE.LinePieces);
           this.scene.add(this.subGrid);
@@ -735,7 +743,7 @@
             color: 0x0000FF
           });
           this.plane = new THREE.Mesh(planeGeometry, planeMaterial);
-          this.plane.rotation.x = Math.PI / 2;
+          this.plane.rotation.x = Math.PI;
           this.plane.position.y = -0.01;
           this.plane.name = "workplane";
           this.plane.receiveShadow = true;
@@ -758,8 +766,8 @@
         this.axes = new MyAxisHelper(200, 0x666666, 0x666666, 0x666666);
         this.scene.add(this.axes);
         this.xArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 0), 50, 0xFF7700);
-        this.yArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, 0), 50, 0x77FF00);
-        this.zArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 0), 50, 0x0077FF);
+        this.yArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 0), 50, 0x77FF00);
+        this.zArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(0, 0, 0), 50, 0x0077FF);
         this.overlayscene.add(this.xArrow);
         this.overlayscene.add(this.yArrow);
         this.overlayscene.add(this.zArrow);
@@ -767,10 +775,10 @@
         this.xLabel.position.set(55, 0, 0);
         this.overlayscene.add(this.xLabel);
         this.yLabel = this.drawText("Y");
-        this.yLabel.position.set(0, 0, 55);
+        this.yLabel.position.set(0, 55, 0);
         this.overlayscene.add(this.yLabel);
         this.zLabel = this.drawText("Z");
-        this.zLabel.position.set(0, 55, 0);
+        this.zLabel.position.set(0, 0, 55);
         return this.overlayscene.add(this.zLabel);
       };
 
@@ -868,9 +876,6 @@
         this.camera.setSize(this.width, this.height);
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(this.width, this.height);
-        this.overlayCamera.position.z = this.camera.position.z / 3;
-        this.overlayCamera.position.y = this.camera.position.y / 3;
-        this.overlayCamera.position.x = this.camera.position.x / 3;
         return this._render();
       };
 
@@ -886,9 +891,6 @@
         this.camera.setSize(this.width, this.height);
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(this.width, this.height);
-        this.overlayCamera.position.z = this.camera.position.z / 3;
-        this.overlayCamera.position.y = this.camera.position.y / 3;
-        this.overlayCamera.position.x = this.camera.position.x / 3;
         this._render();
         this.$el.resize(this.onResize);
         window.addEventListener('resize', this.onResize, false);

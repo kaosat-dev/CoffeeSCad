@@ -468,14 +468,21 @@ define (require) ->
           FAR)
       #function ( width, height, fov, near, far, orthoNear, orthoFar )
       #function ( @width, @height, @viewAngle, NEAR, FAR, NEAR, FAR ) 
-      @camera.position.z = 450
-      @camera.position.y = 750
+      
+      @camera.up = new THREE.Vector3( 0, 0, 1 )
+      
       @camera.position.x = 450
+      @camera.position.y = 450
+      @camera.position.z = 750
+      
           
       @scene = new THREE.Scene()
       @scene.add(@camera)
       @setupLights()
       
+      
+      @cameraHelper = new THREE.CameraHelper(@camera)
+      #@camera.add(@cameraHelper)
       ###
       xArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(100,0,0),50, 0xFF7700)
       yArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(100,0,0),50, 0x77FF00)
@@ -500,10 +507,14 @@ define (require) ->
           FAR,
           NEAR,
           FAR)
-      @overlayCamera.position.z = 150
-      @overlayCamera.position.y = 250
-      @overlayCamera.position.x = 150
+      @overlayCamera.up = new THREE.Vector3( 0, 0, 1 )
       
+      #@overlayCamera.position.x = 150
+      #@overlayCamera.position.y = 150
+      #@overlayCamera.position.z = 250
+      
+      #@overlayCamera.toOrthographic()
+      #@overlayCamera.setZoom(0.05)
       @overlayscene = new THREE.Scene()
       @overlayscene.add(@overlayCamera)
 
@@ -511,16 +522,16 @@ define (require) ->
       pointLight =
         new THREE.PointLight(0x333333,5)
       pointLight.position.x = -2200
-      pointLight.position.y = -2200
-      pointLight.position.z = 3000
+      pointLight.position.y = 3000
+      pointLight.position.z = -2200
 
       @ambientColor = '0x253565'
       ambientLight = new THREE.AmbientLight(@ambientColor)
       
       spotLight = new THREE.SpotLight( 0xbbbbbb, 2 )    
       spotLight.position.x = 0
-      spotLight.position.y = 2000
-      spotLight.position.z = 0
+      spotLight.position.y = 0
+      spotLight.position.z = 2000
       #
       spotLight.castShadow = true
       @light= spotLight 
@@ -535,87 +546,115 @@ define (require) ->
         @camera.position.x = 0
       switch val
         when 'diagonal'
-          @camera.position.z = 450
-          @camera.position.y = 750
           @camera.position.x = 450
-          @camera.lookAt(@scene.position)
+          @camera.position.y = 450
+          @camera.position.z = 750
           
-          @overlayCamera.position.z = 150
-          @overlayCamera.position.y = 250
           @overlayCamera.position.x = 150
+          @overlayCamera.position.y = 150
+          @overlayCamera.position.z = 250
+          
+          @camera.lookAt(@scene.position)
           @overlayCamera.lookAt(@overlayscene.position)
+          
         when 'top'
-          @camera.toTopView()
-          @overlayCamera.toTopView()
+          #@camera.toTopView()
+          #@overlayCamera.toTopView()
           
           try
-            offset = @camera.position.clone().subSelf(@controls.center)
+            offset = @camera.position.clone().subSelf(@controls.target)
             nPost = new THREE.Vector3()
-            nPost.y = offset.length()
-            @camera.position = nPost
-          catch error
-            @camera.position = new THREE.Vector3(0,200,0)
-          @camera.rotationAutoUpdate = true
-          @overlayCamera.rotationAutoUpdate = true
-          
-        when 'bottom'
-          @camera.toBottomView()
-          @overlayCamera.toBottomView()
-          try
-            offset = @camera.position.clone().subSelf(@controls.center)
-            nPost = new  THREE.Vector3()
-            nPost.y = -offset.length()
-            @camera.position = nPost
-          catch error
-            @camera.position = new THREE.Vector3(0,-200,0)
-          @camera.rotationAutoUpdate = true
-          
-        when 'front'
-          @camera.toFrontView()
-          @overlayCamera.toFrontView()
-          try
-            offset = @camera.position.clone().subSelf(@controls.center)
-            nPost = new  THREE.Vector3()
             nPost.z = offset.length()
             @camera.position = nPost
+            
           catch error
-            @camera.position = new THREE.Vector3(0,0,200)
-          @camera.rotationAutoUpdate = true
+            @camera.position = new THREE.Vector3(0,0,750)
+            
+          @overlayCamera.position = new THREE.Vector3(0,0,250)
+          @camera.lookAt(@scene.position)
+          @overlayCamera.lookAt(@overlayscene.position)
+          #@camera.rotationAutoUpdate = true
+          #@overlayCamera.rotationAutoUpdate = true
           
-        when 'back'
-          @camera.toBackView()
-          @overlayCamera.toBackView()
+          
+        when 'bottom'
+          #@camera.toBottomView()
+          #@overlayCamera.toBottomView()
           try
-            offset = @camera.position.clone().subSelf(@controls.center)
+            offset = @camera.position.clone().subSelf(@controls.target)
             nPost = new  THREE.Vector3()
             nPost.z = -offset.length()
             @camera.position = nPost
           catch error
-            @camera.position = new THREE.Vector3(0,0,-200)
-          @camera.rotationAutoUpdate = true
+            @camera.position = new THREE.Vector3(0,0,-750)
+            
+          @overlayCamera.position = new THREE.Vector3(0,0,-250)
+          @camera.lookAt(@scene.position)
+          @overlayCamera.lookAt(@overlayscene.position)
+          #@camera.rotationAutoUpdate = true
+          
+        when 'front'
+          #@camera.toFrontView()
+          #@overlayCamera.toFrontView()
+          try
+            offset = @camera.position.clone().subSelf(@controls.target)
+            nPost = new  THREE.Vector3()
+            nPost.y = offset.length()
+            @camera.position = nPost
+          catch error
+            @camera.position = new THREE.Vector3(0,450,0)
+            
+          @overlayCamera.position = new THREE.Vector3(0,250,0)
+          @camera.lookAt(@scene.position)
+          @overlayCamera.lookAt(@overlayscene.position)
+          #@camera.rotationAutoUpdate = true
+          
+          
+        when 'back'
+          #@camera.toBackView()
+          #@overlayCamera.toBackView()
+          try
+            offset = @camera.position.clone().subSelf(@controls.target)
+            nPost = new  THREE.Vector3()
+            nPost.y = -offset.length()
+            @camera.position = nPost
+          catch error
+            @camera.position = new THREE.Vector3(0,-450,0)
+          #@camera.rotationAutoUpdate = true
+          @overlayCamera.position = new THREE.Vector3(0,-250,0)
+          @camera.lookAt(@scene.position)
+          @overlayCamera.lookAt(@overlayscene.position)
           
         when 'left'
-          @camera.toLeftView()
+          #@camera.toLeftView()
           try
-            offset = @camera.position.clone().subSelf(@controls.center)
+            offset = @camera.position.clone().subSelf(@controls.target)
             nPost = new  THREE.Vector3()
             nPost.x = offset.length()
             @camera.position = nPost
           catch error
-            @camera.position = new THREE.Vector3(200,0,0)
-          @camera.rotationAutoUpdate = true
+            @camera.position = new THREE.Vector3(450,0,0)
+          #@camera.rotationAutoUpdate = true
+          @overlayCamera.position = new THREE.Vector3(250,0,0)
+          @camera.lookAt(@scene.position)
+          @overlayCamera.lookAt(@overlayscene.position)
           
         when 'right'
-          @camera.toRightView()
+          #@camera.toRightView()
           try
-            offset = @camera.position.clone().subSelf(@controls.center)
+            offset = @camera.position.clone().subSelf(@controls.target)
             nPost = new  THREE.Vector3()
             nPost.x = -offset.length()
             @camera.position = nPost
           catch error
-            @camera.position = new THREE.Vector3(-200,0,0)
-          @camera.rotationAutoUpdate = true
-      
+            @camera.position = new THREE.Vector3(-450,0,0)
+          #@camera.rotationAutoUpdate = true
+          @overlayCamera.position = new THREE.Vector3(-250,0,0)
+          @camera.lookAt(@scene.position)
+          @overlayCamera.lookAt(@overlayscene.position)
+          
+      @_render()
+        
     addGrid:()=>
       ###
       Adds both grid & plane (for shadow casting), based on the parameters from the settings object
@@ -628,11 +667,11 @@ define (require) ->
         gridMaterial = new THREE.LineBasicMaterial({ color: 0x888888, opacity: 0.5 })
         
         for i in [-gridSize/2..gridSize/2] by gridStep
-          gridGeometry.vertices.push(new THREE.Vector3(-gridSize/2, 0, i))
-          gridGeometry.vertices.push(new THREE.Vector3(gridSize/2, 0, i))
+          gridGeometry.vertices.push(new THREE.Vector3(-gridSize/2, i, 0))
+          gridGeometry.vertices.push(new THREE.Vector3(gridSize/2, i, 0))
           
-          gridGeometry.vertices.push(new THREE.Vector3(i, 0, -gridSize/2))
-          gridGeometry.vertices.push(new THREE.Vector3(i, 0, gridSize/2))
+          gridGeometry.vertices.push(new THREE.Vector3(i, -gridSize/2, 0))
+          gridGeometry.vertices.push(new THREE.Vector3(i, gridSize/2, 0))
         @grid = new THREE.Line(gridGeometry, gridMaterial, THREE.LinePieces)
         @scene.add @grid
         
@@ -640,11 +679,11 @@ define (require) ->
         gridMaterial = new THREE.LineBasicMaterial({ color: 0xcccccc, opacity: 0.5 })
         
         for i in [-gridSize/2..gridSize/2] by gridStep/10
-          gridGeometry.vertices.push(new THREE.Vector3(-gridSize/2, 0, i))
-          gridGeometry.vertices.push(new THREE.Vector3(gridSize/2, 0, i))
+          gridGeometry.vertices.push(new THREE.Vector3(-gridSize/2, i, 0))
+          gridGeometry.vertices.push(new THREE.Vector3(gridSize/2, i, 0))
           
-          gridGeometry.vertices.push(new THREE.Vector3(i, 0, -gridSize/2))
-          gridGeometry.vertices.push(new THREE.Vector3(i, 0, gridSize/2))
+          gridGeometry.vertices.push(new THREE.Vector3(i, -gridSize/2, 0))
+          gridGeometry.vertices.push(new THREE.Vector3(i, gridSize/2, 0))
         @subGrid = new THREE.Line(gridGeometry, gridMaterial, THREE.LinePieces)
         @scene.add @subGrid
         
@@ -690,7 +729,7 @@ define (require) ->
             color: 0x0000FF
         
         @plane = new THREE.Mesh(planeGeometry, planeMaterial)
-        @plane.rotation.x = Math.PI/2
+        @plane.rotation.x = Math.PI
         @plane.position.y = -0.01
         @plane.name = "workplane"
         @plane.receiveShadow = true
@@ -711,8 +750,8 @@ define (require) ->
       @scene.add(@axes)
       
       @xArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,0),50, 0xFF7700)
-      @yArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(0,0,0),50, 0x77FF00)
-      @zArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,0),50, 0x0077FF)
+      @yArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,0),50, 0x77FF00)
+      @zArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(0,0,0),50, 0x0077FF)
       @overlayscene.add @xArrow
       @overlayscene.add @yArrow
       @overlayscene.add @zArrow
@@ -722,11 +761,11 @@ define (require) ->
       @overlayscene.add(@xLabel)
       
       @yLabel=@drawText("Y")
-      @yLabel.position.set(0,0,55)
+      @yLabel.position.set(0,55,0)
       @overlayscene.add(@yLabel)
       
       @zLabel=@drawText("Z")
-      @zLabel.position.set(0,55,0)
+      @zLabel.position.set(0,0,55)
       @overlayscene.add(@zLabel)
       
     removeAxes:()->
@@ -821,13 +860,11 @@ define (require) ->
       
       @renderer.setSize(@width, @height)
       
-      @overlayCamera.position.z = @camera.position.z/3
-      @overlayCamera.position.y = @camera.position.y/3
-      @overlayCamera.position.x = @camera.position.x/3
+      #@overlayCamera.position.z = @camera.position.z/3
+      #@overlayCamera.position.y = @camera.position.y/3
+      #@overlayCamera.position.x = @camera.position.x/3
       
       @_render()
-      #console.log @camera.position
-      #console.log "width #{width} height #{height}"
     
     onRender:()=>
       selectors = @ui.overlayDiv.children(" .uicons")
@@ -846,9 +883,12 @@ define (require) ->
       @renderer.setSize(@width, @height)
       
       #FIXME: remove this totally random stuff
-      @overlayCamera.position.z = @camera.position.z/3
-      @overlayCamera.position.y = @camera.position.y/3
-      @overlayCamera.position.x = @camera.position.x/3
+      #@overlayCamera.position.z = @camera.position.z
+      #@overlayCamera.position.y = @camera.position.y
+      #@overlayCamera.position.x = @camera.position.x
+      #@overlayCamera.position.z = 150
+      #@overlayCamera.position.y = 250
+      #@overlayCamera.position.x = 150
             
       @_render()
       
@@ -863,7 +903,6 @@ define (require) ->
       @controls.rotateSpeed = 1.8
       @controls.zoomSpeed = 4.2
       @controls.panSpeed = 1.8
-      
       
       #CustomOrbitControls
       #OrbitControls
@@ -882,6 +921,8 @@ define (require) ->
       ########
       container2 = $(@ui.glOverlayBlock)
       container2.append(@overlayRenderer.domElement)
+      
+      
       @overlayControls = new THREE.CustomOrbitControls(@overlayCamera, @el)
       @overlayControls.noPan = true
       #@overlayControls.noZoom = true
@@ -889,7 +930,6 @@ define (require) ->
       @overlayControls.zoomSpeed = 0
       @overlayControls.panSpeed = 0
       @overlayControls.userZoomSpeed=0
-      
       ### 
       @overlayControls.autoRotate = false
       @overlayControls.staticMoving = true
@@ -904,11 +944,10 @@ define (require) ->
       if @settings.get("showStats")
         @stats.update()
       
-    animate:()=>
-      #@camera.lookAt(@scene.position)
-      @controls.update()
+      #@cameraHelper.update()
       
-     #@overlayCamera.lookAt(@overlayscene.position)
+    animate:()=>
+      @controls.update()
       @overlayControls.update()
 
       requestAnimationFrame(@animate)
