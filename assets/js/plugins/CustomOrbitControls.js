@@ -81,7 +81,7 @@ THREE.CustomOrbitControls = function ( object, domElement ) {
 
         }
 
-        thetaDelta -= angle;
+        thetaDelta += angle;
 
     };
 
@@ -93,7 +93,7 @@ THREE.CustomOrbitControls = function ( object, domElement ) {
 
         }
 
-        thetaDelta += angle;
+        thetaDelta -= angle;
 
     };
 

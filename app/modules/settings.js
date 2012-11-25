@@ -47,10 +47,13 @@
         showGrid: true,
         gridSize: 1000,
         gridStep: 100,
+        gridColor: 0xFFFFFF,
+        gridOpacity: 0.5,
         showStats: false,
         position: "diagonal",
         projection: "perspective",
-        wireframe: false
+        wireframe: false,
+        helpersColor: 0xFFFFFF
       };
 
       function GlViewSettings(options) {

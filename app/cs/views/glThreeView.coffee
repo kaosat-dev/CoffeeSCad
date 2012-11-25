@@ -29,9 +29,9 @@ define (require) ->
         )
         
       geometry.colors.push(
-        new THREE.Color( xcolor or 0xffaa00 ), new THREE.Color( xcolor or 0xffaa00 ),
-        new THREE.Color( ycolor or 0xaaff00 ), new THREE.Color( ycolor or 0xaaff00 ),
-        new THREE.Color( zcolor or 0x00aaff ), new THREE.Color( zcolor or 0x00aaff )
+        xcolor or new THREE.Color(0xffaa00), xcolor or new THREE.Color(0xffaa00),
+        ycolor or new THREE.Color(0xaaff00), ycolor or new THREE.Color(0xaaff00),
+        zcolor or new THREE.Color(0x00aaff), zcolor or new THREE.Color(0x00aaff)
         )
         
       material = new THREE.LineBasicMaterial
@@ -279,11 +279,17 @@ define (require) ->
             else
               @removeGrid()
           when "gridSize"
-            @removeGrid()
-            @addGrid()
+            if @grid?
+              @removeGrid()
+              @addGrid()
           when "gridStep"
-            @removeGrid()
-            @addGrid()
+            if @grid?
+              @removeGrid()
+              @addGrid()
+          when "gridColor"
+            if @grid?
+              @grid.material.color.setHex(val)
+              @subGrid.material.color.setHex(val)
           when "showAxes"
             if val
               @addAxes()
@@ -331,6 +337,19 @@ define (require) ->
             #TODO: should not be global , but object specific?
             if @mesh?
               @mesh.material.wireframe = val
+          
+          when 'center'
+            try
+              tgt = @controls.target
+              offset = new THREE.Vector3().subSelf(@controls.target.clone())
+              @controls.target.addSelf(offset)
+              @camera.position.addSelf(offset)
+            catch error
+              console.log "error #{error} in center"
+            @camera.lookAt(@scene.position)
+          when 'helpersColor'
+            if @axes?
+              @axes.material.color.setHex(val)
             
       @_render()  
        
@@ -652,6 +671,7 @@ define (require) ->
           @overlayCamera.position = new THREE.Vector3(-250,0,0)
           @camera.lookAt(@scene.position)
           @overlayCamera.lookAt(@overlayscene.position)
+         
           
       @_render()
         
@@ -662,9 +682,14 @@ define (require) ->
       if not @grid 
         gridSize = @settings.get("gridSize")
         gridStep = @settings.get("gridStep")
+        gridColor = @settings.get("gridColor")
+        gridOpacity = @settings.get("gridOpacity")
         
         gridGeometry = new THREE.Geometry()
-        gridMaterial = new THREE.LineBasicMaterial({ color: 0x888888, opacity: 0.5 })
+        gridMaterial = new THREE.LineBasicMaterial
+          color: new THREE.Color().setHex(gridColor)
+          opacity: gridOpacity
+          linewidth:2
         
         for i in [-gridSize/2..gridSize/2] by gridStep
           gridGeometry.vertices.push(new THREE.Vector3(-gridSize/2, i, 0))
@@ -676,7 +701,7 @@ define (require) ->
         @scene.add @grid
         
         gridGeometry = new THREE.Geometry()
-        gridMaterial = new THREE.LineBasicMaterial({ color: 0xcccccc, opacity: 0.5 })
+        gridMaterial = new THREE.LineBasicMaterial({ color: new THREE.Color().setHex(gridColor), opacity: gridOpacity/2 })
         
         for i in [-gridSize/2..gridSize/2] by gridStep/10
           gridGeometry.vertices.push(new THREE.Vector3(-gridSize/2, i, 0))
@@ -746,7 +771,9 @@ define (require) ->
         delete @plane
       
     addAxes:()->
-      @axes = new MyAxisHelper(200,0x666666,0x666666, 0x666666)
+      helpersColor = @settings.get("helpersColor")
+      helpersColor = new THREE.Color().setHex(helpersColor)
+      @axes = new MyAxisHelper(200,helpersColor,helpersColor, helpersColor)
       @scene.add(@axes)
       
       @xArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,0),50, 0xFF7700)
@@ -780,6 +807,9 @@ define (require) ->
       @overlayscene.remove @zLabel
       
     addCage:(mesh)=>
+      helpersColor = @settings.get("helpersColor")
+      helpersColor = new THREE.Color().setHex(helpersColor)
+      
       bbox = mesh.geometry.boundingBox
       length = bbox.max.x-bbox.min.x
       width  = bbox.max.y-bbox.min.y
@@ -789,43 +819,90 @@ define (require) ->
       v=(x,y,z)->
          return new THREE.Vector3(x,y,z)
      
-      lineMat = new THREE.LineBasicMaterial({color: 0x808080, lineWidth: 2,wireframe: true})
-      lineMat = new THREE.MeshBasicMaterial({color: 0x808080, wireframe: true, shading:THREE.FlatShading})
+      ###lineMat = new THREE.LineBasicMaterial
+        color: helpersColor
+        lineWidth: 2
+      ###
+      lineMat = new THREE.MeshBasicMaterial
+        color: helpersColor
+        wireframe: true
+        shading:THREE.FlatShading
+      
       cage = new THREE.Mesh(cageGeo, lineMat)
-      #cage.type = THREE.Lines
+      #cage = new THREE.Line(cageGeo, lineMat, THREE.Lines)
       middlePoint=(geometry)->
-        #console.log geometry.boundingBox
         middle  = new THREE.Vector3()
         middle.x  = ( geometry.boundingBox.max.x + geometry.boundingBox.min.x ) / 2
         middle.y  = ( geometry.boundingBox.max.y + geometry.boundingBox.min.y ) / 2
         middle.z  = ( geometry.boundingBox.max.z + geometry.boundingBox.min.z ) / 2
         return middle
       
-      delta = middlePoint(mesh.geometry)#.negate();
-      #cage.translate(mesh.geometry, delta)
+      delta = middlePoint(mesh.geometry)
       cage.position = delta
       
-      truc = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(-length/2,-width/2,height/2),width,0xFF7700)
-      cage.add truc
+      heightLabel=@drawText(height.toFixed(2))
+      heightLabel.position.set(-length/2-10,-width/2-10,height/2)
+      
+      
+      texture = @drawText2(height.toFixed(2))
+      testLabel = new THREE.Sprite
+        map: texture
+        useScreenCoordinates: false
+        #alignment: THREE.SpriteAlignment.bottom
+      testLabel.position.set(-length/2,-width/2,0)
+      cage.add testLabel
+      cage.add heightLabel
+
+      #TODO: solve z fighting issue
+      upArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(-length/2,-width/2,-height/2),height,0x0077FF)
+      #upArrow.material.depthTest=false
+      cage.add upArrow
       mesh.cageView= cage
       
-      
     drawText:(text)=>
+      helpersColor = @settings.get("helpersColor")
+      if helpersColor.indexOf "0x" == 0
+        helpersColor= "#"+helpersColor[2..]
+      
       canvas = document.createElement('canvas')
+      
       canvas.width = 640
       canvas.height = 640
       context = canvas.getContext('2d')
       context.font = "17px sans-serif"
+      context.fillStyle = helpersColor
       context.fillText(text, canvas.width/2, canvas.height/2)
+     
+      context.strokeStyle = '#FFFFFF'
+      context.strokeText(text, canvas.width/2, canvas.height/2)
+      
 
       texture = new THREE.Texture(canvas)
       texture.needsUpdate = true
-      sprite = new THREE.Sprite(
+      sprite = new THREE.Sprite
         map: texture
-        transparent: false
+        transparent: true
         useScreenCoordinates: false
-        scaleByViewport:false)
+        scaleByViewport:false
       return sprite
+      
+    drawText2:(text)=>
+      helpersColor = @settings.get("helpersColor")
+      if helpersColor.indexOf "0x" == 0
+        helpersColor= "#"+helpersColor[2..]
+      
+      canvas = document.createElement('canvas')
+      
+      context = canvas.getContext('2d')
+      context.font = "17px sans-serif"
+      context.fillStyle = helpersColor
+      context.fillText(text, 0, 17);
+      context.strokeStyle = '#FFFFFF'
+      context.strokeText(text, 0, 17)
+      
+      texture = new THREE.Texture(canvas)
+      texture.needsUpdate = true
+      return texture
     
     setupPickerHelper:()->
       canvas = document.createElement('canvas')

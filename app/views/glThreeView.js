@@ -24,7 +24,7 @@
         var geometry, material;
         geometry = new THREE.Geometry();
         geometry.vertices.push(new THREE.Vector3(-size || -1, 0, 0), new THREE.Vector3(size || 1, 0, 0), new THREE.Vector3(0, -size || -1, 0), new THREE.Vector3(0, size || 1, 0), new THREE.Vector3(0, 0, -size || -1), new THREE.Vector3(0, 0, size || 1));
-        geometry.colors.push(new THREE.Color(xcolor || 0xffaa00), new THREE.Color(xcolor || 0xffaa00), new THREE.Color(ycolor || 0xaaff00), new THREE.Color(ycolor || 0xaaff00), new THREE.Color(zcolor || 0x00aaff), new THREE.Color(zcolor || 0x00aaff));
+        geometry.colors.push(xcolor || new THREE.Color(0xffaa00), xcolor || new THREE.Color(0xffaa00), ycolor || new THREE.Color(0xaaff00), ycolor || new THREE.Color(0xaaff00), zcolor || new THREE.Color(0x00aaff), zcolor || new THREE.Color(0x00aaff));
         material = new THREE.LineBasicMaterial({
           vertexColors: THREE.VertexColors,
           linewidth: 1
@@ -275,7 +275,7 @@
       };
 
       GlThreeView.prototype.settingsChanged = function(settings, value) {
-        var key, val, _ref;
+        var key, offset, tgt, val, _ref;
         console.log("settings changed");
         _ref = this.settings.changedAttributes();
         for (key in _ref) {
@@ -300,12 +300,22 @@
               }
               break;
             case "gridSize":
-              this.removeGrid();
-              this.addGrid();
+              if (this.grid != null) {
+                this.removeGrid();
+                this.addGrid();
+              }
               break;
             case "gridStep":
-              this.removeGrid();
-              this.addGrid();
+              if (this.grid != null) {
+                this.removeGrid();
+                this.addGrid();
+              }
+              break;
+            case "gridColor":
+              if (this.grid != null) {
+                this.grid.material.color.setHex(val);
+                this.subGrid.material.color.setHex(val);
+              }
               break;
             case "showAxes":
               if (val) {
@@ -360,6 +370,22 @@
               if (this.mesh != null) {
                 this.mesh.material.wireframe = val;
               }
+              break;
+            case 'center':
+              try {
+                tgt = this.controls.target;
+                offset = new THREE.Vector3().subSelf(this.controls.target.clone());
+                this.controls.target.addSelf(offset);
+                this.camera.position.addSelf(offset);
+              } catch (error) {
+                console.log("error " + error + " in center");
+              }
+              this.camera.lookAt(this.scene.position);
+              break;
+            case 'helpersColor':
+              if (this.axes != null) {
+                this.axes.material.color.setHex(val);
+              }
           }
         }
         return this._render();
@@ -377,6 +403,8 @@
         this.onRender = __bind(this.onRender, this);
 
         this.onResize = __bind(this.onResize, this);
+
+        this.drawText2 = __bind(this.drawText2, this);
 
         this.drawText = __bind(this.drawText, this);
 
@@ -704,14 +732,17 @@
               Adds both grid & plane (for shadow casting), based on the parameters from the settings object
         */
 
-        var gridGeometry, gridMaterial, gridSize, gridStep, i, planeFragmentShader, planeGeometry, planeMaterial, _i, _j, _ref, _ref1, _ref2, _ref3, _ref4;
+        var gridColor, gridGeometry, gridMaterial, gridOpacity, gridSize, gridStep, i, planeFragmentShader, planeGeometry, planeMaterial, _i, _j, _ref, _ref1, _ref2, _ref3, _ref4;
         if (!this.grid) {
           gridSize = this.settings.get("gridSize");
           gridStep = this.settings.get("gridStep");
+          gridColor = this.settings.get("gridColor");
+          gridOpacity = this.settings.get("gridOpacity");
           gridGeometry = new THREE.Geometry();
           gridMaterial = new THREE.LineBasicMaterial({
-            color: 0x888888,
-            opacity: 0.5
+            color: new THREE.Color().setHex(gridColor),
+            opacity: gridOpacity,
+            linewidth: 2
           });
           for (i = _i = _ref = -gridSize / 2, _ref1 = gridSize / 2; _ref <= _ref1 ? _i <= _ref1 : _i >= _ref1; i = _i += gridStep) {
             gridGeometry.vertices.push(new THREE.Vector3(-gridSize / 2, i, 0));
@@ -723,8 +754,8 @@
           this.scene.add(this.grid);
           gridGeometry = new THREE.Geometry();
           gridMaterial = new THREE.LineBasicMaterial({
-            color: 0xcccccc,
-            opacity: 0.5
+            color: new THREE.Color().setHex(gridColor),
+            opacity: gridOpacity / 2
           });
           for (i = _j = _ref2 = -gridSize / 2, _ref3 = gridSize / 2, _ref4 = gridStep / 10; _ref2 <= _ref3 ? _j <= _ref3 : _j >= _ref3; i = _j += _ref4) {
             gridGeometry.vertices.push(new THREE.Vector3(-gridSize / 2, i, 0));
@@ -763,7 +794,10 @@
       };
 
       GlThreeView.prototype.addAxes = function() {
-        this.axes = new MyAxisHelper(200, 0x666666, 0x666666, 0x666666);
+        var helpersColor;
+        helpersColor = this.settings.get("helpersColor");
+        helpersColor = new THREE.Color().setHex(helpersColor);
+        this.axes = new MyAxisHelper(200, helpersColor, helpersColor, helpersColor);
         this.scene.add(this.axes);
         this.xArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 0), 50, 0xFF7700);
         this.yArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 0), 50, 0x77FF00);
@@ -793,7 +827,9 @@
       };
 
       GlThreeView.prototype.addCage = function(mesh) {
-        var bbox, cage, cageGeo, delta, height, length, lineMat, middlePoint, truc, v, width;
+        var bbox, cage, cageGeo, delta, height, heightLabel, helpersColor, length, lineMat, middlePoint, testLabel, texture, upArrow, v, width;
+        helpersColor = this.settings.get("helpersColor");
+        helpersColor = new THREE.Color().setHex(helpersColor);
         bbox = mesh.geometry.boundingBox;
         length = bbox.max.x - bbox.min.x;
         width = bbox.max.y - bbox.min.y;
@@ -802,13 +838,13 @@
         v = function(x, y, z) {
           return new THREE.Vector3(x, y, z);
         };
-        lineMat = new THREE.LineBasicMaterial({
-          color: 0x808080,
-          lineWidth: 2,
-          wireframe: true
-        });
+        /*lineMat = new THREE.LineBasicMaterial
+          color: helpersColor
+          lineWidth: 2
+        */
+
         lineMat = new THREE.MeshBasicMaterial({
-          color: 0x808080,
+          color: helpersColor,
           wireframe: true,
           shading: THREE.FlatShading
         });
@@ -823,28 +859,63 @@
         };
         delta = middlePoint(mesh.geometry);
         cage.position = delta;
-        truc = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(-length / 2, -width / 2, height / 2), width, 0xFF7700);
-        cage.add(truc);
+        heightLabel = this.drawText(height.toFixed(2));
+        heightLabel.position.set(-length / 2 - 10, -width / 2 - 10, height / 2);
+        texture = this.drawText2(height.toFixed(2));
+        testLabel = new THREE.Sprite({
+          map: texture,
+          useScreenCoordinates: false
+        });
+        testLabel.position.set(-length / 2, -width / 2, 0);
+        cage.add(testLabel);
+        cage.add(heightLabel);
+        upArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(-length / 2, -width / 2, -height / 2), height, 0x0077FF);
+        cage.add(upArrow);
         return mesh.cageView = cage;
       };
 
       GlThreeView.prototype.drawText = function(text) {
-        var canvas, context, sprite, texture;
+        var canvas, context, helpersColor, sprite, texture;
+        helpersColor = this.settings.get("helpersColor");
+        if (helpersColor.indexOf("0x" === 0)) {
+          helpersColor = "#" + helpersColor.slice(2);
+        }
         canvas = document.createElement('canvas');
         canvas.width = 640;
         canvas.height = 640;
         context = canvas.getContext('2d');
         context.font = "17px sans-serif";
+        context.fillStyle = helpersColor;
         context.fillText(text, canvas.width / 2, canvas.height / 2);
+        context.strokeStyle = '#FFFFFF';
+        context.strokeText(text, canvas.width / 2, canvas.height / 2);
         texture = new THREE.Texture(canvas);
         texture.needsUpdate = true;
         sprite = new THREE.Sprite({
           map: texture,
-          transparent: false,
+          transparent: true,
           useScreenCoordinates: false,
           scaleByViewport: false
         });
         return sprite;
+      };
+
+      GlThreeView.prototype.drawText2 = function(text) {
+        var canvas, context, helpersColor, texture;
+        helpersColor = this.settings.get("helpersColor");
+        if (helpersColor.indexOf("0x" === 0)) {
+          helpersColor = "#" + helpersColor.slice(2);
+        }
+        canvas = document.createElement('canvas');
+        context = canvas.getContext('2d');
+        context.font = "17px sans-serif";
+        context.fillStyle = helpersColor;
+        context.fillText(text, 0, 17);
+        context.strokeStyle = '#FFFFFF';
+        context.strokeText(text, 0, 17);
+        texture = new THREE.Texture(canvas);
+        texture.needsUpdate = true;
+        return texture;
       };
 
       GlThreeView.prototype.setupPickerHelper = function() {

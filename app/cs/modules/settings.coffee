@@ -32,13 +32,17 @@ define (require)->
       showGrid     : true
       gridSize     : 1000
       gridStep     : 100
+      gridColor    : 0xFFFFFF
+      gridOpacity  : 0.5
       
       showStats    : false
       
       position     : "diagonal"
       projection   : "perspective" #orthogonal
-      
+            
       wireframe    : false
+      
+      helpersColor : 0xFFFFFF
       
     constructor:(options)->
       super options

@@ -260,16 +260,20 @@
             showGrid: 'Checkbox',
             gridSize: 'Number',
             gridStep: 'Number',
+            gridColor: 'Text',
+            gridOpacity: 'Number',
             showStats: 'Checkbox',
             position: {
               type: 'Select',
-              options: ['diagonal', 'top', 'bottom', 'front', 'back', 'left', 'right']
+              options: ['diagonal', 'top', 'bottom', 'front', 'back', 'left', 'right', 'center']
             },
             projection: {
               type: 'Select',
               options: ['perspective', 'orthographic']
             },
-            wireframe: 'Checkbox'
+            center: 'Checkbox',
+            wireframe: 'Checkbox',
+            helpersColor: 'Text'
           };
         }
         GlViewSettingsForm.__super__.constructor.call(this, options);
