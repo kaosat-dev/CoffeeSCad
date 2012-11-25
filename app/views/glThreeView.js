@@ -317,6 +317,12 @@
                 this.subGrid.material.color.setHex(val);
               }
               break;
+            case "gridOpacity":
+              if (this.grid != null) {
+                this.grid.material.opacity = val;
+                this.subGrid.material.opacity = val;
+              }
+              break;
             case "showAxes":
               if (val) {
                 this.addAxes();
@@ -637,11 +643,11 @@
         };
         switch (val) {
           case 'diagonal':
-            this.camera.position.x = 450;
-            this.camera.position.y = 450;
+            this.camera.position.x = -450;
+            this.camera.position.y = -450;
             this.camera.position.z = 750;
-            this.overlayCamera.position.x = 150;
-            this.overlayCamera.position.y = 150;
+            this.overlayCamera.position.x = -150;
+            this.overlayCamera.position.y = -150;
             this.overlayCamera.position.z = 250;
             this.camera.lookAt(this.scene.position);
             this.overlayCamera.lookAt(this.overlayscene.position);
@@ -676,12 +682,12 @@
             try {
               offset = this.camera.position.clone().subSelf(this.controls.target);
               nPost = new THREE.Vector3();
-              nPost.y = offset.length();
+              nPost.y = -offset.length();
               this.camera.position = nPost;
             } catch (error) {
-              this.camera.position = new THREE.Vector3(0, 450, 0);
+              this.camera.position = new THREE.Vector3(0, -450, 0);
             }
-            this.overlayCamera.position = new THREE.Vector3(0, 250, 0);
+            this.overlayCamera.position = new THREE.Vector3(0, -250, 0);
             this.camera.lookAt(this.scene.position);
             this.overlayCamera.lookAt(this.overlayscene.position);
             break;
@@ -689,12 +695,12 @@
             try {
               offset = this.camera.position.clone().subSelf(this.controls.target);
               nPost = new THREE.Vector3();
-              nPost.y = -offset.length();
+              nPost.y = offset.length();
               this.camera.position = nPost;
             } catch (error) {
-              this.camera.position = new THREE.Vector3(0, -450, 0);
+              this.camera.position = new THREE.Vector3(0, 450, 0);
             }
-            this.overlayCamera.position = new THREE.Vector3(0, -250, 0);
+            this.overlayCamera.position = new THREE.Vector3(0, 250, 0);
             this.camera.lookAt(this.scene.position);
             this.overlayCamera.lookAt(this.overlayscene.position);
             break;
@@ -827,7 +833,7 @@
       };
 
       GlThreeView.prototype.addCage = function(mesh) {
-        var bbox, cage, cageGeo, delta, height, heightLabel, helpersColor, length, lineMat, middlePoint, testLabel, texture, upArrow, v, width;
+        var bbox, cage, cageGeo, delta, height, heightArrow, heightLabel, helpersColor, length, lengthArrow, lengthLabel, lineMat, middlePoint, v, width, widthArrow, widthLabel;
         helpersColor = this.settings.get("helpersColor");
         helpersColor = new THREE.Color().setHex(helpersColor);
         bbox = mesh.geometry.boundingBox;
@@ -859,18 +865,31 @@
         };
         delta = middlePoint(mesh.geometry);
         cage.position = delta;
-        heightLabel = this.drawText(height.toFixed(2));
+        /*
+              texture = @drawText2(height.toFixed(2))
+              testLabel = new THREE.Sprite
+                map: texture
+                useScreenCoordinates: false
+                #alignment: THREE.SpriteAlignment.bottom
+              testLabel.position.set(-length/2,-width/2,0)
+              cage.add testLabel
+        */
+
+        widthLabel = this.drawText("w: " + (width.toFixed(2)));
+        widthLabel.position.set(-length / 2 - 10, 0, height / 2);
+        lengthLabel = this.drawText("l: " + (length.toFixed(2)));
+        lengthLabel.position.set(0, -width / 2 - 10, height / 2);
+        heightLabel = this.drawText("h: " + (height.toFixed(2)));
         heightLabel.position.set(-length / 2 - 10, -width / 2 - 10, height / 2);
-        texture = this.drawText2(height.toFixed(2));
-        testLabel = new THREE.Sprite({
-          map: texture,
-          useScreenCoordinates: false
-        });
-        testLabel.position.set(-length / 2, -width / 2, 0);
-        cage.add(testLabel);
+        cage.add(widthLabel);
+        cage.add(lengthLabel);
         cage.add(heightLabel);
-        upArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(-length / 2, -width / 2, -height / 2), height, 0x0077FF);
-        cage.add(upArrow);
+        widthArrow = new THREE.ArrowHelper(new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 0), 50, 0xFF7700);
+        lengthArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 0), 50, 0x77FF00);
+        heightArrow = new THREE.ArrowHelper(new THREE.Vector3(0, 0, 1), new THREE.Vector3(-length / 2, -width / 2, -height / 2), height, 0x0077FF);
+        cage.add(widthArrow);
+        cage.add(lengthArrow);
+        cage.add(heightArrow);
         return mesh.cageView = cage;
       };
 

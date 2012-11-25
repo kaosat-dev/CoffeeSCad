@@ -111,15 +111,6 @@ require.config
     jquery_layout:
       deps:    ["jquery"]
       exports : "jquery_layout"
-    
-    
-    
-      
-###
-require ["CoffeeScript"], (CoffeeScript)->
-    tutu = CoffeeScript.compile("class Pouet", {bare: true})
-    console.log("tutu:\n"+tutu)
-###
 
   
 

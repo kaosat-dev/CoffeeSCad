@@ -290,6 +290,10 @@ define (require) ->
             if @grid?
               @grid.material.color.setHex(val)
               @subGrid.material.color.setHex(val)
+          when "gridOpacity"
+            if @grid?
+              @grid.material.opacity=val
+              @subGrid.material.opacity=val
           when "showAxes"
             if val
               @addAxes()
@@ -565,12 +569,12 @@ define (require) ->
         @camera.position.x = 0
       switch val
         when 'diagonal'
-          @camera.position.x = 450
-          @camera.position.y = 450
+          @camera.position.x = -450
+          @camera.position.y = -450
           @camera.position.z = 750
           
-          @overlayCamera.position.x = 150
-          @overlayCamera.position.y = 150
+          @overlayCamera.position.x = -150
+          @overlayCamera.position.y = -150
           @overlayCamera.position.z = 250
           
           @camera.lookAt(@scene.position)
@@ -618,12 +622,12 @@ define (require) ->
           try
             offset = @camera.position.clone().subSelf(@controls.target)
             nPost = new  THREE.Vector3()
-            nPost.y = offset.length()
+            nPost.y = -offset.length()
             @camera.position = nPost
           catch error
-            @camera.position = new THREE.Vector3(0,450,0)
+            @camera.position = new THREE.Vector3(0,-450,0)
             
-          @overlayCamera.position = new THREE.Vector3(0,250,0)
+          @overlayCamera.position = new THREE.Vector3(0,-250,0)
           @camera.lookAt(@scene.position)
           @overlayCamera.lookAt(@overlayscene.position)
           #@camera.rotationAutoUpdate = true
@@ -635,12 +639,12 @@ define (require) ->
           try
             offset = @camera.position.clone().subSelf(@controls.target)
             nPost = new  THREE.Vector3()
-            nPost.y = -offset.length()
+            nPost.y = offset.length()
             @camera.position = nPost
           catch error
-            @camera.position = new THREE.Vector3(0,-450,0)
+            @camera.position = new THREE.Vector3(0,450,0)
           #@camera.rotationAutoUpdate = true
-          @overlayCamera.position = new THREE.Vector3(0,-250,0)
+          @overlayCamera.position = new THREE.Vector3(0,250,0)
           @camera.lookAt(@scene.position)
           @overlayCamera.lookAt(@overlayscene.position)
           
@@ -840,10 +844,8 @@ define (require) ->
       delta = middlePoint(mesh.geometry)
       cage.position = delta
       
-      heightLabel=@drawText(height.toFixed(2))
-      heightLabel.position.set(-length/2-10,-width/2-10,height/2)
       
-      
+      ###
       texture = @drawText2(height.toFixed(2))
       testLabel = new THREE.Sprite
         map: texture
@@ -851,12 +853,34 @@ define (require) ->
         #alignment: THREE.SpriteAlignment.bottom
       testLabel.position.set(-length/2,-width/2,0)
       cage.add testLabel
+      ###
+      
+      
+      
+      widthLabel=@drawText("w: #{width.toFixed(2)}")
+      widthLabel.position.set(-length/2-10,0,height/2)
+      
+      lengthLabel=@drawText("l: #{length.toFixed(2)}")
+      lengthLabel.position.set(0,-width/2-10,height/2)
+
+      heightLabel=@drawText("h: #{height.toFixed(2)}")
+      heightLabel.position.set(-length/2-10,-width/2-10,height/2)
+      
+      cage.add widthLabel
+      cage.add lengthLabel
       cage.add heightLabel
+      
+      
 
       #TODO: solve z fighting issue
-      upArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(-length/2,-width/2,-height/2),height,0x0077FF)
-      #upArrow.material.depthTest=false
-      cage.add upArrow
+      widthArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,0),50, 0xFF7700)
+      lengthArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,0),50, 0x77FF00)
+      heightArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(-length/2,-width/2,-height/2),height, 0x0077FF)
+      
+      cage.add widthArrow
+      cage.add lengthArrow
+      cage.add heightArrow
+      
       mesh.cageView= cage
       
     drawText:(text)=>

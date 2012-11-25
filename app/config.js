@@ -129,11 +129,4 @@
     }
   });
 
-  /*
-  require ["CoffeeScript"], (CoffeeScript)->
-      tutu = CoffeeScript.compile("class Pouet", {bare: true})
-      console.log("tutu:\n"+tutu)
-  */
-
-
 }).call(this);
