@@ -694,6 +694,7 @@ define (require) ->
           color: new THREE.Color().setHex(gridColor)
           opacity: gridOpacity
           linewidth:2
+          transparent:true
         
         for i in [-gridSize/2..gridSize/2] by gridStep
           gridGeometry.vertices.push(new THREE.Vector3(-gridSize/2, i, 0))
@@ -705,7 +706,7 @@ define (require) ->
         @scene.add @grid
         
         gridGeometry = new THREE.Geometry()
-        gridMaterial = new THREE.LineBasicMaterial({ color: new THREE.Color().setHex(gridColor), opacity: gridOpacity/2 })
+        gridMaterial = new THREE.LineBasicMaterial({ color: new THREE.Color().setHex(gridColor), opacity: gridOpacity/2 ,transparent:true})
         
         for i in [-gridSize/2..gridSize/2] by gridStep/10
           gridGeometry.vertices.push(new THREE.Vector3(-gridSize/2, i, 0))
@@ -756,6 +757,7 @@ define (require) ->
             vertexShader: THREE.ShaderLib['basic'].vertexShader,
             fragmentShader: planeFragmentShader,
             color: 0x0000FF
+            transparent:true
         
         @plane = new THREE.Mesh(planeGeometry, planeMaterial)
         @plane.rotation.x = Math.PI

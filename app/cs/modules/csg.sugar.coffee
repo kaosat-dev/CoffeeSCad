@@ -45,9 +45,7 @@ define (require)->
     return CSG.cylinder options"""
   
   
-  
   csgSugar = ""
-  #csgSugar += "Cube = CSG.cube\n"
   csgSugar += """Cube=(options)=> 
     if "size" of options
       options.radius = options.size.map (comp) -> comp/2
@@ -73,7 +71,6 @@ define (require)->
         result = CSG.cube options
     return result
   \n"""
-  csgSugar += "RoundedCube = CSG.roundedCube\n"
   csgSugar += """Sphere =(options)=>
     if "r" of options
       options.radius = options.r
@@ -114,7 +111,6 @@ define (require)->
       result = CSG.cylinder options
     return result
   \n"""
-  #csgSugar += "Cylinder = CSG.cylinder\n"
   csgSugar += "RoundedCylinder = CSG.roundedCylinder\n"
 
   csgSugar += "fromPoints = CAG.fromPoints\n"
@@ -122,6 +118,9 @@ define (require)->
   csgSugar += "Rectangle = CAG.rectangle\n"
   csgSugar += "RoundedRectangle = CAG.roundedRectangle\n"
   
-
+  csgSugar += """translate=(options)=> 
+  
+  \n"""
+  #csgSugar += "RoundedCube = CSG.roundedCube\n"
   
   return csgSugar

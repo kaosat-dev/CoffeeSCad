@@ -748,7 +748,8 @@
           gridMaterial = new THREE.LineBasicMaterial({
             color: new THREE.Color().setHex(gridColor),
             opacity: gridOpacity,
-            linewidth: 2
+            linewidth: 2,
+            transparent: true
           });
           for (i = _i = _ref = -gridSize / 2, _ref1 = gridSize / 2; _ref <= _ref1 ? _i <= _ref1 : _i >= _ref1; i = _i += gridStep) {
             gridGeometry.vertices.push(new THREE.Vector3(-gridSize / 2, i, 0));
@@ -761,7 +762,8 @@
           gridGeometry = new THREE.Geometry();
           gridMaterial = new THREE.LineBasicMaterial({
             color: new THREE.Color().setHex(gridColor),
-            opacity: gridOpacity / 2
+            opacity: gridOpacity / 2,
+            transparent: true
           });
           for (i = _j = _ref2 = -gridSize / 2, _ref3 = gridSize / 2, _ref4 = gridStep / 10; _ref2 <= _ref3 ? _j <= _ref3 : _j >= _ref3; i = _j += _ref4) {
             gridGeometry.vertices.push(new THREE.Vector3(-gridSize / 2, i, 0));
@@ -777,7 +779,8 @@
             uniforms: THREE.ShaderLib['basic'].uniforms,
             vertexShader: THREE.ShaderLib['basic'].vertexShader,
             fragmentShader: planeFragmentShader,
-            color: 0x0000FF
+            color: 0x0000FF,
+            transparent: true
           });
           this.plane = new THREE.Mesh(planeGeometry, planeMaterial);
           this.plane.rotation.x = Math.PI;

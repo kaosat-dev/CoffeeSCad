@@ -3510,6 +3510,7 @@ CSG.Matrix4x4.rotation = function(rotationCenter, rotationAxis, degrees) {
   transformation = transformation.multiply(CSG.Matrix4x4.rotationZ(degrees));
   transformation = transformation.multiply(orthobasis.getInverseProjectionMatrix());
   transformation = transformation.multiply(CSG.Matrix4x4.translation(rotationCenter));
+  console.log ("Done here");
   return transformation;
 };
 
@@ -5069,9 +5070,28 @@ CSG.addTransformationMethodsToPrototype = function(proto) {
     return this.transform(CSG.Matrix4x4.rotationZ(deg));
   };
 
-  proto.rotate = function(rotationCenter, rotationAxis, degrees) {
+  proto.rotate_alt = function(degrees, rotationCenter, rotationAxis) {
     return this.transform(CSG.Matrix4x4.rotation(rotationCenter, rotationAxis, degrees));
   };
+  
+  proto.rotate_alt2 = function(degrees, rotationCenter, rotationAxis ) {
+    tmp1 = CSG.Matrix4x4.rotation(rotationCenter, rotationAxis, degrees);
+    tmp = this.transform(tmp1);
+    return tmp
+  };
+  
+  proto.rotate = function(degrees, rotationCenter) {
+    
+    if (rotationCenter ==null)
+    {rotationCenter = [0,0,0];}
+    tmp = this.translate(rotationCenter);
+    tmp = tmp.transform(CSG.Matrix4x4.rotationX(degrees[0]));
+    tmp = tmp.transform(CSG.Matrix4x4.rotationY(degrees[1]));
+    tmp = tmp.transform(CSG.Matrix4x4.rotationZ(degrees[2]));
+     
+    return tmp;
+  };
+  
 };
 
 //////////////////
