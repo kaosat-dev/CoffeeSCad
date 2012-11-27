@@ -5589,8 +5589,8 @@ CAG.prototype = {
       return new CSG();
     }
     var offsetvector = CSG.parseOptionAs3DVector(options, "offset", [0,0,1]);
-    var twistangle = CSG.parseOptionAsFloat(options, "twistangle", 0);
-    var twiststeps = CSG.parseOptionAsInt(options, "twiststeps", 10);
+    var twistangle = CSG.parseOptionAsFloat(options, "twist", 0);
+    var twiststeps = CSG.parseOptionAsInt(options, "slices", 10);
     
     if(twistangle == 0) twiststeps = 1;
     if(twiststeps < 1) twiststeps = 1;

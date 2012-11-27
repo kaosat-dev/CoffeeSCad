@@ -1,7 +1,10 @@
 <script id="testcodeViewTmpl" type="text/x-underscore-template">
 	<div id="dialog" title="Basic dialog" >
-		<textarea id="codeArea" class="field span12" rows="6" ><%= content %></textarea>
-		<div id="errorConsole" class="well">
+		<div>
+			<div style="height:auto;max-height: 300px;">
+			<textarea id="codeArea" rows="6" ><%= content %></textarea>
+			</div>
 		</div>
+		<div id="errorConsole" class="well field "" ></div>
 	</div>
 </script>

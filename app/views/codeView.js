@@ -57,7 +57,7 @@
             "level": "warning"
           },
           "indentation": {
-            "value": 4,
+            "value": 2,
             "level": "ignore"
           }
         };
@@ -194,6 +194,8 @@
         foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder);
         this.editor = CodeMirror.fromTextArea(this.ui.codeBlock.get(0), {
           mode: "coffeescript",
+          tabSize: 2,
+          indentWithTabs: false,
           lineNumbers: true,
           gutter: true,
           matchBrackets: true,

@@ -27,7 +27,7 @@ define (require)->
         "max_line_length": {"value": 80, "level": "warning"},
         "no_tabs":{"level": "warning"}
         "indentation" : {
-          "value" : 4,
+          "value" : 2,
           "level" : "ignore"
         }
         }
@@ -139,6 +139,8 @@ define (require)->
       
       @editor = CodeMirror.fromTextArea @ui.codeBlock.get(0),
         mode:"coffeescript"
+        tabSize: 2
+        indentWithTabs:false
         lineNumbers:true
         gutter: true
         matchBrackets:true
