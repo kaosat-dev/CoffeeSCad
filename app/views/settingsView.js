@@ -201,6 +201,11 @@
       function GeneralSettingsForm(options) {
         if (!options.schema) {
           options.schema = {
+            csgCompileMode: {
+              title: "Compile & render mode",
+              type: 'Select',
+              options: ["onDemand", "onCodeChange", "onCodeChangeDelayed", "onSave"]
+            },
             maxRecentFilesDisplay: {
               type: 'Number',
               title: 'Nb of recent files to display (Feature N/A)'

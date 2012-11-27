@@ -10,6 +10,7 @@ define (require)->
       name: "General"
       title: "General"
       maxRecentFilesDisplay:  5
+      csgCompileMode: "onCodeChange" #can be either "onCodeChange", "onCodeChangeDelayed", "onDemand", "onSave"
       
     constructor:(options)->
       super options
@@ -32,8 +33,8 @@ define (require)->
       showGrid     : true
       gridSize     : 1000
       gridStep     : 100
-      gridColor    : 0xFFFFFF
-      gridOpacity  : 0.5
+      gridColor    : "0xFFFFFF"
+      gridOpacity  : 0.2
       
       showStats    : false
       
@@ -42,7 +43,8 @@ define (require)->
             
       wireframe    : false
       
-      helpersColor : 0xFFFFFF
+      helpersColor : "0xFFFFFF"
+      background   : "0xFFFFFF"
       
     constructor:(options)->
       super options

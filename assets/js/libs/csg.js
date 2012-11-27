@@ -3510,7 +3510,6 @@ CSG.Matrix4x4.rotation = function(rotationCenter, rotationAxis, degrees) {
   transformation = transformation.multiply(CSG.Matrix4x4.rotationZ(degrees));
   transformation = transformation.multiply(orthobasis.getInverseProjectionMatrix());
   transformation = transformation.multiply(CSG.Matrix4x4.translation(rotationCenter));
-  console.log ("Done here");
   return transformation;
 };
 

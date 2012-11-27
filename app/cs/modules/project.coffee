@@ -18,7 +18,8 @@ define (require)->
       name:     "mainPart"
       ext:      "coscad"
       content:  ""
-
+      includes: []
+      
     constructor:(options)->
       super options
       @rendered = false

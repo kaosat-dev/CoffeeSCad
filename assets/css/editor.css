@@ -24,6 +24,36 @@ span.CodeMirror-matchhighlight { background: #e9e9e9 }
 .CodeMirror-focused span.CodeMirror-matchhighlight { background: #e7e4ff !important; }
 
 
+.CodeMirror-dialog {
+  position: relative;
+}
+
+.CodeMirror-dialog > div {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  background: white;
+  border-bottom: 1px solid #eee;
+  z-index: 15;
+  padding: .1em .8em;
+  overflow: hidden;
+  color: #333;
+}
+
+.CodeMirror-dialog input {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 20em;
+  color: inherit;
+  font-family: monospace;
+}
+
+.CodeMirror-dialog button {
+  font-size: 70%;
+}
+
+
+
 .CodeErrorMarker
 {
 	color: #EE3333 ;
@@ -50,7 +80,7 @@ span.CodeMirror-matchhighlight { background: #e9e9e9 }
 
 #errorConsole
 {
-	position: absolute; bottom: 0; 
+	position: relative;
 	width:90%;
 	/*position: relative;*/
 }

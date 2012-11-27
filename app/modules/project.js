@@ -20,7 +20,8 @@
       ProjectFile.prototype.defaults = {
         name: "mainPart",
         ext: "coscad",
-        content: ""
+        content: "",
+        includes: []
       };
 
       function ProjectFile(options) {

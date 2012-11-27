@@ -19,7 +19,8 @@
       GeneralSettings.prototype.defaults = {
         name: "General",
         title: "General",
-        maxRecentFilesDisplay: 5
+        maxRecentFilesDisplay: 5,
+        csgCompileMode: "onCodeChange"
       };
 
       function GeneralSettings(options) {
@@ -47,13 +48,14 @@
         showGrid: true,
         gridSize: 1000,
         gridStep: 100,
-        gridColor: 0xFFFFFF,
-        gridOpacity: 0.5,
+        gridColor: "0xFFFFFF",
+        gridOpacity: 0.2,
         showStats: false,
         position: "diagonal",
         projection: "perspective",
         wireframe: false,
-        helpersColor: 0xFFFFFF
+        helpersColor: "0xFFFFFF",
+        background: "0xFFFFFF"
       };
 
       function GlViewSettings(options) {

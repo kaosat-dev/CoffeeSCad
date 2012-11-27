@@ -29,7 +29,9 @@ require.config
     coffeelint:       "../assets/js/plugins/coffeelint"
     jsHint:           "../assets/js/plugins/javascript-hint"
     coffee_synhigh:   "../assets/js/libs/codeMirror/mode/coffeescript/coffeescript"
+    search:           "../assets/js/plugins/codemirror_search"
     search_cursor:    "../assets/js/plugins/codemirror_searchcursor"
+    dialog:           "../assets/js/plugins/codemirror_dialog"
     match_high:       "../assets/js/plugins/codemirror_match-high"
     
     marionette:       "../assets/js/plugins/backbone.marionette.min"
@@ -65,7 +67,7 @@ require.config
     forms:  
       deps:    ["backbone","underscore"]
       exports:  "forms"
-      
+    
     CoffeeScript:
       exports:  "CoffeeScript"
     coffeelint:
@@ -79,10 +81,15 @@ require.config
       deps:    ["CodeMirror"]
     jsHint:
       deps:    ["CodeMirror"]
+    search:
+      deps:    ["CodeMirror"]
     search_cursor:
+      deps:    ["CodeMirror"]
+    dialog:
       deps:    ["CodeMirror"]
     match_high:
       deps:    ["CodeMirror","search_cursor"]
+    
     jquery_codemirror:
       deps:    ["CodeMirror","jquery"]
       

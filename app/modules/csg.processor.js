@@ -31,29 +31,55 @@
         return csg;
       };
 
+      CsgProcessorMin.prototype.processIncludes = function(source) {
+        var includes, match, pattern;
+        pattern = new RegExp(/(?:\s??include\s??)(?:\"([\w\//:'%~+#-.*]+)\")/g);
+        match = pattern.exec(source);
+        includes = [];
+        while (match) {
+          includes.push(match[1]);
+          match = pattern.exec(source);
+        }
+        pattern = new RegExp(/(?:\s??include\s??)(?:\(\"([\w\//:'%~+#-.*]+)\"\))/g);
+        match = pattern.exec(source);
+        while (match) {
+          includes.push(match[1]);
+          match = pattern.exec(source);
+        }
+        return includes;
+      };
+
       CsgProcessorMin.prototype.compileFormatCoffee = function(source) {
-        var csgSugar, formated, textblock,
+        var app, csgSugar, formated, fullSource, inc, includeSrc, includes, index, lib, libsSource, mainPart, project, textblock,
           _this = this;
         csgSugar = require("modules/csg.sugar");
-        /*
-              csgSugar += """include=(options)=> 
-              console.log "including " +options
-              \n"""
-        */
-
-        window.include = function(options, source) {
-          console.log("including " + options);
-          console.log("source:" + source);
-          if (options === "toto") {
-            return console.log("check");
-          }
+        app = require("app");
+        lib = app.lib;
+        window.include = function(options) {
+          var pp;
+          return pp = pp;
         };
-        source = csgSugar + source;
-        textblock = CoffeeScript.compile(source, {
+        libsSource = "";
+        includes = this.processIncludes(source);
+        for (index in includes) {
+          inc = includes[index];
+          project = lib.fetch({
+            id: inc
+          });
+          if (project != null) {
+            mainPart = project.pfiles.at(0);
+            if (mainPart != null) {
+              includeSrc = mainPart.get("content");
+              libsSource += includeSrc + "\n";
+            }
+          }
+        }
+        libsSource += "\n";
+        fullSource = csgSugar + libsSource + source;
+        textblock = CoffeeScript.compile(fullSource, {
           bare: true
         });
-        formated = "";
-        formated += "function main()";
+        formated = "function main()";
         formated += "{";
         formated += textblock;
         formated += "}\n";

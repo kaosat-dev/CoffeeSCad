@@ -7,6 +7,8 @@ define (require)->
   require 'foldcode'
   require 'coffee_synhigh'
   require 'match_high'
+  require 'search'
+  require 'dialog'
   
   CoffeeScript = require 'CoffeeScript'
   require 'coffeelint'
@@ -102,8 +104,6 @@ define (require)->
               @markers.push(marker)
             catch error
               console.log "ERROR #{error} in adding error marker"
-        
-          
       )
       
      # info = @editor.getScrollInfo()

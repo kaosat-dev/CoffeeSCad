@@ -14,6 +14,8 @@
     require('foldcode');
     require('coffee_synhigh');
     require('match_high');
+    require('search');
+    require('dialog');
     CoffeeScript = require('CoffeeScript');
     require('coffeelint');
     codeEdit_template = require("text!templates/codeedit.tmpl");

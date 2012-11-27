@@ -1089,6 +1089,7 @@ define (require) ->
         
         @scene.add @mesh
         @controller.objects = [@mesh]
+      
       catch error
         @scene.remove @mesh
         @model.csg = null
@@ -1097,7 +1098,7 @@ define (require) ->
       finally
         @app.vent.trigger("parseCsgDone", @)
         @_render()
-      
+
     addObjs: () =>
       @cube = new THREE.Mesh(new THREE.CubeGeometry(50,50,50),new THREE.MeshBasicMaterial({color: 0x000000}))
       @scene.add(@cube)

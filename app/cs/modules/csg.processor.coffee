@@ -30,27 +30,63 @@ define (require) ->
       
       return csg
         
+    processIncludes:(source)->
+      #TODO: move this to some more general code processing/ codeediting module ?
+      #TODO: cleanup regexp (ie in order not to have to use two)
+      #(?:\"([\w\//:'%~+#-.*]+)\")
+      #(?:\(\"([\w\//:'%~+#-.*]+)\"\))
+      pattern = new RegExp(/(?:\s??include\s??)(?:\"([\w\//:'%~+#-.*]+)\")/g)
+      #console.log "searching includes"
+      match = pattern.exec(source)
+      includes = []
+      
+      while match  
+        #console.log("Match: "  + match )
+        includes.push(match[1])
+        #for submatch in match
+        #  console.log("SubMatch:" + submatch)
+        match = pattern.exec(source)
+      
+      pattern = new RegExp(/(?:\s??include\s??)(?:\(\"([\w\//:'%~+#-.*]+)\"\))/g)
+      match = pattern.exec(source)
+      while match  
+        #console.log("Match2: "  + match )
+        includes.push(match[1])
+        #for submatch in match
+        #  console.log("SubMatch:" + submatch)
+        match = pattern.exec(source)
+        
+      return includes
+        
     compileFormatCoffee:(source)->
       #console.log("Compiling & formating coffeescad code")
       csgSugar = require "modules/csg.sugar"
-      ###
-      csgSugar += """include=(options)=> 
-      console.log "including " +options
-      \n"""
-      ###
-      window.include= (options, source)=>
-        console.log "including " +options
-        console.log "source:" + source
-        if options == "toto"
-          console.log "check"
-          
-      source = csgSugar + source
-      textblock = CoffeeScript.compile(source, {bare: true})
+      
+      app = require "app"   
+      lib = app.lib
+      
+      window.include= (options)=>
+        pp=pp
+      
+      libsSource = ""
+      
+      includes = @processIncludes(source)
+      #console.log "includes"+ includes
+      for index, inc of includes
+        project = lib.fetch({id:inc})
+        if project?
+          mainPart = project.pfiles.at(0)
+          if mainPart?
+            includeSrc = mainPart.get("content")
+            libsSource+= includeSrc+ "\n" 
+      libsSource+="\n"      
+      fullSource = csgSugar + libsSource + source
+      
+      textblock = CoffeeScript.compile(fullSource, {bare: true})
 
-      formated =""
-      formated += "function main()"
+      formated = "function main()"
       formated += "{"
-      formated += textblock#lines.join('\n')
+      formated += textblock
       formated += "}\n"
       if @debug_ing#TODO correct this
         console.log("Formated scad #{formated}")
