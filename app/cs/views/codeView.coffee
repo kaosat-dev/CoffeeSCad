@@ -140,6 +140,7 @@ define (require)->
       @editor = CodeMirror.fromTextArea @ui.codeBlock.get(0),
         mode:"coffeescript"
         tabSize: 2
+        indentUnit:2
         indentWithTabs:false
         lineNumbers:true
         gutter: true
@@ -152,13 +153,18 @@ define (require)->
           return
         onGutterClick:
           foldFunc 
-        extraKeys: 
-            "Ctrl-Q": (cm) ->
-              foldFunc(cm, cm.getCursor().line)
         onCursorActivity:() =>
           @editor.matchHighlight("CodeMirror-matchhighlight")
           @editor.setLineClass(@hlLine, null, null)
           @hlLine = @editor.setLineClass(@editor.getCursor().line, null, "activeline")
+        extraKeys: 
+            "Ctrl-Q": (cm) ->
+              foldFunc(cm, cm.getCursor().line)
+            #"Ctrl-P" : newProject
+            #"Ctrl-S" : saveProject
+            Tab:(cm)->
+              cm.replaceSelection("  ", "end")
+            
       @hlLine=  @editor.setLineClass(0, "activeline")
       
       setTimeout @editor.refresh, 0 #necessary hack

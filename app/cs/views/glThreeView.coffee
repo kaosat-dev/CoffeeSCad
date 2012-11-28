@@ -372,7 +372,6 @@ define (require) ->
       @stats.domElement.style.top = '30px'
       @stats.domElement.style.zIndex = 100
         
-      
       @bindTo(@settings, "change", @settingsChanged)
       #Controls:
       @dragging = false

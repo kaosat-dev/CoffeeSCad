@@ -10,7 +10,6 @@ define (require)->
       name: "General"
       title: "General"
       maxRecentFilesDisplay:  5
-      csgCompileMode: "onCodeChange" #can be either "onCodeChange", "onCodeChangeDelayed", "onDemand", "onSave"
       
     constructor:(options)->
       super options
@@ -21,7 +20,10 @@ define (require)->
     defaults:
       name: "GlView"
       title: "3d view"
+      
+      csgRenderMode: "onCodeChange" #can be either "onCodeChange", "onCodeChangeDelayed", "onDemand", "onSave"
       autoUpdate   : true
+      
       renderer     : 'webgl'
       antialiasing : true
       
@@ -88,7 +90,7 @@ define (require)->
       super options
       @bind("reset", @onReset)
       @init()
-      
+    
     init:()=>
       @add new GeneralSettings()
       @add new GlViewSettings()
@@ -129,5 +131,11 @@ define (require)->
       console.log @
       console.log "_____________"
       ###
+    byName:(name)->
+      #TODO: cleanup
+      return this.filter (setting)->
+        return setting.get('name')==name
+      
+      
    
   return Settings

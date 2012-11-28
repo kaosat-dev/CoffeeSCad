@@ -2,19 +2,19 @@
 /*Code Editor*/
 
 .CodeMirror {
-	top: 0;
+	/*top: 0;
 	left: 0;
 	right: 0;
 	bottom: 0;
-	/*width: 100%;
-	height: 90%;*/
-	width:	auto;
+	*/
+	/*width:	auto;
 	height: auto;
+	overflow: auto;*/
 }
 
 .CodeMirror-scroll 
 {
-        height: auto;
+        height: 100%;
         overflow-y: hidden;
         overflow-x: auto;
 }
@@ -52,8 +52,6 @@ span.CodeMirror-matchhighlight { background: #e9e9e9 }
   font-size: 70%;
 }
 
-
-
 .CodeErrorMarker
 {
 	color: #EE3333 ;
@@ -80,11 +78,21 @@ span.CodeMirror-matchhighlight { background: #e9e9e9 }
 
 #errorConsole
 {
-	position: relative;
-	width:90%;
-	/*position: relative;*/
+	position:absolute;
+   	bottom:0;
+   	width:90%;
+   	height:60px; 
 }
-
+#codeView
+{
+	min-height:100%;
+   	position:relative;
+}
+#mainStuff
+{
+	padding:10px;
+	padding-bottom:100px;
+}
 /*-------------------------------------*/	
 /*viewer*/
 canvas { cursor: move; }

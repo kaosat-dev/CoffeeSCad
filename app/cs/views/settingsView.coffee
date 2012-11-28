@@ -111,11 +111,6 @@ define (require)->
     constructor:(options)->
       if not options.schema
         options.schema=
-          csgCompileMode: 
-            title: "Compile & render mode"
-            type: 'Select'
-            options : ["onDemand", "onCodeChange", "onCodeChangeDelayed", "onSave"]
-            
           maxRecentFilesDisplay: 
             type:'Number'
             title: 'Nb of recent files to display (Feature N/A)'
@@ -141,6 +136,10 @@ define (require)->
     constructor:(options)->
       if not options.schema
         options.schema=
+          csgRenderMode: 
+            title: "Render mode"
+            type: 'Select'
+            options : ["onDemand", "onCodeChange", "onCodeChangeDelayed", "onSave"]
           autoUpdate   : 'Checkbox' 
           
           renderer     :
@@ -175,6 +174,9 @@ define (require)->
           wireframe    : 'Checkbox'
           
           helpersColor :  'Text'
+          background : 
+            type: 'Select'
+            options: ['black', 'white', 'gradient']
           
           
       super options

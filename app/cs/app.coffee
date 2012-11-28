@@ -214,10 +214,27 @@ return res
       console.log ("show editor")
       @dialogRegion.show @codeEditorView
       
+    dispatchModelChanged=()=>
+      generalSettings = @settings.byName "GlView"
+      console.log generalSettings
+      csgRenderMode = generalSettings.get("csgRenderMode")
+      switch csgRenderMode
+        when "onCodeChange"
+          console.log "onCodeChange"
+        when "onCodeChangeDelayed"
+          console.log "onCodeChangeDelayed"
+        when "onDemand"
+          console.log "onDemand"
+        when "onSave"
+          console.log "onSave"
+        #@fromCsg @model
+      
     @vent.bind("fileSaveRequest", saveProject)
     @vent.bind("fileLoadRequest", loadProject)
     @vent.bind("fileDeleteRequest", deleteProject)
     @vent.bind("editorShowRequest", showEditor)
+    #@vent.bind("modelChanged", dispatchModelChanged)
+    #@bindTo(@settings.byName "General", "change", @settingsChanged)
     
     ################
     

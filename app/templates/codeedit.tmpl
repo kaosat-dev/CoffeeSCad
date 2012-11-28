@@ -1,10 +1,10 @@
 <script id="testcodeViewTmpl" type="text/x-underscore-template">
 	<div id="dialog" title="Basic dialog" >
-		<div>
-			<div>
-				<textarea id="codeArea" rows="6" ><%= content %></textarea>
+		<div id="codeView">
+			<div id="mainStuff">
+				<textarea id="codeArea" ><%= content %></textarea>
 			</div>
+			<div id="errorConsole" class="well" ></div>
 		</div>
-		<div id="errorConsole" class="well" ></div>
 	</div>
 </script>

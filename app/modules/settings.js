@@ -19,8 +19,7 @@
       GeneralSettings.prototype.defaults = {
         name: "General",
         title: "General",
-        maxRecentFilesDisplay: 5,
-        csgCompileMode: "onCodeChange"
+        maxRecentFilesDisplay: 5
       };
 
       function GeneralSettings(options) {
@@ -39,6 +38,7 @@
       GlViewSettings.prototype.defaults = {
         name: "GlView",
         title: "3d view",
+        csgRenderMode: "onCodeChange",
         autoUpdate: true,
         renderer: 'webgl',
         antialiasing: true,
@@ -197,6 +197,12 @@
               console.log "_____________"
         */
 
+      };
+
+      Settings.prototype.byName = function(name) {
+        return this.filter(function(setting) {
+          return setting.get('name') === name;
+        });
       };
 
       return Settings;

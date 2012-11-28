@@ -46,7 +46,7 @@
 
     });
     app.addInitializer(function(options) {
-      var deleteProject, exporter, loadProject, saveProject, showEditor, stlexport,
+      var deleteProject, dispatchModelChanged, exporter, loadProject, saveProject, showEditor, stlexport,
         _this = this;
       exporter = new CsgStlExporterMin();
       this.settings = new Settings();
@@ -166,6 +166,22 @@
       showEditor = function() {
         console.log("show editor");
         return _this.dialogRegion.show(_this.codeEditorView);
+      };
+      dispatchModelChanged = function() {
+        var csgRenderMode, generalSettings;
+        generalSettings = _this.settings.byName("GlView");
+        console.log(generalSettings);
+        csgRenderMode = generalSettings.get("csgRenderMode");
+        switch (csgRenderMode) {
+          case "onCodeChange":
+            return console.log("onCodeChange");
+          case "onCodeChangeDelayed":
+            return console.log("onCodeChangeDelayed");
+          case "onDemand":
+            return console.log("onDemand");
+          case "onSave":
+            return console.log("onSave");
+        }
       };
       this.vent.bind("fileSaveRequest", saveProject);
       this.vent.bind("fileLoadRequest", loadProject);

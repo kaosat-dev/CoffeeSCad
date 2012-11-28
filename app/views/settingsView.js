@@ -201,11 +201,6 @@
       function GeneralSettingsForm(options) {
         if (!options.schema) {
           options.schema = {
-            csgCompileMode: {
-              title: "Compile & render mode",
-              type: 'Select',
-              options: ["onDemand", "onCodeChange", "onCodeChangeDelayed", "onSave"]
-            },
             maxRecentFilesDisplay: {
               type: 'Number',
               title: 'Nb of recent files to display (Feature N/A)'
@@ -250,6 +245,11 @@
       function GlViewSettingsForm(options) {
         if (!options.schema) {
           options.schema = {
+            csgRenderMode: {
+              title: "Render mode",
+              type: 'Select',
+              options: ["onDemand", "onCodeChange", "onCodeChangeDelayed", "onSave"]
+            },
             autoUpdate: 'Checkbox',
             renderer: {
               type: 'Select',
@@ -278,7 +278,11 @@
             },
             center: 'Checkbox',
             wireframe: 'Checkbox',
-            helpersColor: 'Text'
+            helpersColor: 'Text',
+            background: {
+              type: 'Select',
+              options: ['black', 'white', 'gradient']
+            }
           };
         }
         GlViewSettingsForm.__super__.constructor.call(this, options);

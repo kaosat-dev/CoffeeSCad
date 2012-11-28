@@ -197,6 +197,7 @@
         this.editor = CodeMirror.fromTextArea(this.ui.codeBlock.get(0), {
           mode: "coffeescript",
           tabSize: 2,
+          indentUnit: 2,
           indentWithTabs: false,
           lineNumbers: true,
           gutter: true,
@@ -208,15 +209,18 @@
             _this.updateUndoRedo();
           },
           onGutterClick: foldFunc,
-          extraKeys: {
-            "Ctrl-Q": function(cm) {
-              return foldFunc(cm, cm.getCursor().line);
-            }
-          },
           onCursorActivity: function() {
             _this.editor.matchHighlight("CodeMirror-matchhighlight");
             _this.editor.setLineClass(_this.hlLine, null, null);
             return _this.hlLine = _this.editor.setLineClass(_this.editor.getCursor().line, null, "activeline");
+          },
+          extraKeys: {
+            "Ctrl-Q": function(cm) {
+              return foldFunc(cm, cm.getCursor().line);
+            },
+            Tab: function(cm) {
+              return cm.replaceSelection("  ", "end");
+            }
           }
         });
         this.hlLine = this.editor.setLineClass(0, "activeline");
