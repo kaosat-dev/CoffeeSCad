@@ -18,6 +18,8 @@ define (require)->
     tagName:  "ul"
     itemView: RecentFilesView
     itemViewContainer: "#recentFilesList"
+    ui:
+      dirtyStar: "#dirtyStar"
 
     triggers: 
       "mouseup .newFile":     "file:new:mouseup"
@@ -34,6 +36,13 @@ define (require)->
      events: 
       "mouseup .loadFileDirect":    "requestFileLoad"
       "mouseup .showEditor":        "showEditor"
+      
+     templateHelpers:
+       dirtyStar: ()=>
+         if @model?
+          if @model.dirty then return "*" else return ""
+         else
+          return ""
     
     requestFileLoad:(ev)=>
       fileName = $(ev.currentTarget).html()
@@ -47,6 +56,9 @@ define (require)->
     constructor:(options)->
       super options
       @app = require 'app'
+      
+      @bindTo(@model, "change", @modelChanged)
+      @bindTo(@model, "allSaved", @modelSaved)
       
       @on "file:new:mouseup" ,=>
         @app.vent.trigger("fileNewRequest", @)
@@ -86,5 +98,20 @@ define (require)->
         fileName = @app.project.get("name")
         tmpLnk.prop("download", "#{fileName}.stl")
         tmpLnk.prop("href", blob)
+        
+    switchModel:(newModel)->
+      #replace current model with a new one
+      #@unbindFrom(@model) or @unbindAll() ?
+      @model = newModel
+      @bindTo(@model, "dirtied", @modelChanged)
+      @bindTo(@model, "allSaved", @modelSaved)
+      #(@model, "cleaned", @modelSaved)
+      @render()
+      
+    modelChanged: (model, value)=>
+      @ui.dirtyStar.text "*"
+     
+    modelSaved: (model)=>
+      @ui.dirtyStar.text ""
       
   return MainMenuView

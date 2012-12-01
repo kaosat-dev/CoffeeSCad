@@ -22,6 +22,7 @@
       jquery_hotkeys: "../assets/js/plugins/jquery.hotkeys",
       jquery_ui: "../assets/js/plugins/jquery-ui-1.9.0.custom.min",
       jquery_layout: "../assets/js/plugins/jquery.layout-latest",
+      bootbox: "../assets/js/plugins/bootbox.min",
       foldcode: "../assets/js/plugins/foldcode",
       coffeelint: "../assets/js/plugins/coffeelint",
       jsHint: "../assets/js/plugins/javascript-hint",
@@ -50,6 +51,9 @@
       bootstrap: {
         deps: ["jquery"],
         exports: "bootstrap"
+      },
+      bootbox: {
+        dep: ["bootstrap"]
       },
       'backbone': {
         deps: ["underscore"],

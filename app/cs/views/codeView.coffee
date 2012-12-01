@@ -36,6 +36,7 @@ define (require)->
       
       @app = require 'app'
       @bindTo(@model, "change", @modelChanged)
+      @bindTo(@model, "saved", @modelSaved)
       @bindTo(@settings, "change", @settingsChanged)
       @app.vent.bind("csgParseError", @showError)
     
@@ -47,6 +48,7 @@ define (require)->
       @app.vent.trigger("clearUndoRedo", @)
       @editor.clearHistory()
       @bindTo(@model, "change", @modelChanged)
+      @bindTo(@model, "saved", @modelSaved)
       
     modelChanged: (model, value)=>
       $(@ui.errorBlock).addClass("well")
@@ -56,6 +58,9 @@ define (require)->
       
       $("[rel=tooltip]").tooltip
             placement:'bottom' 
+            
+    modelSaved: (model)=>
+      
     
     settingsChanged:(settings, value)=> 
       console.log("Settings changed")

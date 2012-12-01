@@ -20,18 +20,19 @@ define (require)->
     showModal: (view)=>
       view.on("close", @hideModal, @)
       $("#dialog").dialog
-        title : view.model.get("name")
+        title : "Part Code Editor"#view.model.get("name")
         width: 550
         height: 700
         position: 
           my: "right center"
-          at: "right center"
+          at: "right bottom"
+      ###
       $(".draggable").draggable
-        #cursor: 'move'
         grid: [ 1, 1 ]
       $(".draggable").resizable
         handles : "se"
-        
+      ###
+       
     hideModal: ->
       @$el.modal 'hide'
       

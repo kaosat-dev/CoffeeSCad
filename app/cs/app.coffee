@@ -3,6 +3,7 @@ define (require)->
   _ = require 'underscore'
   marionette = require 'marionette'
   require 'bootstrap'
+  require 'bootbox'
   
   CodeEditorView = require "views/codeView"
   MainMenuView = require "views/menuView"
@@ -130,6 +131,7 @@ return res
       settings: @settings.at(2)
     @mainMenuView = new MainMenuView
       collection: @lib
+      model: @project
     @projectView = new ProjectView
       collection:@lib
     @glThreeView = new GlThreeView
@@ -149,32 +151,17 @@ return res
     @alertModal.el= alertmodal
     @modal.app = @
     
-    saveProject= (params) =>
-      #console.log("Saving part to file : #{params}")
-      foundProjects = @lib.get(params)
-      if foundProjects?
-        console.log "project exists"
-        @project.set("name",params)
-        @lib.add @project
-        #bla = new AlertView
-        #@alertModal.show(bla)
-      else
-        console.log "new project"
-        @project.set("name",params)
-        @lib.add @project
-      
-      @project.save()
-      #hack to ensure the various sub files(only the one for now) are saved aswell: this should be done within the project class'
-      #save method
-      @mainPart.save()
-      
-      console.log "Saved Elems"
-      console.log @project
-      console.log @mainPart
-      
-      return      
-      
-    loadProject= (name) =>
+    #TODO: move this elsewhere
+    @CreateNewProject=()=>
+      @project = new Project({name:'TestProject'}) 
+      @mainPart = new ProjectFile()
+      @project.add @mainPart 
+      ########VIEW UPDATES
+      @mainMenuView.switchModel @project
+      @codeEditorView.switchModel @mainPart
+      @glThreeView.switchModel @mainPart
+    
+    @loadProject=(name)=>    
       console.log("Loading part: #{name}")
       if name != @project.get("name")
         project = @lib.fetch({id:name})
@@ -182,14 +169,78 @@ return res
         @mainPart = project.pfiles.at(0)
         @project.add @mainPart
         @lib.add @project
+        ########VIEW UPDATES
         @codeEditorView.switchModel @mainPart 
         @glThreeView.switchModel @mainPart
+        @mainMenuView.switchModel @project
       else
-        console.log "Project already loaded"
+        #console.log "Project already loaded"
       return
-      #console.log "Loaded Elems"
-      #console.log @project
-      #console.log @mainPart
+    
+    @SaveProject=(name)=>
+      
+      @project.save()
+      #hack to ensure the various sub files(only the one for now) are saved aswell: this should be done within the project class'
+      #save method
+      @mainPart.save()
+      @mainMenuView.model = @project
+    
+    @newProject=()=>
+      if @project.dirty
+        bootbox.dialog "Project is unsaved, proceed anyway?", [
+          label: "Ok"
+          class: "btn-inverse"
+          callback: =>
+            @CreateNewProject()
+        ,
+          label: "Cancel"
+          class: "btn-inverse"
+          callback: ->
+        ]
+      else
+        @CreateNewProject()
+        
+    saveProject= (params) =>
+      if @project.get("name") == params
+        @SaveProject()
+      else
+        foundProjects = @lib.get(params)
+        if foundProjects?
+          bootbox.dialog "Project already exists, overwrite?", [
+            label: "Ok"
+            class: "btn-inverse"
+            callback: =>
+              @project.set("name",params)
+              @lib.add @project
+              @SaveProject()
+          ,
+            label: "Cancel"
+            class: "btn-inverse"
+            callback: ->
+          ]
+          
+        else
+          @project.set("name",params)
+          @lib.add @project
+          @SaveProject()
+      return      
+      
+    loadProject= (name) =>
+      #first check if a the current project is dirty/modified (don't want to loose work !)
+      if @project.dirty
+        bootbox.dialog "Project is unsaved, proceed anyway?", [
+          label: "Ok"
+          class: "btn-inverse"
+          callback: =>
+            @loadProject(name)
+        ,
+          label: "Cancel"
+          class: "btn-inverse"
+          callback: ->
+        ]
+       else
+        @loadProject(name)
+        
     
     deleteProject=(name)=>
       console.log("deleting project #{name}")
@@ -205,6 +256,7 @@ return res
       @mainPart = new ProjectFile()
       @project.add @mainPart 
       
+      @mainMenuView.switchModel @project
       @codeEditorView.switchModel @mainPart 
       @glThreeView.switchModel @mainPart
       
@@ -217,7 +269,7 @@ return res
     dispatchModelChanged=()=>
       generalSettings = @settings.byName "GlView"
       console.log generalSettings
-      csgRenderMode = generalSettings.get("csgRenderMode")
+      csgRenderMode = generalSettings.get "csgRenderMode"
       switch csgRenderMode
         when "onCodeChange"
           console.log "onCodeChange"
@@ -233,23 +285,19 @@ return res
     @vent.bind("fileLoadRequest", loadProject)
     @vent.bind("fileDeleteRequest", deleteProject)
     @vent.bind("editorShowRequest", showEditor)
-    #@vent.bind("modelChanged", dispatchModelChanged)
-    #@bindTo(@settings.byName "General", "change", @settingsChanged)
+    
+    tutu=()=>
+      console.log ("ARKJHKH modelSaved")
+    @bindTo(@mainPart, "saved", tutu)
     
     ################
     
-    app.mainMenuView.on "project:new:mouseup",=>
+    @mainMenuView.on "project:new:mouseup",=>
 
-    app.mainMenuView.on "file:new:mouseup",=>
-      #TODO: check if all files are saved etc
-      @project = new Project({name:'TestProject'}) 
-      @mainPart = new ProjectFile()
-      @project.add @mainPart 
-      ########VIEW UPDATES
-      @codeEditorView.switchModel @mainPart 
-      @glThreeView.switchModel @mainPart
+    @mainMenuView.on "file:new:mouseup",=>
+      @newProject()
       
-    app.mainMenuView.on "file:save:mouseup",=>
+    @mainMenuView.on "file:save:mouseup",=>
       if @project.isNew2()
         @modView = new SaveView
         @modal.show(@modView)
@@ -257,16 +305,16 @@ return res
         console.log "save existing"
         @vent.trigger("fileSaveRequest",@project.get("name"))
       
-    app.mainMenuView.on "file:saveas:mouseup",=>
+    @mainMenuView.on "file:saveas:mouseup",=>
       @modView = new SaveView
       @modal.show(@modView)
     
-    app.mainMenuView.on "file:load:mouseup",=>
+    @mainMenuView.on "file:load:mouseup",=>
       @modView = new LoadView
         collection: @lib
       @modal.show(@modView)
      
-    app.mainMenuView.on "settings:mouseup",=>
+    @mainMenuView.on "settings:mouseup",=>
       @modView = new SettingsView 
         model: @settings
       @modal.show(@modView)      

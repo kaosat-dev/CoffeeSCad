@@ -32,21 +32,22 @@
 
       DialogRegion.prototype.showModal = function(view) {
         view.on("close", this.hideModal, this);
-        $("#dialog").dialog({
-          title: view.model.get("name"),
+        return $("#dialog").dialog({
+          title: "Part Code Editor",
           width: 550,
           height: 700,
           position: {
             my: "right center",
-            at: "right center"
+            at: "right bottom"
           }
         });
-        $(".draggable").draggable({
-          grid: [1, 1]
-        });
-        return $(".draggable").resizable({
-          handles: "se"
-        });
+        /*
+              $(".draggable").draggable
+                grid: [ 1, 1 ]
+              $(".draggable").resizable
+                handles : "se"
+        */
+
       };
 
       DialogRegion.prototype.hideModal = function() {

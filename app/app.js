@@ -7,6 +7,7 @@
     _ = require('underscore');
     marionette = require('marionette');
     require('bootstrap');
+    require('bootbox');
     CodeEditorView = require("views/codeView");
     MainMenuView = require("views/menuView");
     ProjectView = require("views/projectsview");
@@ -46,7 +47,7 @@
 
     });
     app.addInitializer(function(options) {
-      var deleteProject, dispatchModelChanged, exporter, loadProject, saveProject, showEditor, stlexport,
+      var deleteProject, dispatchModelChanged, exporter, loadProject, saveProject, showEditor, stlexport, tutu,
         _this = this;
       exporter = new CsgStlExporterMin();
       this.settings = new Settings();
@@ -93,7 +94,8 @@
         settings: this.settings.at(2)
       });
       this.mainMenuView = new MainMenuView({
-        collection: this.lib
+        collection: this.lib,
+        model: this.project
       });
       this.projectView = new ProjectView({
         collection: this.lib
@@ -109,25 +111,17 @@
       this.navigationRegion.show(this.mainMenuView);
       this.alertModal.el = alertmodal;
       this.modal.app = this;
-      saveProject = function(params) {
-        var foundProjects;
-        foundProjects = _this.lib.get(params);
-        if (foundProjects != null) {
-          console.log("project exists");
-          _this.project.set("name", params);
-          _this.lib.add(_this.project);
-        } else {
-          console.log("new project");
-          _this.project.set("name", params);
-          _this.lib.add(_this.project);
-        }
-        _this.project.save();
-        _this.mainPart.save();
-        console.log("Saved Elems");
-        console.log(_this.project);
-        console.log(_this.mainPart);
+      this.CreateNewProject = function() {
+        _this.project = new Project({
+          name: 'TestProject'
+        });
+        _this.mainPart = new ProjectFile();
+        _this.project.add(_this.mainPart);
+        _this.mainMenuView.switchModel(_this.project);
+        _this.codeEditorView.switchModel(_this.mainPart);
+        return _this.glThreeView.switchModel(_this.mainPart);
       };
-      loadProject = function(name) {
+      this.loadProject = function(name) {
         var project;
         console.log("Loading part: " + name);
         if (name !== _this.project.get("name")) {
@@ -140,8 +134,81 @@
           _this.lib.add(_this.project);
           _this.codeEditorView.switchModel(_this.mainPart);
           _this.glThreeView.switchModel(_this.mainPart);
+          _this.mainMenuView.switchModel(_this.project);
         } else {
-          console.log("Project already loaded");
+
+        }
+      };
+      this.SaveProject = function(name) {
+        _this.project.save();
+        _this.mainPart.save();
+        return _this.mainMenuView.model = _this.project;
+      };
+      this.newProject = function() {
+        if (_this.project.dirty) {
+          return bootbox.dialog("Project is unsaved, proceed anyway?", [
+            {
+              label: "Ok",
+              "class": "btn-inverse",
+              callback: function() {
+                return _this.CreateNewProject();
+              }
+            }, {
+              label: "Cancel",
+              "class": "btn-inverse",
+              callback: function() {}
+            }
+          ]);
+        } else {
+          return _this.CreateNewProject();
+        }
+      };
+      saveProject = function(params) {
+        var foundProjects;
+        if (_this.project.get("name") === params) {
+          _this.SaveProject();
+        } else {
+          foundProjects = _this.lib.get(params);
+          if (foundProjects != null) {
+            bootbox.dialog("Project already exists, overwrite?", [
+              {
+                label: "Ok",
+                "class": "btn-inverse",
+                callback: function() {
+                  _this.project.set("name", params);
+                  _this.lib.add(_this.project);
+                  return _this.SaveProject();
+                }
+              }, {
+                label: "Cancel",
+                "class": "btn-inverse",
+                callback: function() {}
+              }
+            ]);
+          } else {
+            _this.project.set("name", params);
+            _this.lib.add(_this.project);
+            _this.SaveProject();
+          }
+        }
+      };
+      loadProject = function(name) {
+        if (_this.project.dirty) {
+          return bootbox.dialog("Project is unsaved, proceed anyway?", [
+            {
+              label: "Ok",
+              "class": "btn-inverse",
+              callback: function() {
+                return _this.loadProject(name);
+              }
+            }, {
+              label: "Cancel",
+              "class": "btn-inverse",
+              callback: function() {}
+            }
+          ]);
+        } else {
+          return _this.loadProject(name);
         }
       };
       deleteProject = function(name) {
@@ -160,6 +227,7 @@
         });
         _this.mainPart = new ProjectFile();
         _this.project.add(_this.mainPart);
+        _this.mainMenuView.switchModel(_this.project);
         _this.codeEditorView.switchModel(_this.mainPart);
         _this.glThreeView.switchModel(_this.mainPart);
       };
@@ -187,17 +255,15 @@
       this.vent.bind("fileLoadRequest", loadProject);
       this.vent.bind("fileDeleteRequest", deleteProject);
       this.vent.bind("editorShowRequest", showEditor);
-      app.mainMenuView.on("project:new:mouseup", function() {});
-      app.mainMenuView.on("file:new:mouseup", function() {
-        _this.project = new Project({
-          name: 'TestProject'
-        });
-        _this.mainPart = new ProjectFile();
-        _this.project.add(_this.mainPart);
-        _this.codeEditorView.switchModel(_this.mainPart);
-        return _this.glThreeView.switchModel(_this.mainPart);
+      tutu = function() {
+        return console.log("ARKJHKH modelSaved");
+      };
+      this.bindTo(this.mainPart, "saved", tutu);
+      this.mainMenuView.on("project:new:mouseup", function() {});
+      this.mainMenuView.on("file:new:mouseup", function() {
+        return _this.newProject();
       });
-      app.mainMenuView.on("file:save:mouseup", function() {
+      this.mainMenuView.on("file:save:mouseup", function() {
         if (_this.project.isNew2()) {
           _this.modView = new SaveView;
           return _this.modal.show(_this.modView);
@@ -206,17 +272,17 @@
           return _this.vent.trigger("fileSaveRequest", _this.project.get("name"));
         }
       });
-      app.mainMenuView.on("file:saveas:mouseup", function() {
+      this.mainMenuView.on("file:saveas:mouseup", function() {
         _this.modView = new SaveView;
         return _this.modal.show(_this.modView);
       });
-      app.mainMenuView.on("file:load:mouseup", function() {
+      this.mainMenuView.on("file:load:mouseup", function() {
         _this.modView = new LoadView({
           collection: _this.lib
         });
         return _this.modal.show(_this.modView);
       });
-      app.mainMenuView.on("settings:mouseup", function() {
+      this.mainMenuView.on("settings:mouseup", function() {
         _this.modView = new SettingsView({
           model: _this.settings
         });

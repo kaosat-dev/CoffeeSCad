@@ -52,10 +52,8 @@ define (require)->
   csgSugar += """Cube=(options)=> 
     if "size" of options
       if typeIsArray options.size
-        console.log "is array"
         options.radius = options.size.map (comp) -> comp/2
       else
-        console.log "not array"
         options.radius = options.size
     if "$fn" of options
       options.resolution = options.$fn

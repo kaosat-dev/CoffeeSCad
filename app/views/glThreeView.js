@@ -965,7 +965,7 @@
 
       GlThreeView.prototype.onResize = function() {
         this.width = $("#glArea").width();
-        this.height = window.innerHeight - 100;
+        this.height = window.innerHeight - 10;
         this.camera.setSize(this.width, this.height);
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(this.width, this.height);
@@ -980,7 +980,7 @@
           this.ui.overlayDiv.append(this.stats.domElement);
         }
         this.width = $("#gl").width();
-        this.height = window.innerHeight - 100;
+        this.height = window.innerHeight - 10;
         this.camera.setSize(this.width, this.height);
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(this.width, this.height);

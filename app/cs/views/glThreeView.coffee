@@ -949,10 +949,9 @@ define (require) ->
       @particleMaterial = new THREE.MeshBasicMaterial( { map: texture, transparent: true ,color: 0x000000} );
     
     onResize:()=>
-      #console.log("resized")
       
       @width =  $("#glArea").width()
-      @height = window.innerHeight-100
+      @height = window.innerHeight-10
       
       #@camera.aspect = @width / @height
       #@camera.updateProjectionMatrix()
@@ -976,7 +975,7 @@ define (require) ->
         @ui.overlayDiv.append(@stats.domElement)
         
       @width = $("#gl").width()
-      @height = window.innerHeight-100#$("#gl").height()
+      @height = window.innerHeight-10#$("#gl").height()
      
       #@camera.aspect = @width / @height
       #@camera.updateProjectionMatrix()

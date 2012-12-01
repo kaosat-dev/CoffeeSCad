@@ -128,7 +128,7 @@ canvas { cursor: move; }
 /*misc*/
 
 
-
+.ui-dialog-titlebar { height: 2em; }
 
 .fill { 
     min-height: 100%;

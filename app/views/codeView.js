@@ -45,6 +45,8 @@
 
         this.settingsChanged = __bind(this.settingsChanged, this);
 
+        this.modelSaved = __bind(this.modelSaved, this);
+
         this.modelChanged = __bind(this.modelChanged, this);
         CodeEditorView.__super__.constructor.call(this, options);
         this.settings = options.settings;
@@ -65,6 +67,7 @@
         };
         this.app = require('app');
         this.bindTo(this.model, "change", this.modelChanged);
+        this.bindTo(this.model, "saved", this.modelSaved);
         this.bindTo(this.settings, "change", this.settingsChanged);
         this.app.vent.bind("csgParseError", this.showError);
       }
@@ -74,7 +77,8 @@
         this.editor.setValue(this.model.get("content"));
         this.app.vent.trigger("clearUndoRedo", this);
         this.editor.clearHistory();
-        return this.bindTo(this.model, "change", this.modelChanged);
+        this.bindTo(this.model, "change", this.modelChanged);
+        return this.bindTo(this.model, "saved", this.modelSaved);
       };
 
       CodeEditorView.prototype.modelChanged = function(model, value) {
@@ -86,6 +90,8 @@
           placement: 'bottom'
         });
       };
+
+      CodeEditorView.prototype.modelSaved = function(model) {};
 
       CodeEditorView.prototype.settingsChanged = function(settings, value) {
         var key, val, _ref, _results;

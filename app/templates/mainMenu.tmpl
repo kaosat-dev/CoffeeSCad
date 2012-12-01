@@ -45,16 +45,6 @@
 				    		<a class="btn btn-small btn-inverse showEditor" href="#" rel="tooltip" title="Editor" ><i class="icon-edit icon-large"></i>
 				    		</a>
 				    	</div>
-				    	<!--
-				    	<div class="btn-group">
-				    		<a class="btn btn-small dropdown-toggle " data-toggle="dropdown" href="#" rel="tooltip" title="Project"><i class="icon-beaker icon-large"></i>
-				    			<span class="caret"></span>
-				    		</a>
-				    		<ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
-				    			<li id ="newFileBtn" class="newProject"><a tabindex="-1" href="#"><i class="icon-file"></i>New</a></li>			
-				    		</ul>
-				    	</div>
-				    	-->	
 				    	<div class="btn-group">	
 				    		<a id="undoBtn" class="btn btn-small disabled undo btn-inverse" href="#" rel="tooltip" title="Undo (CTRL+Z)"><i class="icon-undo icon-large"></i></a>
 					  		<a id="redoBtn" class="btn btn-small disabled redo btn-inverse" href="#" rel="tooltip" title="Redo (CTRL+Y)"><i class="icon-repeat icon-large"></i></a>
@@ -62,15 +52,25 @@
 					    <div class="btn-group">
 						    <a id="updateBtn" class="btn btn-small disabled parseCSG btn-inverse" href="#" rel="tooltip" title="Update view" ><i class="icon-refresh icon-large"></i></a>
 						  	<a id="abortBtn" class="btn hide" href="#" rel="tooltip" title="Abort"><i class="icon-remove icon-large"></i></a>
-
 						</div>
 						<div class="btn-group">
-					    <a id="settingsBtn" class="btn btn-small settings btn-inverse" href="#" rel="tooltip" title="Settings"><i class="icon-cogs icon-large"></i></a>
+					    	<a id="settingsBtn" class="btn btn-small settings btn-inverse" href="#" rel="tooltip" title="Settings"><i class="icon-cogs icon-large"></i></a>
 						</div>
+						<a id="projectName" class="btn btn-inverse disabled btn-small" style="text-align: center;display: inline-block;position: absolute;top: 10;left: 50%" href="#" ><%=name%> <span id="dirtyStar"/></a>
 						<div class="btn-group  pull-right">
 							<a class="btn btn-small btn-inverse" href="https://github.com/kaosat-dev/OpenCoffeeSCad" target="_blank" rel="tooltip" title="Help"><i class="icon-question-sign icon-large"></i></a>
 							<a class="btn btn-small btn-inverse" href="https://github.com/kaosat-dev/OpenCoffeeSCad" target="_blank" rel="tooltip" title="Fork me on GitHub!"><i class="icon-github icon-large"></i></a>
 						</div>
+						
 					</div>
+					<!--
+					<div class="btn-group-wrap" style="text-align: center; padding:0;border:0">
+							<div class="btn-group" style="margin: 0 auto; 
+    text-align: center;
+    width: inherit;
+    display: inline-block;">
+				    			<a id="projectName" class="btn btn-inverse disabled btn-small" href="#" >Assembly.coscad</a>
+							</div>
+					</div>-->
 				</div>
 </script>

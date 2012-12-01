@@ -33,6 +33,7 @@
 
     })(Backbone.Marionette.ItemView);
     MainMenuView = (function(_super) {
+      var _this = this;
 
       __extends(MainMenuView, _super);
 
@@ -43,6 +44,10 @@
       MainMenuView.prototype.itemView = RecentFilesView;
 
       MainMenuView.prototype.itemViewContainer = "#recentFilesList";
+
+      MainMenuView.prototype.ui = {
+        dirtyStar: "#dirtyStar"
+      };
 
       MainMenuView.prototype.triggers = {
         "mouseup .newFile": "file:new:mouseup",
@@ -62,6 +67,20 @@
         "mouseup .showEditor": "showEditor"
       };
 
+      MainMenuView.prototype.templateHelpers = {
+        dirtyStar: function() {
+          if (MainMenuView.model != null) {
+            if (MainMenuView.model.dirty) {
+              return "*";
+            } else {
+              return "";
+            }
+          } else {
+            return "";
+          }
+        }
+      };
+
       MainMenuView.prototype.requestFileLoad = function(ev) {
         var fileName;
         fileName = $(ev.currentTarget).html();
@@ -74,6 +93,10 @@
       };
 
       function MainMenuView(options) {
+        this.modelSaved = __bind(this.modelSaved, this);
+
+        this.modelChanged = __bind(this.modelChanged, this);
+
         this.showEditor = __bind(this.showEditor, this);
 
         this.requestFileLoad = __bind(this.requestFileLoad, this);
@@ -81,6 +104,8 @@
         var _this = this;
         MainMenuView.__super__.constructor.call(this, options);
         this.app = require('app');
+        this.bindTo(this.model, "change", this.modelChanged);
+        this.bindTo(this.model, "allSaved", this.modelSaved);
         this.on("file:new:mouseup", function() {
           return _this.app.vent.trigger("fileNewRequest", _this);
         });
@@ -137,9 +162,24 @@
         });
       }
 
+      MainMenuView.prototype.switchModel = function(newModel) {
+        this.model = newModel;
+        this.bindTo(this.model, "dirtied", this.modelChanged);
+        this.bindTo(this.model, "allSaved", this.modelSaved);
+        return this.render();
+      };
+
+      MainMenuView.prototype.modelChanged = function(model, value) {
+        return this.ui.dirtyStar.text("*");
+      };
+
+      MainMenuView.prototype.modelSaved = function(model) {
+        return this.ui.dirtyStar.text("");
+      };
+
       return MainMenuView;
 
-    })(marionette.CompositeView);
+    }).call(this, marionette.CompositeView);
     return MainMenuView;
   });
 

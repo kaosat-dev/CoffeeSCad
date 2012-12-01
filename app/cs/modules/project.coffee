@@ -18,14 +18,31 @@ define (require)->
       name:     "mainPart"
       ext:      "coscad"
       content:  ""
-      includes: []
-      
+           
     constructor:(options)->
       super options
       @rendered = false
       @dirty    = false
-      @bind("change", ()=> @dirty=true)
-      @bind("sync",   ()=> @dirty=false)#when save is sucessfull
+      @storedContent = @get("content") #This is used for "dirtyness compare" , might be optimisable (storage vs time , hash vs direct compare)
+      @bind("change", @onChanged)
+      @bind("sync",   @onSynched)
+      
+    onChanged:()=>
+      if @storedContent == @get("content")
+          @dirty = false
+      else
+          @dirty = true
+      if @dirty
+        @trigger "dirtied"
+      else
+        @trigger "cleaned"
+    
+    onSynched:()=>
+      #when save is sucessfull
+      console.log "synching"
+      @storedContent = @get("content")
+      @dirty=false
+      @trigger "saved"
       
   class ProjectFiles extends Backbone.Collection
     model: ProjectFile
@@ -48,7 +65,8 @@ define (require)->
     
     constructor:(options)->
       super options
-      @new    = true
+      @dirty    = false #based on propagation from project files : if a project file is changed, the project is tagged as "dirty" aswell
+      @new      = true
       @bind("reset", @onReset)
       @bind("sync",  @onSync)
       @bind("change",@onChanged)
@@ -74,12 +92,21 @@ define (require)->
       #@pfiles.localStorage= new Backbone.LocalStorage(locStorName)
       
     onChanged:(settings, value)->
-      console.log "changed"
+      @dirty=true
       for key, val of @changedAttributes()
         switch key
           when "name"
             locStorName = val+"-parts"
             @pfiles.localStorage= new Backbone.LocalStorage(locStorName)
+            
+    onPartSaved:(partName)=> 
+      for part of @pfiles
+        if part.dirty
+          return
+      @trigger "allSaved"
+      
+    onPartChanged:()=>
+      
       
     isNew2:()->
       return @new 
@@ -87,6 +114,10 @@ define (require)->
     add:(pFile)=>
       @pfiles.add pFile
       @files.push pFile.get("name")
+      pFile.bind("change", ()=> @trigger "change")
+      pFile.bind("saved" , ()=> @onPartSaved(pFile.get("id")))
+      pFile.bind("dirtied", ()=> @trigger "dirtied")
+      pFile.bind("cleaned", ()=> @onPartSaved(pFile.get("id")))
     
     remove:(pFile)=>
       index = @files.indexOf(pFile.get("name"))
