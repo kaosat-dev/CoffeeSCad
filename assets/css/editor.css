@@ -109,21 +109,31 @@ canvas { cursor: move; }
 }
 
 /*-------------------------------------*/	
-/*layout*/
+/*settings*/
 
-.simple {
-	height: 600px;
-	width: 1600px;
-}
-.simple div {
-	/*overflow: auto;*/
-}
-.vsplitbar {
-	width: 2px;
-	background: #AAAAAA;
+.control-group
+{
+	padding: 0px;
+	padding-top:0px;
+	border:0px;
 }
 
+legend
+{
+	font-size: 1em;
+	line-height: 1em;
+	font-weight: bold;
+}
 
+legend + .control-group
+{
+	margin-top: 2px;
+}
+
+.form-horizontal .control-group
+{
+	margin-bottom: 5px;
+}
 /*-------------------------------------*/	
 /*misc*/
 
@@ -137,16 +147,18 @@ canvas { cursor: move; }
 
 body {
         padding-top: 60px;
-        /*padding-bottom: 40px;*/
-	background-color:#c0d1b8;
+	
+	/*background-color:#222222;#39464e;*/
+	/*
+	 * background-color:#c0d1b8;
 	background-image: -moz-radial-gradient(center center, circle cover, #c0d1b8, #000014 100%);
 	background-image: -webkit-radial-gradient(center center, circle cover, #c0d1b8, #000014 100%);
 	background-image: -o-radial-gradient(center center, circle cover, #c0d1b8, #000014 100%);
 	background-image: -ms-radial-gradient(center center, circle cover, #c0d1b8, #000014 100%);
 	background-image: radial-gradient(center center, circle cover, #c0d1b8, #000014 100%);
    	background-repeat: no-repeat;
-    background-attachment: fixed;
-      }
+    background-attachment: fixed;*/
+}
 
 
 .modal-backdrop {background-color: #aaaaaa;}

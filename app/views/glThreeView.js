@@ -281,7 +281,7 @@
             callback = function() {
               return _this.fromCsg(_this.model);
             };
-            return this.CodeChangeTimer = setTimeout(callback, 1500);
+            return this.CodeChangeTimer = setTimeout(callback, this.settings.get("csgRenderDelay") * 1000);
         }
       };
 
@@ -296,6 +296,12 @@
         for (key in _ref) {
           val = _ref[key];
           switch (key) {
+            case "bgColor":
+              this.setBgColor();
+              break;
+            case "bgColor2":
+              this.setBgColor();
+              break;
             case "renderer":
               delete this.renderer;
               this.init();
@@ -466,6 +472,8 @@
 
         this.addGrid = __bind(this.addGrid, this);
 
+        this.setBgColor = __bind(this.setBgColor, this);
+
         this.setupView = __bind(this.setupView, this);
 
         this.setupLights = __bind(this.setupLights, this);
@@ -528,6 +536,7 @@
         this.projector = new THREE.Projector();
         this.setupScene();
         this.setupOverlayScene();
+        this.setBgColor();
         csgRenderMode = this.settings.get("csgRenderMode");
         switch (csgRenderMode) {
           case "onCodeChange":
@@ -809,6 +818,28 @@
         return this._render();
       };
 
+      GlThreeView.prototype.setBgColor = function() {
+        var bgColor1, bgColor2;
+        console.log("setting bg color");
+        bgColor1 = this.settings.get("bgColor");
+        bgColor2 = this.settings.get("bgColor2");
+        $("body").css("background-color", bgColor1);
+        if (bgColor1 !== bgColor2) {
+          $("body").css("background-image", "-moz-radial-gradient(center center, circle cover, " + bgColor1 + "," + bgColor2 + "  100%)");
+          $("body").css("background-image", "-webkit-radial-gradient(center center, circle cover, " + bgColor1 + "," + bgColor2 + "  100%)");
+          $("body").css("background-image", "-o-radial-gradient(center center, circle cover, " + bgColor1 + "," + bgColor2 + "  100%)");
+          $("body").css("background-image", "-ms-radial-gradient(center center, circle cover, " + bgColor1 + "," + bgColor2 + "  100%)");
+          $("body").css("background-image", "radial-gradient(center center, circle cover, " + bgColor1 + "," + bgColor2 + "  100%)");
+          $("body").css("background-repeat", "no-repeat");
+          return $("body").css("background-attachment", "fixed");
+        } else {
+          $("body").css("background-image", "");
+          $("body").css("background-image", "");
+          $("body").css("background-repeat", "");
+          return $("body").css("background-attachment", "");
+        }
+      };
+
       GlThreeView.prototype.addGrid = function() {
         /*
               Adds both grid & plane (for shadow casting), based on the parameters from the settings object
@@ -860,7 +891,7 @@
           });
           this.plane = new THREE.Mesh(planeGeometry, planeMaterial);
           this.plane.rotation.x = Math.PI;
-          this.plane.position.y = -0.01;
+          this.plane.position.z = -2;
           this.plane.name = "workplane";
           this.plane.receiveShadow = true;
           return this.scene.add(this.plane);

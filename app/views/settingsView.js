@@ -246,9 +246,12 @@
         if (!options.schema) {
           options.schema = {
             csgRenderMode: {
-              title: "Render mode",
+              title: "Render trigger mode",
               type: 'Select',
               options: ["onDemand", "onCodeChange", "onCodeChangeDelayed", "onSave"]
+            },
+            csgRenderDelay: {
+              type: 'Number'
             },
             renderer: {
               type: 'Select',
@@ -278,19 +281,33 @@
             center: 'Checkbox',
             wireframe: 'Checkbox',
             helpersColor: 'Text',
-            background: {
-              type: 'Select',
-              options: ['solid', 'gradient']
+            bgColor: {
+              title: "background color",
+              type: 'Text'
+            },
+            bgColor2: {
+              title: "background color2 (gradient)",
+              type: 'Text'
             }
-            /* 
-            background:
-               type: 'Object'
-               subSchema:
-                  zip:
-                    type: 'Number'
-            */
-
           };
+          options.fieldsets = [
+            {
+              "legend": "CsgRender settings",
+              "fields": ["csgRenderMode", "csgRenderDelay"]
+            }, {
+              "legend": "Render settings",
+              "fields": ["renderer", "antialiasing", "shadows", "selfShadows"]
+            }, {
+              "legend": "View settings",
+              "fields": ["position", "projection", "center", "wireframe"]
+            }, {
+              "legend": "Axes and Grid settings",
+              "fields": ["showAxes", "helpersColor", "showGrid", "gridSize", "gridStep", "gridColor", "gridOpacity"]
+            }, {
+              "legend": "Extra settings",
+              "fields": ["bgColor", "bgColor2", "showStats"]
+            }
+          ];
         }
         GlViewSettingsForm.__super__.constructor.call(this, options);
       }
@@ -302,7 +319,13 @@
 
       __extends(GlViewSettingsWrapper, _super);
 
+      GlViewSettingsWrapper.prototype.events = {
+        'change #c6_csgRenderMode': "tutu"
+      };
+
       function GlViewSettingsWrapper(options) {
+        this.tutu = __bind(this.tutu, this);
+
         this.render = __bind(this.render, this);
         GlViewSettingsWrapper.__super__.constructor.call(this, options);
         this.wrappedForm = new GlViewSettingsForm({
@@ -310,14 +333,34 @@
         });
       }
 
+      GlViewSettingsWrapper.prototype.ui = {
+        csgRenderMode: "#c6_csgRenderMode"
+      };
+
       GlViewSettingsWrapper.prototype.render = function() {
         var tmp;
+        if (this.beforeRender) {
+          this.beforeRender();
+        }
+        this.trigger("before:render", this);
+        this.trigger("item:before:render", this);
         tmp = this.wrappedForm.render();
         this.$el.append(tmp.el);
         this.$el.addClass("tab-pane");
         this.$el.addClass("fade");
         this.$el.attr('id', this.model.get("name"));
-        return this.el;
+        this.bindUIElements();
+        if (this.onRender) {
+          this.onRender();
+        }
+        this.trigger("render", this);
+        this.trigger("item:rendered", this);
+        return this;
+      };
+
+      GlViewSettingsWrapper.prototype.tutu = function(bla) {
+        console.log(bla);
+        return console.log("gne INDEED");
       };
 
       return GlViewSettingsWrapper;

@@ -266,7 +266,7 @@ define (require) ->
             @CodeChangeTimer = null
           callback=()=>
             @fromCsg @model
-          @CodeChangeTimer = setTimeout callback, 1500
+          @CodeChangeTimer = setTimeout callback, @settings.get("csgRenderDelay")*1000
       
     modelSaved:(model)=>
       @fromCsg @model
@@ -274,6 +274,10 @@ define (require) ->
     settingsChanged:(settings, value)=> 
       for key, val of @settings.changedAttributes()
         switch key
+          when "bgColor"
+            @setBgColor()
+          when "bgColor2"
+            @setBgColor()
           when "renderer"
             delete @renderer
             @init()
@@ -425,6 +429,8 @@ define (require) ->
       @setupScene()
       @setupOverlayScene()
       
+      @setBgColor()
+      
       csgRenderMode = @settings.get "csgRenderMode"
       switch csgRenderMode
         when "onCodeChange"
@@ -464,7 +470,8 @@ define (require) ->
       
       if @mesh?
         @mesh.material.wireframe = @settings.get("wireframe")
-        
+      
+      
       val = @settings.get("position")
       @setupView(val)
         
@@ -731,6 +738,27 @@ define (require) ->
          
           
       @_render()
+     
+    setBgColor:()=>
+      console.log "setting bg color"
+      bgColor1 = @settings.get("bgColor")
+      bgColor2 = @settings.get("bgColor2")
+      $("body").css("background-color", bgColor1)
+      if bgColor1 != bgColor2
+        $("body").css("background-image", "-moz-radial-gradient(center center, circle cover, #{bgColor1},#{bgColor2}  100%)")
+        $("body").css("background-image", "-webkit-radial-gradient(center center, circle cover, #{bgColor1},#{bgColor2}  100%)")
+        $("body").css("background-image", "-o-radial-gradient(center center, circle cover, #{bgColor1},#{bgColor2}  100%)")
+        $("body").css("background-image", "-ms-radial-gradient(center center, circle cover, #{bgColor1},#{bgColor2}  100%)")
+        $("body").css("background-image", "radial-gradient(center center, circle cover, #{bgColor1},#{bgColor2}  100%)")
+        $("body").css("background-repeat", "no-repeat")
+        $("body").css("background-attachment", "fixed")
+      else
+        $("body").css("background-image", "")
+        $("body").css("background-image", "")
+        $("body").css("background-repeat", "")
+        $("body").css("background-attachment", "")
+        
+        #$("body").css('background-color', @settings.get("bkGndColor"))
         
     addGrid:()=>
       ###
@@ -814,7 +842,7 @@ define (require) ->
         
         @plane = new THREE.Mesh(planeGeometry, planeMaterial)
         @plane.rotation.x = Math.PI
-        @plane.position.y = -0.01
+        @plane.position.z = -2
         @plane.name = "workplane"
         @plane.receiveShadow = true
         

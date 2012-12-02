@@ -5,7 +5,7 @@
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
   define(function(require) {
-    var $, MainMenuView, RecentFilesView, mainMenu_template, marionette, sF_template, _;
+    var $, Library, MainMenuView, Project, ProjectFile, RecentFilesView, examples, mainMenu_template, marionette, sF_template, _, _ref;
     $ = require('jquery');
     _ = require('underscore');
     marionette = require('marionette');
@@ -13,6 +13,8 @@
     require('bootbox');
     mainMenu_template = require("text!templates/mainMenu.tmpl");
     sF_template = require("text!templates/menuFiles.tmpl");
+    examples = require("modules/examples");
+    _ref = require("modules/project"), Library = _ref.Library, Project = _ref.Project, ProjectFile = _ref.ProjectFile;
     RecentFilesView = (function(_super) {
 
       __extends(RecentFilesView, _super);
@@ -67,7 +69,8 @@
       MainMenuView.prototype.events = {
         "mouseup .loadFileDirect": "requestFileLoad",
         "mouseup .showEditor": "showEditor",
-        "mouseup #aboutBtn": "showAbout"
+        "mouseup #aboutBtn": "showAbout",
+        "mouseup .exampleProject": "loadExample"
       };
 
       MainMenuView.prototype.templateHelpers = {
@@ -95,7 +98,7 @@
       };
 
       MainMenuView.prototype.showAbout = function(ev) {
-        return bootbox.dialog("Coffeescad v0.1 (experimental) by Mark 'kaosat-dev' Moissette ", [
+        return bootbox.dialog("<b>Coffeescad v0.1</b> (experimental)<br/><br/>\nLicenced under the MIT Licence<br/>\n@2012 by Mark 'kaosat-dev' Moissette\n", [
           {
             label: "Ok",
             "class": "btn-inverse"
@@ -108,6 +111,8 @@
       };
 
       function MainMenuView(options) {
+        this.loadExample = __bind(this.loadExample, this);
+
         this.modelSaved = __bind(this.modelSaved, this);
 
         this.modelChanged = __bind(this.modelChanged, this);
@@ -194,8 +199,55 @@
         return this.ui.dirtyStar.text("");
       };
 
+      MainMenuView.prototype.loadExample = function(ev) {
+        var index, mainPart, project,
+          _this = this;
+        index = ev.currentTarget.id;
+        project = new Project({
+          name: examples[index].name
+        });
+        mainPart = new ProjectFile({
+          name: "mainPart",
+          ext: "coscad",
+          content: examples[index].content
+        });
+        project.add(mainPart);
+        if (this.app.project.dirty) {
+          return bootbox.dialog("Project is unsaved, proceed anyway?", [
+            {
+              label: "Ok",
+              "class": "btn-inverse",
+              callback: function() {
+                _this.app.project = project;
+                _this.app.mainPart = mainPart;
+                _this.app.codeEditorView.switchModel(_this.app.mainPart);
+                _this.app.glThreeView.switchModel(_this.app.mainPart);
+                return _this.app.mainMenuView.switchModel(_this.app.project);
+              }
+            }, {
+              label: "Cancel",
+              "class": "btn-inverse",
+              callback: function() {}
+            }
+          ]);
+        } else {
+          this.app.project = project;
+          this.app.mainPart = mainPart;
+          this.app.codeEditorView.switchModel(this.app.mainPart);
+          this.app.glThreeView.switchModel(this.app.mainPart);
+          return this.app.mainMenuView.switchModel(this.app.project);
+        }
+      };
+
       MainMenuView.prototype.onRender = function() {
-        return this.ui.examplesList;
+        var example, index, _results;
+        this.ui.examplesList.html("");
+        _results = [];
+        for (index in examples) {
+          example = examples[index];
+          _results.push(this.ui.examplesList.append("<li id='" + index + "' class='exampleProject'><a href=#> " + example.name + "</a> </li>"));
+        }
+        return _results;
       };
 
       return MainMenuView;

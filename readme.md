@@ -9,7 +9,8 @@ live demo here : http://kaosat-dev.github.com/CoffeeSCad/
 Feedback, bug reports, ideas and contributions are welcome !
 
 
-CoffeeSCad was originally built on the great OpenJsCad project but is *not* compatible with it anymore at this point!
+CoffeeSCad was originally built on the great OpenJsCad project but is *not* compatible with it anymore at this point, although a good portion
+of the cgs codebase is still the same.
 
 Features
 =============
@@ -18,7 +19,7 @@ Features
 - **full featured code editor**: *line counts*, syntax coloring, block folding, undo redo etc
 - a limited possibility of **"real time" visualisation** of the coffeescad code: type your code, watch the shapes changes!
 this is mainly limited by the speed of your machine and the complexity of the csg objects your are working on: beyond a certain complexity
-it is ***just not worth using***
+it is not necessarly the best option.
 
 
 Future Features

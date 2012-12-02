@@ -68,7 +68,6 @@ define (require)->
       for index, childView of @children
         if childView.wrappedForm?
           @forms.push(childView.wrappedForm)
-
   
   class SettingsView extends Backbone.Marionette.Layout
     template: s_template
@@ -89,7 +88,7 @@ define (require)->
     constructor:(options) ->
       super options
       @app = require 'app'
-      
+    
     onRender:()=>
       #show tab nav
       sHeaderView = new SettingHeader
@@ -104,6 +103,7 @@ define (require)->
       defaultItem = $(@ui.tabContent).find('div .tab-pane:first')#:eq(1)
       defaultItem.addClass('active')
       defaultItem.removeClass('fade')
+    
 
   #-------------------------------------------------------------------#   
   class GeneralSettingsForm extends Backbone.Form
@@ -132,27 +132,27 @@ define (require)->
   
   #-------------------------------------------------------------------#       
   class GlViewSettingsForm extends Backbone.Form
-    #Backbone.Form.editors.List.Modal.ModalAdapter = Backbone.BootstrapModal
+    
     constructor:(options)->
       if not options.schema
         options.schema=
           csgRenderMode: 
-            title: "Render mode"
+            title: "Render trigger mode"
             type: 'Select'
             options : ["onDemand", "onCodeChange", "onCodeChangeDelayed", "onSave"]
-
+          csgRenderDelay:
+            type: 'Number'
+          
           renderer     :
             type: 'Select'
             options : ["webgl", "canvas"]
           antialiasing : 'Checkbox'
-          
           shadows      : 'Checkbox'
           selfShadows  : 
             type:       'Checkbox'
             title:      'Object self shadowing'
           
           showAxes     : 'Checkbox' 
-          
           showGrid     : 'Checkbox' 
           gridSize     : 'Number'  
           gridStep     : 'Number'
@@ -173,32 +173,66 @@ define (require)->
           wireframe    : 'Checkbox'
           
           helpersColor :  'Text'
-          background : 
-            type: 'Select'
-            options: ['solid', 'gradient']
-          ### 
-          background:
-             type: 'Object'
-             subSchema:
-                zip:
-                  type: 'Number'
-          ###
+          bgColor : 
+            title: "background color"
+            type: 'Text'
+          bgColor2 : 
+            title: "background color2 (gradient)" 
+            type: 'Text'
+            #options: ['solid', 'gradient']
+        options.fieldsets=[
+          "legend": "CsgRender settings"
+          "fields": ["csgRenderMode","csgRenderDelay"]
+        ,
+          "legend":"Render settings"
+          "fields": ["renderer","antialiasing","shadows","selfShadows"]
+        , 
+          "legend":"View settings"
+          "fields": ["position","projection","center","wireframe"]
+        ,
+          "legend":"Axes and Grid settings"
+          "fields": ["showAxes","helpersColor", "showGrid","gridSize","gridStep","gridColor","gridOpacity"]
+        , 
+          "legend":"Extra settings"
+          "fields": ["bgColor","bgColor2", "showStats"]
           
+        ]
       super options
+      
   
   class GlViewSettingsWrapper extends Backbone.Marionette.ItemView
+    
+    events:
+      'change #c6_csgRenderMode': "tutu"
+    
     constructor:(options)->
       super options
       @wrappedForm = new GlViewSettingsForm
         model: @model
-       
+      
+    ui:
+      csgRenderMode:    "#c6_csgRenderMode"    
+      
     render:()=>
+      if @beforeRender then @beforeRender()
+      @trigger("before:render", @)
+      @trigger("item:before:render", @)
+      
       tmp = @wrappedForm.render()
       @$el.append(tmp.el)
       @$el.addClass("tab-pane")
       @$el.addClass("fade")
       @$el.attr('id',@model.get("name"))
-      return @el
+
+      @bindUIElements()
+      if @onRender then @onRender()
+      @trigger("render", @)
+      @trigger("item:rendered", @)
+      return @
+      
+    tutu:(bla)=>
+      console.log bla
+      console.log "gne INDEED"
   #-------------------------------------------------------------------#   
   class EditorSettingsForm extends Backbone.Form
 

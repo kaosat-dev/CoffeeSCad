@@ -39,7 +39,7 @@
         name: "GlView",
         title: "3d view",
         csgRenderMode: "onCodeChange",
-        autoUpdate: true,
+        csgRenderDelay: 1.0,
         renderer: 'webgl',
         antialiasing: true,
         shadows: true,
@@ -49,13 +49,14 @@
         gridSize: 1000,
         gridStep: 100,
         gridColor: "0xFFFFFF",
-        gridOpacity: 0.2,
+        gridOpacity: 0.1,
         showStats: false,
         position: "diagonal",
         projection: "perspective",
         wireframe: false,
         helpersColor: "0xFFFFFF",
-        background: "0xFFFFFF"
+        bgColor: "#363335",
+        bgColor2: "#363335"
       };
 
       function GlViewSettings(options) {

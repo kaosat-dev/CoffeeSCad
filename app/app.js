@@ -2,7 +2,7 @@
 (function() {
 
   define(function(require) {
-    var $, CodeEditorView, CsgProcessor, CsgStlExporterMin, DialogRegion, GlThreeView, Library, LoadView, MainContentLayout, MainMenuView, ModalRegion, Project, ProjectFile, ProjectView, SaveView, Settings, SettingsView, app, marionette, testcode, _, _ref, _ref1;
+    var $, CodeEditorView, CsgProcessor, CsgStlExporterMin, DialogRegion, GlThreeView, Library, LoadView, MainContentLayout, MainMenuView, ModalRegion, Project, ProjectFile, ProjectView, SaveView, Settings, SettingsView, app, marionette, testcode, testcode_old, _, _ref, _ref1;
     $ = require('jquery');
     _ = require('underscore');
     marionette = require('marionette');
@@ -21,7 +21,8 @@
     Settings = require("modules/settings");
     CsgProcessor = require("modules/csg.processor");
     CsgStlExporterMin = require("modules/csg.stlexporter");
-    testcode = "class Thingy\n  constructor: (@thickness=10, @pos=[0,0,0], @rot=[0,0,0]) ->\n  \n  render: =>\n    result = new CSG()\n    shape1 = fromPoints([[0,0], [150,50], [0,-50]])\n    shape = shape1.expand(20, 25)\n    shape = shape.extrude\n      offset:[0, 0, @thickness]\n      \n    cyl = new Cylinder(\n      start: [0, 0, -50]\n      end: [0, 0, 50],radius:10,resolution:12)\n      \n    result = shape.subtract cyl\n    return result.translate(@pos).rotateX(@rot[0]).\n    rotateY(@rot[1]).rotateZ(@rot[2]).color([1,0.5,0])\n\nthing = new Thingy(35)\nthing2 = new Thingy(25)\n\nres = thing.render().union(\n  thing2.render()\n  .mirroredX()\n    .color([0.2,0.5,0.6]))\nres= res.rotateX(37)\nres= res.rotateZ(190)\nres= res.translate([0,0,100])\nreturn res";
+    testcode = "cube = new Cube\n  size: [100,110,100]\n  center: true\n  \nreturn cube";
+    testcode_old = "class Thingy\n  constructor: (@thickness=10, @pos=[0,0,0], @rot=[0,0,0]) ->\n  \n  render: =>\n    result = new CSG()\n    shape1 = fromPoints [[0,0], [150,50], [0,-50]]\n    shape = shape1.expand(20, 25)\n    shape = shape.extrude\n      offset:[0, 0, @thickness]\n      \n    cyl = new Cylinder\n      r:10\n      $fn:12\n      h:100\n      \n    result = shape.subtract cyl\n    return result.translate(@pos).rotate(@rot).\n    color([1,0.5,0])\n\nthing = new Thingy(35)\nthing2 = new Thingy(25)\n\nres = thing.render().union(\n  thing2.render()\n  .mirroredX()\n    .color([0.2,0.5,0.6]))\n    \nres= res.rotateX(37)\nres= res.rotateZ(190)\nres= res.translate([0,0,100])\nreturn res";
     app = new marionette.Application({
       root: "/opencoffeescad"
     });
@@ -122,7 +123,6 @@
       };
       this.loadProject = function(name) {
         var project;
-        console.log("Loading part: " + name);
         if (name !== _this.project.get("name")) {
           project = _this.lib.fetch({
             id: name

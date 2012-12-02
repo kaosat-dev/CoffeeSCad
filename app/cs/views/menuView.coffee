@@ -7,6 +7,10 @@ define (require)->
   mainMenu_template = require "text!templates/mainMenu.tmpl"
   sF_template = require "text!templates/menuFiles.tmpl"
   
+  #FIXME: temporary, needs cleanup
+  examples = require "modules/examples"
+  {Library,Project,ProjectFile} = require "modules/project"
+  
   class RecentFilesView extends Backbone.Marionette.ItemView
     template: sF_template
     tagName:  "li"
@@ -39,7 +43,8 @@ define (require)->
      events: 
       "mouseup .loadFileDirect":    "requestFileLoad"
       "mouseup .showEditor":        "showEditor"
-      "mouseup #aboutBtn":           "showAbout"
+      "mouseup #aboutBtn":          "showAbout"
+      "mouseup .exampleProject":     "loadExample"
       
      templateHelpers:
        dirtyStar: ()=>
@@ -56,7 +61,11 @@ define (require)->
       @app.vent.trigger("editorShowRequest")
       
     showAbout:(ev)=>
-      bootbox.dialog "Coffeescad v0.1 (experimental) by Mark 'kaosat-dev' Moissette ", [
+      bootbox.dialog """<b>Coffeescad v0.1</b> (experimental)<br/><br/>
+      Licenced under the MIT Licence<br/>
+      @2012 by Mark 'kaosat-dev' Moissette
+      
+      """, [
           label: "Ok"
           class: "btn-inverse"
         ],
@@ -124,7 +133,42 @@ define (require)->
     modelSaved: (model)=>
       @ui.dirtyStar.text ""
     
+    loadExample:(ev)=>
+      #TOTAL HACK !! yuck
+      index = ev.currentTarget.id
+      project = new Project({name:examples[index].name})  
+      mainPart = new ProjectFile
+          name: "mainPart"
+          ext: "coscad"
+          content: examples[index].content    
+      project.add mainPart
+      
+      ########VIEW UPDATES
+      if @app.project.dirty
+        bootbox.dialog "Project is unsaved, proceed anyway?", [
+          label: "Ok"
+          class: "btn-inverse"
+          callback: =>
+            @app.project = project
+            @app.mainPart= mainPart
+            @app.codeEditorView.switchModel @app.mainPart
+            @app.glThreeView.switchModel @app.mainPart
+            @app.mainMenuView.switchModel @app.project
+        ,
+          label: "Cancel"
+          class: "btn-inverse"
+          callback: ->
+        ]
+      else
+        @app.project = project
+        @app.mainPart= mainPart
+        @app.codeEditorView.switchModel @app.mainPart
+        @app.glThreeView.switchModel @app.mainPart
+        @app.mainMenuView.switchModel @app.project
+    
     onRender:()->
-      @ui.examplesList
+      @ui.examplesList.html("")
+      for index,example of examples
+        @ui.examplesList.append("<li id='#{index}' class='exampleProject'><a href=#> #{example.name}</a> </li>")
       
   return MainMenuView

@@ -13,7 +13,6 @@ define (require)->
       
     constructor:(options)->
       super options
-      #@set "title", @title
   
   class GlViewSettings extends Backbone.Model
     idAttribute: 'name'
@@ -22,8 +21,8 @@ define (require)->
       title: "3d view"
       
       csgRenderMode: "onCodeChange" #can be either "onCodeChange", "onCodeChangeDelayed", "onDemand", "onSave"
-      autoUpdate   : true
-      
+      csgRenderDelay: 1.0
+           
       renderer     : 'webgl'
       antialiasing : true
       
@@ -36,7 +35,7 @@ define (require)->
       gridSize     : 1000
       gridStep     : 100
       gridColor    : "0xFFFFFF"
-      gridOpacity  : 0.2
+      gridOpacity  : 0.1
       
       showStats    : false
       
@@ -46,7 +45,10 @@ define (require)->
       wireframe    : false
       
       helpersColor : "0xFFFFFF"
-      background   : "0xFFFFFF"
+      
+      
+      bgColor      : "#363335"
+      bgColor2     : "#363335"
       
     constructor:(options)->
       super options
