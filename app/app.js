@@ -2,7 +2,7 @@
 (function() {
 
   define(function(require) {
-    var $, AlertView, CodeEditorView, CsgProcessor, CsgStlExporterMin, DialogRegion, GlThreeView, Library, LoadView, MainContentLayout, MainMenuView, ModalRegion, Project, ProjectFile, ProjectView, SaveView, Settings, SettingsView, app, marionette, testcode, _, _ref, _ref1;
+    var $, CodeEditorView, CsgProcessor, CsgStlExporterMin, DialogRegion, GlThreeView, Library, LoadView, MainContentLayout, MainMenuView, ModalRegion, Project, ProjectFile, ProjectView, SaveView, Settings, SettingsView, app, marionette, testcode, _, _ref, _ref1;
     $ = require('jquery');
     _ = require('underscore');
     marionette = require('marionette');
@@ -16,7 +16,6 @@
     ModalRegion = require("views/modalRegion");
     DialogRegion = require("views/dialogRegion");
     _ref = require("views/fileSaveLoadView"), LoadView = _ref.LoadView, SaveView = _ref.SaveView;
-    AlertView = require("views/alertView");
     GlThreeView = require("views/glThreeView");
     _ref1 = require("modules/project"), Library = _ref1.Library, Project = _ref1.Project, ProjectFile = _ref1.ProjectFile;
     Settings = require("modules/settings");
@@ -47,7 +46,7 @@
 
     });
     app.addInitializer(function(options) {
-      var deleteProject, dispatchModelChanged, exporter, loadProject, saveProject, showEditor, stlexport, tutu,
+      var deleteProject, exporter, loadProject, saveProject, showEditor, stlexport,
         _this = this;
       exporter = new CsgStlExporterMin();
       this.settings = new Settings();
@@ -232,33 +231,12 @@
         _this.glThreeView.switchModel(_this.mainPart);
       };
       showEditor = function() {
-        console.log("show editor");
         return _this.dialogRegion.show(_this.codeEditorView);
-      };
-      dispatchModelChanged = function() {
-        var csgRenderMode, generalSettings;
-        generalSettings = _this.settings.byName("GlView");
-        console.log(generalSettings);
-        csgRenderMode = generalSettings.get("csgRenderMode");
-        switch (csgRenderMode) {
-          case "onCodeChange":
-            return console.log("onCodeChange");
-          case "onCodeChangeDelayed":
-            return console.log("onCodeChangeDelayed");
-          case "onDemand":
-            return console.log("onDemand");
-          case "onSave":
-            return console.log("onSave");
-        }
       };
       this.vent.bind("fileSaveRequest", saveProject);
       this.vent.bind("fileLoadRequest", loadProject);
       this.vent.bind("fileDeleteRequest", deleteProject);
       this.vent.bind("editorShowRequest", showEditor);
-      tutu = function() {
-        return console.log("ARKJHKH modelSaved");
-      };
-      this.bindTo(this.mainPart, "saved", tutu);
       this.mainMenuView.on("project:new:mouseup", function() {});
       this.mainMenuView.on("file:new:mouseup", function() {
         return _this.newProject();

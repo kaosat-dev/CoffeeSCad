@@ -268,15 +268,30 @@
       };
 
       GlThreeView.prototype.modelChanged = function(model, value) {
-        console.log("model changed");
-        if (this.settings.get("autoUpdate")) {
-          return this.fromCsg(this.model);
+        var callback,
+          _this = this;
+        switch (this.settings.get("csgRenderMode")) {
+          case "onCodeChange":
+            return this.fromCsg(this.model);
+          case "onCodeChangeDelayed":
+            if (this.CodeChangeTimer) {
+              clearTimeout(this.CodeChangeTimer);
+              this.CodeChangeTimer = null;
+            }
+            callback = function() {
+              return _this.fromCsg(_this.model);
+            };
+            return this.CodeChangeTimer = setTimeout(callback, 1500);
         }
       };
 
+      GlThreeView.prototype.modelSaved = function(model) {
+        return this.fromCsg(this.model);
+      };
+
       GlThreeView.prototype.settingsChanged = function(settings, value) {
-        var key, offset, tgt, val, _ref;
-        console.log("settings changed");
+        var key, offset, tgt, val, _ref,
+          _this = this;
         _ref = this.settings.changedAttributes();
         for (key in _ref) {
           val = _ref[key];
@@ -287,9 +302,40 @@
               this.fromCsg(this.model);
               this.render();
               break;
-            case "autoUpdate":
-              if (val) {
-                this.fromCsg(this.model);
+            case "csgRenderMode":
+              switch (val) {
+                case "onCodeChange":
+                  console.log("onCodeChange");
+                  if (this.modelSaveBinding != null) {
+                    this.unbindFrom(this.modelSaveBinding);
+                  }
+                  this.modelChangeBinding = this.bindTo(this.model, "change", this.modelChanged);
+                  this.fromCsg(this.model);
+                  break;
+                case "onCodeChangeDelayed":
+                  console.log("onCodeChangeDelayed");
+                  if (this.modelSaveBinding != null) {
+                    this.unbindFrom(this.modelSaveBinding);
+                  }
+                  this.modelChangeBinding = this.bindTo(this.model, "change", this.modelChanged);
+                  this.fromCsg(this.model);
+                  break;
+                case "onDemand":
+                  if (this.modelChangeBinding != null) {
+                    this.unbindFrom(this.modelChangeBinding);
+                  }
+                  if (this.modelSaveBinding != null) {
+                    this.unbindFrom(this.modelSaveBinding);
+                  }
+                  this.app.vent.bind("parseCsgRequest", function() {
+                    return _this.fromCsg(_this.model);
+                  });
+                  break;
+                case "onSave":
+                  if (this.modelChangeBinding != null) {
+                    this.unbindFrom(this.modelChangeBinding);
+                  }
+                  this.modelSaveBinding = this.bindTo(this.model, "saved", this.modelSaved);
               }
               break;
             case "showGrid":
@@ -430,6 +476,8 @@
 
         this.settingsChanged = __bind(this.settingsChanged, this);
 
+        this.modelSaved = __bind(this.modelSaved, this);
+
         this.modelChanged = __bind(this.modelChanged, this);
 
         this.selectObj = __bind(this.selectObj, this);
@@ -453,15 +501,9 @@
         this.toggleAxes = __bind(this.toggleAxes, this);
 
         this.toggleGrid = __bind(this.toggleGrid, this);
-
-        var _this = this;
         GlThreeView.__super__.constructor.call(this, options);
         this.settings = options.settings;
         this.app = require('app');
-        this.bindTo(this.model, "change", this.modelChanged);
-        this.app.vent.bind("parseCsgRequest", function() {
-          return _this.fromCsg(_this.model);
-        });
         this.stats = new stats();
         this.stats.domElement.style.position = 'absolute';
         this.stats.domElement.style.top = '30px';
@@ -474,7 +516,8 @@
       }
 
       GlThreeView.prototype.init = function() {
-        var val;
+        var csgRenderMode, val,
+          _this = this;
         this.renderer = null;
         this.configure(this.settings);
         this.renderer.shadowMapEnabled = true;
@@ -485,6 +528,39 @@
         this.projector = new THREE.Projector();
         this.setupScene();
         this.setupOverlayScene();
+        csgRenderMode = this.settings.get("csgRenderMode");
+        switch (csgRenderMode) {
+          case "onCodeChange":
+            console.log("onCodeChange");
+            if (this.modelSaveBinding != null) {
+              unbindFrom(this.modelSaveBinding);
+            }
+            this.modelChangeBinding = this.bindTo(this.model, "change", this.modelChanged);
+            break;
+          case "onCodeChangeDelayed":
+            console.log("onCodeChangeDelayed");
+            if (this.modelSaveBinding != null) {
+              unbindFrom(this.modelSaveBinding);
+            }
+            this.modelChangeBinding = this.bindTo(this.model, "change", this.modelChanged);
+            break;
+          case "onDemand":
+            if (this.modelChangeBinding != null) {
+              unbindFrom(this.modelChangeBinding);
+            }
+            if (this.modelSaveBinding != null) {
+              unbindFrom(this.modelSaveBinding);
+            }
+            this.app.vent.bind("parseCsgRequest", function() {
+              return _this.fromCsg(_this.model);
+            });
+            break;
+          case "onSave":
+            if (this.modelChangeBinding != null) {
+              unbindFrom(this.modelChangeBinding);
+            }
+            this.modelSaveBinding = this.bindTo(this.model, "saved", this.modelSaved);
+        }
         if (this.settings.get("shadows")) {
           this.renderer.shadowMapAutoUpdate = this.settings.get("shadows");
         }

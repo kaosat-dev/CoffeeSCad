@@ -140,8 +140,7 @@ define (require)->
             title: "Render mode"
             type: 'Select'
             options : ["onDemand", "onCodeChange", "onCodeChangeDelayed", "onSave"]
-          autoUpdate   : 'Checkbox' 
-          
+
           renderer     :
             type: 'Select'
             options : ["webgl", "canvas"]
@@ -176,8 +175,14 @@ define (require)->
           helpersColor :  'Text'
           background : 
             type: 'Select'
-            options: ['black', 'white', 'gradient']
-          
+            options: ['solid', 'gradient']
+          ### 
+          background:
+             type: 'Object'
+             subSchema:
+                zip:
+                  type: 'Number'
+          ###
           
       super options
   

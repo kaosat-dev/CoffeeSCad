@@ -10,6 +10,7 @@
     _ = require('underscore');
     marionette = require('marionette');
     require('bootstrap');
+    require('bootbox');
     mainMenu_template = require("text!templates/mainMenu.tmpl");
     sF_template = require("text!templates/menuFiles.tmpl");
     RecentFilesView = (function(_super) {
@@ -46,7 +47,8 @@
       MainMenuView.prototype.itemViewContainer = "#recentFilesList";
 
       MainMenuView.prototype.ui = {
-        dirtyStar: "#dirtyStar"
+        dirtyStar: "#dirtyStar",
+        examplesList: "#examplesList"
       };
 
       MainMenuView.prototype.triggers = {
@@ -64,7 +66,8 @@
 
       MainMenuView.prototype.events = {
         "mouseup .loadFileDirect": "requestFileLoad",
-        "mouseup .showEditor": "showEditor"
+        "mouseup .showEditor": "showEditor",
+        "mouseup #aboutBtn": "showAbout"
       };
 
       MainMenuView.prototype.templateHelpers = {
@@ -88,14 +91,28 @@
       };
 
       MainMenuView.prototype.showEditor = function(ev) {
-        console.log("show editor1");
         return this.app.vent.trigger("editorShowRequest");
+      };
+
+      MainMenuView.prototype.showAbout = function(ev) {
+        return bootbox.dialog("Coffeescad v0.1 (experimental) by Mark 'kaosat-dev' Moissette ", [
+          {
+            label: "Ok",
+            "class": "btn-inverse"
+          }
+        ], {
+          "backdrop": false,
+          "keyboard": true,
+          "animate": false
+        });
       };
 
       function MainMenuView(options) {
         this.modelSaved = __bind(this.modelSaved, this);
 
         this.modelChanged = __bind(this.modelChanged, this);
+
+        this.showAbout = __bind(this.showAbout, this);
 
         this.showEditor = __bind(this.showEditor, this);
 
@@ -175,6 +192,10 @@
 
       MainMenuView.prototype.modelSaved = function(model) {
         return this.ui.dirtyStar.text("");
+      };
+
+      MainMenuView.prototype.onRender = function() {
+        return this.ui.examplesList;
       };
 
       return MainMenuView;

@@ -13,7 +13,6 @@ define (require)->
   ModalRegion = require "views/modalRegion"
   DialogRegion = require "views/dialogRegion"
   {LoadView, SaveView} = require "views/fileSaveLoadView"
-  AlertView = require "views/alertView"
   GlThreeView = require "views/glThreeView"
   {Library,Project,ProjectFile} = require "modules/project"
 
@@ -259,36 +258,15 @@ return res
       @mainMenuView.switchModel @project
       @codeEditorView.switchModel @mainPart 
       @glThreeView.switchModel @mainPart
-      
       return
       
     showEditor=()=>
-      console.log ("show editor")
       @dialogRegion.show @codeEditorView
-      
-    dispatchModelChanged=()=>
-      generalSettings = @settings.byName "GlView"
-      console.log generalSettings
-      csgRenderMode = generalSettings.get "csgRenderMode"
-      switch csgRenderMode
-        when "onCodeChange"
-          console.log "onCodeChange"
-        when "onCodeChangeDelayed"
-          console.log "onCodeChangeDelayed"
-        when "onDemand"
-          console.log "onDemand"
-        when "onSave"
-          console.log "onSave"
-        #@fromCsg @model
       
     @vent.bind("fileSaveRequest", saveProject)
     @vent.bind("fileLoadRequest", loadProject)
     @vent.bind("fileDeleteRequest", deleteProject)
     @vent.bind("editorShowRequest", showEditor)
-    
-    tutu=()=>
-      console.log ("ARKJHKH modelSaved")
-    @bindTo(@mainPart, "saved", tutu)
     
     ################
     

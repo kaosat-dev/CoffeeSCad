@@ -3,6 +3,7 @@ define (require)->
   _ = require 'underscore'
   marionette = require 'marionette'
   require 'bootstrap'
+  require 'bootbox'
   mainMenu_template = require "text!templates/mainMenu.tmpl"
   sF_template = require "text!templates/menuFiles.tmpl"
   
@@ -19,7 +20,8 @@ define (require)->
     itemView: RecentFilesView
     itemViewContainer: "#recentFilesList"
     ui:
-      dirtyStar: "#dirtyStar"
+      dirtyStar:    "#dirtyStar"
+      examplesList: "#examplesList"
 
     triggers: 
       "mouseup .newFile":     "file:new:mouseup"
@@ -32,10 +34,12 @@ define (require)->
       "mouseup .redo":        "file:redo:mouseup"
       "mouseup .parseCSG"  :  "csg:parserender:mouseup"
       "mouseup .downloadStl" :"download:stl:mouseup"
+      
     
      events: 
       "mouseup .loadFileDirect":    "requestFileLoad"
       "mouseup .showEditor":        "showEditor"
+      "mouseup #aboutBtn":           "showAbout"
       
      templateHelpers:
        dirtyStar: ()=>
@@ -49,9 +53,16 @@ define (require)->
       @app.vent.trigger("fileLoadRequest", fileName)
     
     showEditor:(ev)=>
-      #fileName = $(ev.currentTarget).html()
-      console.log ("show editor1")
       @app.vent.trigger("editorShowRequest")
+      
+    showAbout:(ev)=>
+      bootbox.dialog "Coffeescad v0.1 (experimental) by Mark 'kaosat-dev' Moissette ", [
+          label: "Ok"
+          class: "btn-inverse"
+        ],
+        "backdrop" : false
+        "keyboard":   true
+        "animate":false
       
     constructor:(options)->
       super options
@@ -105,7 +116,6 @@ define (require)->
       @model = newModel
       @bindTo(@model, "dirtied", @modelChanged)
       @bindTo(@model, "allSaved", @modelSaved)
-      #(@model, "cleaned", @modelSaved)
       @render()
       
     modelChanged: (model, value)=>
@@ -113,5 +123,8 @@ define (require)->
      
     modelSaved: (model)=>
       @ui.dirtyStar.text ""
+    
+    onRender:()->
+      @ui.examplesList
       
   return MainMenuView

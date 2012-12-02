@@ -257,12 +257,21 @@ define (require) ->
       
     
     modelChanged:(model, value)=>
-      console.log "model changed"
-      if @settings.get("autoUpdate")
-        @fromCsg @model
+      switch @settings.get("csgRenderMode")
+        when "onCodeChange"
+          @fromCsg @model
+        when "onCodeChangeDelayed"
+          if @CodeChangeTimer
+            clearTimeout @CodeChangeTimer
+            @CodeChangeTimer = null
+          callback=()=>
+            @fromCsg @model
+          @CodeChangeTimer = setTimeout callback, 1500
+      
+    modelSaved:(model)=>
+      @fromCsg @model
         
     settingsChanged:(settings, value)=> 
-      console.log "settings changed"
       for key, val of @settings.changedAttributes()
         switch key
           when "renderer"
@@ -270,9 +279,34 @@ define (require) ->
             @init()
             @fromCsg @model
             @render()
-          when "autoUpdate"
-            if val
-              @fromCsg @model
+            
+          when "csgRenderMode"
+            switch val
+              when "onCodeChange"
+                console.log "onCodeChange"
+                if @modelSaveBinding?
+                  @unbindFrom @modelSaveBinding
+                @modelChangeBinding=@bindTo(@model, "change", @modelChanged)
+                @fromCsg @model
+              when "onCodeChangeDelayed"
+                console.log "onCodeChangeDelayed"
+                #TODO: add delay handling (any "change" events must invalidate the timer)
+                if @modelSaveBinding?
+                  @unbindFrom @modelSaveBinding
+                @modelChangeBinding=@bindTo(@model, "change", @modelChanged)
+                @fromCsg @model
+              when "onDemand"
+                if @modelChangeBinding?
+                  @unbindFrom @modelChangeBinding
+                if @modelSaveBinding?
+                  @unbindFrom @modelSaveBinding
+                @app.vent.bind "parseCsgRequest", =>
+                  @fromCsg @model
+              when "onSave"
+                if @modelChangeBinding?
+                  @unbindFrom @modelChangeBinding
+                @modelSaveBinding=@bindTo(@model, "saved", @modelSaved)
+
           when "showGrid"
             if val
               @addGrid()
@@ -362,11 +396,6 @@ define (require) ->
       @settings = options.settings #or new GlViewSettings() #TODO fix this horrible hack
       @app = require 'app'
       
-      @bindTo(@model, "change", @modelChanged)
-      @app.vent.bind "parseCsgRequest", =>
-        @fromCsg @model
-      
-      
       @stats = new stats()
       @stats.domElement.style.position = 'absolute'
       @stats.domElement.style.top = '30px'
@@ -396,6 +425,31 @@ define (require) ->
       @setupScene()
       @setupOverlayScene()
       
+      csgRenderMode = @settings.get "csgRenderMode"
+      switch csgRenderMode
+        when "onCodeChange"
+          console.log "onCodeChange"
+          if @modelSaveBinding?
+            unbindFrom @modelSaveBinding
+          @modelChangeBinding=@bindTo(@model, "change", @modelChanged)
+        when "onCodeChangeDelayed"
+          console.log "onCodeChangeDelayed"
+          #TODO: add delay handling (any "change" events must invalidate the timer)
+          if @modelSaveBinding?
+            unbindFrom @modelSaveBinding
+          @modelChangeBinding=@bindTo(@model, "change", @modelChanged)
+        when "onDemand"
+          if @modelChangeBinding?
+            unbindFrom @modelChangeBinding
+          if @modelSaveBinding?
+            unbindFrom @modelSaveBinding
+          @app.vent.bind "parseCsgRequest", =>
+            @fromCsg @model
+        when "onSave"
+          if @modelChangeBinding?
+            unbindFrom @modelChangeBinding
+          @modelSaveBinding=@bindTo(@model, "saved", @modelSaved)
+      
       if @settings.get("shadows")
         @renderer.shadowMapAutoUpdate = @settings.get("shadows")
       if @settings.get("showGrid")
@@ -410,7 +464,7 @@ define (require) ->
       
       if @mesh?
         @mesh.material.wireframe = @settings.get("wireframe")
-      
+        
       val = @settings.get("position")
       @setupView(val)
         
