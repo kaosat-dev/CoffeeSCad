@@ -31,7 +31,8 @@
       };
 
       DialogRegion.prototype.showModal = function(view) {
-        view.on("close", this.hideModal, this);
+        var _this = this;
+        view.isVisible = true;
         return $("#dialog").dialog({
           title: "Part Code Editor",
           width: 550,
@@ -39,6 +40,10 @@
           position: {
             my: "right center",
             at: "right bottom"
+          },
+          beforeClose: function() {
+            view.isVisible = false;
+            return view.close();
           }
         });
         /*

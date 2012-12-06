@@ -61,6 +61,7 @@ return shape
   ,
     "name": "mix"
     "content": """
+#Yeah , we can use classes!
 class Thingy
   constructor: (@thickness=10, @pos=[0,0,0], @rot=[0,0,0]) ->
   
@@ -75,11 +76,17 @@ class Thingy
       r:10
       $fn:12
       h:100
-      
+      center:true
+    ###
+    this could have been written as:
+    cyl = new Cylinder(r:10, $fn:12, h:100, center:true)
+
+    ###
     result = shape.subtract cyl
     return result.translate(@pos).rotate(@rot).
     color([1,0.5,0])
 
+#Here we create two new class instances
 thing = new Thingy(35)
 thing2 = new Thingy(25)
 
@@ -89,7 +96,7 @@ res = thing.render().union(
     .color([0.2,0.5,0.6]))
     
 res= res.rotateX(37)
-res= res.rotateZ(190)
+res= res.rotateZ(5)
 res= res.translate([0,0,100])
 return res"""
   ,

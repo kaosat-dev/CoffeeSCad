@@ -112,23 +112,24 @@ define (require)->
     if not "re" of options
       options.re = false #duh ?
     if "center" of options
-      if options.center is true
+      if options.center == true
         options.center= [0,0,0]
       else
         if options.re is true
-          console.log "rounded"
-          console.log options
           result = CSG.roundedCylinder options
         else
           result = CSG.cylinder options
-        result = result.translate([0,0,-options.h/2])
+        tmpCenter =  [options.center[0],options.center[1],(-options.h/2)+options.center[2]]
+        result = result.translate(tmpCenter)
+    else
+      options.center = [0,0,(-options.h/2)]
     if not result?
       if options.re is true
-        console.log "rounded"
-        console.log options
         result = CSG.roundedCylinder options
       else
         result = CSG.cylinder options
+      tmpCenter =  [options.center[0],options.center[1],(-options.h/2)+options.center[2]]
+      result = result.translate(tmpCenter)
     return result
   \n"""
   csgSugar += """Plane=CSG.Plane\n"""

@@ -700,22 +700,31 @@
       };
 
       GlThreeView.prototype.setupLights = function() {
-        var ambientLight, pointLight, spotLight;
-        pointLight = new THREE.PointLight(0x333333, 5);
-        pointLight.position.x = -2200;
-        pointLight.position.y = 3000;
-        pointLight.position.z = -2200;
+        var ambientLight, pointLight, pointLight2, spotLight;
+        pointLight = new THREE.PointLight(0x333333, 3);
+        pointLight.position.x = -2500;
+        pointLight.position.y = -2500;
+        pointLight.position.z = 2200;
+        pointLight2 = new THREE.PointLight(0x333333, 3);
+        pointLight2.position.x = 2500;
+        pointLight2.position.y = 2500;
+        pointLight2.position.z = -5200;
         this.ambientColor = '0x253565';
+        this.ambientColor = '0x354575';
+        this.ambientColor = '0x455585';
+        this.ambientColor = '0x565595';
         ambientLight = new THREE.AmbientLight(this.ambientColor);
-        spotLight = new THREE.SpotLight(0xbbbbbb, 2);
+        spotLight = new THREE.SpotLight(0xbbbbbb, 1.5);
         spotLight.position.x = 0;
         spotLight.position.y = 0;
-        spotLight.position.z = 2000;
+        spotLight.position.z = 4000;
         spotLight.castShadow = true;
         this.light = spotLight;
         this.scene.add(ambientLight);
         this.scene.add(pointLight);
-        return this.scene.add(spotLight);
+        this.scene.add(pointLight2);
+        this.scene.add(spotLight);
+        return this.camera.add(pointLight);
       };
 
       GlThreeView.prototype.setupView = function(val) {

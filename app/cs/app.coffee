@@ -269,7 +269,8 @@ return res
       return
       
     showEditor=()=>
-      @dialogRegion.show @codeEditorView
+      if not @codeEditorView.isVisible
+        @dialogRegion.show @codeEditorView
       
     @vent.bind("fileSaveRequest", saveProject)
     @vent.bind("fileLoadRequest", loadProject)

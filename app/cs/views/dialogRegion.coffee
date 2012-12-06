@@ -18,7 +18,8 @@ define (require)->
       return $el
 
     showModal: (view)=>
-      view.on("close", @hideModal, @)
+      #view.on("close", @hideModal, @)
+      view.isVisible=true
       $("#dialog").dialog
         title : "Part Code Editor"#view.model.get("name")
         width: 550
@@ -26,6 +27,11 @@ define (require)->
         position: 
           my: "right center"
           at: "right bottom"
+        beforeClose: =>
+          view.isVisible=false
+          #view.off("close", @hideModal, @)#: unbind this on close
+          view.close()
+          
       ###
       $(".draggable").draggable
         grid: [ 1, 1 ]
@@ -35,5 +41,6 @@ define (require)->
        
     hideModal: ->
       @$el.modal 'hide'
+      
       
   return DialogRegion

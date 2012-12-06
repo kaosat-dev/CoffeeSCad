@@ -231,7 +231,9 @@
         _this.glThreeView.switchModel(_this.mainPart);
       };
       showEditor = function() {
-        return _this.dialogRegion.show(_this.codeEditorView);
+        if (!_this.codeEditorView.isVisible) {
+          return _this.dialogRegion.show(_this.codeEditorView);
+        }
       };
       this.vent.bind("fileSaveRequest", saveProject);
       this.vent.bind("fileLoadRequest", loadProject);
