@@ -18,9 +18,11 @@ define (require)->
       return $el
 
     showModal: (view)=>
+      $el = @getEl()
       #view.on("close", @hideModal, @)
       view.isVisible=true
-      $("#dialog").dialog
+      el = "#dialogRegion"
+      $(el).dialog
         title : "Part Code Editor"#view.model.get("name")
         width: 550
         height: 700

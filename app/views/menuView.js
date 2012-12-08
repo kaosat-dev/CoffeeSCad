@@ -113,6 +113,8 @@
       function MainMenuView(options) {
         this.loadExample = __bind(this.loadExample, this);
 
+        this.settingsChanged = __bind(this.settingsChanged, this);
+
         this.modelSaved = __bind(this.modelSaved, this);
 
         this.modelChanged = __bind(this.modelChanged, this);
@@ -123,11 +125,17 @@
 
         this.requestFileLoad = __bind(this.requestFileLoad, this);
 
-        var _this = this;
+        var filtered,
+          _this = this;
         MainMenuView.__super__.constructor.call(this, options);
         this.app = require('app');
+        this.settings = this.app.settings.byName("General");
+        filtered = this.collection.first(this.settings.get("maxRecentFilesDisplay"));
+        this.originalCollection = this.collection;
+        this.collection = new Backbone.Collection(filtered);
         this.bindTo(this.model, "change", this.modelChanged);
         this.bindTo(this.model, "allSaved", this.modelSaved);
+        this.bindTo(this.settings, "change", this.settingsChanged);
         this.on("file:new:mouseup", function() {
           return _this.app.vent.trigger("fileNewRequest", _this);
         });
@@ -197,6 +205,25 @@
 
       MainMenuView.prototype.modelSaved = function(model) {
         return this.ui.dirtyStar.text("");
+      };
+
+      MainMenuView.prototype.settingsChanged = function(settings, value) {
+        var filtered, key, val, _ref1, _results;
+        _ref1 = this.settings.changedAttributes();
+        _results = [];
+        for (key in _ref1) {
+          val = _ref1[key];
+          switch (key) {
+            case "maxRecentFilesDisplay":
+              filtered = this.originalCollection.first(this.settings.get("maxRecentFilesDisplay"));
+              this.collection = new Backbone.Collection(filtered);
+              _results.push(this.render());
+              break;
+            default:
+              _results.push(void 0);
+          }
+        }
+        return _results;
       };
 
       MainMenuView.prototype.loadExample = function(ev) {

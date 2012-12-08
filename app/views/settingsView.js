@@ -5,7 +5,7 @@
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   define(function(require) {
-    var $, EditorSettingsForm, EditorSettingsWrapper, GeneralSettingsForm, GeneralSettingsWrapper, GitHubSettingsForm, GitHubSettingsWrapper, GlViewSettingsForm, GlViewSettingsWrapper, SettingContent, SettingContentItemView, SettingHeader, SettingHeaderItemView, SettingsView, boostrap, forms, forms_bstrap, marionette, s_template, sc_template, sca_template, sh_template, sha_template, _;
+    var $, EditorSettingsForm, EditorSettingsWrapper, GeneralSettingsForm, GeneralSettingsWrapper, GitHubSettingsForm, GitHubSettingsWrapper, GlViewSettingsForm, GlViewSettingsWrapper, KeyBindingsForm, KeyBindingsWrapper, SettingContent, SettingContentItemView, SettingHeader, SettingHeaderItemView, SettingsView, boostrap, forms, forms_bstrap, marionette, s_template, sc_template, sca_template, sh_template, sha_template, _;
     $ = require('jquery');
     _ = require('underscore');
     boostrap = require('bootstrap');
@@ -100,7 +100,8 @@
           "GeneralSettings": GeneralSettingsWrapper,
           "GlViewSettings": GlViewSettingsWrapper,
           "EditorSettings": EditorSettingsWrapper,
-          "GitHubSettings": GitHubSettingsWrapper
+          "GitHubSettings": GitHubSettingsWrapper,
+          "KeyBindings": KeyBindingsWrapper
         };
       }
 
@@ -203,7 +204,7 @@
           options.schema = {
             maxRecentFilesDisplay: {
               type: 'Number',
-              title: 'Nb of recent files to display (Feature N/A)'
+              title: 'Max recent files to display'
             }
           };
         }
@@ -375,6 +376,12 @@
           options.schema = {
             startLine: 'Number'
           };
+          options.fieldsets = [
+            {
+              "legend": "General settings",
+              "fields": ["startLine"]
+            }
+          ];
         }
         EditorSettingsForm.__super__.constructor.call(this, options);
       }
@@ -405,6 +412,47 @@
       };
 
       return EditorSettingsWrapper;
+
+    })(Backbone.Marionette.ItemView);
+    KeyBindingsForm = (function(_super) {
+
+      __extends(KeyBindingsForm, _super);
+
+      function KeyBindingsForm(options) {
+        if (!options.schema) {
+          options.schema = {
+            general: 'Number'
+          };
+        }
+        KeyBindingsForm.__super__.constructor.call(this, options);
+      }
+
+      return KeyBindingsForm;
+
+    })(Backbone.Form);
+    KeyBindingsWrapper = (function(_super) {
+
+      __extends(KeyBindingsWrapper, _super);
+
+      function KeyBindingsWrapper(options) {
+        this.render = __bind(this.render, this);
+        KeyBindingsWrapper.__super__.constructor.call(this, options);
+        this.wrappedForm = new KeyBindingsForm({
+          model: this.model
+        });
+      }
+
+      KeyBindingsWrapper.prototype.render = function() {
+        var tmp;
+        tmp = this.wrappedForm.render();
+        this.$el.append(tmp.el);
+        this.$el.addClass("tab-pane");
+        this.$el.addClass("fade");
+        this.$el.attr('id', this.model.get("name"));
+        return this.el;
+      };
+
+      return KeyBindingsWrapper;
 
     })(Backbone.Marionette.ItemView);
     GitHubSettingsForm = (function(_super) {

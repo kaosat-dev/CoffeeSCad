@@ -19,7 +19,8 @@
       GeneralSettings.prototype.defaults = {
         name: "General",
         title: "General",
-        maxRecentFilesDisplay: 5
+        maxRecentFilesDisplay: 5,
+        theme: "slate"
       };
 
       function GeneralSettings(options) {
@@ -95,8 +96,12 @@
       KeyBindings.prototype.defaults = {
         name: "Keys",
         title: "Key Bindings",
-        "undo": "CTRL+Z",
-        "redo": "CTRL+Y"
+        general: [
+          {
+            "undo": "CTRL+Z",
+            "redo": "CTRL+Y"
+          }
+        ]
       };
 
       function KeyBindings(options) {
@@ -201,9 +206,11 @@
       };
 
       Settings.prototype.byName = function(name) {
-        return this.filter(function(setting) {
+        var result;
+        result = this.filter(function(setting) {
           return setting.get('name') === name;
         });
+        return result[0];
       };
 
       return Settings;

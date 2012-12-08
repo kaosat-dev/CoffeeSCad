@@ -53,7 +53,8 @@ define (require)->
         "GlViewSettings":   GlViewSettingsWrapper
         "EditorSettings":   EditorSettingsWrapper
         "GitHubSettings":   GitHubSettingsWrapper
-                    
+        "KeyBindings"   :   KeyBindingsWrapper
+              
     getItemView: (item) =>
       view = SettingContentItemView
       if item?
@@ -113,7 +114,7 @@ define (require)->
         options.schema=
           maxRecentFilesDisplay: 
             type:'Number'
-            title: 'Nb of recent files to display (Feature N/A)'
+            title: 'Max recent files to display'
       super options
       
   class GeneralSettingsWrapper extends Backbone.Marionette.ItemView
@@ -240,6 +241,10 @@ define (require)->
       if not options.schema
         options.schema=
           startLine    : 'Number'
+        options.fieldsets=[
+          "legend": "General settings"
+          "fields": ["startLine"]
+        ]
       super options
   
   class EditorSettingsWrapper extends Backbone.Marionette.ItemView
@@ -256,6 +261,30 @@ define (require)->
       @$el.attr('id',@model.get("name"))
       return @el    
       
+  #-------------------------------------------------------------------#   
+  class KeyBindingsForm extends Backbone.Form
+
+    constructor:(options)->
+      if not options.schema
+        options.schema=
+          general    : 'Number'
+        
+      super options
+  
+  class KeyBindingsWrapper extends Backbone.Marionette.ItemView
+    constructor:(options)->
+      super options
+      @wrappedForm = new KeyBindingsForm
+        model: @model
+       
+    render:()=>
+      tmp = @wrappedForm.render()
+      @$el.append(tmp.el)
+      @$el.addClass("tab-pane")
+      @$el.addClass("fade")
+      @$el.attr('id',@model.get("name"))
+      return @el    
+          
   #-------------------------------------------------------------------# 
   class GitHubSettingsForm extends Backbone.Form
     

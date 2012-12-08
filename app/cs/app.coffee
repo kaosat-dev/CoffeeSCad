@@ -14,7 +14,10 @@ define (require)->
   DialogRegion = require "views/dialogRegion"
   {LoadView, SaveView} = require "views/fileSaveLoadView"
   GlThreeView = require "views/glThreeView"
+  {FileBrowseRegion,FileBrowserView} = require "views/fileBrowserView"
+  
   {Library,Project,ProjectFile} = require "modules/project"
+  
 
   Settings = require "modules/settings"
   CsgProcessor    = require "modules/csg.processor"
@@ -73,8 +76,8 @@ return res
     mainRegion: "#mainContent"
     statusRegion: "#statusBar"
     modal: ModalRegion
-    alertModal: ModalRegion
     dialogRegion: DialogRegion
+    fileBrowseRegion: FileBrowseRegion
     
   app.on "start", (opts)->
     console.log "App Started"
@@ -132,7 +135,8 @@ return res
     @vent.bind("downloadStlRequest", stlexport)
 
       
-    ################  
+    ################ 
+    """Create all main views"""
     @codeEditorView = new CodeEditorView
       model: @mainPart 
       settings: @settings.at(2)
@@ -144,18 +148,21 @@ return res
     @glThreeView = new GlThreeView
       model: @mainPart
       settings: @settings.at(1)
+    @fileBrowserView = new FileBrowserView
+      collection: @lib
       
     @mainContentLayout = new MainContentLayout
+    
+    """Show all necessary view in the correct regions"""
+    
     @mainRegion.show @mainContentLayout
     #@mainContentLayout.edit.show @codeEditorView
     @mainContentLayout.gl.show @glThreeView
     
-    #@modal.show(@codeEditorView)
     @dialogRegion.show @codeEditorView
-    
     @navigationRegion.show @mainMenuView
     
-    @alertModal.el= alertmodal
+    
     @modal.app = @
     
     #TODO: move this elsewhere
@@ -299,7 +306,10 @@ return res
     @mainMenuView.on "file:load:mouseup",=>
       @modView = new LoadView
         collection: @lib
-      @modal.show(@modView)
+      
+      @fileBrowseRegion.show @modView
+    
+      #@modal.show(@modView)
      
     @mainMenuView.on "settings:mouseup",=>
       @modView = new SettingsView 

@@ -2,7 +2,7 @@
 (function() {
 
   define(function(require) {
-    var $, CodeEditorView, CsgProcessor, CsgStlExporterMin, DialogRegion, GlThreeView, Library, LoadView, MainContentLayout, MainMenuView, ModalRegion, Project, ProjectFile, ProjectView, SaveView, Settings, SettingsView, app, marionette, testcode, testcode_old, _, _ref, _ref1;
+    var $, CodeEditorView, CsgProcessor, CsgStlExporterMin, DialogRegion, FileBrowseRegion, FileBrowserView, GlThreeView, Library, LoadView, MainContentLayout, MainMenuView, ModalRegion, Project, ProjectFile, ProjectView, SaveView, Settings, SettingsView, app, marionette, testcode, testcode_old, _, _ref, _ref1, _ref2;
     $ = require('jquery');
     _ = require('underscore');
     marionette = require('marionette');
@@ -17,7 +17,8 @@
     DialogRegion = require("views/dialogRegion");
     _ref = require("views/fileSaveLoadView"), LoadView = _ref.LoadView, SaveView = _ref.SaveView;
     GlThreeView = require("views/glThreeView");
-    _ref1 = require("modules/project"), Library = _ref1.Library, Project = _ref1.Project, ProjectFile = _ref1.ProjectFile;
+    _ref1 = require("views/fileBrowserView"), FileBrowseRegion = _ref1.FileBrowseRegion, FileBrowserView = _ref1.FileBrowserView;
+    _ref2 = require("modules/project"), Library = _ref2.Library, Project = _ref2.Project, ProjectFile = _ref2.ProjectFile;
     Settings = require("modules/settings");
     CsgProcessor = require("modules/csg.processor");
     CsgStlExporterMin = require("modules/csg.stlexporter");
@@ -31,8 +32,8 @@
       mainRegion: "#mainContent",
       statusRegion: "#statusBar",
       modal: ModalRegion,
-      alertModal: ModalRegion,
-      dialogRegion: DialogRegion
+      dialogRegion: DialogRegion,
+      fileBrowseRegion: FileBrowseRegion
     });
     app.on("start", function(opts) {
       console.log("App Started");
@@ -89,6 +90,8 @@
         return _this.vent.trigger("stlGenDone", blobUrl);
       };
       this.vent.bind("downloadStlRequest", stlexport);
+      "Create all main views";
+
       this.codeEditorView = new CodeEditorView({
         model: this.mainPart,
         settings: this.settings.at(2)
@@ -104,12 +107,16 @@
         model: this.mainPart,
         settings: this.settings.at(1)
       });
+      this.fileBrowserView = new FileBrowserView({
+        collection: this.lib
+      });
       this.mainContentLayout = new MainContentLayout;
+      "Show all necessary view in the correct regions";
+
       this.mainRegion.show(this.mainContentLayout);
       this.mainContentLayout.gl.show(this.glThreeView);
       this.dialogRegion.show(this.codeEditorView);
       this.navigationRegion.show(this.mainMenuView);
-      this.alertModal.el = alertmodal;
       this.modal.app = this;
       this.CreateNewProject = function() {
         _this.project = new Project({
@@ -211,13 +218,13 @@
         }
       };
       deleteProject = function(name) {
-        var i, model, _ref2;
+        var i, model, _ref3;
         console.log("deleting project " + name);
         _this.project.destroy();
         _this.lib.remove(_this.project);
-        _ref2 = _this.project.pfiles.models;
-        for (i in _ref2) {
-          model = _ref2[i];
+        _ref3 = _this.project.pfiles.models;
+        for (i in _ref3) {
+          model = _ref3[i];
           model.destroy();
         }
         localStorage.removeItem(_this.project.pfiles.localStorage.name);
@@ -260,7 +267,7 @@
         _this.modView = new LoadView({
           collection: _this.lib
         });
-        return _this.modal.show(_this.modView);
+        return _this.fileBrowseRegion.show(_this.modView);
       });
       this.mainMenuView.on("settings:mouseup", function() {
         _this.modView = new SettingsView({

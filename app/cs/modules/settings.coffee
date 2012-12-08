@@ -10,6 +10,7 @@ define (require)->
       name: "General"
       title: "General"
       maxRecentFilesDisplay:  5
+      theme: "slate"
       
     constructor:(options)->
       super options
@@ -69,8 +70,9 @@ define (require)->
     defaults:
       name: "Keys"
       title: "Key Bindings"
-      "undo":   "CTRL+Z"
-      "redo":   "CTRL+Y"
+      general:
+        ["undo":   "CTRL+Z",
+        "redo":   "CTRL+Y"]
       
     constructor:(options)->
       super options
@@ -135,8 +137,9 @@ define (require)->
       ###
     byName:(name)->
       #TODO: cleanup
-      return this.filter (setting)->
+      result = this.filter (setting)->
         return setting.get('name')==name
+      return result[0]
       
       
    

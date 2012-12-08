@@ -77,8 +77,16 @@ define (require)->
       super options
       @app = require 'app'
       
+      #filtered = @collection.where({type: 'todo'})
+      @settings = @app.settings.byName("General")
+      filtered = @collection.first(@settings.get("maxRecentFilesDisplay"))
+      @originalCollection = @collection
+      @collection = new Backbone.Collection(filtered)
+      
+      
       @bindTo(@model, "change", @modelChanged)
       @bindTo(@model, "allSaved", @modelSaved)
+      @bindTo(@settings, "change", @settingsChanged)
       
       @on "file:new:mouseup" ,=>
         @app.vent.trigger("fileNewRequest", @)
@@ -132,6 +140,14 @@ define (require)->
      
     modelSaved: (model)=>
       @ui.dirtyStar.text ""
+      
+    settingsChanged:(settings, value)=> 
+      for key, val of @settings.changedAttributes()
+        switch key
+          when "maxRecentFilesDisplay"
+            filtered = @originalCollection.first(@settings.get("maxRecentFilesDisplay"))
+            @collection = new Backbone.Collection(filtered)
+            @render()
     
     loadExample:(ev)=>
       #TOTAL HACK !! yuck

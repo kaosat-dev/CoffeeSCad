@@ -90,7 +90,8 @@
       Project.prototype.idAttribute = 'name';
 
       Project.prototype.defaults = {
-        name: "TestProject"
+        name: "TestProject",
+        lastModificationDate: null
       };
 
       function Project(options) {
@@ -155,6 +156,7 @@
 
       Project.prototype.onPartSaved = function(partName) {
         var part;
+        this.set("lastModificationDate", new Date());
         for (part in this.pfiles) {
           if (part.dirty) {
             return;
@@ -248,6 +250,12 @@
         this.bind("reset", this.onReset);
         this.namesFetch = false;
       }
+
+      Library.prototype.comparator = function(project) {
+        var date;
+        date = new Date(project.get('lastModificationDate'));
+        return date.getTime();
+      };
 
       Library.prototype.bli = function() {
         return console.log("calling bli");

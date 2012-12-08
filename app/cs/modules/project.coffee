@@ -3,7 +3,7 @@ define (require)->
   _ = require 'underscore'
   Backbone = require 'backbone'
   LocalStorage = require 'localstorage'
-  #project is a top level element
+  #project is a top level element (folder+metadata)
   #a project contains files
   #a project can reference another project (includes?)
   #a library contains multiple projects
@@ -62,6 +62,7 @@ define (require)->
     idAttribute: 'name'
     defaults:
       name:     "TestProject"
+      lastModificationDate: null
     
     constructor:(options)->
       super options
@@ -99,7 +100,9 @@ define (require)->
             locStorName = val+"-parts"
             @pfiles.localStorage= new Backbone.LocalStorage(locStorName)
             
-    onPartSaved:(partName)=> 
+    onPartSaved:(partName)=>
+      @set("lastModificationDate",new Date())
+      #console.log @get("lastModificationDate")
       for part of @pfiles
         if part.dirty
           return
@@ -157,13 +160,16 @@ define (require)->
       
       @namesFetch = false
     
+    comparator: (project)->
+      date = new Date(project.get('lastModificationDate'))
+      return date.getTime()
+    
     bli:()=>
       console.log("calling bli")
     
     save:()=>
       @each (model)-> 
         model.save()
-    
     
     fetch:(options)=>
       if options?

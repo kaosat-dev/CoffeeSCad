@@ -24,6 +24,7 @@ require.config
     jquery_hotkeys:   "../assets/js/plugins/jquery.hotkeys"
     jquery_ui:        "../assets/js/plugins/jquery-ui-1.9.0.custom.min"
     jquery_layout:    "../assets/js/plugins/jquery.layout-latest"
+    jquery_jstree:    "../assets/js/plugins/jquery.jstree"
     
     bootbox:          "../assets/js/plugins/bootbox.min"
     
@@ -122,6 +123,9 @@ require.config
     jquery_layout:
       deps:    ["jquery"]
       exports : "jquery_layout"
+    jquery_jstree:
+      deps: ["jquery"]
+      exports: "jquery_jstree"
 
   
 

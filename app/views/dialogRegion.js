@@ -31,9 +31,12 @@
       };
 
       DialogRegion.prototype.showModal = function(view) {
-        var _this = this;
+        var $el, el,
+          _this = this;
+        $el = this.getEl();
         view.isVisible = true;
-        return $("#dialog").dialog({
+        el = "#dialogRegion";
+        return $(el).dialog({
           title: "Part Code Editor",
           width: 550,
           height: 700,
