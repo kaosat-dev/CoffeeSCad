@@ -115,6 +115,10 @@ define (require)->
           maxRecentFilesDisplay: 
             type:'Number'
             title: 'Max recent files to display'
+          theme:
+            type:'Select'
+            options : ["slate", "spacelab"]
+            
       super options
       
   class GeneralSettingsWrapper extends Backbone.Marionette.ItemView

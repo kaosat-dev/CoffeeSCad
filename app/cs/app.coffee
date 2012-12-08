@@ -97,6 +97,10 @@ return res
     @settings = new Settings()
     @settings.fetch()
     
+    """Initialize correct theme css"""
+    theme = @settings.get("General").get("theme")
+    $("#mainTheme").attr("href","assets/css/themes/#{theme}/bootstrap.css");
+    
     @lib  = new Library()
     @lib.fetch()
     
@@ -283,6 +287,23 @@ return res
     @vent.bind("fileLoadRequest", loadProject)
     @vent.bind("fileDeleteRequest", deleteProject)
     @vent.bind("editorShowRequest", showEditor)
+    
+    @settingsChanged=(settings, value)=> 
+      console.log "gnu"
+      for key, val of @settings.get("General").changedAttributes()
+        switch key
+          when "theme"
+            $("#mainTheme").attr("href","assets/css/themes/#{val}/bootstrap.css");
+
+    
+    @bindTo(@settings.get("General"), "change", @settingsChanged)
+    
+   
+    
+    
+    
+    
+    $("link").attr("href",$(this).attr('rel'))
     
     ################
     

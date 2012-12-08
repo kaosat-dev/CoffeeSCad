@@ -48,11 +48,15 @@
 
     });
     app.addInitializer(function(options) {
-      var deleteProject, exporter, loadProject, saveProject, showEditor, stlexport,
+      var deleteProject, exporter, loadProject, saveProject, showEditor, stlexport, theme,
         _this = this;
       exporter = new CsgStlExporterMin();
       this.settings = new Settings();
       this.settings.fetch();
+      "Initialize correct theme css";
+
+      theme = this.settings.get("General").get("theme");
+      $("#mainTheme").attr("href", "assets/css/themes/" + theme + "/bootstrap.css");
       this.lib = new Library();
       this.lib.fetch();
       this.project = new Project({
@@ -246,6 +250,25 @@
       this.vent.bind("fileLoadRequest", loadProject);
       this.vent.bind("fileDeleteRequest", deleteProject);
       this.vent.bind("editorShowRequest", showEditor);
+      this.settingsChanged = function(settings, value) {
+        var key, val, _ref3, _results;
+        console.log("gnu");
+        _ref3 = _this.settings.get("General").changedAttributes();
+        _results = [];
+        for (key in _ref3) {
+          val = _ref3[key];
+          switch (key) {
+            case "theme":
+              _results.push($("#mainTheme").attr("href", "assets/css/themes/" + val + "/bootstrap.css"));
+              break;
+            default:
+              _results.push(void 0);
+          }
+        }
+        return _results;
+      };
+      this.bindTo(this.settings.get("General"), "change", this.settingsChanged);
+      $("link").attr("href", $(this).attr('rel'));
       this.mainMenuView.on("project:new:mouseup", function() {});
       this.mainMenuView.on("file:new:mouseup", function() {
         return _this.newProject();
