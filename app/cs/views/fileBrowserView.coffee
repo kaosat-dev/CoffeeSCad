@@ -51,15 +51,24 @@ define (require)->
     tagName: "ul"
     templateHelpers:
       renderFiles:()->
-        console.log "in render files"
         fileInfo = ""
-        console.log @
-        console.log @files
-        console.log @pfiles.length
+        fileInfo += "<li class='loadFileDirect'><a href='#' class='loadFileDirect'>mainpart.coscad</a></li>"
         for pfile in @pfiles
-          item = "<li><a href='#'>#{pfile.get('name')}</a></li>" 
+          item = "<li class='loadFileDirect'><a href='#'>#{pfile.get('name')}</a></li>" 
           fileInfo += item 
         return fileInfo
+    
+    constructor:(options)->
+      super options
+      @app = require 'app'
+    
+    events: 
+      "mouseup .loadFileDirect":    "requestFileLoad"
+      
+    requestFileLoad:(ev)=>
+      fileName = $(ev.currentTarget).html()
+      console.log "requesting #{fileName}"
+      #@app.vent.trigger("fileLoadRequest", fileName)
   
   class FileBrowserView extends Backbone.Marionette.CollectionView
     itemView: SingleFileView
@@ -70,11 +79,36 @@ define (require)->
       super options
       @app = require 'app'
     
-    onRender_:(options)->
+    onRender:(options)->
+      customMenu = (node) =>
+        # The default set of all items
+        items =
+          deleteItem: # The "delete" menu item
+            label: "Delete"
+            action: ->
+              console.log "aie aie"
+              console.log $(node)
+              if $(node).hasClass("folder")
+                delete items.deleteItem
+                @render()
+        
+        # Delete the "delete" menu item
+        delete items.deleteItem  if $(node).hasClass("folder")
+        items
+      
+      
       tmp = @$el.jstree 
         "core":
           "animation":0
-        "plugins" : ["themes","html_data","ui","contextmenu"]
+        "plugins" : ["html_data","ui","contextmenu","themeroller"]
+        "contextmenu":
+          "items": customMenu
+        #
+        ###"themes":
+          "theme": "default",
+          "dots": true,
+          "icons": false,
+        ###
         ### 
         "html_data" : 
           "data" : """
@@ -93,17 +127,16 @@ define (require)->
           </li>"""
         ###
       #@bindUIElements()
-    
-      tmp.bind("loaded.jstree", (event, data)=>
-        console.log "JSTREE ready")  
+      
 
       @$el.bind("open_node.jstree close_node.jstree",(e)->
         console.log "tutupouet"
       )
       
-      @$el.bind("select_node.jstree",(event, data)->
-        console.log "gnark"
-        #alert(data.rslt.obj.attr("id")))
+      @$el.bind("select_node.jstree",(event, data)=>
+        id = $.jstree._focused().get_selected().attr("id")
+        fileName = id[7..id.length] 
+        @app.vent.trigger("fileLoadRequest", fileName)
       )
 
   return {FileBrowserView, FileBrowseRegion}

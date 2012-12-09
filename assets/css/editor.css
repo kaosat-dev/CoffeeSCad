@@ -19,9 +19,18 @@
         overflow-x: auto;
 }
 
-.activeline {background: #e8f2ff !important;}
-span.CodeMirror-matchhighlight { background: #e9e9e9 }
-.CodeMirror-focused span.CodeMirror-matchhighlight { background: #e7e4ff !important; }
+/*for current full line selection*/
+/*.activeline {background: #e8f2ff !important;}
+.activeline {background: #0AAAF1 !important;}*/
+.activeline {background: #3a3f44 !important;}
+
+/*for current selection other instances*/
+/*span.CodeMirror-matchhighlight { background: #e9e9e9 }
+.CodeMirror-focused span.CodeMirror-matchhighlight { background: #e7e4ff !important; }*/
+
+
+span.CodeMirror-matchhighlight { background: #00438A }
+.CodeMirror-focused span.CodeMirror-matchhighlight { background: #00438A !important; }
 
 
 .CodeMirror-dialog {
@@ -87,12 +96,112 @@ span.CodeMirror-matchhighlight { background: #e9e9e9 }
 {
 	min-height:100%;
    	position:relative;
+   	padding-bottom: 60px;
 }
 #mainStuff
 {
 	padding:10px;
 	padding-bottom:100px;
 }
+
+/*-------------------*/
+.ui-dialog
+{
+	background-color: #3a3f44; /*same as slate theme bg*/
+	/*border-color: transparent !important;
+	border-width: 1px;*/
+	border: 1px solid rgba(0, 0, 0, 0.3);
+	color: #FFFFFF !important;
+	
+	
+}
+.ui-dialog-title
+{
+	color: #C8C8C8 !important;
+	border-color: #000000 !important;
+}
+.ui-dialog-titlebar
+{
+	border-color: #000000 !important;
+
+}
+.ui-dialog .ui-dialog-titlebar
+{
+	border-color: transparent !important;
+}
+
+.ui-dialog-content
+{
+	background-color: #3a3f44;/*same as slate theme bg*/
+}
+
+.ui-resizable-handle
+{
+	background-color: #3a3f44;/*same as slate theme bg*/
+	color:#3a3f44;
+}
+
+.ui-widget-content
+{
+	background: #3a3f44;
+	color: #C8C8C8 !important;
+}
+
+.ui-widget-content a
+{
+	color:inherit;
+}
+
+#dialogRegion
+{
+	background-color:  #262626;/*same as code editor black theme bg*/
+	padding: 0px;
+}
+
+.ui-dialog .ui-dialog-titlebar-close .ui-state-hover
+{
+	color:#FF0000 !important;
+}
+
+ui-icon ui-icon-closethick .ui-state-hover
+{
+	color:#FF0000 !important;
+	background-color: #FF0000 !important;
+}
+
+
+/*for file browser*/
+.ui-state-default
+{
+	background-color:  #262626;
+	background-image: none;
+}
+
+.ui-state-default, .ui-widget-content .ui-state-default, .ui-widget-header .ui-state-default
+{
+	background-color:  #3a3f44;
+	background-image: none;
+	color:#C8C8C8;
+	border-color: transparent;
+}
+.jstree
+{
+	border:0px;
+}
+
+#vakata-contextmenu 
+{
+	background-color:  #3a3f44 !important;
+	border: 1px solid rgba(0, 0, 0, 0.3) !important;
+	color:#C8C8C8 !important;
+}
+
+#vakata-contextmenu li a
+{
+	color:#C8C8C8 !important;
+}
+
+
 /*-------------------------------------*/	
 /*viewer*/
 canvas { cursor: move; }

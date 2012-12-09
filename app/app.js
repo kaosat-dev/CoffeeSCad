@@ -121,6 +121,7 @@
       this.mainContentLayout.gl.show(this.glThreeView);
       this.dialogRegion.show(this.codeEditorView);
       this.navigationRegion.show(this.mainMenuView);
+      this.fileBrowseRegion.show(this.fileBrowserView);
       this.modal.app = this;
       this.CreateNewProject = function() {
         _this.project = new Project({
@@ -290,7 +291,7 @@
         _this.modView = new LoadView({
           collection: _this.lib
         });
-        return _this.fileBrowseRegion.show(_this.modView);
+        return _this.modal.show(_this.modView);
       });
       this.mainMenuView.on("settings:mouseup", function() {
         _this.modView = new SettingsView({

@@ -165,6 +165,7 @@ return res
     
     @dialogRegion.show @codeEditorView
     @navigationRegion.show @mainMenuView
+    @fileBrowseRegion.show @fileBrowserView
     
     
     @modal.app = @
@@ -327,10 +328,8 @@ return res
     @mainMenuView.on "file:load:mouseup",=>
       @modView = new LoadView
         collection: @lib
+      @modal.show(@modView)
       
-      @fileBrowseRegion.show @modView
-    
-      #@modal.show(@modView)
      
     @mainMenuView.on "settings:mouseup",=>
       @modView = new SettingsView 

@@ -201,6 +201,7 @@
           _this = this;
         foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder);
         this.editor = CodeMirror.fromTextArea(this.ui.codeBlock.get(0), {
+          theme: "lesser-dark",
           mode: "coffeescript",
           tabSize: 2,
           indentUnit: 2,

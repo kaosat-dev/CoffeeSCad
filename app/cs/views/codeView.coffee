@@ -143,7 +143,7 @@ define (require)->
       foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder)
       
       @editor = CodeMirror.fromTextArea @ui.codeBlock.get(0),
-        #theme: "lesser-dark"
+        theme: "lesser-dark"
         mode:"coffeescript"
         tabSize: 2
         indentUnit:2

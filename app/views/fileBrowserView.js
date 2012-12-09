@@ -76,10 +76,6 @@
 
       __extends(SingleFileView, _super);
 
-      function SingleFileView() {
-        return SingleFileView.__super__.constructor.apply(this, arguments);
-      }
-
       SingleFileView.prototype.template = fileBrowserSingleTemplate;
 
       SingleFileView.prototype.tagName = "ul";
@@ -87,19 +83,32 @@
       SingleFileView.prototype.templateHelpers = {
         renderFiles: function() {
           var fileInfo, item, pfile, _i, _len, _ref;
-          console.log("in render files");
           fileInfo = "";
-          console.log(this);
-          console.log(this.files);
-          console.log(this.pfiles.length);
+          fileInfo += "<li class='loadFileDirect'><a href='#' class='loadFileDirect'>mainpart.coscad</a></li>";
           _ref = this.pfiles;
           for (_i = 0, _len = _ref.length; _i < _len; _i++) {
             pfile = _ref[_i];
-            item = "<li><a href='#'>" + (pfile.get('name')) + "</a></li>";
+            item = "<li class='loadFileDirect'><a href='#'>" + (pfile.get('name')) + "</a></li>";
             fileInfo += item;
           }
           return fileInfo;
         }
+      };
+
+      function SingleFileView(options) {
+        this.requestFileLoad = __bind(this.requestFileLoad, this);
+        SingleFileView.__super__.constructor.call(this, options);
+        this.app = require('app');
+      }
+
+      SingleFileView.prototype.events = {
+        "mouseup .loadFileDirect": "requestFileLoad"
+      };
+
+      SingleFileView.prototype.requestFileLoad = function(ev) {
+        var fileName;
+        fileName = $(ev.currentTarget).html();
+        return console.log("requesting " + fileName);
       };
 
       return SingleFileView;
@@ -116,14 +125,43 @@
         this.app = require('app');
       }
 
-      FileBrowserView.prototype.onRender_ = function(options) {
-        var tmp,
+      FileBrowserView.prototype.onRender = function(options) {
+        var customMenu, tmp,
           _this = this;
+        customMenu = function(node) {
+          var items;
+          items = {
+            deleteItem: {
+              label: "Delete",
+              action: function() {
+                console.log("aie aie");
+                console.log($(node));
+                if ($(node).hasClass("folder")) {
+                  delete items.deleteItem;
+                  return this.render();
+                }
+              }
+            }
+          };
+          if ($(node).hasClass("folder")) {
+            delete items.deleteItem;
+          }
+          return items;
+        };
         tmp = this.$el.jstree({
           "core": {
             "animation": 0
           },
-          "plugins": ["themes", "html_data", "ui", "contextmenu"]
+          "plugins": ["html_data", "ui", "contextmenu", "themeroller"],
+          "contextmenu": {
+            "items": customMenu
+          }
+          /*"themes":
+            "theme": "default",
+            "dots": true,
+            "icons": false,
+          */
+
           /* 
           "html_data" : 
             "data" : """
@@ -143,14 +181,14 @@
           */
 
         });
-        tmp.bind("loaded.jstree", function(event, data) {
-          return console.log("JSTREE ready");
-        });
         this.$el.bind("open_node.jstree close_node.jstree", function(e) {
           return console.log("tutupouet");
         });
         return this.$el.bind("select_node.jstree", function(event, data) {
-          return console.log("gnark");
+          var fileName, id;
+          id = $.jstree._focused().get_selected().attr("id");
+          fileName = id.slice(7, id.length + 1 || 9e9);
+          return _this.app.vent.trigger("fileLoadRequest", fileName);
         });
       };
 
