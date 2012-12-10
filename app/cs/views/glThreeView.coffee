@@ -1,6 +1,7 @@
 define (require) ->
   $ = require 'jquery'
   marionette = require 'marionette'
+  require 'bootstrap'
   csg = require 'csg'
   THREE = require 'three'
   THREE.CSG = require 'three_csg'
@@ -50,7 +51,7 @@ define (require) ->
       
     events:
       #'mousemove'   : 'mousemove'
-      #'mouseup'     : 'mouseup'
+      'mouseup'     : 'mouseup'
       #'mousewheel'  : 'mousewheel'
       #'mousedown'   : 'mousedown'
       'contextmenu' : 'rightclick'
@@ -123,10 +124,22 @@ define (require) ->
         return false
       
     rightclick:(ev)=>
+      """used either for selection or context menu"""
       normalizeEvent(ev)
       x = ev.offsetX
       y = ev.offsetY
       @selectObj(x,y)
+      
+      #Contextmenu
+      {ContextMenuRegion,ContextMenu} = require "views/contextMenuView"
+      @contextMenu = new ContextMenu()
+      @contextMenuRegion = new ContextMenuRegion
+          mouseCoords:[x,y]
+          selection: @current #pass in current selection
+      @contextMenuRegion.show @contextMenu
+      
+       
+      
       ev.preventDefault()
       return false
       
@@ -180,6 +193,9 @@ define (require) ->
       @dragStart={'x':ev.offsetX, 'y':ev.offsetY}
       
     mouseup:(ev)=>
+      
+      #if @contextMenuRegion?
+      #  @contextMenuRegion.close()
       #if @dragStart?
       #  @dragAmount=[@dragStart.x-ev.offsetX, @dragStart.y-ev.offsetY]
       #  @dragStart=null
@@ -414,6 +430,12 @@ define (require) ->
       @init()
       
       
+
+      # Save image into localStorage
+      #var imgAsDataURL = imgCanvas.toDataURL("image/png");
+      #try 
+      #  localStorage.setItem("elephant", imgAsDataURL);
+      
     init:()=>
       @renderer=null
       #TODO: do this properly
@@ -485,6 +507,7 @@ define (require) ->
                 clearColor: 0x00000000
                 clearAlpha: 0
                 antialias: true
+                preserveDrawingBuffer   : true
               @renderer.clear() 
               @renderer.setSize(@width, @height)
               
@@ -1180,6 +1203,18 @@ define (require) ->
         @mesh.receiveShadow = @settings.get("selfShadows") and @settings.get("shadows")
         @mesh.material.wireframe = @settings.get("wireframe")
         @mesh.name = "CSG_OBJ"
+        
+        ###TOTALLY useless, and slow, mirror effect 
+        resultCSG = app.csgProcessor.processScript(@model.get("content")+".mirroredZ()")
+        geom = THREE.CSG.fromCSG(resultCSG)
+        mat = new THREE.MeshPhongMaterial({color:  0xFFFFFF , shading: THREE.SmoothShading,  shininess: shine, specular: spec, metal: true, vertexColors: THREE.VertexColors}) 
+        mat.opacity = 0.5
+        mirrormesh = new THREE.Mesh(geom, mat)
+        #mirrormesh.rotation.set(0,90,0)
+        #mirrormesh.position.set(@mesh.position.x,@mesh.position.y,-@mesh.position.z-50)
+        @mesh.add mirrormesh
+        ###
+        
         
         @scene.add @mesh
         @controller.objects = [@mesh]

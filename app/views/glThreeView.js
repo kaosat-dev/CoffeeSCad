@@ -8,6 +8,7 @@
     var $, GlThreeView, MyAxisHelper, THREE, combo_cam, csg, detector, marionette, orbit_ctrl, requestAnimationFrame, stats, threedView_template, utils;
     $ = require('jquery');
     marionette = require('marionette');
+    require('bootstrap');
     csg = require('csg');
     THREE = require('three');
     THREE.CSG = require('three_csg');
@@ -48,6 +49,7 @@
       };
 
       GlThreeView.prototype.events = {
+        'mouseup': 'mouseup',
         'contextmenu': 'rightclick',
         "mousedown .toggleGrid": "toggleGrid",
         "mousedown .toggleAxes": "toggleAxes",
@@ -131,11 +133,20 @@
       };
 
       GlThreeView.prototype.rightclick = function(ev) {
-        var x, y;
+        "used either for selection or context menu";
+
+        var ContextMenu, ContextMenuRegion, x, y, _ref;
         normalizeEvent(ev);
         x = ev.offsetX;
         y = ev.offsetY;
         this.selectObj(x, y);
+        _ref = require("views/contextMenuView"), ContextMenuRegion = _ref.ContextMenuRegion, ContextMenu = _ref.ContextMenu;
+        this.contextMenu = new ContextMenu();
+        this.contextMenuRegion = new ContextMenuRegion({
+          mouseCoords: [x, y],
+          selection: this.current
+        });
+        this.contextMenuRegion.show(this.contextMenu);
         ev.preventDefault();
         return false;
       };
@@ -602,7 +613,8 @@
               this.renderer = new THREE.WebGLRenderer({
                 clearColor: 0x00000000,
                 clearAlpha: 0,
-                antialias: true
+                antialias: true,
+                preserveDrawingBuffer: true
               });
               this.renderer.clear();
               this.renderer.setSize(this.width, this.height);
@@ -1189,6 +1201,17 @@
           this.mesh.receiveShadow = this.settings.get("selfShadows") && this.settings.get("shadows");
           this.mesh.material.wireframe = this.settings.get("wireframe");
           this.mesh.name = "CSG_OBJ";
+          /*TOTALLY useless, and slow, mirror effect 
+          resultCSG = app.csgProcessor.processScript(@model.get("content")+".mirroredZ()")
+          geom = THREE.CSG.fromCSG(resultCSG)
+          mat = new THREE.MeshPhongMaterial({color:  0xFFFFFF , shading: THREE.SmoothShading,  shininess: shine, specular: spec, metal: true, vertexColors: THREE.VertexColors}) 
+          mat.opacity = 0.5
+          mirrormesh = new THREE.Mesh(geom, mat)
+          #mirrormesh.rotation.set(0,90,0)
+          #mirrormesh.position.set(@mesh.position.x,@mesh.position.y,-@mesh.position.z-50)
+          @mesh.add mirrormesh
+          */
+
           this.scene.add(this.mesh);
           return this.controller.objects = [this.mesh];
         } catch (error) {

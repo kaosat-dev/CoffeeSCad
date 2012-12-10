@@ -277,8 +277,8 @@ body {
 
 /*taken from https://github.com/twitter/bootstrap/issues/675*/
 .modal-big {
-    width: 700px;
-    margin-left: -350px;
+    width: 750px;
+    margin-left: -370px;
 }
 /*
 .bbf-field .bbf-editor {
