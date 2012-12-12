@@ -135,8 +135,9 @@ define (require)->
       console.log @
       console.log "_____________"
       ###
+      
     byName:(name)->
-      #TODO: cleanup
+      """Return a specific setting by name"""
       result = this.filter (setting)->
         return setting.get('name')==name
       return result[0]
