@@ -1,6 +1,7 @@
 define (require)->
   $ = require 'jquery'
   _ = require 'underscore'
+  Backbone = require 'backbone'
   marionette = require 'marionette'
   require 'bootstrap'
   require 'bootbox'
@@ -20,125 +21,22 @@ define (require)->
   
 
   Settings = require "modules/settings"
-  CsgProcessor    = require "modules/csg.processor"
-  CsgStlExporterMin     = require "modules/csg.stlexporter"
-
-  
   
   ###############################
-  testcode = """
-cube = new Cube
-  size: [100,110,100]
-  center: true
-  
-return cube
-  """
-  testcode_old = 
-  """
-class Thingy
-  constructor: (@thickness=10, @pos=[0,0,0], @rot=[0,0,0]) ->
-  
-  render: =>
-    result = new CSG()
-    shape1 = fromPoints [[0,0], [150,50], [0,-50]]
-    shape = shape1.expand(20, 25)
-    shape = shape.extrude
-      offset:[0, 0, @thickness]
-      
-    cyl = new Cylinder
-      r:10
-      $fn:12
-      h:100
-      
-    result = shape.subtract cyl
-    return result.translate(@pos).rotate(@rot).
-    color([1,0.5,0])
-
-thing = new Thingy(35)
-thing2 = new Thingy(25)
-
-res = thing.render().union(
-  thing2.render()
-  .mirroredX()
-    .color([0.2,0.5,0.6]))
-    
-res= res.rotateX(37)
-res= res.rotateZ(190)
-res= res.translate([0,0,100])
-return res
-  """
-
-  app = new marionette.Application
-    root: "/opencoffeescad"
+ 
+  app = new Backbone.Marionette.Application
+    root: "/coffeescad"
       
   app.addRegions
     navigationRegion: "#navigation"
     mainRegion: "#mainContent"
-    statusRegion: "#statusBar"
-    modal: ModalRegion
-    dialogRegion: DialogRegion
-    fileBrowseRegion: FileBrowseRegion
     
   app.on "start", (opts)->
     console.log "App Started"
     $("[rel=tooltip]").tooltip
       placement:'bottom' 
     
-   # jquery_layout = require 'jquery_layout' 
-   # $("body").layout({ applyDemoStyles: true })  
-    
-  app.on "initialize:after", ->
-    console.log "after init"
-    
-    ###fetch all settings###
   app.addInitializer (options)->
-    exporter = new CsgStlExporterMin()
-    
-    @settings = new Settings()
-    @settings.fetch()
-    
-    """Initialize correct theme css"""
-    theme = @settings.get("General").get("theme")
-    $("#mainTheme").attr("href","assets/css/themes/#{theme}/bootstrap.css");
-    
-    @lib  = new Library()
-    @lib.fetch()
-    
-    @project = new Project({name:'TestProject'})  
-    @mainPart = new ProjectFile
-        name: "mainPart"
-        ext: "coscad"
-        content: testcode    
-    @project.add @mainPart
-    ###
-    TODO: replace this hack with an actual reload of the LATEST project
-    if @lib.length > 0
-      @project = @lib.at(0)
-      name = @project.get("name")
-      @project = @lib.fetch({id:name})
-      @mainPart = @project.pfiles.at(0)
-      @project.add @mainPart
-    else
-      @project = new Project({name:'TestProject'})  
-      @mainPart = new ProjectFile
-        name: "mainPart"
-        ext: "coscad"
-        content: testcode    
-      @project.add @mainPart
-    ###
-    
-    ###############
-    @csgProcessor = new CsgProcessor()
-    CsgStlExporterMin = require "modules/csg.stlexporter"
-    
-    stlexport=()=>
-      stlExp = new CsgStlExporterMin @mainPart.csg
-      blobUrl = stlExp.export()
-      @vent.trigger("stlGenDone", blobUrl)
-    
-    @vent.bind("downloadStlRequest", stlexport)
-
-      
     ################ 
     """Create all main views"""
     @codeEditorView = new CodeEditorView
@@ -170,115 +68,6 @@ return res
     
     @modal.app = @
     
-    #TODO: move this elsewhere
-    @CreateNewProject=()=>
-      @project = new Project({name:'TestProject'}) 
-      @mainPart = new ProjectFile()
-      @project.add @mainPart 
-      ########VIEW UPDATES
-      @mainMenuView.switchModel @project
-      @codeEditorView.switchModel @mainPart
-      @glThreeView.switchModel @mainPart
-    
-    @loadProject=(name)=>    
-      #console.log("Loading part: #{name}")
-      if name != @project.get("name")
-        project = @lib.fetch({id:name})
-        @project = project
-        @mainPart = project.pfiles.at(0)
-        @project.add @mainPart
-        @lib.add @project
-        ########VIEW UPDATES
-        @codeEditorView.switchModel @mainPart 
-        @glThreeView.switchModel @mainPart
-        @mainMenuView.switchModel @project
-      else
-        #console.log "Project already loaded"
-      return
-    
-    @SaveProject=(name)=>
-      
-      @project.save()
-      #hack to ensure the various sub files(only the one for now) are saved aswell: this should be done within the project class'
-      #save method
-      @mainPart.save()
-      @mainMenuView.model = @project
-    
-    @newProject=()=>
-      if @project.dirty
-        bootbox.dialog "Project is unsaved, proceed anyway?", [
-          label: "Ok"
-          class: "btn-inverse"
-          callback: =>
-            @CreateNewProject()
-        ,
-          label: "Cancel"
-          class: "btn-inverse"
-          callback: ->
-        ]
-      else
-        @CreateNewProject()
-        
-    saveProject= (params) =>
-      if @project.get("name") == params
-        @SaveProject()
-      else
-        foundProjects = @lib.get(params)
-        if foundProjects?
-          bootbox.dialog "Project already exists, overwrite?", [
-            label: "Ok"
-            class: "btn-inverse"
-            callback: =>
-              @project.set("name",params)
-              @lib.add @project
-              @SaveProject()
-          ,
-            label: "Cancel"
-            class: "btn-inverse"
-            callback: ->
-          ]
-          
-        else
-          @project.set("name",params)
-          @lib.add @project
-          @SaveProject()
-      return      
-      
-    loadProject= (name) =>
-      #first check if a the current project is dirty/modified (don't want to loose work !)
-      if @project.dirty
-        bootbox.dialog "Project is unsaved, proceed anyway?", [
-          label: "Ok"
-          class: "btn-inverse"
-          callback: =>
-            @loadProject(name)
-        ,
-          label: "Cancel"
-          class: "btn-inverse"
-          callback: ->
-        ]
-       else
-        @loadProject(name)
-        
-    
-    deleteProject=(name)=>
-      console.log("deleting project #{name}")
-      @project.destroy()
-      @lib.remove(@project)
-      for i,model of @project.pfiles.models
-        model.destroy()
-      #FIXME: yuck, ugly hack to remove the complete collection too
-      localStorage.removeItem(@project.pfiles.localStorage.name)
-      
-      #ReCreate Fresh project and part
-      @project = new Project({name:'TestProject'}) 
-      @mainPart = new ProjectFile()
-      @project.add @mainPart 
-      
-      @mainMenuView.switchModel @project
-      @codeEditorView.switchModel @mainPart 
-      @glThreeView.switchModel @mainPart
-      return
       
     showEditor=()=>
       if not @codeEditorView.isVisible
@@ -329,7 +118,6 @@ return res
       @modView = new LoadView
         collection: @lib
       @modal.show(@modView)
-      
      
     @mainMenuView.on "settings:mouseup",=>
       @modView = new SettingsView 

@@ -3,10 +3,9 @@ define (require)->
   _ = require 'underscore'
   Backbone = require 'backbone'
   LocalStorage = require 'localstorage'
-  #project is a top level element (folder+metadata)
-  #a project contains files
-  #a project can reference another project (includes?)
-  #a library contains multiple projects
+ 
+  
+  CsgProcessor    = require "modules/csg.processor"
   
   debug  = false
   #TODO: add support for multiple types of storage, settable per project
@@ -59,10 +58,19 @@ define (require)->
     ###
     
   class Project extends Backbone.Model
+    """Main aspect of coffeescad : contains all the parts
+    * project is a top level element ("folder"+metadata)
+    * a project contains files /parts
+    * a project can reference another project (includes)
+    """
+    
     idAttribute: 'name'
     defaults:
       name:     "TestProject"
       lastModificationDate: null
+      
+    @exporter : new CsgStlExporterMin()
+    @csgProcessor : new CsgProcessor()
     
     constructor:(options)->
       super options
@@ -148,7 +156,10 @@ define (require)->
       return response
     ###
     
-  class Library extends Backbone.Collection   
+  class Library extends Backbone.Collection
+    """
+    a library contains multiple projects
+    """  
     model: Project
     localStorage: new Backbone.LocalStorage("Library")
     defaults:
