@@ -3,14 +3,11 @@ define (require)->
   _ = require 'underscore'
   Backbone = require 'backbone'
   marionette = require 'marionette'
-  require 'bootstrap'
-  require 'bootbox'
-  
+  CoffeeScadApp = require 'modules/coffeescad.app'  
   
   ###############################
  
-  app = new Backbone.Marionette.Application
-    root: "/coffeescad"
+  app = new CoffeeScadApp()
   # Mix Backbone.Events, modules, and layout management into the app object.
   ###return _.extend app,
     module: (additionalProps)->
