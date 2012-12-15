@@ -12,8 +12,7 @@
       Library
     </p>
   </body>
-</html>
-</richcontent>
+</html></richcontent>
 <node CREATED="1350758648597" ID="ID_438992088" MODIFIED="1355013304061" TEXT="what">
 <node CREATED="1355013312260" ID="ID_949055210" MODIFIED="1355013312260">
 <richcontent TYPE="NODE"><html>
@@ -25,8 +24,7 @@
       holds info about all projects
     </p>
   </body>
-</html>
-</richcontent>
+</html></richcontent>
 </node>
 </node>
 <node CREATED="1355011583107" HGAP="19" ID="ID_25160753" MODIFIED="1355013318781" TEXT="storage" VSHIFT="10">
@@ -160,6 +158,12 @@
 </node>
 <node CREATED="1350765644598" FOLDED="true" ID="ID_1742136158" MODIFIED="1355012893950" POSITION="left" TEXT="how to">
 <node CREATED="1350765647742" HGAP="15" ID="ID_1048509829" MODIFIED="1355011041244" TEXT="seperate csg code into multiple distinct meshes" VSHIFT="43"/>
+</node>
+<node CREATED="1355519723515" ID="ID_970769818" MODIFIED="1355519727529" POSITION="left" TEXT="app flow">
+<node CREATED="1355519729001" ID="ID_1182559828" MODIFIED="1355520105341" TEXT="on start">
+<node CREATED="1355519736081" ID="ID_1563301632" MODIFIED="1355519744676" TEXT="retrieve last project"/>
+<node CREATED="1355519747258" ID="ID_1579671376" MODIFIED="1355519752483" TEXT="render csg"/>
+</node>
 </node>
 </node>
 </map>
