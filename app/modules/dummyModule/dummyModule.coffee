@@ -4,4 +4,5 @@ define (require)->
   Backbone = require 'backbone'
   marionette = require 'marionette'
   
-  return new Backbone.Marionette.EventAggregator()
+  
+  
