@@ -84,6 +84,7 @@ define (require)->
       
       locStorName = @get("name")+"-parts"
       @pfiles.localStorage= new Backbone.LocalStorage(locStorName)
+      storageType = "localStorage"#can be localStorage, dropbox, github
       
     onReset:()->
       if debug
@@ -97,8 +98,6 @@ define (require)->
         console.log "Project sync" 
         console.log @
         console.log "_____________"
-      #locStorName = @get("name")+"-parts"
-      #@pfiles.localStorage= new Backbone.LocalStorage(locStorName)
       
     onChanged:(settings, value)->
       @dirty=true
@@ -110,14 +109,12 @@ define (require)->
             
     onPartSaved:(partName)=>
       @set("lastModificationDate",new Date())
-      #console.log @get("lastModificationDate")
       for part of @pfiles
         if part.dirty
           return
       @trigger "allSaved"
       
     onPartChanged:()=>
-      
       
     isNew2:()->
       return @new 
@@ -152,75 +149,7 @@ define (require)->
     parse: (response)=>
       console.log("in proj parse")
       console.log response
-      
       return response
     ###
-    
-  class Library extends Backbone.Collection
-    """
-    a library contains multiple projects
-    """  
-    model: Project
-    localStorage: new Backbone.LocalStorage("Library")
-    defaults:
-      recentProjects: []
-    
-    constructor:(options)->
-      super options
-      @bind("reset", @onReset)
       
-      @namesFetch = false
-    
-    comparator: (project)->
-      date = new Date(project.get('lastModificationDate'))
-      return date.getTime()
-    
-    bli:()=>
-      console.log("calling bli")
-    
-    save:()=>
-      @each (model)-> 
-        model.save()
-    
-    fetch:(options)=>
-      if options?
-        if options.id?
-          id = options.id
-          console.log "id specified"
-          proj=null
-          if @get(id)
-            proj = @get(id)
-            proj.new = false
-            proj.pfiles.fetch()
-          #else
-          #  proj = new Project({name:id})
-          #  proj.collection = @
-          #  proj.fetch()
-          return proj
-        else
-          #console.log "NO id specified"
-          res= Library.__super__.fetch.apply(this, options)
-          return res
-      else
-          #console.log "NO id specified2"
-          res = super(options)
-          return res
-        
-    parse: (response)=>
-      #console.log("in lib parse")
-      for i, v of response
-        response[i].pfiles = new ProjectFiles(response[i].pfiles)
-      return response
-      
-    getLatest:()->
-      @namesFetch = true
-      
-    onReset:()->
-      #if @models.length == 0
-      #  @save()
-      if debug
-        console.log "Library reset" 
-        console.log @
-        console.log "_____________"
-      
-  return {ProjectFile,Project,Library}
+  return {ProjectFile,Project}

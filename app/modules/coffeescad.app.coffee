@@ -39,15 +39,14 @@ define (require)->
       @on("initialize:after",@onInitializeAfter)
       @on("start", @onStart)
       @vent.on("app:started", @onAppStarted)
-      #vent.bind("dummy:new", @onAppStarted)
       
       @initLayout()
       ###
-      @vent.bind("downloadStlRequest", stlexport)
-      @vent.bind("fileSaveRequest", saveProject)
-      @vent.bind("fileLoadRequest", loadProject)
-      @vent.bind("fileDeleteRequest", deleteProject)
-      @vent.bind("editorShowRequest", showEditor)
+      @vent.bind("downloadStlRequest", stlexport)#COMMAND
+      @vent.bind("fileSaveRequest", saveProject)#COMMAND
+      @vent.bind("fileLoadRequest", loadProject)#COMMAND
+      @vent.bind("fileDeleteRequest", deleteProject)#COMMAND
+      @vent.bind("editorShowRequest", showEditor)#COMMAND
       ###
     initLayout:=>
       @layout = new MainLayout()
