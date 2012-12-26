@@ -3,9 +3,8 @@ define (require)->
   _ = require 'underscore'
   marionette = require 'marionette'
   
-  vent = require './coffeescad.vent'
-  contentTemplate = require "text!modules/content.tmpl"
-  DummySubApp = require 'modules/dummyModule/dummyApp'
+  vent = require './core/vent'
+  contentTemplate = require "text!./core/content.tmpl"
   
   class MainLayout extends Backbone.Marionette.Layout
     template: contentTemplate

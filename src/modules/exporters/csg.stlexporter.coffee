@@ -1,6 +1,5 @@
 define (require) ->
-  csg = require 'csg'
-  utils = require "modules/utils"
+  utils = require "modules/core/utils/utils"
   
   class CsgStlExporterMin
     #exports the given csg tree to the stl file format (binary only for now)
