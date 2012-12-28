@@ -1,7 +1,7 @@
 define (require) ->
   utils = require "modules/core/utils/utils"
   
-  class CsgStlExporterMin
+  class CsgStlExporter
     #exports the given csg tree to the stl file format (binary only for now)
     
     constructor:(csgObject)->
@@ -73,7 +73,7 @@ define (require) ->
           
       return blobData
       
-  return CsgStlExporterMin
+  return CsgStlExporter
   ###############################
   ###
   generateOutputFileFileSystem: ()-> 

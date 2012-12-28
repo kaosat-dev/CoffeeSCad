@@ -4,8 +4,7 @@ define (require)->
   Backbone = require 'backbone'
   LocalStorage = require 'localstorage'
  
-  
-  CsgProcessor    = require "modules/csg.processor"
+  CsgProcessor    = require "./csg/csg.processor"
   
   debug  = false
   #TODO: add support for multiple types of storage, settable per project
@@ -69,7 +68,7 @@ define (require)->
       name:     "TestProject"
       lastModificationDate: null
       
-    @exporter : new CsgStlExporterMin()
+    #@exporter : new CsgStlExporterMin()
     @csgProcessor : new CsgProcessor()
     
     constructor:(options)->
@@ -152,4 +151,4 @@ define (require)->
       return response
     ###
       
-  return {ProjectFile,Project}
+  return Project

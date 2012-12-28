@@ -60,7 +60,7 @@ define (require) ->
         
     compileFormatCoffee:(source)->
       #console.log("Compiling & formating coffeescad code")
-      csgSugar = require "modules/csg.sugar"
+      csgSugar = require "./csg.sugar"
       
       app = require "app"   
       lib = app.lib

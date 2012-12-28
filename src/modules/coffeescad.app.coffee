@@ -4,21 +4,20 @@ define (require)->
   marionette = require 'marionette'
   
   vent = require './core/vent'
+  
   contentTemplate = require "text!./core/content.tmpl"
+  MenuView = require './core/menuView'
+  Project = require "./core/projects/project"  
   
   class MainLayout extends Backbone.Marionette.Layout
     template: contentTemplate
     regions:
       menu:    "#menu"
       content: "#content"
-    
-    events:
-      "click .newDummy":    ()->vent.trigger("dummy:new")
-      "click .deleteDummy": ()->vent.trigger("dummy:delete")
-      "click .listDummies": ()->vent.trigger("dummy:list")
       
     constructor:(options)->
       super options
+      @headerRegion.show @layout
       
       
   class CoffeeScadApp extends Backbone.Marionette.Application
@@ -27,7 +26,6 @@ define (require)->
     regions:
       headerRegion: "#header"
       mainRegion: "#content"
-      
       
     constructor:(options)->
       super options
@@ -40,6 +38,7 @@ define (require)->
       @vent.on("app:started", @onAppStarted)
       
       @initLayout()
+      @initData()
       ###
       @vent.bind("downloadStlRequest", stlexport)#COMMAND
       @vent.bind("fileSaveRequest", saveProject)#COMMAND
@@ -48,24 +47,29 @@ define (require)->
       @vent.bind("editorShowRequest", showEditor)#COMMAND
       ###
     initLayout:=>
-      @layout = new MainLayout()
-      @headerRegion.show @layout
+      @menuView = new MenuView()
+      #@layout = new MainLayout()
+      @headerRegion.show @menuView
     
     initSettings:->
       @settings = new Settings()
       @bindTo(@settings.get("General"), "change", @settingsChanged)
+    
+    initData:->
+      @project = new Project()
       
     onStart:()=>
       console.log "app started"
       #$("[rel=tooltip]").tooltip
       #  placement:'bottom' 
       #@glThreeView.fromCsg()#YIKES 
-      console.log @layout
-      dummySubApp = new DummySubApp
+      CodeEditor = require './editors/codeEditor/codeEditor'
+      codeEditor = new CodeEditor
         regions: 
-          mainRegion: "#content"#@layout.regions
-      dummySubApp.start()
-      
+          mainRegion: "#content"
+        project:
+          @project
+      codeEditor.start()
       
     onAppStarted:(appName)->
       console.log "I see app: #{appName} has started"

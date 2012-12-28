@@ -3,11 +3,12 @@ define (require)->
   _ = require 'underscore'
   Backbone = require 'backbone'
   marionette = require 'marionette'
-  vent = require 'core/vent'
+  vent = require 'modules/core/vent'
   
   View = require './codeEditorView'
-  Project = require 'core/projects/project'
+  CodeEditorSettings = require './codeEditorSettings'
   CodeEditorRouter = require "./codeEditorRouter"
+  
   ###############################
  
   class CodeEditor extends Backbone.Marionette.Application
@@ -19,7 +20,8 @@ define (require)->
       super options
       @vent = vent
       @addRegions @regions
-      
+      @settings = new CodeEditorSettings()
+      @project= options.project
       @router = new CodeEditorRouter
         controller: @
         
@@ -32,5 +34,8 @@ define (require)->
         @vent.trigger "app:started", "#{@title}"
         
     onStart:()=>
+      @mainRegion.show new View 
+        model:    @project
+        settings: @settings
       
-  return DummySubApp
+  return CodeEditor

@@ -4,6 +4,7 @@ define (require)->
   Backbone = require 'backbone'
   LocalStorage = require 'localstorage'
   
+  
   class CodeEditorSettings extends Backbone.Model
     idAttribute: 'name'
     defaults:
