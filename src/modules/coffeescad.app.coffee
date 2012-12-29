@@ -57,12 +57,17 @@ define (require)->
     
     initData:->
       @project = new Project()
+      @project.create_part
+        name:"testPart"
+      @project.create_part
+        name:"otherPart"
+      @project.create_part
+        name:"someOtherPart"
+      
       
     onStart:()=>
       console.log "app started"
-      #$("[rel=tooltip]").tooltip
-      #  placement:'bottom' 
-      #@glThreeView.fromCsg()#YIKES 
+      
       CodeEditor = require './editors/codeEditor/codeEditor'
       codeEditor = new CodeEditor
         regions: 
@@ -70,6 +75,16 @@ define (require)->
         project:
           @project
       codeEditor.start()
+      
+      ### 
+      VisualEditor = require './editors/visualEditor/visualEditor'
+      visualEditor = new VisualEditor
+        regions: 
+          mainRegion: "#content"
+        project:
+          @project
+      visualEditor.start()
+      ###
       
     onAppStarted:(appName)->
       console.log "I see app: #{appName} has started"

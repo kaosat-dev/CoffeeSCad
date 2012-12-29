@@ -142,8 +142,11 @@ define (require)->
         pFile.fetch()
       return pFile
       
-    export:(format)->
-      
+    create_part:(options)->
+      part = new ProjectFile
+        name: options.name 
+        content: ""    
+      @add part      
     ###
     parse: (response)=>
       console.log("in proj parse")

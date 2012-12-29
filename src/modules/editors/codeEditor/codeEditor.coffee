@@ -5,7 +5,7 @@ define (require)->
   marionette = require 'marionette'
   vent = require 'modules/core/vent'
   
-  View = require './codeEditorView'
+  CodeEditorView = require './multiFileView'
   CodeEditorSettings = require './codeEditorSettings'
   CodeEditorRouter = require "./codeEditorRouter"
   
@@ -34,7 +34,7 @@ define (require)->
         @vent.trigger "app:started", "#{@title}"
         
     onStart:()=>
-      @mainRegion.show new View 
+      @mainRegion.show new CodeEditorView 
         model:    @project
         settings: @settings
       

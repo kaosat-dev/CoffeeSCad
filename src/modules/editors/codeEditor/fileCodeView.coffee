@@ -15,11 +15,12 @@ define (require)->
   
   
   vent = require 'modules/core/vent'
-  codeEditor_template = require "text!./codeEditor.tmpl"
+  codeEditor_template = require "text!./fileCode.tmpl"
   
   
-  class CodeEditorView extends Backbone.Marionette.CompositeView
+  class FileCodeView extends Backbone.Marionette.ItemView
     template: codeEditor_template
+    className: "tab-pane"
     ui:
       codeBlock : "#codeArea"
       errorBlock: "#errorConsole"
@@ -43,6 +44,13 @@ define (require)->
       @bindTo(@model, "saved", @modelSaved)
       @bindTo(@settings, "change", @settingsChanged)
       @vent.bind("csgParseError", @showError)
+      @vent.on("file:closed", @onFileClosed)
+    
+    onFileClosed:(fileName)=>
+      console.log @model
+      if fileName == @model.get("name")
+        console.log "gne"
+        @close()
     
     switchModel:(newModel)->
       #replace current model with a new one
@@ -61,7 +69,7 @@ define (require)->
       @vent.trigger("modelChanged", @)
       
       $("[rel=tooltip]").tooltip
-            placement:'bottom' 
+            placement:'right' 
             
     modelSaved: (model)=>
       
@@ -174,6 +182,7 @@ define (require)->
             #"Ctrl-S" : saveProject
             Tab:(cm)->
               cm.replaceSelection("  ", "end")
+      
             
       @hlLine=  @editor.setLineClass(0, "activeline")
       
@@ -181,5 +190,7 @@ define (require)->
       #TODO : find  a way to put this in the init/constructor
       @vent.bind("undoRequest", @undo)
       @vent.bind("redoRequest", @redo)
+      @$el.attr('id', @model.get("name"))
       
-  return CodeEditorView
+      
+  return FileCodeView
