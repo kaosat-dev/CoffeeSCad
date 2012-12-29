@@ -72,8 +72,7 @@ define (require)->
       codeEditor = new CodeEditor
         regions: 
           mainRegion: "#content"
-        project:
-          @project
+        project: @project
       codeEditor.start()
       
       ### 

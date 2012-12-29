@@ -144,8 +144,8 @@ define (require)->
       
     create_part:(options)->
       part = new ProjectFile
-        name: options.name 
-        content: ""    
+        name: options.name ? "a Part"
+        content: options.content ? " \n\n"    
       @add part      
     ###
     parse: (response)=>

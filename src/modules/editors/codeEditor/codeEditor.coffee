@@ -3,7 +3,9 @@ define (require)->
   _ = require 'underscore'
   Backbone = require 'backbone'
   marionette = require 'marionette'
+  
   vent = require 'modules/core/vent'
+  Project = require 'modules/core/projects/project'
   
   CodeEditorView = require './multiFileView'
   CodeEditorSettings = require './codeEditorSettings'
@@ -18,10 +20,11 @@ define (require)->
     
     constructor:(options)->
       super options
+      @settings = options.settings ? new CodeEditorSettings()
+      @project= options.project ? new Project()
       @vent = vent
       @addRegions @regions
-      @settings = new CodeEditorSettings()
-      @project= options.project
+      
       @router = new CodeEditorRouter
         controller: @
         

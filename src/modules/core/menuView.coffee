@@ -6,7 +6,7 @@ define (require)->
   require 'bootbox'
   
   vent = require './vent'
-  mainMenu_template = require "text!./mainMenu.tmpl"
+  mainMenu_template = require "text!./mainMenu2.tmpl"
   sF_template = require "text!./menuFiles.tmpl"
   
   class RecentFilesView extends Backbone.Marionette.ItemView

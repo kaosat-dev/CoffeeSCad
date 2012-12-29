@@ -43,8 +43,15 @@ define (require)->
       @bindTo(@model, "change", @modelChanged)
       @bindTo(@model, "saved", @modelSaved)
       @bindTo(@settings, "change", @settingsChanged)
+      
       @vent.bind("csgParseError", @showError)
       @vent.on("file:closed", @onFileClosed)
+      @vent.on("file:selected", @onFileSelected)
+    
+    onFileSelected:(model)=>
+      if model == @model
+       @render()
+       @updateHints()
     
     onFileClosed:(fileName)=>
       console.log @model
@@ -83,8 +90,10 @@ define (require)->
             @render()
     
     showError:(error)=>
+      #@vent.trigger("Error")
       #console.log("In show error")
       #TODO: should be its own view, not a hack
+      console.log "lkklERROR"
       try
         $(@ui.errorBlock).removeClass("well")
         $(@ui.errorBlock).addClass("alert alert-error")
@@ -105,7 +114,10 @@ define (require)->
         #TODO: fetch errors from csg compiler?
         try
           errors = coffeelint.lint(@editor.getValue(), @lintConf)
+          if errors.length == 0
+            @vent.trigger("noError")
           for i, error of errors
+            @vent.trigger("error",error)
             errMsg = error.message
             markerDiv= "<span class='CodeErrorMarker'> <a href='#' rel='tooltip' title=\" #{errMsg}\" > <i class='icon-remove-sign'></i></a></span> %N%"
             marker = @editor.setMarker(error.lineNumber - 1, markerDiv)
@@ -133,13 +145,13 @@ define (require)->
       redos = @editor.historySize().redo
       undos = @editor.historySize().undo
       if redos >0
-        @vent.trigger("redoAvailable", @)
+        @vent.trigger("file:redoAvailable", @)
       else
-        @vent.trigger("redoUnAvailable", @)
+        @vent.trigger("file:redoUnAvailable", @)
       if undos >0
-        @vent.trigger("undoAvailable", @)
+        @vent.trigger("file:undoAvailable", @)
       else
-        @vent.trigger("undoUnAvailable", @)
+        @vent.trigger("file:undoUnAvailable", @)
         
     undo:=>
       undoes = @editor.historySize().undo
@@ -187,9 +199,11 @@ define (require)->
       @hlLine=  @editor.setLineClass(0, "activeline")
       
       setTimeout @editor.refresh, 0 #necessary hack
+      
       #TODO : find  a way to put this in the init/constructor
-      @vent.bind("undoRequest", @undo)
-      @vent.bind("redoRequest", @redo)
+      #TODO: these are commands, not events
+      @vent.bind("file:undoRequest", @undo)
+      @vent.bind("file:redoRequest", @redo)
       @$el.attr('id', @model.get("name"))
       
       
