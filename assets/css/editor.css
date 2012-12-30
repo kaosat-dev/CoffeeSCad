@@ -1,3 +1,41 @@
+/*Things worth considering adding to the overall style: (cleaner, more minimal look)
+  
+#header 
+element.style {
+height: 15px;
+padding-top: 0px;
+border-top: 0px;
+}
+no box shadow
+
+different rounding for tabs
+reduced padding in tabs
+
+#content
+element.style {
+position: fixed;
+top: 35px;
+left: 5px;
+}
+ */
+#header{
+	height: 15px;
+padding-top: 0px;
+border-top: 0px;
+}
+
+.navbar .nav > li > a {
+float: none;
+padding: 5px 10px 10px;
+text-decoration: none;
+text-shadow: 0 1px 0 white;
+}
+
+#content{
+	position: fixed;
+	top: 35px;
+	left: 5px;
+}
 /*-------------------------------------*/		
 /*Code Editor*/
 
@@ -15,6 +53,7 @@
 .CodeMirror-scroll 
 {
         height: 100%;
+        min-height:500px;
         overflow-y: hidden;
         overflow-x: auto;
 }

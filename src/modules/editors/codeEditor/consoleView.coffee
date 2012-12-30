@@ -14,8 +14,8 @@ define (require)->
     constructor:(options)->
       super options
       @vent = vent
-      @vent.on("error",   @onError)
-      @vent.on("noError", @clearConsole)
+      @vent.on("file:error",   @onError)
+      @vent.on("file:noError", @clearConsole)
       @vent.on("file:selected", @onFileSelected)
       
     serializeData: ()->

@@ -10,9 +10,21 @@ define (require)->
     defaults:
       name: "Editor"
       title: "Code editor"
-      startLine    :  1
+      #general
       theme        : "default"
+      startLine    :  1
+      undoDepth    :  40
       
+      linting:
+        max_line_length:
+          value: 80
+          level: "warning"
+        no_tabs:
+          level: "warning"
+        indentation:
+          value: 2
+          level: "ignore"
+        
     constructor:(options)->
       super options
       

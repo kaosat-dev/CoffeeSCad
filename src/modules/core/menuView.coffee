@@ -64,6 +64,7 @@ define (require)->
   class ExportersView extends Backbone.Marionette.CollectionView
     
   
+  class AboutView 
   
   class MainMenuView extends Backbone.Marionette.Layout
     template: mainMenu_template
@@ -79,10 +80,66 @@ define (require)->
       "click .loadProject":   ()->vent.trigger("project:load")
       "click .deleteProject": ()->vent.trigger("project:delete")
       
-      "click .undo":          ()->vent.trigger("undo")
-      "click .redo":          ()->vent.trigger("redo")
+      "click .undo":          "onUndoClicked"
+      "click .redo":          "onRedoClicked"
       
       "click .showEditor":    ()->vent.trigger("showEditor")
+      
+    constructor:(options)->
+      super options
+      @vent = vent
+      
+      @vent.on("file:selected", @onFileSelected)
+      
+      @on "file:new:mouseup" ,=>
+        @vent.trigger("fileNewRequest", @)
+      
+      @on "csg:parserender:mouseup" ,=>
+        if not  $('#updateBtn').hasClass "disabled"
+          @vent.trigger("parseCsgRequest", @)
+      @on "download:stl:mouseup" ,=>
+        if not $('#exportStl').hasClass "disabled"
+          @vent.trigger("downloadStlRequest", @) 
+        
+      @vent.bind "file:undoAvailable", ->
+        $('#undoBtn').removeClass("disabled")
+      @vent.bind "file:redoAvailable", ->
+        $('#redoBtn').removeClass("disabled")
+      @vent.bind "file:undoUnAvailable", ->
+        $('#undoBtn').addClass("disabled")
+      @vent.bind "file:redoUnAvailable", ->
+        $('#redoBtn').addClass("disabled")
+        
+      @vent.bind "clearUndoRedo", ->
+        $('#undoBtn').addClass("disabled")
+        $('#redoBtn').addClass("disabled")
+      @vent.bind "modelChanged", ->
+        $('#updateBtn').removeClass("disabled")
+        $('#exportStl').addClass("disabled")
+      @vent.bind "parseCsgDone", ->
+        $('#updateBtn').addClass("disabled")
+        $('#exportStl').removeClass("disabled") 
+      
+     onFileSelected:(model)=>
+       $('#undoBtn').addClass("disabled")
+       $('#redoBtn').addClass("disabled")
+       
+     onUndoClicked:->
+      console.log $('#undoBtn')
+      if not  $('#undoBtn').hasClass "disabled"
+        console.log "triggering undo Request"
+        @vent.trigger("file:undoRequest")
+        #()->vent.trigger("undo")
+        
+     onRedoClicked:->
+      if not  $('#redoBtn').hasClass "disabled"
+        @vent.trigger("file:redoRequest")
+     
+     onRender:=>
+       $('#undoBtn').addClass("disabled")
+       $('#redoBtn').addClass("disabled")
+        
+       
   
   
   class MainMenuView_old extends marionette.CompositeView

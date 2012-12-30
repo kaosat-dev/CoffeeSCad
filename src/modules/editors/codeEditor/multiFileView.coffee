@@ -84,11 +84,12 @@ define (require)->
       defaultItem = @tabContent.$el.find('div .tab-pane:first')
       defaultItem.addClass('active')
       defaultItem.removeClass('fade')
+      vent.trigger("file:selected",@model.pfiles.first)
       
+      #FIXME not working
       $("a[data-toggle=\"tab\"]").on "shown", (e) ->
         e.target # activated tab
         e.relatedTarget # previous tab
-        console.log "lkjljlk"
 
       
   return MultiFileView

@@ -13,7 +13,6 @@ define (require)->
   CoffeeScript = require 'CoffeeScript'
   require 'coffeelint'
   
-  
   vent = require 'modules/core/vent'
   codeEditor_template = require "text!./fileCode.tmpl"
   
@@ -23,35 +22,38 @@ define (require)->
     className: "tab-pane"
     ui:
       codeBlock : "#codeArea"
-      errorBlock: "#errorConsole"
       
     constructor:(options)->
       super options
       @vent = vent
       @settings = options.settings
       @editor = null
-      @markers = []
-      @lintConf = {
-        "max_line_length": {"value": 80, "level": "warning"},
-        "no_tabs":{"level": "warning"}
-        "indentation" : {
-          "value" : 2,
-          "level" : "ignore"
-        }
-        }
+      @_markers = []
+     
       
       @bindTo(@model, "change", @modelChanged)
       @bindTo(@model, "saved", @modelSaved)
       @bindTo(@settings, "change", @settingsChanged)
       
-      @vent.bind("csgParseError", @showError)
+      #@vent.bind("csgParseError", @showError)
       @vent.on("file:closed", @onFileClosed)
       @vent.on("file:selected", @onFileSelected)
+      
+      #TODO: these are commands, not events
+      @vent.on("file:undoRequest", @undo)
+      @vent.on("file:redoRequest", @redo)
+      
     
     onFileSelected:(model)=>
       if model == @model
-       @render()
-       @updateHints()
+        #temporarhack, needed because of rendering issues forcing to re-render, but thus loosing undo history
+        history = @editor.getHistory()
+        @render()
+        @editor.setHistory history
+        #@editor.refresh()
+        @updateUndoRedo()
+        @updateHints()
+        @editor.focus()
     
     onFileClosed:(fileName)=>
       console.log @model
@@ -70,17 +72,12 @@ define (require)->
       @bindTo(@model, "saved", @modelSaved)
       
     modelChanged: (model, value)=>
-      $(@ui.errorBlock).addClass("well")
-      $(@ui.errorBlock).removeClass("alert alert-error")
-      $(@ui.errorBlock).html("")
       @vent.trigger("modelChanged", @)
-      
       $("[rel=tooltip]").tooltip
             placement:'right' 
             
     modelSaved: (model)=>
       
-    
     settingsChanged:(settings, value)=> 
       console.log("Settings changed")
       for key, val of @settings.changedAttributes()
@@ -89,39 +86,23 @@ define (require)->
             @editor.setOption("firstLineNumber",val)
             @render()
     
-    showError:(error)=>
-      #@vent.trigger("Error")
-      #console.log("In show error")
-      #TODO: should be its own view, not a hack
-      console.log "lkklERROR"
-      try
-        $(@ui.errorBlock).removeClass("well")
-        $(@ui.errorBlock).addClass("alert alert-error")
-        $(@ui.errorBlock).html("<div> <h4>#{error.name}:</h4>  #{error.message}</div>")
-        errLine = error.message.split("line ")
-        errLine = errLine[errLine.length - 1]
-        errMsg = error.message
-      catch err
-        console.log("Inner err: "+ err)
-        $(@ui.errorBlock).text(error)
-      
     updateHints: ()=>
-      #console.log "updating hints: errors "+@markers.length
-      for i, marker of @markers
+      #console.log "updating hints: errors "+@_markers.length
+      for i, marker of @_markers
         @editor.clearMarker(marker)
-      @markers = []
+      @_markers = []
       @editor.operation( ()=>
         #TODO: fetch errors from csg compiler?
         try
-          errors = coffeelint.lint(@editor.getValue(), @lintConf)
+          errors = coffeelint.lint(@editor.getValue(), @settings.get("linting"))
           if errors.length == 0
-            @vent.trigger("noError")
+            @vent.trigger("file:noError")
           for i, error of errors
-            @vent.trigger("error",error)
+            @vent.trigger("file:error",error)
             errMsg = error.message
             markerDiv= "<span class='CodeErrorMarker'> <a href='#' rel='tooltip' title=\" #{errMsg}\" > <i class='icon-remove-sign'></i></a></span> %N%"
             marker = @editor.setMarker(error.lineNumber - 1, markerDiv)
-            @markers.push(marker)
+            @_markers.push(marker)
         catch error
             #here handle any error not already managed by coffeelint
             errLine = error.message.split("line ")
@@ -130,7 +111,7 @@ define (require)->
             markerDiv= "<span class='CodeErrorMarker'> <a href='#' rel='tooltip' title=\" #{errMsg}\" > <i class='icon-remove-sign'></i></a></span> %N%"
             try
               marker = @editor.setMarker(errLine - 1, markerDiv)
-              @markers.push(marker)
+              @_markers.push(marker)
             catch error
               console.log "ERROR #{error} in adding error marker"
       )
@@ -142,8 +123,10 @@ define (require)->
     
     #this could also be solved by letting the event listeners access the list of available undos & redos ?
     updateUndoRedo: () =>
+      
       redos = @editor.historySize().redo
       undos = @editor.historySize().undo
+      console.log "here: redos: #{redos}, undos: #{undos}"
       if redos >0
         @vent.trigger("file:redoAvailable", @)
       else
@@ -175,6 +158,7 @@ define (require)->
         lineNumbers:true
         gutter: true
         matchBrackets:true
+        undoDepth: @settings.get("undoDepth")
         firstLineNumber:@settings.get("startLine")
         onChange:(arg, arg2)  =>
           @updateHints()
@@ -199,12 +183,6 @@ define (require)->
       @hlLine=  @editor.setLineClass(0, "activeline")
       
       setTimeout @editor.refresh, 0 #necessary hack
-      
-      #TODO : find  a way to put this in the init/constructor
-      #TODO: these are commands, not events
-      @vent.bind("file:undoRequest", @undo)
-      @vent.bind("file:redoRequest", @redo)
       @$el.attr('id', @model.get("name"))
-      
       
   return FileCodeView

@@ -58,11 +58,15 @@ define (require)->
     initData:->
       @project = new Project()
       @project.create_part
+        name:"config"
+        content:"""#This is the project's main configuration file
+        #It is better to keep global configuration elements here"""
+      @project.create_part
+        name:"assembly"
+      @project.create_part
         name:"testPart"
       @project.create_part
         name:"otherPart"
-      @project.create_part
-        name:"someOtherPart"
       
       
     onStart:()=>
