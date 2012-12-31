@@ -109,4 +109,4 @@ define (require)->
       console.log bla
       console.log "gne INDEED"
       
-    return VisEditorSettingsView
+  return VisEditorSettingsView

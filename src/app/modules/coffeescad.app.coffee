@@ -1,3 +1,11 @@
+###
+Documentation functions
+=======================
+
+These functions extract relevant documentation info from AST nodes as returned
+by the coffeescript parser.
+###
+
 define (require)->
   $ = require 'jquery'
   _ = require 'underscore'
@@ -21,6 +29,10 @@ define (require)->
       
       
   class CoffeeScadApp extends Backbone.Marionette.Application
+    ###
+    This docstring documents MyClass. It can include *Markdown* syntax,
+    which will be converted to html.
+    ###
     root: "/CoffeeSCad/index.html/"
     title: "Coffeescad"
     regions:

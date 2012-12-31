@@ -5,9 +5,6 @@ define (require)->
   marionette = require 'marionette'
   CoffeeScadApp = require 'modules/coffeescad.app'  
   
-  
-  ###############################
- 
   app = new CoffeeScadApp()
   
   # Mix Backbone.Events, modules, and layout management into the app object.

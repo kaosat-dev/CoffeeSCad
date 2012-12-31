@@ -1,11 +1,7 @@
-describe "toto", ->
-  it 'can do jokes', ->
-    expect(true).toBe(true)
-
 define (require)->
   $ = require 'jquery'
   _ = require 'underscore'
-  {Library,Project,ProjectFile} = require "modules/project"
+  Project = require "modules/core/project/project"
   
   describe "library", ->
     lib = null

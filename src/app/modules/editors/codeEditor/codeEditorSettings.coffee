@@ -6,10 +6,15 @@ define (require)->
   
   
   class CodeEditorSettings extends Backbone.Model
+    ###
+    All settings for the code editor are stored within this class
+    ###
+      
     idAttribute: 'name'
     defaults:
       name: "Editor"
       title: "Code editor"
+      
       #general
       theme        : "default"
       startLine    :  1

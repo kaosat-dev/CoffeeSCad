@@ -14,4 +14,4 @@ define (require)->
         "project:delete": 'deleteProject'
         '*defaults'     : 'home'
   
-    return ProjectRouter
+  return ProjectRouter

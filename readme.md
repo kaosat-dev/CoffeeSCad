@@ -1,3 +1,8 @@
+IMPORTANT!!
+===========
+This does not impact the master version or the demo but, As of the Dec 11, 2012 commit, the dev branch is "unusable",
+and will be in a **semi broken state** until I finish the current (huge) refactoring pass.
+
 CoffeeSCad
 =============
 
@@ -24,10 +29,13 @@ it is not necessarly the best option.
 
 Future Features
 ===============
+- store projects online in Dropbox
+- multi file edition : a project is typically made up of various files: this should help with clarity and modularity of
+larger projects
 - share projects via github (gist)
-- better ui 
 - library system (I consider this absolutely essential: using other people's creations as "parts libraries" is a key
 element
+- better ui 
 - better, simpler syntax
 - bill of materials perhaps even "interactive" assembly guides
 
@@ -68,7 +76,7 @@ can get rid of a lot of curly braces etc is a good fit
 
  **A** It is in the **App/CS** (for coffeescript) folder: I am currently developping using the coffeescript "watch" feature 
  to compile the various .coffee files to js ie: 
- 	after cloning the project, just go into the OpenCoffeScad folder and type **coffee -co app/ --watch app/cs**
+ 	after cloning the project, just go into the OpenCoffeScad folder and type **coffee -co . --watch src**
  	(you need to have coffeescript install)
  
 Inspiration
