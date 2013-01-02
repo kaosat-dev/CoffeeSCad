@@ -9,8 +9,48 @@ define (require)->
   Some of these can eventually be migrated into csg.js as modified /added methods
   and classes .
   ###
+###
+  classNameInstances= {}
+register=(classname)=>
+  #console.log "registering " + classname
+  if not (classname of classNameInstances)
+    classNameInstances[classname] = 0
+  classNameInstances[classname]+=1
+
+class Meta extends CSG
+  constructor:()->
+    super()
+    parent= @__proto__.__proto__.constructor.name
+    console.log "Parent:"+parent
+    register(@__proto__.constructor.name)
+
+class Screw extends Meta
+   constructor:()->
+    super()
+    
+    
+class SpecialScrew extends Screw
+  constructor:()->
+    super()
+    
+class ReallySpecialScrew extends SpecialScrew
+  constructor:()->
+    super()
   
-  
+    
+#c= new Meta()
+p =new Screw()
+#p3=new Screw()
+p4= new SpecialScrew()
+p5= new ReallySpecialScrew()
+
+console.log "BOM:"
+for i, v of classNameInstances
+  console.log "  You Have: #{v} #{i}(s) "
+
+
+return p
+ ### 
   
   ###experimenting
         

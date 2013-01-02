@@ -8,7 +8,7 @@ define (require) ->
   #   1-3 rebuildSolid
   #     useSynch= debug 
    
-  class CsgProcessorMin
+  class CsgProcessor
     #minimal version of csg processor, for future cleanup of the rest
     construtor:()->
       @debug=true
@@ -141,7 +141,7 @@ define (require) ->
 
 
 #######################
-  class CsgProcessor 
+  class CsgProcessor_old
     constructor: (debug, @currentObject, @statusdiv, @viewer)->
       console.log "in processor init"
       @debug = if debug? then debug else true 
@@ -493,4 +493,4 @@ define (require) ->
       }###
 
       
-  return CsgProcessorMin#CsgProcessor
+  return CsgProcessor

@@ -1,0 +1,432 @@
+define (require)->
+  CSGBase = require './csg'
+  console.log "in geom, looking for csg"
+  maths = require './csg.maths'
+  console.log "in geom, looking for maths"
+  Vertex = maths.CSG.Vertex
+  Vector3d = maths.CSG.Vector3d
+  Polygon = maths.CSG.Polygon
+  
+  properties = require './csg.props'
+  console.log "in geom, looking for props"
+  CSG.Properties = properties.CSG.Properties
+  CSG.Connector = properties.CSG.Connector
+  
+  utils = require './csg.utils'
+  console.log "in geom, looking for utils"
+  parseOptionAs3DVector = utils.CSG.parseOptionAs3DVector
+  parseOptionAsFloat = utils.CSG.parseOptionAsFloat
+  parseOptionAsInt = utils.CSG.parseOptionAsInt
+  
+  class Cube extends CSGBase
+    # Construct an axis-aligned solid cuboid.
+    # Parameters:
+    #   center: center of cube (default [0,0,0])
+    #   radius: radius of cube (default [1,1,1]), can be specified as scalar or as 3D vector
+    #  
+    # Example code:
+    #     var cube = Cube({
+    #       center: [0, 0, 0],
+    #       radius: 1
+    #     });
+    constructor : (options) ->
+      c = parseOptionAs3DVector(options, "center", [0, 0, 0])
+      r = parseOptionAs3DVector(options, "radius", [1, 1, 1])
+      result = CSGBase.fromPolygons([[[0, 4, 6, 2], [-1, 0, 0]], [[1, 3, 7, 5], [+1, 0, 0]], [[0, 1, 5, 4], [0, -1, 0]], [[2, 6, 7, 3], [0, +1, 0]], [[0, 2, 3, 1], [0, 0, -1]], [[4, 5, 7, 6], [0, 0, +1]]].map((info) ->
+        normal = new Vector3D(info[1])
+        vertices = info[0].map((i) ->
+          pos = new Vector3D(c.x + r.x * (2 * !!(i & 1) - 1), c.y + r.y * (2 * !!(i & 2) - 1), c.z + r.z * (2 * !!(i & 4) - 1))
+          new Vertex(pos)
+          )
+        new Polygon(vertices, null)
+      ))
+      result.properties.cube = new CSG.Properties()
+      result.properties.cube.center = new Vector3D(c)
+  
+      # add 6 connectors, at the centers of each face:
+      result.properties.cube.facecenters = [new CSG.Connector(new Vector3D([r.x, 0, 0]).plus(c), [1, 0, 0], [0, 0, 1]), new CSG.Connector(new Vector3D([-r.x, 0, 0]).plus(c), [-1, 0, 0], [0, 0, 1]), new CSG.Connector(new Vector3D([0, r.y, 0]).plus(c), [0, 1, 0], [0, 0, 1]), new CSG.Connector(new Vector3D([0, -r.y, 0]).plus(c), [0, -1, 0], [0, 0, 1]), new CSG.Connector(new Vector3D([0, 0, r.z]).plus(c), [0, 0, 1], [1, 0, 0]), new CSG.Connector(new Vector3D([0, 0, -r.z]).plus(c), [0, 0, -1], [1, 0, 0])]
+      result
+        
+  class RoundedCube extends CSGBase
+    # Construct an axis-aligned solid rounded cuboid.
+    # Parameters:
+    #   center: center of cube (default [0,0,0])
+    #   radius: radius of cube (default [1,1,1]), can be specified as scalar or as 3D vector
+    #   roundradius: radius of rounded corners (default 0.2), must be a scalar
+    #   resolution: determines the number of polygons per 360 degree revolution (default 8)
+    # 
+    # Example code:
+    # 
+    #     var cube = RoundedCube({
+    #       center: [0, 0, 0],
+    #       radius: 1,
+    #       roundradius: 0.2,
+    #       resolution: 8,
+    #     });
+    constructor : (options) ->
+      center = parseOptionAs3DVector(options, "center", [0, 0, 0])
+      cuberadius = parseOptionAs3DVector(options, "radius", [1, 1, 1])
+      resolution = parseOptionAsFloat(options, "resolution", CSGBase.defaultResolution3D)
+      resolution = 4  if resolution < 4
+      roundradius = parseOptionAsFloat(options, "roundradius", 0.2)
+      innercuberadius = cuberadius
+      innercuberadius = innercuberadius.minus(new Vector3D(roundradius))
+      result = Cube(
+        center: center
+        radius: [cuberadius.x, innercuberadius.y, innercuberadius.z]
+      )
+      result = result.unionSub(Cube(
+        center: center
+        radius: [innercuberadius.x, cuberadius.y, innercuberadius.z]
+      ), false, false)
+      result = result.unionSub(Cube(
+        center: center
+        radius: [innercuberadius.x, innercuberadius.y, cuberadius.z]
+      ), false, false)
+      level = 0
+    
+      while level < 2
+        z = innercuberadius.z
+        z = -z  if level is 1
+        p1 = new Vector3D(innercuberadius.x, innercuberadius.y, z).plus(center)
+        p2 = new Vector3D(innercuberadius.x, -innercuberadius.y, z).plus(center)
+        p3 = new Vector3D(-innercuberadius.x, -innercuberadius.y, z).plus(center)
+        p4 = new Vector3D(-innercuberadius.x, innercuberadius.y, z).plus(center)
+        sphere = Sphere(
+          center: p1
+          radius: roundradius
+          resolution: resolution
+        )
+        result = result.unionSub(sphere, false, false)
+        sphere = Sphere(
+          center: p2
+          radius: roundradius
+          resolution: resolution
+        )
+        result = result.unionSub(sphere, false, false)
+        sphere = Sphere(
+          center: p3
+          radius: roundradius
+          resolution: resolution
+        )
+        result = result.unionSub(sphere, false, false)
+        sphere = Sphere(
+          center: p4
+          radius: roundradius
+          resolution: resolution
+        )
+        result = result.unionSub(sphere, false, true)
+        cylinder = Cylinder(
+          start: p1
+          end: p2
+          radius: roundradius
+          resolution: resolution
+        )
+        result = result.unionSub(cylinder, false, false)
+        cylinder = Cylinder(
+          start: p2
+          end: p3
+          radius: roundradius
+          resolution: resolution
+        )
+        result = result.unionSub(cylinder, false, false)
+        cylinder = Cylinder(
+          start: p3
+          end: p4
+          radius: roundradius
+          resolution: resolution
+        )
+        result = result.unionSub(cylinder, false, false)
+        cylinder = Cylinder(
+          start: p4
+          end: p1
+          radius: roundradius
+          resolution: resolution
+        )
+        result = result.unionSub(cylinder, false, false)
+        if level is 0
+          d = new Vector3D(0, 0, -2 * z)
+          cylinder = Cylinder(
+            start: p1
+            end: p1.plus(d)
+            radius: roundradius
+            resolution: resolution
+          )
+          result = result.unionSub(cylinder)
+          cylinder = Cylinder(
+            start: p2
+            end: p2.plus(d)
+            radius: roundradius
+            resolution: resolution
+          )
+          result = result.unionSub(cylinder)
+          cylinder = Cylinder(
+            start: p3
+            end: p3.plus(d)
+            radius: roundradius
+            resolution: resolution
+          )
+          result = result.unionSub(cylinder)
+          cylinder = Cylinder(
+            start: p4
+            end: p4.plus(d)
+            radius: roundradius
+            resolution: resolution
+          )
+          result = result.unionSub(cylinder, false, true)
+        level++
+      result = result.reTesselated()
+      result.properties.roundedCube = new CSG.Properties()
+      result.properties.roundedCube.center = new Vertex(center)
+      result.properties.roundedCube.facecenters = [new CSG.Connector(new Vector3D([cuberadius.x, 0, 0]).plus(center), [1, 0, 0], [0, 0, 1]), new CSG.Connector(new Vector3D([-cuberadius.x, 0, 0]).plus(center), [-1, 0, 0], [0, 0, 1]), new CSG.Connector(new Vector3D([0, cuberadius.y, 0]).plus(center), [0, 1, 0], [0, 0, 1]), new CSG.Connector(new Vector3D([0, -cuberadius.y, 0]).plus(center), [0, -1, 0], [0, 0, 1]), new CSG.Connector(new Vector3D([0, 0, cuberadius.z]).plus(center), [0, 0, 1], [1, 0, 0]), new CSG.Connector(new Vector3D([0, 0, -cuberadius.z]).plus(center), [0, 0, -1], [1, 0, 0])]
+      result
+  
+  class Sphere extends CSGBase
+    # Construct a solid sphere
+    #
+    # Parameters:
+    #   center: center of sphere (default [0,0,0])
+    #   radius: radius of sphere (default 1), must be a scalar
+    #   resolution: determines the number of polygons per 360 degree revolution (default 12)
+    #   axes: (optional) an array with 3 vectors for the x, y and z base vectors
+    # 
+    # Example usage:
+    # 
+    #     var sphere = Sphere({
+    #       center: [0, 0, 0],
+    #       radius: 2,
+    #       resolution: 32,
+    #     });
+    constructor : (options) ->
+      options = options or {}
+      center = parseOptionAs3DVector(options, "center", [0, 0, 0])
+      radius = parseOptionAsFloat(options, "radius", 1)
+      resolution = parseOptionAsInt(options, "resolution", CSG.defaultResolution3D)
+      xvector = undefined
+      yvector = undefined
+      zvector = undefined
+      if "axes" of options
+        xvector = options.axes[0].unit().times(radius)
+        yvector = options.axes[1].unit().times(radius)
+        zvector = options.axes[2].unit().times(radius)
+      else
+        xvector = new Vector3D([1, 0, 0]).times(radius)
+        yvector = new Vector3D([0, -1, 0]).times(radius)
+        zvector = new Vector3D([0, 0, 1]).times(radius)
+      resolution = 4  if resolution < 4
+      qresolution = Math.round(resolution / 4)
+      prevcylinderpoint = undefined
+      polygons = []
+      slice1 = 0
+    
+      while slice1 <= resolution
+        angle = Math.PI * 2.0 * slice1 / resolution
+        cylinderpoint = xvector.times(Math.cos(angle)).plus(yvector.times(Math.sin(angle)))
+        if slice1 > 0
+          
+          # cylinder vertices:
+          vertices = []
+          prevcospitch = undefined
+          prevsinpitch = undefined
+          slice2 = 0
+    
+          while slice2 <= qresolution
+            pitch = 0.5 * Math.PI * slice2 / qresolution
+            cospitch = Math.cos(pitch)
+            sinpitch = Math.sin(pitch)
+            if slice2 > 0
+              vertices = []
+              vertices.push new Vertex(center.plus(prevcylinderpoint.times(prevcospitch).minus(zvector.times(prevsinpitch))))
+              vertices.push new Vertex(center.plus(cylinderpoint.times(prevcospitch).minus(zvector.times(prevsinpitch))))
+              vertices.push new Vertex(center.plus(cylinderpoint.times(cospitch).minus(zvector.times(sinpitch))))  if slice2 < qresolution
+              vertices.push new Vertex(center.plus(prevcylinderpoint.times(cospitch).minus(zvector.times(sinpitch))))
+              polygons.push new Polygon(vertices)
+              vertices = []
+              vertices.push new Vertex(center.plus(prevcylinderpoint.times(prevcospitch).plus(zvector.times(prevsinpitch))))
+              vertices.push new Vertex(center.plus(cylinderpoint.times(prevcospitch).plus(zvector.times(prevsinpitch))))
+              vertices.push new Vertex(center.plus(cylinderpoint.times(cospitch).plus(zvector.times(sinpitch))))  if slice2 < qresolution
+              vertices.push new Vertex(center.plus(prevcylinderpoint.times(cospitch).plus(zvector.times(sinpitch))))
+              vertices.reverse()
+              polygons.push new Polygon(vertices)
+            prevcospitch = cospitch
+            prevsinpitch = sinpitch
+            slice2++
+        prevcylinderpoint = cylinderpoint
+        slice1++
+      result = CSGBase.fromPolygons(polygons)
+      result.properties.sphere = new CSG.Properties()
+      result.properties.sphere.center = new Vector3D(center)
+      result.properties.sphere.facepoint = center.plus(xvector)
+      result
+  
+  class Cylinder extends CSGBase
+    # Construct a solid cylinder.
+    #
+    # Parameters:
+    #   start: start point of cylinder (default [0, -1, 0])
+    #   end: end point of cylinder (default [0, 1, 0])
+    #   radius: radius of cylinder (default 1), must be a scalar
+    #   resolution: determines the number of polygons per 360 degree revolution (default 12)
+    # 
+    # Example usage:
+    # 
+    #     var cylinder = Cylinder({
+    #       start: [0, -1, 0],
+    #       end: [0, 1, 0],
+    #       radius: 1,
+    #       resolution: 16
+    #     });
+    constructor : (options) ->
+      options = options or {}
+      #, isY = (Math.abs(axisZ.y) > 0.5);
+      #  var axisX = new Vector3D(isY, !isY, 0).cross(axisZ).unit();
+      point = (stack, slice, radius) ->
+        angle = slice * Math.PI * 2
+        out = axisX.times(Math.cos(angle)).plus(axisY.times(Math.sin(angle)))
+        pos = s.plus(ray.times(stack)).plus(out.times(radius))
+        new Vertex(pos)
+      s = parseOptionAs3DVector(options, "start", [0, -1, 0])
+      e = parseOptionAs3DVector(options, "end", [0, 1, 0])
+      r = parseOptionAsFloat(options, "radius", 1)
+      rEnd = parseOptionAsFloat(options, "radiusEnd", r)
+      rStart = parseOptionAsFloat(options, "radiusStart", r)
+      throw new Error("Radius should be non-negative")  if (rEnd < 0) or (rStart < 0)
+      throw new Error("Either radiusStart or radiusEnd should be positive")  if (rEnd is 0) and (rStart is 0)
+      slices = parseOptionAsFloat(options, "resolution", CSGBase.defaultResolution2D)
+      ray = e.minus(s)
+      axisZ = ray.unit()
+      axisX = axisZ.randomNonParallelVector().unit()
+      axisY = axisX.cross(axisZ).unit()
+      start = new Vertex(s)
+      end = new Vertex(e)
+      polygons = []
+      i = 0
+    
+      while i < slices
+        t0 = i / slices
+        t1 = (i + 1) / slices
+        if rEnd is rStart
+          polygons.push new Polygon([start, point(0, t0, rEnd), point(0, t1, rEnd)])
+          polygons.push new Polygon([point(0, t1, rEnd), point(0, t0, rEnd), point(1, t0, rEnd), point(1, t1, rEnd)])
+          polygons.push new Polygon([end, point(1, t1, rEnd), point(1, t0, rEnd)])
+        else
+          if rStart > 0
+            polygons.push new Polygon([start, point(0, t0, rStart), point(0, t1, rStart)])
+            polygons.push new Polygon([point(0, t0, rStart), point(1, t0, rEnd), point(0, t1, rStart)])
+          if rEnd > 0
+            polygons.push new Polygon([end, point(1, t1, rEnd), point(1, t0, rEnd)])
+            polygons.push new Polygon([point(1, t0, rEnd), point(1, t1, rEnd), point(0, t1, rStart)])
+        i++
+      result = CSGBase.fromPolygons(polygons)
+      result.properties.cylinder = new CSG.Properties()
+      result.properties.cylinder.start = new CSG.Connector(s, axisZ.negated(), axisX)
+      result.properties.cylinder.end = new CSG.Connector(e, axisZ, axisX)
+      result.properties.cylinder.facepoint = s.plus(axisX.times(rStart))
+      result
+   
+  
+  class RoundedCylinder extends CSGBase
+    # Like a cylinder, but with rounded ends instead of flat
+    #
+    # Parameters:
+    #   start: start point of cylinder (default [0, -1, 0])
+    #   end: end point of cylinder (default [0, 1, 0])
+    #   radius: radius of cylinder (default 1), must be a scalar
+    #   resolution: determines the number of polygons per 360 degree revolution (default 12)
+    #   normal: a vector determining the starting angle for tesselation. Should be non-parallel to start.minus(end)
+    # 
+    # Example usage:
+    # 
+    #     var cylinder = RoundedCylinder({
+    #       start: [0, -1, 0],
+    #       end: [0, 1, 0],
+    #       radius: 1,
+    #       resolution: 16
+    #     });
+    constructor : (options) ->
+      options = options or {}
+      p1 = parseOptionAs3DVector(options, "start", [0, -1, 0])
+      p2 = parseOptionAs3DVector(options, "end", [0, 1, 0])
+      radius = parseOptionAsFloat(options, "radius", 1)
+      direction = p2.minus(p1)
+      defaultnormal = undefined
+      if Math.abs(direction.x) > Math.abs(direction.y)
+        defaultnormal = new Vector3D(0, 1, 0)
+      else
+        defaultnormal = new Vector3D(1, 0, 0)
+      normal = parseOptionAs3DVector(options, "normal", defaultnormal)
+      resolution = parseOptionAsFloat(options, "resolution", CSGBase.defaultResolution3D)
+      resolution = 4  if resolution < 4
+      polygons = []
+      qresolution = Math.floor(0.25 * resolution)
+      length = direction.length()
+      if length < 1e-10
+        return Sphere(
+          center: p1
+          radius: radius
+          resolution: resolution
+        )
+      zvector = direction.unit().times(radius)
+      xvector = zvector.cross(normal).unit().times(radius)
+      yvector = xvector.cross(zvector).unit().times(radius)
+      prevcylinderpoint = undefined
+      slice1 = 0
+    
+      while slice1 <= resolution
+        angle = Math.PI * 2.0 * slice1 / resolution
+        cylinderpoint = xvector.times(Math.cos(angle)).plus(yvector.times(Math.sin(angle)))
+        if slice1 > 0
+          
+          # cylinder vertices:
+          vertices = []
+          vertices.push new Vertex(p1.plus(cylinderpoint))
+          vertices.push new Vertex(p1.plus(prevcylinderpoint))
+          vertices.push new Vertex(p2.plus(prevcylinderpoint))
+          vertices.push new Vertex(p2.plus(cylinderpoint))
+          polygons.push new Polygon(vertices)
+          prevcospitch = undefined
+          prevsinpitch = undefined
+          slice2 = 0
+    
+          while slice2 <= qresolution
+            pitch = 0.5 * Math.PI * slice2 / qresolution
+            
+            #var pitch = Math.asin(slice2/qresolution);
+            cospitch = Math.cos(pitch)
+            sinpitch = Math.sin(pitch)
+            if slice2 > 0
+              vertices = []
+              vertices.push new Vertex(p1.plus(prevcylinderpoint.times(prevcospitch).minus(zvector.times(prevsinpitch))))
+              vertices.push new Vertex(p1.plus(cylinderpoint.times(prevcospitch).minus(zvector.times(prevsinpitch))))
+              vertices.push new Vertex(p1.plus(cylinderpoint.times(cospitch).minus(zvector.times(sinpitch))))  if slice2 < qresolution
+              vertices.push new Vertex(p1.plus(prevcylinderpoint.times(cospitch).minus(zvector.times(sinpitch))))
+              polygons.push new Polygon(vertices)
+              vertices = []
+              vertices.push new Vertex(p2.plus(prevcylinderpoint.times(prevcospitch).plus(zvector.times(prevsinpitch))))
+              vertices.push new Vertex(p2.plus(cylinderpoint.times(prevcospitch).plus(zvector.times(prevsinpitch))))
+              vertices.push new Vertex(p2.plus(cylinderpoint.times(cospitch).plus(zvector.times(sinpitch))))  if slice2 < qresolution
+              vertices.push new Vertex(p2.plus(prevcylinderpoint.times(cospitch).plus(zvector.times(sinpitch))))
+              vertices.reverse()
+              polygons.push new Polygon(vertices)
+            prevcospitch = cospitch
+            prevsinpitch = sinpitch
+            slice2++
+        prevcylinderpoint = cylinderpoint
+        slice1++
+      result = CSGBase.fromPolygons(polygons)
+      ray = zvector.unit()
+      axisX = xvector.unit()
+      result.properties.roundedCylinder = new CSG.Properties()
+      result.properties.roundedCylinder.start = new CSG.Connector(p1, ray.negated(), axisX)
+      result.properties.roundedCylinder.end = new CSG.Connector(p2, ray, axisX)
+      result.properties.roundedCylinder.facepoint = p1.plus(xvector)
+      result
+    
+  exports:
+    "Cube": Cube
+    "RoundedCube": RoundedCube
+    "Sphere": Sphere
+    "Cylinder": Cylinder
+    "RoundedCylinder":RoundedCylinder
+    
+  return exports
