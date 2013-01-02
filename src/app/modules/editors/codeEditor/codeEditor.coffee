@@ -7,30 +7,29 @@ define (require)->
   vent = require 'modules/core/vent'
   Project = require 'modules/core/projects/project'
   
-  CodeEditorView = require './multiFileView'
   CodeEditorSettings = require './codeEditorSettings'
   CodeEditorRouter = require "./codeEditorRouter"
+  CodeEditorView = require './multiFileView'
   
-  ###############################
  
   class CodeEditor extends Backbone.Marionette.Application
     title: "CodeEditor"
     regions:
-      mainRegion: "#Content"
+      mainRegion: "#code"
     
     constructor:(options)->
       super options
+      
       @settings = options.settings ? new CodeEditorSettings()
       @project= options.project ? new Project()
       @vent = vent
-      @addRegions @regions
-      
       @router = new CodeEditorRouter
         controller: @
         
+      @on("start", @onStart)
       @init()
 
-      @on("start", @onStart)
+      @addRegions @regions
       
     init:=>
       @addInitializer ->

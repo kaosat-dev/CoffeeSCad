@@ -37,7 +37,7 @@ define (require)->
     title: "Coffeescad"
     regions:
       headerRegion: "#header"
-      mainRegion: "#content"
+      #mainRegion: "#content"
       
     constructor:(options)->
       super options
@@ -72,13 +72,17 @@ define (require)->
       @project.create_part
         name:"config"
         content:"""#This is the project's main configuration file
-        #It is better to keep global configuration elements here"""
+        #It is better to keep global configuration elements here
+        cube = new Cube
+          size: [100,110,100]
+          center: true
+          
+        return cube
+        """
       @project.create_part
         name:"assembly"
       @project.create_part
         name:"testPart"
-      @project.create_part
-        name:"otherPart"
       
       
     onStart:()=>
@@ -87,19 +91,17 @@ define (require)->
       CodeEditor = require './editors/codeEditor/codeEditor'
       codeEditor = new CodeEditor
         regions: 
-          mainRegion: "#content"
+          mainRegion: "#code"
         project: @project
       codeEditor.start()
       
-      ### 
       VisualEditor = require './editors/visualEditor/visualEditor'
       visualEditor = new VisualEditor
         regions: 
-          mainRegion: "#content"
+          mainRegion: "#visual"
         project:
           @project
       visualEditor.start()
-      ###
       
     onAppStarted:(appName)->
       console.log "I see app: #{appName} has started"
@@ -112,5 +114,3 @@ define (require)->
       console.log "after init"
 
   return CoffeeScadApp   
-
-

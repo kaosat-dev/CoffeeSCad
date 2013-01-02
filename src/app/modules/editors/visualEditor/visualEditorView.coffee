@@ -9,13 +9,15 @@ define (require) ->
   detector = require 'detector'
   stats = require  'stats'
   utils = require 'utils'
-  threedView_template = require "text!templates/glThree.tmpl"
-  requestAnimationFrame = require 'anim'
+  
+  vent = require 'modules/core/vent'
+  
+  threedView_template = require "text!./visualEditorView.tmpl"
+  requestAnimationFrame = require 'modules/core/utils/anim'
   orbit_ctrl = require 'orbit_ctrl'
   
   #TODO:
   #FIXME: memory leaks: When removing objects from scene do we really need: renderer.deallocateObject(Object); ?
-  
   
   #just for testing
   
@@ -42,7 +44,7 @@ define (require) ->
       
       return new THREE.Line(geometry, material, THREE.LinePieces)
   
-  class GlThreeView extends marionette.ItemView
+  class VisualEditorView extends marionette.ItemView
     template: threedView_template
     ui:
       renderBlock :   "#glArea"
@@ -131,13 +133,14 @@ define (require) ->
       @selectObj(x,y)
       
       #Contextmenu
+      ###
       {ContextMenuRegion,ContextMenu} = require "views/contextMenuView"
       @contextMenu = new ContextMenu()
       @contextMenuRegion = new ContextMenuRegion
           mouseCoords:[x,y]
           selection: @current #pass in current selection
       @contextMenuRegion.show @contextMenu
-      
+      ###
        
       
       ev.preventDefault()
@@ -320,7 +323,7 @@ define (require) ->
                   @unbindFrom @modelChangeBinding
                 if @modelSaveBinding?
                   @unbindFrom @modelSaveBinding
-                @app.vent.bind "parseCsgRequest", =>
+                @vent.bind "parseCsgRequest", =>
                   @fromCsg @model
               when "onSave"
                 if @modelChangeBinding?
@@ -413,9 +416,9 @@ define (require) ->
        
     constructor:(options, settings)->
       super options
+      @vent = vent 
       @settings = options.settings #or new GlViewSettings() #TODO fix this horrible hack
-      @app = require 'app'
-      
+        
       @stats = new stats()
       @stats.domElement.style.position = 'absolute'
       @stats.domElement.style.top = '30px'
@@ -471,7 +474,7 @@ define (require) ->
             unbindFrom @modelChangeBinding
           if @modelSaveBinding?
             unbindFrom @modelSaveBinding
-          @app.vent.bind "parseCsgRequest", =>
+          @vent.bind "parseCsgRequest", =>
             @fromCsg @model
         when "onSave"
           if @modelChangeBinding?
@@ -1071,7 +1074,6 @@ define (require) ->
       
       @width =  $("#glArea").width()
       @height = window.innerHeight-10
-      
       #@camera.aspect = @width / @height
       #@camera.updateProjectionMatrix()
       
@@ -1093,7 +1095,7 @@ define (require) ->
       if @settings.get("showStats")
         @ui.overlayDiv.append(@stats.domElement)
         
-      @width = $("#gl").width()
+      @width = $("#visual").width()
       @height = window.innerHeight-10#$("#gl").height()
      
       #@camera.aspect = @width / @height
@@ -1163,7 +1165,6 @@ define (require) ->
       
       if @settings.get("showStats")
         @stats.update()
-      
       #@cameraHelper.update()
       
     animate:()=>
@@ -1179,8 +1180,8 @@ define (require) ->
       
     fromCsg:(csg)=>
       try
-        app = require 'app'
-        resultCSG = app.csgProcessor.processScript(@model.get("content"))
+        CsgProcessor  = require 'modules/core/projects/csg/csg.processor'
+        resultCSG = new CsgProcessor().processScript(@model.get("content"))
         @model.csg = resultCSG #FIXME: remove this at all costs (needs overall reorganization perhaps), but a view should not modify a model like this ? or should it?
         
         geom = THREE.CSG.fromCSG(resultCSG)
@@ -1223,9 +1224,9 @@ define (require) ->
         @scene.remove @mesh
         @model.csg = null
         console.log "Csg Generation error: #{error} "
-        @app.vent.trigger("csgParseError", error)
+        @vent.trigger("csgParseError", error)
       finally
-        @app.vent.trigger("parseCsgDone", @)
+        @vent.trigger("parseCsgDone", @)
         @_render()
 
     addObjs: () =>
@@ -1252,4 +1253,4 @@ define (require) ->
       @scene.add(sphere)
       
 
-  return GlThreeView
+  return VisualEditorView

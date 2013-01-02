@@ -3,11 +3,11 @@ define (require)->
   _ = require 'underscore'
   Backbone = require 'backbone'
   marionette = require 'marionette'
-  vent = require 'core/vent'
+  
+  vent = require 'modules/core/vent'
   
   class VisualEditorRouter extends Backbone.Marionette.AppRouter
-    appRoutes: 
-        "dummy:list"  : 'listDummies'
+    #appRoutes: 
        
     constructor:(options)->
       super options
@@ -18,4 +18,4 @@ define (require)->
       for route, methodName of @appRoutes
         vent.bind(route, @controller[methodName])
             
-  return DummyRouter
+  return VisualEditorRouter
