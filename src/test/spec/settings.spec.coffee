@@ -1,8 +1,8 @@
 define (require)->
   $ = require 'jquery'
   _ = require 'underscore'
-  Settings= require "modules/settings/settings"
-  
+  Settings= require "/CoffeeSCad/app/modules/core/settings/settings"
+
   describe "settings", ->
     settings = null
     beforeEach ->

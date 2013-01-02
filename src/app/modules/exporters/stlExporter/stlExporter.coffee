@@ -1,15 +1,17 @@
 define (require) ->
   utils = require "modules/core/utils/utils"
   
-  class CsgStlExporter
-    #exports the given csg tree to the stl file format (binary only for now)
+  class StlExporter
+    ###
+    Exports the given csg tree to the stl file format (binary only for now)
+    ###
     
-    constructor:(csgObject)->
-      @csgObject=csgObject
+    constructor:->
+     
       @mimeType = "application/sla"
-      app = require 'app'
     
-    export:()=>
+    export:(csgObject)=>
+      @csgObject=csgObject
       @currentObject = null
       try
         @currentObject = @csgObject.fixTJunctions()
@@ -73,7 +75,7 @@ define (require) ->
           
       return blobData
       
-  return CsgStlExporter
+  return StlExporter
   ###############################
   ###
   generateOutputFileFileSystem: ()-> 

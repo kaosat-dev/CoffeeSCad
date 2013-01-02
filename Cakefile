@@ -8,6 +8,12 @@ glob          = require 'glob'
 mkdirp        = require 'mkdirp'
 watcher       = require 'watch-tree-maintained'
 
+requirejs = require 'requirejs'
+requirejs.config
+  baseUrl: './build/js',
+  nodeRequire: require
+global.define = require('requirejs');
+
 SRCDIR="./src"
 TGTDIR="."
  
@@ -16,8 +22,8 @@ find_all = (srcdir, src_prefix) ->
 mkr = (r) -> new RegExp r.replace /\./, '\\.'
 
 twoDigits = (val) ->
-    if val < 10 then return "0#{val}" 
-    return val
+  if val < 10 then return "0#{val}" 
+  return val
 
 #######################################
 
@@ -65,23 +71,38 @@ copyTemplate = (src_path)->
     mkdirp outPath, '0755', (err) ->
       if err and err.code != 'EEXIST'
           throw err
-    outPath=outPath+ fileName
-    cp = spawn 'cp', [inPath, outPath]
-    cp.stderr.on 'data', (data) ->
-      process.stderr.write data.toString()
-    cp.stdout.on 'data', (data) ->
-      util.log data.toString()
-    ts = new Date()
-    ts = "#{twoDigits(ts.getHours())}:#{twoDigits(ts.getMinutes())}:#{twoDigits(ts.getSeconds())}"
-    print("#{ts} - copied (modified) #{src_path}\n")
+      outPath = outPath+ fileName
+      cp = spawn 'cp', [inPath, outPath]
+      cp.stderr.on 'data', (data) ->
+        process.stderr.write data.toString()
+      cp.stdout.on 'data', (data) ->
+        util.log data.toString()
+      ts = new Date()
+      ts = "#{twoDigits(ts.getHours())}:#{twoDigits(ts.getMinutes())}:#{twoDigits(ts.getSeconds())}"
+      print("#{ts} - copied #{src_path}\n")
 
 deleteTemplate = (src_path)->
   file = src_path
   rootdir = file.split(path.sep)[0]
+  fileName = path.basename(file)
+  splitPath = file.split(path.sep)
+  outPath = splitPath[1..splitPath.length-2].join(path.sep)
+  
+  splitBase = __filename.split(path.sep)
+  basePath = splitBase[0..splitBase.length-2].join(path.sep)
+  
+  inPath = basePath+path.sep+file
+  outPath = basePath+path.sep+ outPath+"/"+ fileName
+  fs.unlink outPath,  (err) ->
+    if (err) then throw err
+    ts = new Date()
+    ts = "#{twoDigits(ts.getHours())}:#{twoDigits(ts.getMinutes())}:#{twoDigits(ts.getSeconds())}"
+    print("#{ts} - deleted #{src_path}\n")
+  
     
 
 task 'test', 'run unit tests',(options) ->
-  exec('jasmine-node --coffee --verbose ./src/test/spec', (err, stdout, stderr) ->
+  exec('jasmine-node --coffee --verbose ./src/test/spec/editors', (err, stdout, stderr) ->
         if err
             process.stderr.write(stderr)
         else
@@ -94,25 +115,31 @@ task 'docs', 'generate api documentation', (options) ->
   
 task 'watch', 'Watch src/ for changes',(options) ->
   coffee = spawn 'coffee', ['-w', '-c', '-o', TGTDIR, SRCDIR]
-  watcher = watcher.watchTree("src", {'sample-rate': 5,'match':'tmpl'})
+  #watchTree's match does not work correctly for newly created files hence the hacks below
+  watcher = watcher.watchTree("src", {'sample-rate': 2})#,'match':'(.*)[.]tmpl'})
   
   coffee.stderr.on 'data', (data) ->
     process.stderr.write data.toString()
   coffee.stdout.on 'data', (data) ->
     print data.toString()
-    
-  watcher.on 'filePreexisted', (path,stats)->
-    ts = new Date()
-    ts = "#{twoDigits(ts.getHours())}:#{twoDigits(ts.getMinutes())}:#{twoDigits(ts.getSeconds())}"
-    print("#{ts} - copied #{path}\n"  )
-  watcher.on 'fileCreated', (path, stats) ->
-    copyTemplate(path)
-  watcher.on 'fileModified', (path, stats) ->
-    copyTemplate(path)
+  watcher.on 'filePreexisted', (srcPath,stats)->
+    if path.extname(srcPath) == ".tmpl"
+      copyTemplate(srcPath)
+  watcher.on 'fileCreated', (srcPath, stats) ->
+    if path.extname(srcPath) == ".tmpl"
+      copyTemplate(srcPath)
+  watcher.on 'fileModified', (srcPath, stats) ->
+    if path.extname(srcPath) == ".tmpl"
+      copyTemplate(srcPath)
+  watcher.on 'fileDeleted', (srcPath) ->
+    if path.extname(srcPath) == ".tmpl"
+      deleteTemplate(srcPath)
 
 task 'cpTemplates', 'Copy all templates into the correct folders', ->
   glob "**/*.tmpl", null, (er, files) ->
     for file in files
+      copyTemplate(file)
+      ### 
       rootdir = file.split(path.sep)[0]
       if rootdir == "src"
         fileName = path.basename(file)
@@ -135,7 +162,14 @@ task 'cpTemplates', 'Copy all templates into the correct folders', ->
           process.stderr.write data.toString()
         cp.stdout.on 'data', (data) ->
           util.log data.toString()
-        
+      ###  
 task 'build', 'build all the components', (options) ->
   build '.coffee', '.js', 'coffee --compile --lint -o $target_path $source', options
-  #build '.less', '.css', 'lessc $source $target', options
+  build '.less', '.css', 'lessc $source $target', options
+  
+task 'release', 'build, minify , prep for release' , (options) ->
+  c = {baseUrl: 'app'
+      ,name:    'main.max'
+      ,out:     'build/app/main.min.js'
+      ,optimize:'uglify'}
+  requirejs.optimize(c, console.log)

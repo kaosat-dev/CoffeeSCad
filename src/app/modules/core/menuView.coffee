@@ -129,7 +129,6 @@ define (require)->
       if not  $('#undoBtn').hasClass "disabled"
         console.log "triggering undo Request"
         @vent.trigger("file:undoRequest")
-        #()->vent.trigger("undo")
         
      onRedoClicked:->
       if not  $('#redoBtn').hasClass "disabled"

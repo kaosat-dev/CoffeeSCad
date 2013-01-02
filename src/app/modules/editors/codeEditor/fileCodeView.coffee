@@ -56,10 +56,11 @@ define (require)->
         @editor.focus()
     
     onFileClosed:(fileName)=>
-      console.log @model
       if fileName == @model.get("name")
-        console.log "gne"
         @close()
+        
+    onClose:()=>
+      console.log "closing"
     
     switchModel:(newModel)->
       #replace current model with a new one
@@ -123,10 +124,8 @@ define (require)->
     
     #this could also be solved by letting the event listeners access the list of available undos & redos ?
     updateUndoRedo: () =>
-      
       redos = @editor.historySize().redo
       undos = @editor.historySize().undo
-      console.log "here: redos: #{redos}, undos: #{undos}"
       if redos >0
         @vent.trigger("file:redoAvailable", @)
       else
