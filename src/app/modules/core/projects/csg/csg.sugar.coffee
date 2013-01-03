@@ -2,7 +2,7 @@ define (require)->
   $ = require 'jquery'
   _ = require 'underscore'
   Backbone = require 'backbone'
-  require 'csg' 
+  #require 'csg' 
   
   ###here we define various shorthands, wrappers etc for the base csg.js syntax,
   all in the mindset of "simple, clearer better"

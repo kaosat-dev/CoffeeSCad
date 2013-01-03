@@ -2,8 +2,18 @@ define (require)->
   $ = require 'jquery'
   _ = require 'underscore'
   Backbone = require 'backbone'
-  require './csg.geometry' 
+  shapes = require './csg.geometry' 
+  CSGBase= require './csg' 
   
+  try
+    truc = new CSGBase()
+    console.log "I GOT " 
+    console.log truc
+    #cube = new shapes.Cube()
+    #console.log "I GOT " 
+    #console.log cube
+  catch error
+    console.log "ERROR"+error
   csgSugar = ""
   csgSugar += """typeIsArray = Array.isArray || ( value ) -> return {}.toString.call( value ) is '[object Array]'
   \n"""

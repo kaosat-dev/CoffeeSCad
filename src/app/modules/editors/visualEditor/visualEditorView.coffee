@@ -2,7 +2,7 @@ define (require) ->
   $ = require 'jquery'
   marionette = require 'marionette'
   require 'bootstrap'
-  csg = require 'csg'
+  #csg = require 'csg'
   THREE = require 'three'
   THREE.CSG = require 'three_csg'
   combo_cam = require 'combo_cam'

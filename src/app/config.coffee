@@ -13,7 +13,7 @@ require.config
     bootstrap:        "../assets/js/libs/bootstrap.min"
     CoffeeScript:     "../assets/js/libs/CoffeeScript"
     CodeMirror:       "../assets/js/libs/codemirror"
-    csg:              "../assets/js/libs/csg"
+    #csg:              "../assets/js/libs/csg"
     lightgl:          "../assets/js/libs/lightgl"
     three:            "../assets/js/libs/three.min"
     detector:         "../assets/js/libs/detector"

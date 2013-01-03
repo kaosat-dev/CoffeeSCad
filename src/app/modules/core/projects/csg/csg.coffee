@@ -1,7 +1,15 @@
 define (require)->
-  TransformBase = require './csg.base'
-  Polygon = require './csg.maths'.CSG.Polygon
-  Properties = require './csg.props'
+  console.log "in csg main"
+  
+  TransformBase = require './transformBase'
+  
+  maths = require './csg.maths'
+  Vertex = maths.Vertex
+  Vector3D = maths.Vector3D
+  Polygon = maths.Polygon
+  
+  props = require './csg.props'
+  Properties = props.CSG.Properties
 
   class CSGBase extends TransformBase
     @defaultResolution2D : 32
@@ -9,13 +17,12 @@ define (require)->
     
     constructor:->
       @polygons = []
-      @properties = new CSG.Properties()
+      @properties = new Properties()
       @isCanonicalized = true
       @isRetesselated = true
       
     @fromPolygons : (polygons) ->
       #Construct a CSG solid from a list of `CSG.Polygon` instances.
-      #console.log("Doing CSG SIDE of from poly");
       csg = new  CSGBase()
       csg.polygons = polygons
       csg.isCanonicalized = false
@@ -64,7 +71,7 @@ define (require)->
         vertices.push vertex
         vertexindex++
       shareds = bin.shared.map((shared) ->
-        CSG.Polygon.Shared.fromObject shared
+        Polygon.Shared.fromObject shared
       )
       polygons = []
       numpolygons = bin.numPolygons
@@ -85,7 +92,7 @@ define (require)->
           i++
         plane = planes[polygonPlaneIndexes[polygonindex]]
         shared = shareds[polygonSharedIndexes[polygonindex]]
-        polygon = new CSG.Polygon(polygonvertices, shared, plane)
+        polygon = new Polygon(polygonvertices, shared, plane)
         polygons.push polygon
         polygonindex++
       csg = CSG.fromPolygons(polygons)
@@ -398,7 +405,7 @@ define (require)->
           newvertex
         )
         newvertices.reverse()  if ismirror
-        new CSG.Polygon(newvertices, p.shared, newplane)
+        new Polygon(newvertices, p.shared, newplane)
       )
       result = CSG.fromPolygons(newpolygons)
       result.properties = @properties._transform(matrix4x4)
@@ -551,14 +558,14 @@ define (require)->
               startfacevertices.push new CSG.Vertex(p1)
               endfacevertices.push new CSG.Vertex(p2)
               polygonvertices = [new CSG.Vertex(prevp2), new CSG.Vertex(p2), new CSG.Vertex(p1), new CSG.Vertex(prevp1)]
-              polygon = new CSG.Polygon(polygonvertices)
+              polygon = new Polygon(polygonvertices)
               polygons.push polygon
             prevp1 = p1
             prevp2 = p2
           i++
         endfacevertices.reverse()
-        polygons.push new CSG.Polygon(startfacevertices)
-        polygons.push new CSG.Polygon(endfacevertices)
+        polygons.push new Polygon(startfacevertices)
+        polygons.push new Polygon(endfacevertices)
         cylinder = CSG.fromPolygons(polygons)
         result = result.unionSub(cylinder, false, false)
       
@@ -723,7 +730,7 @@ define (require)->
       vertices.push new CSG.Vertex(orthobasis.to3D(new CSG.Vector2D(-maxdistance, -maxdistance)))
       vertices.push new CSG.Vertex(orthobasis.to3D(new CSG.Vector2D(-maxdistance, maxdistance)))
       vertices.push new CSG.Vertex(orthobasis.to3D(new CSG.Vector2D(maxdistance, maxdistance)))
-      polygon = new CSG.Polygon(vertices, null, plane.flipped())
+      polygon = new Polygon(vertices, null, plane.flipped())
       
       # and extrude the polygon into a cube, backwards of the plane:
       cube = polygon.extrude(plane.normal.times(-maxdistance))
@@ -748,7 +755,7 @@ define (require)->
       # set the .shared property of all polygons
       # Returns a new CSG solid, the original is unmodified!
       polygons = @polygons.map((p) ->
-        new CSG.Polygon(p.vertices, shared, p.plane)
+        new Polygon(p.vertices, shared, p.plane)
       )
       result = CSG.fromPolygons(polygons)
       result.properties = @properties # keep original properties
@@ -1087,7 +1094,7 @@ define (require)->
                         # split the side by inserting the vertex:
                         newvertices = polygon.vertices.slice(0)
                         newvertices.splice insertionvertextagindex, 0, endvertex
-                        newpolygon = new CSG.Polygon(newvertices, polygon.shared) #polygon.plane
+                        newpolygon = new Polygon(newvertices, polygon.shared) #polygon.plane
                         polygons[polygonindex] = newpolygon
                         
                         # remove the original sides from our maps:

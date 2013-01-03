@@ -1,14 +1,14 @@
 define (require)->
   maths = require './csg.maths'
   console.log "in utils, looking for maths"
-  console.log maths.CSG
-  Vector2D = maths.CSG.Vector2D
-  Vector3D = maths.CSG.Vector3D
-  Vertex   = maths.CSG.Vertex
-  Line2D   = maths.CSG.Line2D
-  OrthoNormalBasis = maths.CSG.OrthoNormalBasis
-  Polygon = maths.CSG.Polygon
-
+  Vector2D = maths.Vector2D
+  Vector3D = maths.Vector3D
+  Vertex   = maths.Vertex
+  Line2D   = maths.Line2D
+  OrthoNormalBasis = maths.OrthoNormalBasis
+  Polygon = maths.Polygon
+  
+  CSG={}
 
   CSG.parseOption = (options, optionname, defaultvalue) ->
     # Parse an option from the options object

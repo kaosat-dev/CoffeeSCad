@@ -1,16 +1,21 @@
 define (require)->
+  console.log "jklhk"
   CSGBase = require './csg'
   console.log "in geom, looking for csg"
   maths = require './csg.maths'
-  console.log "in geom, looking for maths"
-  Vertex = maths.CSG.Vertex
-  Vector3d = maths.CSG.Vector3d
-  Polygon = maths.CSG.Polygon
+  Vertex = maths.Vertex
+  Vector3D = maths.Vector3D
+  Polygon = maths.Polygon
   
-  properties = require './csg.props'
+  console.log "maths"
+  console.log maths
+  
+  props = require './csg.props'
   console.log "in geom, looking for props"
-  CSG.Properties = properties.CSG.Properties
-  CSG.Connector = properties.CSG.Connector
+  console.log props
+  Properties = props.CSG.Properties
+  Connector = props.CSG.Connector
+   
   
   utils = require './csg.utils'
   console.log "in geom, looking for utils"
@@ -30,6 +35,7 @@ define (require)->
     #       radius: 1
     #     });
     constructor : (options) ->
+      options = options or {}
       c = parseOptionAs3DVector(options, "center", [0, 0, 0])
       r = parseOptionAs3DVector(options, "radius", [1, 1, 1])
       result = CSGBase.fromPolygons([[[0, 4, 6, 2], [-1, 0, 0]], [[1, 3, 7, 5], [+1, 0, 0]], [[0, 1, 5, 4], [0, -1, 0]], [[2, 6, 7, 3], [0, +1, 0]], [[0, 2, 3, 1], [0, 0, -1]], [[4, 5, 7, 6], [0, 0, +1]]].map((info) ->
@@ -40,11 +46,13 @@ define (require)->
           )
         new Polygon(vertices, null)
       ))
-      result.properties.cube = new CSG.Properties()
+      result.properties.cube = new Properties()
       result.properties.cube.center = new Vector3D(c)
   
       # add 6 connectors, at the centers of each face:
-      result.properties.cube.facecenters = [new CSG.Connector(new Vector3D([r.x, 0, 0]).plus(c), [1, 0, 0], [0, 0, 1]), new CSG.Connector(new Vector3D([-r.x, 0, 0]).plus(c), [-1, 0, 0], [0, 0, 1]), new CSG.Connector(new Vector3D([0, r.y, 0]).plus(c), [0, 1, 0], [0, 0, 1]), new CSG.Connector(new Vector3D([0, -r.y, 0]).plus(c), [0, -1, 0], [0, 0, 1]), new CSG.Connector(new Vector3D([0, 0, r.z]).plus(c), [0, 0, 1], [1, 0, 0]), new CSG.Connector(new Vector3D([0, 0, -r.z]).plus(c), [0, 0, -1], [1, 0, 0])]
+      result.properties.cube.facecenters = [new Connector(new Vector3D([r.x, 0, 0]).plus(c), [1, 0, 0], [0, 0, 1]), new Connector(new Vector3D([-r.x, 0, 0]).plus(c), [-1, 0, 0], [0, 0, 1]), new Connector(new Vector3D([0, r.y, 0]).plus(c), [0, 1, 0], [0, 0, 1]), new Connector(new Vector3D([0, -r.y, 0]).plus(c), [0, -1, 0], [0, 0, 1]), new Connector(new Vector3D([0, 0, r.z]).plus(c), [0, 0, 1], [1, 0, 0]), new Connector(new Vector3D([0, 0, -r.z]).plus(c), [0, 0, -1], [1, 0, 0])]
+      result=result.color([1,0,0])
+      result.toto=24
       result
         
   class RoundedCube extends CSGBase
@@ -176,9 +184,9 @@ define (require)->
           result = result.unionSub(cylinder, false, true)
         level++
       result = result.reTesselated()
-      result.properties.roundedCube = new CSG.Properties()
+      result.properties.roundedCube = new Properties()
       result.properties.roundedCube.center = new Vertex(center)
-      result.properties.roundedCube.facecenters = [new CSG.Connector(new Vector3D([cuberadius.x, 0, 0]).plus(center), [1, 0, 0], [0, 0, 1]), new CSG.Connector(new Vector3D([-cuberadius.x, 0, 0]).plus(center), [-1, 0, 0], [0, 0, 1]), new CSG.Connector(new Vector3D([0, cuberadius.y, 0]).plus(center), [0, 1, 0], [0, 0, 1]), new CSG.Connector(new Vector3D([0, -cuberadius.y, 0]).plus(center), [0, -1, 0], [0, 0, 1]), new CSG.Connector(new Vector3D([0, 0, cuberadius.z]).plus(center), [0, 0, 1], [1, 0, 0]), new CSG.Connector(new Vector3D([0, 0, -cuberadius.z]).plus(center), [0, 0, -1], [1, 0, 0])]
+      result.properties.roundedCube.facecenters = [new Connector(new Vector3D([cuberadius.x, 0, 0]).plus(center), [1, 0, 0], [0, 0, 1]), new Connector(new Vector3D([-cuberadius.x, 0, 0]).plus(center), [-1, 0, 0], [0, 0, 1]), new Connector(new Vector3D([0, cuberadius.y, 0]).plus(center), [0, 1, 0], [0, 0, 1]), new Connector(new Vector3D([0, -cuberadius.y, 0]).plus(center), [0, -1, 0], [0, 0, 1]), new Connector(new Vector3D([0, 0, cuberadius.z]).plus(center), [0, 0, 1], [1, 0, 0]), new Connector(new Vector3D([0, 0, -cuberadius.z]).plus(center), [0, 0, -1], [1, 0, 0])]
       result
   
   class Sphere extends CSGBase
@@ -254,7 +262,7 @@ define (require)->
         prevcylinderpoint = cylinderpoint
         slice1++
       result = CSGBase.fromPolygons(polygons)
-      result.properties.sphere = new CSG.Properties()
+      result.properties.sphere = new Properties()
       result.properties.sphere.center = new Vector3D(center)
       result.properties.sphere.facepoint = center.plus(xvector)
       result
@@ -318,9 +326,9 @@ define (require)->
             polygons.push new Polygon([point(1, t0, rEnd), point(1, t1, rEnd), point(0, t1, rStart)])
         i++
       result = CSGBase.fromPolygons(polygons)
-      result.properties.cylinder = new CSG.Properties()
-      result.properties.cylinder.start = new CSG.Connector(s, axisZ.negated(), axisX)
-      result.properties.cylinder.end = new CSG.Connector(e, axisZ, axisX)
+      result.properties.cylinder = new Properties()
+      result.properties.cylinder.start = new Connector(s, axisZ.negated(), axisX)
+      result.properties.cylinder.end = new Connector(e, axisZ, axisX)
       result.properties.cylinder.facepoint = s.plus(axisX.times(rStart))
       result
    
@@ -416,17 +424,14 @@ define (require)->
       result = CSGBase.fromPolygons(polygons)
       ray = zvector.unit()
       axisX = xvector.unit()
-      result.properties.roundedCylinder = new CSG.Properties()
-      result.properties.roundedCylinder.start = new CSG.Connector(p1, ray.negated(), axisX)
-      result.properties.roundedCylinder.end = new CSG.Connector(p2, ray, axisX)
+      result.properties.roundedCylinder = new Properties()
+      result.properties.roundedCylinder.start = new Connector(p1, ray.negated(), axisX)
+      result.properties.roundedCylinder.end = new Connector(p2, ray, axisX)
       result.properties.roundedCylinder.facepoint = p1.plus(xvector)
       result
     
-  exports:
-    "Cube": Cube
+  return {"Cube": Cube
     "RoundedCube": RoundedCube
     "Sphere": Sphere
     "Cylinder": Cylinder
-    "RoundedCylinder":RoundedCylinder
-    
-  return exports
+    "RoundedCylinder":RoundedCylinder}

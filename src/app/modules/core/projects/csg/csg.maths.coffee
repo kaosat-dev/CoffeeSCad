@@ -1,16 +1,18 @@
 define (require)->
   Function::property = (prop, desc) ->
     Object.defineProperty @prototype, prop, desc
- 
-  class  CSG.Vector2D 
+    
+  CSG={}
+  
+  class  Vector2D 
     # Represents a 2 element vector
     constructor : (x, y) ->
-      if arguments_.length is 2
+      if arguments.length is 2
         @_x = parseFloat(x)
         @_y = parseFloat(y)
       else
         ok = true
-        if arguments_.length is 1
+        if arguments.length is 1
           if typeof (x) is "object"
             if x instanceof CSG.Vector2D
               @_x = x._x
@@ -31,15 +33,14 @@ define (require)->
           ok = false
         ok = false  if (not CSG.IsFloat(@_x)) or (not CSG.IsFloat(@_y))  if ok
         throw new Error("wrong arguments")  unless ok
-        
-        #getters setters
-        @property 'x',
-          get: -> return this._x
-          set: (v) -> throw new Error("Vector2D is immutable")
-        
-        @property 'y',
-          get: -> return this._y
-          set: (v) -> throw new Error("Vector2D is immutable")
+    
+    @property 'x',
+      get: -> return this._x
+      set: (v) -> throw new Error("Vector2D is immutable")
+    
+    @property 'y',
+      get: -> return this._y
+      set: (v) -> throw new Error("Vector2D is immutable")
           
     @fromAngle : (radians) ->
       CSG.Vector2D.fromAngleRadians radians
@@ -132,7 +133,7 @@ define (require)->
     toString: ->
       "(" + @_x + ", " + @_y + ")"
   
-  class CSG.Vector3D
+  class Vector3D
     # # class Vector3D
     # Represents a 3D vector.
     # 
@@ -144,17 +145,17 @@ define (require)->
     #     new CSG.Vector3D(1, 2); // assumes z=0
     #     new CSG.Vector3D([1, 2]); // assumes z=0
     constructor: (x, y, z) ->
-      if arguments_.length is 3
+      if arguments.length is 3
         @_x = parseFloat(x)
         @_y = parseFloat(y)
         @_z = parseFloat(z)
-      else if arguments_.length is 2
+      else if arguments.length is 2
         @_x = parseFloat(x)
         @_y = parseFloat(y)
         @_z = 0
       else
         ok = true
-        if arguments_.length is 1
+        if arguments.length is 1
           if typeof (x) is "object"
             if x instanceof CSG.Vector3D
               @_x = x._x
@@ -193,18 +194,17 @@ define (require)->
         ok = false  if (not CSG.IsFloat(@_x)) or (not CSG.IsFloat(@_y)) or (not CSG.IsFloat(@_z))  if ok
         throw new Error("wrong arguments")  unless ok
         
-        #getters setters
-        @property 'x',
-          get: -> return this._x
-          set: (v) -> throw new Error("Vector3D is immutable")
-        
-        @property 'y',
-          get: -> return this._y
-          set: (v) -> throw new Error("Vector3D is immutable")
-          
-        @property 'z',
-          get: -> return this._z
-          set: (v) -> throw new Error("Vector3D is immutable")
+    @property 'x',
+      get: -> return this._x
+      set: (v) -> throw new Error("Vector3D is immutable")
+    
+    @property 'y',
+      get: -> return this._y
+      set: (v) -> throw new Error("Vector3D is immutable")
+      
+    @property 'z',
+      get: -> return this._z
+      set: (v) -> throw new Error("Vector3D is immutable")
        
     clone: ->
       new CSG.Vector3D(this)
@@ -284,7 +284,7 @@ define (require)->
     max: (p) ->
       new CSG.Vector3D(Math.max(@_x, p._x), Math.max(@_y, p._y), Math.max(@_z, p._z))
   
-  class CSG.Vertex 
+  class Vertex 
     # # class Vertex
     # Represents a vertex of a polygon. Use your own vertex class instead of this
     # one to provide additional features like texture coordinates and vertex
@@ -742,7 +742,7 @@ define (require)->
       shared = CSG.Polygon.defaultShared  unless shared
       @shared = shared
       numvertices = vertices.length
-      if arguments_.length >= 3
+      if arguments.length >= 3
         @plane = plane
       else
         @plane = CSG.Plane.fromVector3Ds(vertices[0].pos, vertices[1].pos, vertices[2].pos)
@@ -903,7 +903,7 @@ define (require)->
     @createFromPoints : (points, shared, plane) ->
       # Create a polygon from the given points
       normal = undefined
-      if arguments_.length < 3
+      if arguments.length < 3
         
         # initially set a dummy vertex normal:
         normal = new CSG.Vector3D(0, 0, 0)
@@ -916,7 +916,7 @@ define (require)->
         vertices.push vertex
     
       polygon = undefined
-      if arguments_.length < 3
+      if arguments.length < 3
         polygon = new CSG.Polygon(vertices, shared)
       else
         polygon = new CSG.Polygon(vertices, shared, plane)
@@ -1096,7 +1096,7 @@ define (require)->
   class CSG.Matrix4x4
     # Represents a 4x4 matrix. Elements are specified in row order
     constructor: (elements) ->
-      if arguments_.length >= 1
+      if arguments.length >= 1
         @elements = elements
       else
         
@@ -1355,7 +1355,7 @@ define (require)->
     # Reprojects points on a 3D plane onto a 2D plane
     # or from a 2D plane back onto the 3D plane
     constructor: (plane, rightvector) ->
-      if arguments_.length < 2
+      if arguments.length < 2
         
         # choose an arbitrary right hand vector, making sure it is somewhat orthogonal to the plane normal:
         rightvector = plane.normal.randomNonParallelVector()
@@ -1408,16 +1408,15 @@ define (require)->
       newbasis
   
   return {
-    "CSG":
-      "Vector2D": CSG.Vector2D
-      "Vector3D": CSG.Vector3D
-      "Vertex": CSG.Vertex
-      "Line2D": CSG.Line2D
-      "Line3D": CSG.Line3D
-      "Plane": CSG.Plane
-      "Polygon": CSG.Polygon
-      "Shared": CSG.Shared
-      "Path2D": CSG.Path2D
-      "Matrix4x4": CSG.Path2D
-      "OrthoNormalBasis": CSG.OrthoNormalBasis
+    "Vector3D": Vector3D
+    "Vector2D": Vector2D
+    "Plane": CSG.Plane
+    "Vertex": CSG.Vertex
+    "Line2D": CSG.Line2D
+    "Line3D": CSG.Line3D
+    "Polygon": CSG.Polygon
+    "Shared": CSG.Shared
+    "Path2D": CSG.Path2D
+    "Matrix4x4": CSG.Path2D
+    "OrthoNormalBasis": CSG.OrthoNormalBasis
   }

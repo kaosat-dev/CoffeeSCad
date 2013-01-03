@@ -1,4 +1,7 @@
 define (require)->
+  csgMaths = require './csg.maths'
+  Vector3D = csgMaths.Vector3D
+  CSG={}
   
   class CSG.Properties
     # # Class Properties
@@ -74,9 +77,9 @@ define (require)->
     # Connectors are stored in the properties of a CSG solid so they are
     # ge the same transformations applied as the solid
     constructor: (point, axisvector, normalvector) ->
-      @point = new CSG.Vector3D(point)
-      @axisvector = new CSG.Vector3D(axisvector).unit()
-      @normalvector = new CSG.Vector3D(normalvector).unit()
+      @point = new Vector3D(point)
+      @axisvector = new Vector3D(axisvector).unit()
+      @normalvector = new Vector3D(normalvector).unit()
   
     normalized: ->
       axisvector = @axisvector.unit()
@@ -107,7 +110,7 @@ define (require)->
       transformation = CSG.Matrix4x4.translation(@point.negated())
       
       # construct the plane crossing through the origin and the two axes:
-      axesplane = CSG.Plane.anyPlaneFromVector3Ds(new CSG.Vector3D(0, 0, 0), us.axisvector, other.axisvector)
+      axesplane = CSG.Plane.anyPlaneFromVector3Ds(new Vector3D(0, 0, 0), us.axisvector, other.axisvector)
       axesbasis = new CSG.OrthoNormalBasis(axesplane)
       angle1 = axesbasis.to2D(us.axisvector).angle()
       angle2 = axesbasis.to2D(other.axisvector).angle()
@@ -120,7 +123,7 @@ define (require)->
       
       # Now we have done the transformation for aligning the axes.
       # We still need to align the normals:
-      normalsplane = CSG.Plane.fromNormalAndPoint(other.axisvector, new CSG.Vector3D(0, 0, 0))
+      normalsplane = CSG.Plane.fromNormalAndPoint(other.axisvector, new Vector3D(0, 0, 0))
       normalsbasis = new CSG.OrthoNormalBasis(normalsplane)
       angle1 = normalsbasis.to2D(usAxesAligned.normalvector).angle()
       angle2 = normalsbasis.to2D(other.normalvector).angle()
@@ -146,5 +149,5 @@ define (require)->
   return {
     "CSG":
       "Connector":CSG.Connector
-      "Property":CSG.Property
+      "Properties":CSG.Properties
   }
