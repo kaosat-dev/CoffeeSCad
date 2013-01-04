@@ -1,11 +1,10 @@
 define (require)->
-  console.log "in transformbase, looking for maths"
   csgMaths = require './csg.maths'
   Matrix4x4 = csgMaths.Matrix4x4
   Vector3D = csgMaths.Vector3D
   Plane = csgMaths.Plane
- 
-  class TransformBase
+  
+  class TransformBase 
     # Add several convenience methods to the classes that support a transform() method:
     mirrored = (plane) ->
       @transform Matrix4x4.mirroring(plane)

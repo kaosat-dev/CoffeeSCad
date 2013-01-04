@@ -12,9 +12,9 @@ THREE.CSG = {
 	toCSG: function ( three_model, offset, rotation ) {
 		var i, geometry, offset, polygons, vertices, rotation_matrix;
 		
-		if ( !CSG ) {
+		/*if ( !CSG ) {
 			throw 'CSG library not loaded. Please get a copy from https://github.com/evanw/csg.js';
-		}
+		}*/
 		
 		if ( three_model instanceof THREE.Mesh ) {
 			geometry = three_model.geometry;
@@ -53,9 +53,6 @@ THREE.CSG = {
                 v_cor = new CSG.Vector3D( v.x, v.y, v.z);
                 vertices.push( new CSG.Vertex(v_cor, [ geometry.faces[i].normal.x, geometry.faces[i].normal.y, geometry.faces[i].normal.z ] ) );
              
-                
-                
-
 				//console.log("before poly push");
 				polygons.push( new CSG.Polygon( vertices ) );
 				

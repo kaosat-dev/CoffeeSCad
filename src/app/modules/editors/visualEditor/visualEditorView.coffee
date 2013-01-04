@@ -1144,7 +1144,6 @@ define (require) ->
       container2 = $(@ui.glOverlayBlock)
       container2.append(@overlayRenderer.domElement)
       
-      
       @overlayControls = new THREE.CustomOrbitControls(@overlayCamera, @el)
       @overlayControls.noPan = true
       #@overlayControls.noZoom = true
@@ -1178,7 +1177,40 @@ define (require) ->
       if csgResult?
         console.log "CSG conversion result ok:"
       
+      
     fromCsg:(csg)=>
+      CsgProcessor  = require 'modules/core/projects/csg/csg.processor'
+      resultCSG = new CsgProcessor().processScript(@model.get("content"))
+      @model.csg = resultCSG #FIXME: remove this at all costs (needs overall reorganization perhaps), but a view should not modify a model like this ? or should it?
+      
+      geom = THREE.CSG.fromCSG(resultCSG)
+      shine= 1500
+      spec= 10000000000
+      mat = new THREE.MeshPhongMaterial({color:  0xFFFFFF , shading: THREE.SmoothShading,  shininess: shine, specular: spec, metal: true, vertexColors: THREE.VertexColors}) 
+      
+      if @mesh?
+        @scene.remove @mesh
+        try
+          @scene.remove @current.cageView
+          @current=null
+        
+      @mesh = new THREE.Mesh(geom, mat)
+      @mesh.castShadow =  @settings.get("shadows")
+      @mesh.receiveShadow = @settings.get("selfShadows") and @settings.get("shadows")
+      @mesh.material.wireframe = @settings.get("wireframe")
+      @mesh.name = "CSG_OBJ"
+      
+      @scene.add @mesh
+      @controller.objects = [@mesh]
+
+      @vent.trigger("parseCsgDone", @)
+      console.log "bleh"
+      @_render()
+      
+    fromCsg_:(csg)=>
+      #cleanup of old class registry
+      if @model.csg?
+        window.classRegistry={}
       try
         CsgProcessor  = require 'modules/core/projects/csg/csg.processor'
         resultCSG = new CsgProcessor().processScript(@model.get("content"))
@@ -1225,6 +1257,10 @@ define (require) ->
         @model.csg = null
         console.log "Csg Generation error: #{error} "
         @vent.trigger("csgParseError", error)
+        
+        #cleanup of old class registry
+        window.classRegistry={}
+        
       finally
         @vent.trigger("parseCsgDone", @)
         @_render()

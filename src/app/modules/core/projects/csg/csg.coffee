@@ -1,6 +1,6 @@
 define (require)->
   console.log "in csg main"
-  
+  CSG = {}
   TransformBase = require './transformBase'
   
   maths = require './csg.maths'
@@ -10,10 +10,21 @@ define (require)->
   
   props = require './csg.props'
   Properties = props.CSG.Properties
-
+  
+  trees= require './csg.trees'
+  Tree = trees.Tree
+  
+  utils= require './csg.utils'
+  reTesselateCoplanarPolygons = utils.reTesselateCoplanarPolygons
+  parseOptionAs3DVector = utils.parseOptionAs3DVector
+  parseOptionAsFloat = utils.parseOptionAs3DVector
+  parseOptionAsInt = utils.parseOptionAsInt
+  
+  _CSGDEBUG = require './csg.globals'
+  
   class CSGBase extends TransformBase
-    @defaultResolution2D : 32
-    @defaultResolution3D : 12
+    @defaultResolution2D : 64
+    @defaultResolution3D : 64
     
     constructor:->
       @polygons = []
@@ -21,9 +32,10 @@ define (require)->
       @isCanonicalized = true
       @isRetesselated = true
       
+    
     @fromPolygons : (polygons) ->
-      #Construct a CSG solid from a list of `CSG.Polygon` instances.
-      csg = new  CSGBase()
+      #Construct a CSG solid from a list of `Polygon` instances.
+      csg = new CSGBase()
       csg.polygons = polygons
       csg.isCanonicalized = false
       csg.isRetesselated = false
@@ -32,9 +44,9 @@ define (require)->
     @fromObject : (obj) ->
       # create from an untyped object with identical property names:
       polygons = obj.polygons.map((p) ->
-        CSG.Polygon.fromObject p
+        Polygon.fromObject p
       )
-      csg = CSG.fromPolygons(polygons)
+      csg = CSGBase.fromPolygons(polygons)
       csg = csg.canonicalized()
       csg
       
@@ -52,7 +64,7 @@ define (require)->
         y = planeData[arrayindex++]
         z = planeData[arrayindex++]
         w = planeData[arrayindex++]
-        normal = new CSG.Vector3D(x, y, z)
+        normal = new Vector3D(x, y, z)
         plane = new CSG.Plane(normal, w)
         planes.push plane
         planeindex++
@@ -66,8 +78,8 @@ define (require)->
         x = vertexData[arrayindex++]
         y = vertexData[arrayindex++]
         z = vertexData[arrayindex++]
-        pos = new CSG.Vector3D(x, y, z)
-        vertex = new CSG.Vertex(pos)
+        pos = new Vector3D(x, y, z)
+        vertex = new Vertex(pos)
         vertices.push vertex
         vertexindex++
       shareds = bin.shared.map((shared) ->
@@ -95,19 +107,18 @@ define (require)->
         polygon = new Polygon(polygonvertices, shared, plane)
         polygons.push polygon
         polygonindex++
-      csg = CSG.fromPolygons(polygons)
+      csg = CSGBase.fromPolygons(polygons)
       csg.isCanonicalized = true
       csg.isRetesselated = true
       csg
       
     toPolygons : ->
-        @polygons
+      @polygons
         
     toString: ->
       result = "CSG solid:\n"
       @polygons.map (p) ->
         result += p.toString()
-  
       result
   
     toCompactBinary: ->
@@ -216,6 +227,29 @@ define (require)->
       result = result.reTesselated()
       result
    
+    unionSelf:(csg) ->
+      #union the csg with the current object instance
+      #in effect this is close to a '+=' operator
+      csgs = undefined
+      if csg instanceof Array
+        csgs = csg
+      else
+        csgs = [csg]
+      result = @
+      i = 0
+  
+      while i < csgs.length
+        islast = (i is (csgs.length - 1))
+        result = result.unionSub(csgs[i], islast, islast)
+        i++
+ 
+      @properties= result.properties
+      @polygons= result.polygons
+      @isCanonicalized = result.isCanonicalized
+      @isRetesselated = result.isRetesselated
+      @
+        
+   
     union : (csg) ->
       # Return a new CSG solid representing space in either this solid or in the
       # solid `csg`. Neither this solid nor the solid `csg` are modified.
@@ -236,29 +270,34 @@ define (require)->
         csgs = csg
       else
         csgs = [csg]
-      result = this
+      result = @
       i = 0
       while i < csgs.length
         islast = (i is (csgs.length - 1))
         result = result.unionSub(csgs[i], islast, islast)
         i++
+      
+      console.log "union result"
+      console.log result
       result
       
     unionSub: (csg, retesselate, canonicalize) ->
       unless @mayOverlap(csg)
+        console.log "non intersect"
         @unionForNonIntersecting csg
       else
-        a = new CSG.Tree(@polygons)
-        b = new CSG.Tree(csg.polygons)
+        console.log "intersect"
+        a = new Tree(@polygons)
+        b = new Tree(csg.polygons)
         a.clipTo b, false
         
-        # b.clipTo(a, true); // ERROR: this doesn't work
+        #b.clipTo(a, true) # ERROR: this doesn't work
         b.clipTo a
         b.invert()
         b.clipTo a
         b.invert()
         newpolygons = a.allPolygons().concat(b.allPolygons())
-        result = CSG.fromPolygons(newpolygons)
+        result = CSGBase.fromPolygons(newpolygons)
         result.properties = @properties._merge(csg.properties)
         result = result.reTesselated()  if retesselate
         result = result.canonicalized()  if canonicalize
@@ -268,12 +307,32 @@ define (require)->
       # Like union, but when we know that the two solids are not intersecting
       # Do not use if you are not completely sure that the solids do not intersect!
       newpolygons = @polygons.concat(csg.polygons)
-      result = CSG.fromPolygons(newpolygons)
+      result = CSGBase.fromPolygons(newpolygons)
       result.properties = @properties._merge(csg.properties)
       result.isCanonicalized = @isCanonicalized and csg.isCanonicalized
       result.isRetesselated = @isRetesselated and csg.isRetesselated
       result
-      
+    
+    subtractSelf:(csg) ->
+      csgs = undefined
+      if csg instanceof Array
+        csgs = csg
+      else
+        csgs = [csg]
+      result = @
+      i = 0
+  
+      while i < csgs.length
+        islast = (i is (csgs.length - 1))
+        result = result.subtractSub(csgs[i], islast, islast)
+        i++
+        
+      @properties= result.properties
+      @polygons= result.polygons
+      @isCanonicalized = result.isCanonicalized
+      @isRetesselated = result.isRetesselated
+      @
+    
     subtract: (csg) ->
       # Return a new CSG solid representing space in this solid but not in the
       # solid `csg`. Neither this solid nor the solid `csg` are modified.
@@ -304,18 +363,38 @@ define (require)->
       result
       
     subtractSub: (csg, retesselate, canonicalize) ->
-      a = new CSG.Tree(@polygons)
-      b = new CSG.Tree(csg.polygons)
+      a = new Tree(@polygons)
+      b = new Tree(csg.polygons)
       a.invert()
       a.clipTo b
       b.clipTo a, true
       a.addPolygons b.allPolygons()
       a.invert()
-      result = CSG.fromPolygons(a.allPolygons())
+      result = CSGBase.fromPolygons(a.allPolygons())
       result.properties = @properties._merge(csg.properties)
       result = result.reTesselated()  if retesselate
       result = result.canonicalized()  if canonicalize
       result
+    
+    intersectSelf :(csg)->
+      csgs = undefined
+      if csg instanceof Array
+        csgs = csg
+      else
+        csgs = [csg]
+      result = @
+      i = 0
+  
+      while i < csgs.length
+        islast = (i is (csgs.length - 1))
+        result = result.intersectSub(csgs[i], islast, islast)
+        i++
+      
+      @properties= result.properties
+      @polygons= result.polygons
+      @isCanonicalized = result.isCanonicalized
+      @isRetesselated = result.isRetesselated
+      @
   
     intersect: (csg) ->
       # Return a new CSG solid representing space both this solid and in the
@@ -347,8 +426,8 @@ define (require)->
       result
       
     intersectSub: (csg, retesselate, canonicalize) ->
-      a = new CSG.Tree(@polygons)
-      b = new CSG.Tree(csg.polygons)
+      a = new Tree(@polygons)
+      b = new Tree(csg.polygons)
       a.invert()
       b.clipTo a
       b.invert()
@@ -356,7 +435,7 @@ define (require)->
       b.clipTo a
       a.addPolygons b.allPolygons()
       a.invert()
-      result = CSG.fromPolygons(a.allPolygons())
+      result = CSGBase.fromPolygons(a.allPolygons())
       result.properties = @properties._merge(csg.properties)
       result = result.reTesselated()  if retesselate
       result = result.canonicalized()  if canonicalize
@@ -368,7 +447,7 @@ define (require)->
       flippedpolygons = @polygons.map((p) ->
         p.flipped()
       )
-      CSG.fromPolygons flippedpolygons
+      CSGBase.fromPolygons flippedpolygons
       # TODO: flip properties
       
     transform1: (matrix4x4) ->
@@ -376,10 +455,42 @@ define (require)->
       newpolygons = @polygons.map((p) ->
         p.transform matrix4x4
       )
-      result = CSG.fromPolygons(newpolygons)
+      result = CSGBase.fromPolygons(newpolygons)
       result.properties = @properties._transform(matrix4x4)
       result.isRetesselated = @isRetesselated
       result
+    
+    transformSelf: (matrix4x4) ->
+      ismirror = matrix4x4.isMirroring()
+      transformedvertices = {}
+      transformedplanes = {}
+      newpolygons = @polygons.map((p) ->
+        newplane = undefined
+        plane = p.plane
+        planetag = plane.getTag()
+        if planetag of transformedplanes
+          newplane = transformedplanes[planetag]
+        else
+          newplane = plane.transform(matrix4x4)
+          transformedplanes[planetag] = newplane
+        newvertices = p.vertices.map((v) ->
+          newvertex = undefined
+          vertextag = v.getTag()
+          if vertextag of transformedvertices
+            newvertex = transformedvertices[vertextag]
+          else
+            newvertex = v.transform(matrix4x4)
+            transformedvertices[vertextag] = newvertex
+          newvertex
+        )
+        newvertices.reverse()  if ismirror
+        new Polygon(newvertices, p.shared, newplane)
+      )
+
+      result = CSGBase.fromPolygons(newpolygons)
+      @polygons= result.polygons
+      @properties= @properties._transform(matrix4x4)
+      @
   
     transform: (matrix4x4) ->
       ismirror = matrix4x4.isMirroring()
@@ -407,12 +518,21 @@ define (require)->
         newvertices.reverse()  if ismirror
         new Polygon(newvertices, p.shared, newplane)
       )
-      result = CSG.fromPolygons(newpolygons)
+      result = CSGBase.fromPolygons(newpolygons)
       result.properties = @properties._transform(matrix4x4)
       result.isRetesselated = @isRetesselated
       result.isCanonicalized = @isCanonicalized
       result
-      
+    
+    
+    expandSelf: (radius, resolution) ->
+      # Expand the current csg object
+      # resolution: number of points per 360 degree for the rounded corners
+      result = @expandedShell(radius, resolution, true)
+      #result = result.reTesselated()
+      @polygons = result.polygons
+      @
+     
     expand: (radius, resolution) ->
       # Expand the solid
       # resolution: number of points per 360 degree for the rounded corners
@@ -450,6 +570,7 @@ define (require)->
         extrudevector = polygon.plane.normal.unit().times(2 * radius)
         translatedpolygon = polygon.translate(extrudevector.times(-0.5))
         extrudedface = translatedpolygon.extrude(extrudevector)
+        extrudedface = CSGBase.fromPolygons extrudedface
         result = result.unionSub(extrudedface, false, false)
   
       
@@ -555,9 +676,9 @@ define (require)->
           skip = true  if p1.distanceTo(prevp1) < 1e-5  if i >= 0
           unless skip
             if i >= 0
-              startfacevertices.push new CSG.Vertex(p1)
-              endfacevertices.push new CSG.Vertex(p2)
-              polygonvertices = [new CSG.Vertex(prevp2), new CSG.Vertex(p2), new CSG.Vertex(p1), new CSG.Vertex(prevp1)]
+              startfacevertices.push new Vertex(p1)
+              endfacevertices.push new Vertex(p2)
+              polygonvertices = [new Vertex(prevp2), new Vertex(p2), new Vertex(p1), new Vertex(prevp1)]
               polygon = new Polygon(polygonvertices)
               polygons.push polygon
             prevp1 = p1
@@ -566,7 +687,7 @@ define (require)->
         endfacevertices.reverse()
         polygons.push new Polygon(startfacevertices)
         polygons.push new Polygon(endfacevertices)
-        cylinder = CSG.fromPolygons(polygons)
+        cylinder = CSGBase.fromPolygons(polygons)
         result = result.unionSub(cylinder, false, false)
       
       # make a list of all unique vertices
@@ -586,14 +707,12 @@ define (require)->
             vertexmap[vertextag] = obj
           obj.normals.push polygon.plane.normal
   
-  
-      
       # and build spheres at each vertex
       # We will try to set the x and z axis to the normals of 2 planes
       # This will ensure that our sphere tesselation somewhat matches 2 planes
+      console.log "here"
       for vertextag of vertexmap
         vertexobj = vertexmap[vertextag]
-        
         # use the first normal to be the x axis of our sphere:
         xaxis = vertexobj.normals[0].unit()
         
@@ -614,20 +733,24 @@ define (require)->
         bestzaxis = xaxis.randomNonParallelVector()  unless bestzaxis
         yaxis = xaxis.cross(bestzaxis).unit()
         zaxis = yaxis.cross(xaxis)
-        sphere = CSG.sphere(
+        console.log "here s"
+        sphere = sphereUtil(
           center: vertexobj.pos
           radius: radius
           resolution: resolution
           axes: [xaxis, yaxis, zaxis]
         )
+        console.log "here sdfs"
         result = result.unionSub(sphere, false, false)
+        console.log "here toto"
+      console.log "at end"
       result
       
     canonicalized: ->
       if @isCanonicalized
         this
       else
-        factory = new CSG.fuzzyCSGFactory()
+        factory = new FuzzyCSGFactory()
         result = factory.getCSG(this)
         result.isCanonicalized = true
         result.isRetesselated = @isRetesselated
@@ -654,9 +777,9 @@ define (require)->
             destpolygons = destpolygons.concat(sourcepolygons)
           else
             retesselayedpolygons = []
-            CSG.reTesselateCoplanarPolygons sourcepolygons, retesselayedpolygons
+            reTesselateCoplanarPolygons sourcepolygons, retesselayedpolygons
             destpolygons = destpolygons.concat(retesselayedpolygons)
-        result = CSG.fromPolygons(destpolygons)
+        result = CSGBase.fromPolygons(destpolygons)
         result.isRetesselated = true
         result = result.canonicalized()
         
@@ -665,10 +788,10 @@ define (require)->
         result
         
     getBounds: ->
-      # returns an array of two CSG.Vector3Ds (minimum coordinates and maximum coordinates)
+      # returns an array of two Vector3Ds (minimum coordinates and maximum coordinates)
       unless @cachedBoundingBox
-        minpoint = new CSG.Vector3D(0, 0, 0)
-        maxpoint = new CSG.Vector3D(0, 0, 0)
+        minpoint = new Vector3D(0, 0, 0)
+        maxpoint = new Vector3D(0, 0, 0)
         polygons = @polygons
         numpolygons = polygons.length
         i = 0
@@ -726,10 +849,10 @@ define (require)->
       # Now build a polygon on the plane, at any point farther than maxdistance from the plane center:
       vertices = []
       orthobasis = new CSG.OrthoNormalBasis(plane)
-      vertices.push new CSG.Vertex(orthobasis.to3D(new CSG.Vector2D(maxdistance, -maxdistance)))
-      vertices.push new CSG.Vertex(orthobasis.to3D(new CSG.Vector2D(-maxdistance, -maxdistance)))
-      vertices.push new CSG.Vertex(orthobasis.to3D(new CSG.Vector2D(-maxdistance, maxdistance)))
-      vertices.push new CSG.Vertex(orthobasis.to3D(new CSG.Vector2D(maxdistance, maxdistance)))
+      vertices.push new Vertex(orthobasis.to3D(new Vector2D(maxdistance, -maxdistance)))
+      vertices.push new Vertex(orthobasis.to3D(new Vector2D(-maxdistance, -maxdistance)))
+      vertices.push new Vertex(orthobasis.to3D(new Vector2D(-maxdistance, maxdistance)))
+      vertices.push new Vertex(orthobasis.to3D(new Vector2D(maxdistance, maxdistance)))
       polygon = new Polygon(vertices, null, plane.flipped())
       
       # and extrude the polygon into a cube, backwards of the plane:
@@ -757,7 +880,7 @@ define (require)->
       polygons = @polygons.map((p) ->
         new Polygon(p.vertices, shared, p.plane)
       )
-      result = CSG.fromPolygons(polygons)
+      result = CSGBase.fromPolygons(polygons)
       result.properties = @properties # keep original properties
       result.isRetesselated = @isRetesselated
       result.isCanonicalized = @isCanonicalized
@@ -790,9 +913,9 @@ define (require)->
         # gives the least height in z-direction.
         # If two planes give the same height, pick the plane that originally had a normal closest
         # to [0,0,-1].
-        xvector = new CSG.Vector3D(1, 0, 0)
-        yvector = new CSG.Vector3D(0, 1, 0)
-        zvector = new CSG.Vector3D(0, 0, 1)
+        xvector = new Vector3D(1, 0, 0)
+        yvector = new Vector3D(0, 1, 0)
+        zvector = new Vector3D(0, 0, 1)
         z0connectorx = new CSG.Connector([0, 0, 0], [0, 0, -1], xvector)
         z0connectory = new CSG.Connector([0, 0, 0], [0, 0, -1], yvector)
         isfirst = true
@@ -1118,7 +1241,7 @@ define (require)->
             # if(sidetagtocheck in sidemap)
             delete sidestocheck[sidetag]  if donewithside
           break  unless donesomething
-        newcsg = CSG.fromPolygons(polygons)
+        newcsg = CSGBase.fromPolygons(polygons)
         newcsg.properties = csg.properties
         newcsg.isCanonicalized = true
         newcsg.isRetesselated = true
@@ -1130,5 +1253,226 @@ define (require)->
         break
       throw new Error("!sidemapisempty")  unless sidemapisempty
       csg
+      
+  class FuzzyFactory
+    # This class acts as a factory for objects. We can search for an object with approximately
+    # the desired properties (say a rectangle with width 2 and height 1) 
+    # The lookupOrCreate() method looks for an existing object (for example it may find an existing rectangle
+    # with width 2.0001 and height 0.999. If no object is found, the user supplied callback is
+    # called, which should generate a new object. The new object is inserted into the database
+    # so it can be found by future lookupOrCreate() calls.
+    constructor : (numdimensions, tolerance) ->
+      # Constructor:
+      #   numdimensions: the number of parameters for each object
+      #     for example for a 2D rectangle this would be 2
+      #   tolerance: The maximum difference for each parameter allowed to be considered a match
+      lookuptable = []
+      i = 0
+    
+      while i < numdimensions
+        lookuptable.push {}
+        i++
+      @lookuptable = lookuptable
+      @nextElementId = 1
+      @multiplier = 1.0 / tolerance
+      @objectTable = {}
+  
+    lookupOrCreate: (els, creatorCallback) ->
+      # var obj = f.lookupOrCreate([el1, el2, el3], function(elements) {/* create the new object */});
+      # Performs a fuzzy lookup of the object with the specified elements.
+      # If found, returns the existing object
+      # If not found, calls the supplied callback function which should create a new object with
+      # the specified properties. This object is inserted in the lookup database.
+      object = undefined
+      key = @lookupKey(els)
+      if key is null
+        object = creatorCallback(els)
+        key = @nextElementId++
+        @objectTable[key] = object
+        dimension = 0
+  
+        while dimension < els.length
+          elementLookupTable = @lookuptable[dimension]
+          value = els[dimension]
+          valueMultiplied = value * @multiplier
+          valueQuantized1 = Math.floor(valueMultiplied)
+          valueQuantized2 = Math.ceil(valueMultiplied)
+          FuzzyFactory.insertKey key, elementLookupTable, valueQuantized1
+          FuzzyFactory.insertKey key, elementLookupTable, valueQuantized2
+          dimension++
+      else
+        object = @objectTable[key]
+      object
+  
+    # ----------- PRIVATE METHODS:
+    lookupKey: (els) ->
+      keyset = {}
+      dimension = 0
+  
+      while dimension < els.length
+        elementLookupTable = @lookuptable[dimension]
+        value = els[dimension]
+        valueQuantized = Math.round(value * @multiplier)
+        valueQuantized += ""
+        if valueQuantized of elementLookupTable
+          if dimension is 0
+            keyset = elementLookupTable[valueQuantized]
+          else
+            keyset = FuzzyFactory.intersectSets(keyset, elementLookupTable[valueQuantized])
+        else
+          return null
+        return null  if FuzzyFactory.isEmptySet(keyset)
+        dimension++
+      
+      # return first matching key:
+      for key of keyset
+        return key
+      null
+  
+    lookupKeySetForDimension: (dimension, value) ->
+      result = undefined
+      elementLookupTable = @lookuptable[dimension]
+      valueMultiplied = value * @multiplier
+      valueQuantized = Math.floor(value * @multiplier)
+      if valueQuantized of elementLookupTable
+        result = elementLookupTable[valueQuantized]
+      else
+        result = {}
+      result
+  
+    @insertKey : (key, lookuptable, quantizedvalue) ->
+      if quantizedvalue of lookuptable
+        lookuptable[quantizedvalue][key] = true
+      else
+        newset = {}
+        newset[key] = true
+        lookuptable[quantizedvalue] = newset
+  
+    @isEmptySet = (obj) ->
+      for key of obj
+        return false
+      true
+    
+    @intersectSets = (set1, set2) ->
+      result = {}
+      for key of set1
+        result[key] = true  if key of set2
+      result
+    
+     @joinSets = (set1, set2) ->
+      result = {}
+      for key of set1
+        result[key] = true
+      for key of set2
+        result[key] = true
+      result
+  
+  
+  class FuzzyCSGFactory 
+    constructor: ->
+      @vertexfactory = new FuzzyFactory(3, 1e-5)
+      @planefactory = new FuzzyFactory(4, 1e-5)
+      @polygonsharedfactory = {}
+  
+    getPolygonShared: (sourceshared) ->
+      hash = sourceshared.getHash()
+      if hash of @polygonsharedfactory
+        @polygonsharedfactory[hash]
+      else
+        @polygonsharedfactory[hash] = sourceshared
+        sourceshared
+  
+    getVertex: (sourcevertex) ->
+      elements = [sourcevertex.pos._x, sourcevertex.pos._y, sourcevertex.pos._z]
+      result = @vertexfactory.lookupOrCreate(elements, (els) ->
+        sourcevertex
+      )
+      result
+  
+    getPlane: (sourceplane) ->
+      elements = [sourceplane.normal._x, sourceplane.normal._y, sourceplane.normal._z, sourceplane.w]
+      result = @planefactory.lookupOrCreate(elements, (els) ->
+        sourceplane
+      )
+      result
+  
+    getPolygon: (sourcepolygon) ->
+      newplane = @getPlane(sourcepolygon.plane)
+      newshared = @getPolygonShared(sourcepolygon.shared)
+      _this = this
+      newvertices = sourcepolygon.vertices.map((vertex) ->
+        _this.getVertex vertex
+      )
+      new Polygon(newvertices, newshared, newplane)
+  
+    getCSG: (sourcecsg) ->
+      _this = this
+      newpolygons = sourcecsg.polygons.map((polygon) ->
+        _this.getPolygon polygon
+      )
+      CSGBase.fromPolygons newpolygons
+
+
+  sphereUtil = (options) ->
+    options = options or {}
+    center = parseOptionAs3DVector(options, "center", [0, 0, 0])
+    radius = parseOptionAsFloat(options, "radius", 1)
+    resolution = parseOptionAsInt(options, "resolution", CSGBase.defaultResolution3D)
+    xvector = undefined
+    yvector = undefined
+    zvector = undefined
+    if "axes" of options
+      xvector = options.axes[0].unit().times(radius)
+      yvector = options.axes[1].unit().times(radius)
+      zvector = options.axes[2].unit().times(radius)
+    else
+      xvector = new Vector3D([1, 0, 0]).times(radius)
+      yvector = new Vector3D([0, -1, 0]).times(radius)
+      zvector = new Vector3D([0, 0, 1]).times(radius)
+    resolution = 4  if resolution < 4
+    qresolution = Math.round(resolution / 4)
+    prevcylinderpoint = undefined
+    polygons = []
+    slice1 = 0
+  
+    while slice1 <= resolution
+      angle = Math.PI * 2.0 * slice1 / resolution
+      cylinderpoint = xvector.times(Math.cos(angle)).plus(yvector.times(Math.sin(angle)))
+      if slice1 > 0
+        
+        # cylinder vertices:
+        vertices = []
+        prevcospitch = undefined
+        prevsinpitch = undefined
+        slice2 = 0
+  
+        while slice2 <= qresolution
+          pitch = 0.5 * Math.PI * slice2 / qresolution
+          cospitch = Math.cos(pitch)
+          sinpitch = Math.sin(pitch)
+          if slice2 > 0
+            vertices = []
+            vertices.push new Vertex(center.plus(prevcylinderpoint.times(prevcospitch).minus(zvector.times(prevsinpitch))))
+            vertices.push new Vertex(center.plus(cylinderpoint.times(prevcospitch).minus(zvector.times(prevsinpitch))))
+            vertices.push new Vertex(center.plus(cylinderpoint.times(cospitch).minus(zvector.times(sinpitch))))  if slice2 < qresolution
+            vertices.push new Vertex(center.plus(prevcylinderpoint.times(cospitch).minus(zvector.times(sinpitch))))
+            polygons.push new Polygon(vertices)
+            vertices = []
+            vertices.push new Vertex(center.plus(prevcylinderpoint.times(prevcospitch).plus(zvector.times(prevsinpitch))))
+            vertices.push new Vertex(center.plus(cylinderpoint.times(prevcospitch).plus(zvector.times(prevsinpitch))))
+            vertices.push new Vertex(center.plus(cylinderpoint.times(cospitch).plus(zvector.times(sinpitch))))  if slice2 < qresolution
+            vertices.push new Vertex(center.plus(prevcylinderpoint.times(cospitch).plus(zvector.times(sinpitch))))
+            vertices.reverse()
+            polygons.push new Polygon(vertices)
+          prevcospitch = cospitch
+          prevsinpitch = sinpitch
+          slice2++
+      prevcylinderpoint = cylinderpoint
+      slice1++
+    result = CSGBase.fromPolygons(polygons)
+    result.properties.sphere = new Properties()
+    result.properties.sphere.center = new Vector3D(center)
+    result.properties.sphere.facepoint = center.plus(xvector)
+    result
 
   return CSGBase

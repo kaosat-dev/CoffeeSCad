@@ -1,4 +1,6 @@
 define (require)->
+  CSG = {}
+  _CSGDEBUG = require './csg.globals'
   
   class PolygonTreeNode 
     # This class manages hierarchical splits of polygons
@@ -12,7 +14,6 @@ define (require)->
     #  getPolygons() will return the original unsplit polygon instead of the fragments.
     # remove() removes a polygon from the tree. Once a polygon is removed, the parent polygons are invalidated 
     # since they are no longer intact. 
-    
     
     constructor:->
       # constructor creates the root node:
@@ -86,15 +87,12 @@ define (require)->
       children = @children
       numchildren = children.length
       if numchildren > 0
-        
         # if we have children, split the children
         i = 0
-  
         while i < numchildren
           children[i].splitByPlane plane, coplanarfrontnodes, coplanarbacknodes, frontnodes, backnodes
           i++
       else
-        
         # no children. Split the polygon:
         polygon = @polygon
         if polygon
@@ -132,7 +130,7 @@ define (require)->
       # this should be called whenever the polygon is split
       # a child should be created for every fragment of the split polygon 
       # returns the newly created child
-      newchild = new CSG.PolygonTreeNode()
+      newchild = new PolygonTreeNode()
       newchild.parent = this
       newchild.polygon = polygon
       @children.push newchild
@@ -150,13 +148,13 @@ define (require)->
         
   
   
-  class CSG.Tree 
+  class Tree 
     # This is the root of a BSP tree
     # We are using this separate class for the root of the tree, to hold the PolygonTreeNode root
     # The actual tree is kept in this.rootnode
     constructor:(polygons) ->
-      @polygonTree = new CSG.PolygonTreeNode()
-      @rootnode = new CSG.Node(null)
+      @polygonTree = new PolygonTreeNode()
+      @rootnode = new Node(null)
       @addPolygons polygons  if polygons
   
     invert: ->
@@ -182,7 +180,7 @@ define (require)->
       @rootnode.addPolygonTreeNodes polygontreenodes
   
   
-  class CSG.Node 
+  class Node 
     # Holds a node in a BSP tree. A BSP tree is built from a collection of polygons
     # by picking a polygon to split along.
     # Polygons are not stored directly in the tree, but in PolygonTreeNodes, stored in
@@ -272,10 +270,10 @@ define (require)->
         polygontreenode.splitByPlane _this.plane, _this.polygontreenodes, backnodes, frontnodes, backnodes
   
       if frontnodes.length > 0
-        @front = new CSG.Node(this)  unless @front
+        @front = new Node(this)  unless @front
         @front.addPolygonTreeNodes frontnodes
       if backnodes.length > 0
-        @back = new CSG.Node(this)  unless @back
+        @back = new Node(this)  unless @back
         @back.addPolygonTreeNodes backnodes
   
     getParentPlaneNormals: (normals, maxdepth) ->
@@ -286,6 +284,6 @@ define (require)->
 
   return {
     "PolygonTreeNode":PolygonTreeNode
-    "Tree":CSG.Tree
-    "Node":CSG.Node 
+    "Tree": Tree
+    "Node": Node 
   }

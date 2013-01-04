@@ -1,5 +1,6 @@
 define (require) ->
   CoffeeScript = require 'CoffeeScript'  
+  csgSugar = require "./csg.sugar2"
   ##ORDER OF ALGORITHM
   #1-setJsCad
   #   1-1-getParamDefinitions
@@ -60,7 +61,6 @@ define (require) ->
         
     compileFormatCoffee:(source)->
       #console.log("Compiling & formating coffeescad code")
-      csgSugar = require "./csg.sugar2"
       
       app = require "app"   
       lib = app.lib
@@ -130,6 +130,7 @@ define (require) ->
       return result
       
     convertToSolid : (obj) ->
+      ###
       if( (typeof(obj) == "object") and ((obj instanceof CAG)) )
         # convert a 2D shape to a thin solid:
         obj=obj.extrude({offset: [0,0,0.1]})
@@ -137,6 +138,7 @@ define (require) ->
         # obj already is a solid
       else
         throw new Error("Cannot convert to solid");
+      ###
       return obj
 
 

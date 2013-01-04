@@ -51,13 +51,12 @@ define (require)->
     result = !!result
     result
   
-  CSG.IsFloat = (n) ->
-    (not isNaN(n)) or (n is Infinity) or (n is -Infinity)
   
-  # solve 2x2 linear equation:
-  # [ab][x] = [u]
-  # [cd][y]   [v]
+
   CSG.solve2Linear = (a, b, c, d, u, v) ->
+    # solve 2x2 linear equation:
+    # [ab][x] = [u]
+    # [cd][y]   [v]
     det = a * d - b * c
     invdet = 1.0 / det
     x = u * d - b * v
@@ -79,11 +78,10 @@ define (require)->
         rightbound = testindex
     array.splice leftbound, 0, element
     
-  
-  # Get the x coordinate of a point with a certain y coordinate, interpolated between two
-  # points (Vector2D).
-  # Interpolation is robust even if the points have the same y coordinate
   CSG.interpolateBetween2DPointsForY = (point1, point2, y) ->
+    # Get the x coordinate of a point with a certain y coordinate, interpolated between two
+    # points (Vector2D).
+    # Interpolation is robust even if the points have the same y coordinate
     f1 = y - point1.y
     f2 = point2.y - point1.y
     if f2 < 0
@@ -109,7 +107,7 @@ define (require)->
     if numpolygons > 0
       plane = sourcepolygons[0].plane
       shared = sourcepolygons[0].shared
-      orthobasis = new CSG.OrthoNormalBasis(plane)
+      orthobasis = new OrthoNormalBasis(plane)
       polygonvertices2d = [] # array of array of Vector2D
       polygontopvertexindexes = [] # array of indexes of topmost vertex per polygon
       topy2polygonindexes = {}
@@ -596,11 +594,11 @@ define (require)->
       newpolygons = sourcecsg.polygons.map((polygon) ->
         _this.getPolygon polygon
       )
-      CSG.fromPolygons newpolygons
+      CSGBase.fromPolygons newpolygons
 
-    
-    
-    
+      
+  return CSG  
+  ### 
   return {
     "CSG":
       "parseOption": CSG.parseOption
@@ -616,4 +614,4 @@ define (require)->
       "reTesselateCoplanarPolygons": CSG.reTesselateCoplanarPolygons 
       "fuzzyFactory": CSG.fuzzyFactory 
       "fuzzyCSGFactory": CSG.fuzzyCSGFactory 
-  }
+  }###

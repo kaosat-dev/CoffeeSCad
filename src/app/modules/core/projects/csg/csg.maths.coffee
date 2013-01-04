@@ -2,9 +2,21 @@ define (require)->
   Function::property = (prop, desc) ->
     Object.defineProperty @prototype, prop, desc
     
+  _CSGDEBUG = require './csg.globals'
+  
   CSG={}
   
-  class  Vector2D 
+  CSG.IsFloat = (n) ->
+    (not isNaN(n)) or (n is Infinity) or (n is -Infinity)
+    
+  CSG.staticTag = 1
+
+  CSG.getTag =  () ->
+    #console.log "CSG.staticTag"
+    #console.log CSG.staticTag
+    return CSG.staticTag++
+    
+  class  CSG.Vector2D 
     # Represents a 2 element vector
     constructor : (x, y) ->
       if arguments.length is 2
@@ -133,7 +145,7 @@ define (require)->
     toString: ->
       "(" + @_x + ", " + @_y + ")"
   
-  class Vector3D
+  class CSG.Vector3D
     # # class Vector3D
     # Represents a 3D vector.
     # 
@@ -284,7 +296,7 @@ define (require)->
     max: (p) ->
       new CSG.Vector3D(Math.max(@_x, p._x), Math.max(@_y, p._y), Math.max(@_z, p._z))
   
-  class Vertex 
+  class CSG.Vertex 
     # # class Vertex
     # Represents a vertex of a polygon. Use your own vertex class instead of this
     # one to provide additional features like texture coordinates and vertex
@@ -764,6 +776,7 @@ define (require)->
         throw new Error("Not convex!")
   
     extrude: (offsetvector) ->
+      #FIXME !!!!! WARNING, now this method returns polygons, not CSG
       # Extrude a polygon into the direction offsetvector
       # Returns a CSG object
       newpolygons = []
@@ -787,7 +800,8 @@ define (require)->
         i++
       polygon2 = polygon2.flipped()
       newpolygons.push polygon2
-      CSG.fromPolygons newpolygons
+      newpolygons
+      #CSG.fromPolygons newpolygons
   
     translate: (offset) ->
       @transform CSG.Matrix4x4.translation(offset)
@@ -948,8 +962,10 @@ define (require)->
     getTag: ->
       result = @tag
       unless result
+        console.log "no result tag "+ @tag
         result = CSG.getTag()
         @tag = result
+      console.log " tag "+ @tag
       result
     
     # get a string uniquely identifying this object
@@ -1408,8 +1424,8 @@ define (require)->
       newbasis
   
   return {
-    "Vector3D": Vector3D
-    "Vector2D": Vector2D
+    "Vector3D": CSG.Vector3D
+    "Vector2D": CSG.Vector2D
     "Plane": CSG.Plane
     "Vertex": CSG.Vertex
     "Line2D": CSG.Line2D

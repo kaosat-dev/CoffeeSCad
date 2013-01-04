@@ -27,7 +27,6 @@ define (require)->
       super options
       @headerRegion.show @layout
       
-      
   class CoffeeScadApp extends Backbone.Marionette.Application
     ###
     This docstring documents MyClass. It can include *Markdown* syntax,
@@ -71,13 +70,76 @@ define (require)->
       @project = new Project()
       @project.create_part
         name:"config"
-        content:"""#This is the project's main configuration file
+        content:"""#This is the project's main configuration file 
         #It is better to keep global configuration elements here
-        cube = new Cube
-          size: [100,110,100]
-          center: true
+        toto = new Cube
+          radius:[50,50,25]
+          center:[50,50,25]
+        
+        console.log JSON.stringify toto
+        
+        tutu = new Cube
+          radius:[100,25,25]
+          center:[100,25,25]
+        
+        #console.log JSON.stringify tutu
+        
+        tmp =toto.union(tutu)
+        #console.log JSON.stringify tmp
+        return tmp
+        """
+        
+        content_:"""#This is the project's main configuration file
+        #It is better to keep global configuration elements here
+        toto = new Cube
+          radius:[25,50,25]
+          center:[12.5,25,12.5]
+        s = new Sphere
+          radius:75
+                
+        return s.subtract(toto)
+        """
+        tutu:"""#This is the project's main configuration file
+        #It is better to keep global configuration elements here
+        class Thinga extends Meta
+          constructor:(options) ->
+            super options
+            @toto = new Cube
+              radius:[50,100,50]
+            @c1 = new Cube
+              radius:[50,25,50]
+              center:[100,-12.5,0]
+              
+            s = new Sphere
+              radius:75
+            c = new Cylinder
+              start:[0, 0, -100]
+              end: [0, 0, 100]
+              radius:75
+              
+            #@unionSelf(@toto)
+            @unionSelf(@c1)
+            @unionSelf(s)
+            #@unionSelf(c)
+            
+            #@expandSelf 3, 12
+            #@subtract new  Cube({radius:[150,100,5]})
+            
+        truc = new Thinga()
+        c = new Cube
+          radius:[100,50,100]
+          center:[100,0,0]
+        troc = truc.subtract c
+        
+        tmp = new SpecialScrew()
+        
+        console.log "BOM:"
+        for i, v of classRegistry
+          console.log "You Have: \#{v} \#{i} (s)"
           
-        return cube
+        #register(Thinga.__proto__.constructor.name, truc)
+        doMagic()
+        return truc
         """
       @project.create_part
         name:"assembly"

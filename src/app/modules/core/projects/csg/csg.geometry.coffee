@@ -1,27 +1,19 @@
 define (require)->
-  console.log "jklhk"
   CSGBase = require './csg'
-  console.log "in geom, looking for csg"
+  
   maths = require './csg.maths'
   Vertex = maths.Vertex
   Vector3D = maths.Vector3D
   Polygon = maths.Polygon
   
-  console.log "maths"
-  console.log maths
-  
   props = require './csg.props'
-  console.log "in geom, looking for props"
-  console.log props
   Properties = props.CSG.Properties
   Connector = props.CSG.Connector
    
-  
   utils = require './csg.utils'
-  console.log "in geom, looking for utils"
-  parseOptionAs3DVector = utils.CSG.parseOptionAs3DVector
-  parseOptionAsFloat = utils.CSG.parseOptionAsFloat
-  parseOptionAsInt = utils.CSG.parseOptionAsInt
+  parseOptionAs3DVector = utils.parseOptionAs3DVector
+  parseOptionAsFloat = utils.parseOptionAsFloat
+  parseOptionAsInt = utils.parseOptionAsInt
   
   class Cube extends CSGBase
     # Construct an axis-aligned solid cuboid.
@@ -35,6 +27,7 @@ define (require)->
     #       radius: 1
     #     });
     constructor : (options) ->
+      super options
       options = options or {}
       c = parseOptionAs3DVector(options, "center", [0, 0, 0])
       r = parseOptionAs3DVector(options, "radius", [1, 1, 1])
@@ -46,15 +39,42 @@ define (require)->
           )
         new Polygon(vertices, null)
       ))
+      
       result.properties.cube = new Properties()
       result.properties.cube.center = new Vector3D(c)
   
       # add 6 connectors, at the centers of each face:
       result.properties.cube.facecenters = [new Connector(new Vector3D([r.x, 0, 0]).plus(c), [1, 0, 0], [0, 0, 1]), new Connector(new Vector3D([-r.x, 0, 0]).plus(c), [-1, 0, 0], [0, 0, 1]), new Connector(new Vector3D([0, r.y, 0]).plus(c), [0, 1, 0], [0, 0, 1]), new Connector(new Vector3D([0, -r.y, 0]).plus(c), [0, -1, 0], [0, 0, 1]), new Connector(new Vector3D([0, 0, r.z]).plus(c), [0, 0, 1], [1, 0, 0]), new Connector(new Vector3D([0, 0, -r.z]).plus(c), [0, 0, -1], [1, 0, 0])]
-      result=result.color([1,0,0])
-      result.toto=24
-      result
-        
+      @properties= result.properties
+      @polygons= result.polygons
+      @isCanonicalized = result.isCanonicalized
+      @isRetesselated = result.isRetesselated
+  
+  
+  oldCube = (options) ->
+    c = parseOptionAs3DVector(options, "center", [0, 0, 0])
+    r = parseOptionAs3DVector(options, "radius", [1, 1, 1])
+    result = CSGBase.fromPolygons([[[0, 4, 6, 2], [-1, 0, 0]], [[1, 3, 7, 5], [+1, 0, 0]], [[0, 1, 5, 4], [0, -1, 0]], [[2, 6, 7, 3], [0, +1, 0]], [[0, 2, 3, 1], [0, 0, -1]], [[4, 5, 7, 6], [0, 0, +1]]].map((info) ->
+      normal = new Vector3D(info[1])
+      
+      #var plane = new Plane(normal, 1);
+      vertices = info[0].map((i) ->
+        pos = new Vector3D(c.x + r.x * (2 * !!(i & 1) - 1), c.y + r.y * (2 * !!(i & 2) - 1), c.z + r.z * (2 * !!(i & 4) - 1))
+        new Vertex(pos)
+      )
+      p = new Polygon(vertices, null) # , plane
+      console.log "poly"
+      console.log p      
+      p
+    ))
+    result.properties.cube = new Properties()
+    result.properties.cube.center = new Vector3D(c)
+    
+    # add 6 connectors, at the centers of each face:
+    result.properties.cube.facecenters = [new Connector(new Vector3D([r.x, 0, 0]).plus(c), [1, 0, 0], [0, 0, 1]), new Connector(new Vector3D([-r.x, 0, 0]).plus(c), [-1, 0, 0], [0, 0, 1]), new Connector(new Vector3D([0, r.y, 0]).plus(c), [0, 1, 0], [0, 0, 1]), new Connector(new Vector3D([0, -r.y, 0]).plus(c), [0, -1, 0], [0, 0, 1]), new Connector(new Vector3D([0, 0, r.z]).plus(c), [0, 0, 1], [1, 0, 0]), new Connector(new Vector3D([0, 0, -r.z]).plus(c), [0, 0, -1], [1, 0, 0])]
+    result
+  
+       
   class RoundedCube extends CSGBase
     # Construct an axis-aligned solid rounded cuboid.
     # Parameters:
@@ -187,7 +207,76 @@ define (require)->
       result.properties.roundedCube = new Properties()
       result.properties.roundedCube.center = new Vertex(center)
       result.properties.roundedCube.facecenters = [new Connector(new Vector3D([cuberadius.x, 0, 0]).plus(center), [1, 0, 0], [0, 0, 1]), new Connector(new Vector3D([-cuberadius.x, 0, 0]).plus(center), [-1, 0, 0], [0, 0, 1]), new Connector(new Vector3D([0, cuberadius.y, 0]).plus(center), [0, 1, 0], [0, 0, 1]), new Connector(new Vector3D([0, -cuberadius.y, 0]).plus(center), [0, -1, 0], [0, 0, 1]), new Connector(new Vector3D([0, 0, cuberadius.z]).plus(center), [0, 0, 1], [1, 0, 0]), new Connector(new Vector3D([0, 0, -cuberadius.z]).plus(center), [0, 0, -1], [1, 0, 0])]
-      result
+
+      @properties= result.properties
+      @polygons= result.polygons
+      @isCanonicalized = result.isCanonicalized
+      @isRetesselated = result.isRetesselated
+  
+  
+  
+  
+  oldSphere = (options) ->
+    options = options or {}
+    center = parseOptionAs3DVector(options, "center", [0, 0, 0])
+    radius = parseOptionAsFloat(options, "radius", 1)
+    resolution = parseOptionAsInt(options, "resolution", CSGBase.defaultResolution3D)
+    xvector = undefined
+    yvector = undefined
+    zvector = undefined
+    if "axes" of options
+      xvector = options.axes[0].unit().times(radius)
+      yvector = options.axes[1].unit().times(radius)
+      zvector = options.axes[2].unit().times(radius)
+    else
+      xvector = new Vector3D([1, 0, 0]).times(radius)
+      yvector = new Vector3D([0, -1, 0]).times(radius)
+      zvector = new Vector3D([0, 0, 1]).times(radius)
+    resolution = 4  if resolution < 4
+    qresolution = Math.round(resolution / 4)
+    prevcylinderpoint = undefined
+    polygons = []
+    slice1 = 0
+  
+    while slice1 <= resolution
+      angle = Math.PI * 2.0 * slice1 / resolution
+      cylinderpoint = xvector.times(Math.cos(angle)).plus(yvector.times(Math.sin(angle)))
+      if slice1 > 0
+        
+        # cylinder vertices:
+        vertices = []
+        prevcospitch = undefined
+        prevsinpitch = undefined
+        slice2 = 0
+  
+        while slice2 <= qresolution
+          pitch = 0.5 * Math.PI * slice2 / qresolution
+          cospitch = Math.cos(pitch)
+          sinpitch = Math.sin(pitch)
+          if slice2 > 0
+            vertices = []
+            vertices.push new Vertex(center.plus(prevcylinderpoint.times(prevcospitch).minus(zvector.times(prevsinpitch))))
+            vertices.push new Vertex(center.plus(cylinderpoint.times(prevcospitch).minus(zvector.times(prevsinpitch))))
+            vertices.push new Vertex(center.plus(cylinderpoint.times(cospitch).minus(zvector.times(sinpitch))))  if slice2 < qresolution
+            vertices.push new Vertex(center.plus(prevcylinderpoint.times(cospitch).minus(zvector.times(sinpitch))))
+            polygons.push new Polygon(vertices)
+            vertices = []
+            vertices.push new Vertex(center.plus(prevcylinderpoint.times(prevcospitch).plus(zvector.times(prevsinpitch))))
+            vertices.push new Vertex(center.plus(cylinderpoint.times(prevcospitch).plus(zvector.times(prevsinpitch))))
+            vertices.push new Vertex(center.plus(cylinderpoint.times(cospitch).plus(zvector.times(sinpitch))))  if slice2 < qresolution
+            vertices.push new Vertex(center.plus(prevcylinderpoint.times(cospitch).plus(zvector.times(sinpitch))))
+            vertices.reverse()
+            polygons.push new Polygon(vertices)
+          prevcospitch = cospitch
+          prevsinpitch = sinpitch
+          slice2++
+      prevcylinderpoint = cylinderpoint
+      slice1++
+    result = CSGBase.fromPolygons(polygons)
+    result.properties.sphere = new Properties()
+    result.properties.sphere.center = new Vector3D(center)
+    result.properties.sphere.facepoint = center.plus(xvector)
+    result
   
   class Sphere extends CSGBase
     # Construct a solid sphere
@@ -209,7 +298,7 @@ define (require)->
       options = options or {}
       center = parseOptionAs3DVector(options, "center", [0, 0, 0])
       radius = parseOptionAsFloat(options, "radius", 1)
-      resolution = parseOptionAsInt(options, "resolution", CSG.defaultResolution3D)
+      resolution = parseOptionAsInt(options, "resolution", CSGBase.defaultResolution3D)
       xvector = undefined
       yvector = undefined
       zvector = undefined
@@ -265,7 +354,11 @@ define (require)->
       result.properties.sphere = new Properties()
       result.properties.sphere.center = new Vector3D(center)
       result.properties.sphere.facepoint = center.plus(xvector)
-      result
+      
+      @properties= result.properties
+      @polygons= result.polygons
+      @isCanonicalized = result.isCanonicalized
+      @isRetesselated = result.isRetesselated
   
   class Cylinder extends CSGBase
     # Construct a solid cylinder.
@@ -330,7 +423,11 @@ define (require)->
       result.properties.cylinder.start = new Connector(s, axisZ.negated(), axisX)
       result.properties.cylinder.end = new Connector(e, axisZ, axisX)
       result.properties.cylinder.facepoint = s.plus(axisX.times(rStart))
-      result
+      
+      @properties= result.properties
+      @polygons= result.polygons
+      @isCanonicalized = result.isCanonicalized
+      @isRetesselated = result.isRetesselated
    
   
   class RoundedCylinder extends CSGBase
@@ -428,10 +525,18 @@ define (require)->
       result.properties.roundedCylinder.start = new Connector(p1, ray.negated(), axisX)
       result.properties.roundedCylinder.end = new Connector(p2, ray, axisX)
       result.properties.roundedCylinder.facepoint = p1.plus(xvector)
-      result
+      
+      @properties= result.properties
+      @polygons= result.polygons
+      @isCanonicalized = result.isCanonicalized
+      @isRetesselated = result.isRetesselated
     
-  return {"Cube": Cube
+  return {
+    "Cube": Cube
     "RoundedCube": RoundedCube
     "Sphere": Sphere
     "Cylinder": Cylinder
-    "RoundedCylinder":RoundedCylinder}
+    "RoundedCylinder":RoundedCylinder
+    "oldSphere":oldSphere
+    "oldCube":oldCube
+    }
