@@ -1,6 +1,7 @@
 define (require)->
   CSG = {}
-  _CSGDEBUG = require './csg.globals'
+  globals = require './csg.globals'
+  _CSGDEBUG = globals._CSGDEBUG
   
   class PolygonTreeNode 
     # This class manages hierarchical splits of polygons
@@ -231,6 +232,7 @@ define (require)->
             i++
   
     clipTo: (tree, alsoRemovecoplanarFront) ->
+      #FIXME: issue potentially here
       # Remove all polygons in this BSP tree that are inside the other BSP tree
       # `tree`.
       tree.rootnode.clipPolygons @polygontreenodes, alsoRemovecoplanarFront  if @polygontreenodes.length > 0

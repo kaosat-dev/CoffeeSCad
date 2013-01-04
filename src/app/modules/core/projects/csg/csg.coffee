@@ -7,6 +7,7 @@ define (require)->
   Vertex = maths.Vertex
   Vector3D = maths.Vector3D
   Polygon = maths.Polygon
+  PolygonShared = maths.PolygonShared
   
   props = require './csg.props'
   Properties = props.CSG.Properties
@@ -20,11 +21,12 @@ define (require)->
   parseOptionAsFloat = utils.parseOptionAs3DVector
   parseOptionAsInt = utils.parseOptionAsInt
   
-  _CSGDEBUG = require './csg.globals'
+  globals = require './csg.globals'
+  _CSGDEBUG = globals._CSGDEBUG
   
   class CSGBase extends TransformBase
-    @defaultResolution2D : 64
-    @defaultResolution3D : 64
+    @defaultResolution2D : 32
+    @defaultResolution3D : 12
     
     constructor:->
       @polygons = []
@@ -32,7 +34,6 @@ define (require)->
       @isCanonicalized = true
       @isRetesselated = true
       
-    
     @fromPolygons : (polygons) ->
       #Construct a CSG solid from a list of `Polygon` instances.
       csg = new CSGBase()
@@ -289,13 +290,38 @@ define (require)->
         console.log "intersect"
         a = new Tree(@polygons)
         b = new Tree(csg.polygons)
-        a.clipTo b, false
+        console.log a
+        console.log b
+        console.log "#################"
         
+        a.clipTo b, false
         #b.clipTo(a, true) # ERROR: this doesn't work
+        #FIXME: error is already apparent here: mismatch in polygontree children count -1
+        #and in rootnode.polygonTreenodes : 5 elements instead of one !
+        console.log a
+        console.log b
+        console.log "#################"
+        
         b.clipTo a
+        console.log a
+        console.log b
+        console.log "#################"
+        
         b.invert()
+        console.log a
+        console.log b
+        console.log "#################"
+        
         b.clipTo a
+        console.log a
+        console.log b
+        console.log "#################"
+        
         b.invert()
+        console.log a
+        console.log b
+        console.log "#################"
+        
         newpolygons = a.allPolygons().concat(b.allPolygons())
         result = CSGBase.fromPolygons(newpolygons)
         result.properties = @properties._merge(csg.properties)
@@ -887,11 +913,11 @@ define (require)->
       result
   
     setColor: (red, green, blue) ->
-      newshared = new CSG.Polygon.Shared([red, green, blue])
+      newshared = new PolygonShared([red, green, blue])
       @setShared newshared
   
     color: (rgb) ->
-      newshared = new CSG.Polygon.Shared([rgb[0], rgb[1], rgb[2]])
+      newshared = new PolygonShared([rgb[0], rgb[1], rgb[2]])
       @setShared newshared
     
     getTransformationToFlatLying: ->

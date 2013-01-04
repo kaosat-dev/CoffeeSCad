@@ -14,7 +14,8 @@ define (require)->
   parseOptionAs3DVector = utils.parseOptionAs3DVector
   parseOptionAsFloat = utils.parseOptionAsFloat
   parseOptionAsInt = utils.parseOptionAsInt
-  
+
+ 
   class Cube extends CSGBase
     # Construct an axis-aligned solid cuboid.
     # Parameters:
@@ -54,17 +55,16 @@ define (require)->
   oldCube = (options) ->
     c = parseOptionAs3DVector(options, "center", [0, 0, 0])
     r = parseOptionAs3DVector(options, "radius", [1, 1, 1])
-    result = CSGBase.fromPolygons([[[0, 4, 6, 2], [-1, 0, 0]], [[1, 3, 7, 5], [+1, 0, 0]], [[0, 1, 5, 4], [0, -1, 0]], [[2, 6, 7, 3], [0, +1, 0]], [[0, 2, 3, 1], [0, 0, -1]], [[4, 5, 7, 6], [0, 0, +1]]].map((info) ->
+    result = CSGBase.fromPolygons([[[0, 4, 6, 2], [-1, 0, 0]], [[1, 3, 7, 5], [1, 0, 0]], [[0, 1, 5, 4], [0, -1, 0]], [[2, 6, 7, 3], [0, 1, 0]], [[0, 2, 3, 1], [0, 0, -1]], [[4, 5, 7, 6], [0, 0, 1]]].map((info) ->
       normal = new Vector3D(info[1])
-      
       #var plane = new Plane(normal, 1);
       vertices = info[0].map((i) ->
         pos = new Vector3D(c.x + r.x * (2 * !!(i & 1) - 1), c.y + r.y * (2 * !!(i & 2) - 1), c.z + r.z * (2 * !!(i & 4) - 1))
         new Vertex(pos)
       )
       p = new Polygon(vertices, null) # , plane
-      console.log "poly"
-      console.log p      
+      #console.log "poly"
+      #console.log p      
       p
     ))
     result.properties.cube = new Properties()

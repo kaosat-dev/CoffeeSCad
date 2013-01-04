@@ -1,21 +1,19 @@
 define (require)->
   Function::property = (prop, desc) ->
     Object.defineProperty @prototype, prop, desc
-    
-  _CSGDEBUG = require './csg.globals'
   
   CSG={}
+   
+  globals = require './csg.globals'
+  console.log "globals"
+  console.log globals.CSG.staticTag
+  _CSGDEBUG = globals._CSGDEBUG
+  CSG.staticTag = globals.CSG.staticTag
+  CSG.getTag = globals.CSG.getTag
   
   CSG.IsFloat = (n) ->
     (not isNaN(n)) or (n is Infinity) or (n is -Infinity)
-    
-  CSG.staticTag = 1
-
-  CSG.getTag =  () ->
-    #console.log "CSG.staticTag"
-    #console.log CSG.staticTag
-    return CSG.staticTag++
-    
+  
   class  CSG.Vector2D 
     # Represents a 2 element vector
     constructor : (x, y) ->
@@ -414,7 +412,7 @@ define (require)->
   
   
   
-  class  CSG.Line3D 
+  class CSG.Line3D 
     # Represents a line in 3D space
     # direction must be a unit vector 
     # point is a random point on the line
@@ -612,7 +610,8 @@ define (require)->
       if polygon.plane.equals(this)
         result.type = 0
       else
-        EPS = @EPSILON
+        #FIXME: epsion not fetched
+        EPS = CSG.Plane.EPSILON
         thisw = @w
         hasfront = false
         hasback = false
@@ -677,7 +676,7 @@ define (require)->
           # for vertexindex
           
           # remove duplicate vertices:
-          EPS_SQUARED = @EPSILON * @EPSILON
+          EPS_SQUARED = CSG.Plane.EPSILON * CSG.Plane.EPSILON
           if backvertices.length >= 3
             prevvertex = backvertices[backvertices.length - 1]
             vertexindex = 0
@@ -765,7 +764,7 @@ define (require)->
       vertices = obj.vertices.map((v) ->
         CSG.Vertex.fromObject v
       )
-      shared = CSG.Polygon.Shared.fromObject(obj.shared)
+      shared = CSG.PolygonShared.fromObject(obj.shared)
       plane = CSG.Plane.fromObject(obj.plane)
       new CSG.Polygon(vertices, shared, plane)
   
@@ -950,14 +949,15 @@ define (require)->
       crossdotnormal >= 1e-5
     
   
-  class CSG.Polygon.Shared
+  class CSG.PolygonShared
     # Holds the shared properties for each polygon (currently only color)
     constructor:(color, name) ->
       @color = color
       @name = name
+      
   
     @fromObject : (obj) ->
-      new CSG.Polygon.Shared(obj.color, obj.name)
+      new CSG.PolygonShared(obj.color, obj.name)
   
     getTag: ->
       result = @tag
@@ -978,8 +978,9 @@ define (require)->
       return "null"  unless @name
       @name
   
-  CSG.Polygon.defaultShared = new CSG.Polygon.Shared(null, null)
-  
+  CSG.Polygon.defaultShared = new CSG.PolygonShared(null, null)
+  #FIXME
+  #CSG.Polygon.defaultShared.tag = 64
   
   class CSG.Path2D 
     constructor: (points, closed) ->
@@ -1431,6 +1432,7 @@ define (require)->
     "Line2D": CSG.Line2D
     "Line3D": CSG.Line3D
     "Polygon": CSG.Polygon
+    "PolygonShared": CSG.PolygonShared
     "Shared": CSG.Shared
     "Path2D": CSG.Path2D
     "Matrix4x4": CSG.Path2D
