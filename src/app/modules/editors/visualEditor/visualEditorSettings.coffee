@@ -16,7 +16,7 @@ define (require)->
         antialiasing : true
         
         shadows      : true
-        selfShadows  : true
+        selfShadows  : false
         
         showAxes     : true
         

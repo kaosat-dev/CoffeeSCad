@@ -4,12 +4,10 @@ define (require)->
   Backbone = require 'backbone'
   shapes = require './csg.geometry' 
   CSGBase= require './csg' 
-  #Cube = shapes.Cube
-  #Sphere = shapes.Sphere
+  Cube = shapes.Cube
+  Sphere = shapes.Sphere
   Cylinder=shapes.Cylinder
   
-  Cube = shapes.oldCube
-  Sphere= shapes.oldSphere
   
   try
     #FIXME: bunch of hacks, needs cleanup

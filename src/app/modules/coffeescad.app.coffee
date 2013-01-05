@@ -130,6 +130,7 @@ define (require)->
           vn = poly.plane.normal
           console.log "\#{vn}\n\\\n" 
         ###
+        #register(Thinga.__proto__.constructor.name, truc)
         return tmp
         """
         
@@ -143,7 +144,7 @@ define (require)->
                 
         return s.subtract(toto)
         """
-        content:"""#This is the project's main configuration file
+        content222:"""#This is the project's main configuration file
         #It is better to keep global configuration elements here
         class Thinga extends Meta
           constructor:(options) ->
@@ -159,7 +160,7 @@ define (require)->
             c = new Cylinder
               start:[0, 0, -100]
               end: [0, 0, 100]
-              radius:75
+              radius:20
               
             @unionSelf(@toto)
             @unionSelf(@c1)
@@ -168,7 +169,6 @@ define (require)->
             @subtractSelf(c)
             
             #@expandSelf 3, 12
-            #@subtract new  Cube({radius:[150,100,5]})
             
         truc = new Thinga()
         c = new Cube
@@ -181,11 +181,35 @@ define (require)->
         console.log "BOM:"
         for i, v of classRegistry
           console.log "You Have: \#{v} \#{i} (s)"
-          
-        #register(Thinga.__proto__.constructor.name, truc)
+       
         doMagic()
         return truc.color([0.9,0.2,0])
         """
+        content:"""
+        #test
+        sphere = new Sphere
+          d: 100
+          $fn: 10
+          center: [-100,-25,0]
+        cube = new Cube
+          size: 100
+          #center: [100,0,0]
+        cylinder = new Cylinder
+          h:200
+          r:25
+        
+        cone = new Cylinder
+          h:100
+          d1:25
+          d2:75
+          center:[100,0,0]
+        #Don't forget to 'return' what you want t o see rendered (api might change)
+        
+        console.log cube
+        cube.translate [0,100,0]
+        return sphere.union(cube).union(cone).subtract(cylinder)
+        """
+          
       @project.create_part
         name:"assembly"
       @project.create_part

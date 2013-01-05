@@ -9,42 +9,42 @@ define (require)->
     mirrored = (plane) ->
       @transform Matrix4x4.mirroring(plane)
   
-    mirroredX = ->
+    mirroredX : ->
       plane = new Plane(new Vector3D(1, 0, 0), 0)
       @mirrored plane
   
-    mirroredY = ->
+    mirroredY : ->
       plane = new Plane(new Vector3D(0, 1, 0), 0)
       @mirrored plane
   
-    mirroredZ = ->
+    mirroredZ : ->
       plane = new Plane(new Vector3D(0, 0, 1), 0)
       @mirrored plane
   
-    translate = (v) ->
+    translate : (v) ->
       @transform Matrix4x4.translation(v)
   
-    scale = (f) ->
+    scale : (f) ->
       @transform Matrix4x4.scaling(f)
   
-    rotateX = (deg) ->
+    rotateX : (deg) ->
       @transform Matrix4x4.rotationX(deg)
   
-    rotateY = (deg) ->
+    rotateY : (deg) ->
       @transform Matrix4x4.rotationY(deg)
   
-    rotateZ = (deg) ->
+    rotateZ : (deg) ->
       @transform Matrix4x4.rotationZ(deg)
   
-    rotate_alt = (degrees, rotationCenter, rotationAxis) ->
+    rotate_alt : (degrees, rotationCenter, rotationAxis) ->
       @transform Matrix4x4.rotation(rotationCenter, rotationAxis, degrees)
   
-    rotate_alt2 = (degrees, rotationCenter, rotationAxis) ->
+    rotate_alt2 : (degrees, rotationCenter, rotationAxis) ->
       tmp1 = Matrix4x4.rotation(rotationCenter, rotationAxis, degrees)
       tmp = @transform(tmp1)
       tmp
   
-    rotate = (degrees, rotationCenter) ->
+    rotate : (degrees, rotationCenter) ->
       rotationCenter = [0, 0, 0]  unless rotationCenter?
       tmp = @translate(rotationCenter)
       tmp = tmp.transform(Matrix4x4.rotationX(degrees[0]))

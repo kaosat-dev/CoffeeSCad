@@ -30,12 +30,28 @@ define (require)->
     constructor : (options) ->
       super options
       options = options or {}
+      #if options.c?
+      #  if options.c == true #
+      center= true
       c = parseOptionAs3DVector(options, "center", [0, 0, 0])
-      r = parseOptionAs3DVector(options, "radius", [1, 1, 1])
+      r = parseOptionAs3DVector(options, "size", [1, 1, 1])
+      #radius (size) is nonsensical, divide by 2 to get real dimentions
+      r = r.dividedBy(2)
+      ### 
+      result = null
+      CSGBase.fromPolygons
+      vertices = a*a for a in list when a%2 == 0
+      count item  for item in [1..10 ] when item % 3 isnt 0
+      [
+        [pos,norm],
+        [pos,norm]
+      ]
+      ###
+      
       result = CSGBase.fromPolygons([[[0, 4, 6, 2], [-1, 0, 0]], [[1, 3, 7, 5], [+1, 0, 0]], [[0, 1, 5, 4], [0, -1, 0]], [[2, 6, 7, 3], [0, +1, 0]], [[0, 2, 3, 1], [0, 0, -1]], [[4, 5, 7, 6], [0, 0, +1]]].map((info) ->
         normal = new Vector3D(info[1])
         vertices = info[0].map((i) ->
-          pos = new Vector3D(c.x + r.x * (2 * !!(i & 1) - 1), c.y + r.y * (2 * !!(i & 2) - 1), c.z + r.z * (2 * !!(i & 4) - 1))
+          pos = new Vector3D(c.x + (r.x) * (2 * !!(i & 1) - 1), c.y + (r.y) * (2 * !!(i & 2) - 1), c.z + (r.z) * (2 * !!(i & 4) - 1))
           new Vertex(pos)
           )
         new Polygon(vertices, null)
@@ -46,33 +62,13 @@ define (require)->
   
       # add 6 connectors, at the centers of each face:
       result.properties.cube.facecenters = [new Connector(new Vector3D([r.x, 0, 0]).plus(c), [1, 0, 0], [0, 0, 1]), new Connector(new Vector3D([-r.x, 0, 0]).plus(c), [-1, 0, 0], [0, 0, 1]), new Connector(new Vector3D([0, r.y, 0]).plus(c), [0, 1, 0], [0, 0, 1]), new Connector(new Vector3D([0, -r.y, 0]).plus(c), [0, -1, 0], [0, 0, 1]), new Connector(new Vector3D([0, 0, r.z]).plus(c), [0, 0, 1], [1, 0, 0]), new Connector(new Vector3D([0, 0, -r.z]).plus(c), [0, 0, -1], [1, 0, 0])]
+      
+      #FIXME: if possible remove this additional operation (this one is here to have positioning a la openscad)
+      result = result.translate(r)
       @properties= result.properties
       @polygons= result.polygons
       @isCanonicalized = result.isCanonicalized
       @isRetesselated = result.isRetesselated
-  
-  
-  oldCube = (options) ->
-    c = parseOptionAs3DVector(options, "center", [0, 0, 0])
-    r = parseOptionAs3DVector(options, "radius", [1, 1, 1])
-    result = CSGBase.fromPolygons([[[0, 4, 6, 2], [-1, 0, 0]], [[1, 3, 7, 5], [1, 0, 0]], [[0, 1, 5, 4], [0, -1, 0]], [[2, 6, 7, 3], [0, 1, 0]], [[0, 2, 3, 1], [0, 0, -1]], [[4, 5, 7, 6], [0, 0, 1]]].map((info) ->
-      normal = new Vector3D(info[1])
-      #var plane = new Plane(normal, 1);
-      vertices = info[0].map((i) ->
-        pos = new Vector3D(c.x + r.x * (2 * !!(i & 1) - 1), c.y + r.y * (2 * !!(i & 2) - 1), c.z + r.z * (2 * !!(i & 4) - 1))
-        new Vertex(pos)
-      )
-      p = new Polygon(vertices, null) # , plane
-      #console.log "poly"
-      #console.log p      
-      p
-    ))
-    result.properties.cube = new Properties()
-    result.properties.cube.center = new Vector3D(c)
-    
-    # add 6 connectors, at the centers of each face:
-    result.properties.cube.facecenters = [new Connector(new Vector3D([r.x, 0, 0]).plus(c), [1, 0, 0], [0, 0, 1]), new Connector(new Vector3D([-r.x, 0, 0]).plus(c), [-1, 0, 0], [0, 0, 1]), new Connector(new Vector3D([0, r.y, 0]).plus(c), [0, 1, 0], [0, 0, 1]), new Connector(new Vector3D([0, -r.y, 0]).plus(c), [0, -1, 0], [0, 0, 1]), new Connector(new Vector3D([0, 0, r.z]).plus(c), [0, 0, 1], [1, 0, 0]), new Connector(new Vector3D([0, 0, -r.z]).plus(c), [0, 0, -1], [1, 0, 0])]
-    result
   
        
   class RoundedCube extends CSGBase
@@ -99,15 +95,15 @@ define (require)->
       roundradius = parseOptionAsFloat(options, "roundradius", 0.2)
       innercuberadius = cuberadius
       innercuberadius = innercuberadius.minus(new Vector3D(roundradius))
-      result = Cube(
+      result = new Cube(
         center: center
         radius: [cuberadius.x, innercuberadius.y, innercuberadius.z]
       )
-      result = result.unionSub(Cube(
+      result = result.unionSub( new Cube(
         center: center
         radius: [innercuberadius.x, cuberadius.y, innercuberadius.z]
       ), false, false)
-      result = result.unionSub(Cube(
+      result = result.unionSub( new Cube(
         center: center
         radius: [innercuberadius.x, innercuberadius.y, cuberadius.z]
       ), false, false)
@@ -126,46 +122,46 @@ define (require)->
           resolution: resolution
         )
         result = result.unionSub(sphere, false, false)
-        sphere = Sphere(
+        sphere = new Sphere(
           center: p2
           radius: roundradius
           resolution: resolution
         )
         result = result.unionSub(sphere, false, false)
-        sphere = Sphere(
+        sphere = new Sphere(
           center: p3
           radius: roundradius
           resolution: resolution
         )
         result = result.unionSub(sphere, false, false)
-        sphere = Sphere(
+        sphere = new Sphere(
           center: p4
           radius: roundradius
           resolution: resolution
         )
         result = result.unionSub(sphere, false, true)
-        cylinder = Cylinder(
+        cylinder = new Cylinder(
           start: p1
           end: p2
           radius: roundradius
           resolution: resolution
         )
         result = result.unionSub(cylinder, false, false)
-        cylinder = Cylinder(
+        cylinder = new Cylinder(
           start: p2
           end: p3
           radius: roundradius
           resolution: resolution
         )
         result = result.unionSub(cylinder, false, false)
-        cylinder = Cylinder(
+        cylinder = new Cylinder(
           start: p3
           end: p4
           radius: roundradius
           resolution: resolution
         )
         result = result.unionSub(cylinder, false, false)
-        cylinder = Cylinder(
+        cylinder = new Cylinder(
           start: p4
           end: p1
           radius: roundradius
@@ -174,28 +170,28 @@ define (require)->
         result = result.unionSub(cylinder, false, false)
         if level is 0
           d = new Vector3D(0, 0, -2 * z)
-          cylinder = Cylinder(
+          cylinder = new Cylinder(
             start: p1
             end: p1.plus(d)
             radius: roundradius
             resolution: resolution
           )
           result = result.unionSub(cylinder)
-          cylinder = Cylinder(
+          cylinder = new Cylinder(
             start: p2
             end: p2.plus(d)
             radius: roundradius
             resolution: resolution
           )
           result = result.unionSub(cylinder)
-          cylinder = Cylinder(
+          cylinder = new Cylinder(
             start: p3
             end: p3.plus(d)
             radius: roundradius
             resolution: resolution
           )
           result = result.unionSub(cylinder)
-          cylinder = Cylinder(
+          cylinder = new Cylinder(
             start: p4
             end: p4.plus(d)
             radius: roundradius
@@ -213,70 +209,6 @@ define (require)->
       @isCanonicalized = result.isCanonicalized
       @isRetesselated = result.isRetesselated
   
-  
-  
-  
-  oldSphere = (options) ->
-    options = options or {}
-    center = parseOptionAs3DVector(options, "center", [0, 0, 0])
-    radius = parseOptionAsFloat(options, "radius", 1)
-    resolution = parseOptionAsInt(options, "resolution", CSGBase.defaultResolution3D)
-    xvector = undefined
-    yvector = undefined
-    zvector = undefined
-    if "axes" of options
-      xvector = options.axes[0].unit().times(radius)
-      yvector = options.axes[1].unit().times(radius)
-      zvector = options.axes[2].unit().times(radius)
-    else
-      xvector = new Vector3D([1, 0, 0]).times(radius)
-      yvector = new Vector3D([0, -1, 0]).times(radius)
-      zvector = new Vector3D([0, 0, 1]).times(radius)
-    resolution = 4  if resolution < 4
-    qresolution = Math.round(resolution / 4)
-    prevcylinderpoint = undefined
-    polygons = []
-    slice1 = 0
-  
-    while slice1 <= resolution
-      angle = Math.PI * 2.0 * slice1 / resolution
-      cylinderpoint = xvector.times(Math.cos(angle)).plus(yvector.times(Math.sin(angle)))
-      if slice1 > 0
-        
-        # cylinder vertices:
-        vertices = []
-        prevcospitch = undefined
-        prevsinpitch = undefined
-        slice2 = 0
-  
-        while slice2 <= qresolution
-          pitch = 0.5 * Math.PI * slice2 / qresolution
-          cospitch = Math.cos(pitch)
-          sinpitch = Math.sin(pitch)
-          if slice2 > 0
-            vertices = []
-            vertices.push new Vertex(center.plus(prevcylinderpoint.times(prevcospitch).minus(zvector.times(prevsinpitch))))
-            vertices.push new Vertex(center.plus(cylinderpoint.times(prevcospitch).minus(zvector.times(prevsinpitch))))
-            vertices.push new Vertex(center.plus(cylinderpoint.times(cospitch).minus(zvector.times(sinpitch))))  if slice2 < qresolution
-            vertices.push new Vertex(center.plus(prevcylinderpoint.times(cospitch).minus(zvector.times(sinpitch))))
-            polygons.push new Polygon(vertices)
-            vertices = []
-            vertices.push new Vertex(center.plus(prevcylinderpoint.times(prevcospitch).plus(zvector.times(prevsinpitch))))
-            vertices.push new Vertex(center.plus(cylinderpoint.times(prevcospitch).plus(zvector.times(prevsinpitch))))
-            vertices.push new Vertex(center.plus(cylinderpoint.times(cospitch).plus(zvector.times(sinpitch))))  if slice2 < qresolution
-            vertices.push new Vertex(center.plus(prevcylinderpoint.times(cospitch).plus(zvector.times(sinpitch))))
-            vertices.reverse()
-            polygons.push new Polygon(vertices)
-          prevcospitch = cospitch
-          prevsinpitch = sinpitch
-          slice2++
-      prevcylinderpoint = cylinderpoint
-      slice1++
-    result = CSGBase.fromPolygons(polygons)
-    result.properties.sphere = new Properties()
-    result.properties.sphere.center = new Vector3D(center)
-    result.properties.sphere.facepoint = center.plus(xvector)
-    result
   
   class Sphere extends CSGBase
     # Construct a solid sphere
@@ -296,9 +228,20 @@ define (require)->
     #     });
     constructor : (options) ->
       options = options or {}
+      ###
+      if options.center
+        if options.center == true
+          center = [0,0,0]
+      else
+      ###
       center = parseOptionAs3DVector(options, "center", [0, 0, 0])
-      radius = parseOptionAsFloat(options, "radius", 1)
-      resolution = parseOptionAsInt(options, "resolution", CSGBase.defaultResolution3D)
+      
+      radius = parseOptionAsFloat(options, "r", 1)
+      if options.d
+        radius = parseOptionAsFloat(options, "d", 0.5)/2
+      
+      console.log radius
+      resolution = parseOptionAsInt(options, "$fn", CSGBase.defaultResolution3D)
       xvector = undefined
       yvector = undefined
       zvector = undefined
@@ -386,11 +329,21 @@ define (require)->
         out = axisX.times(Math.cos(angle)).plus(axisY.times(Math.sin(angle)))
         pos = s.plus(ray.times(stack)).plus(out.times(radius))
         new Vertex(pos)
-      s = parseOptionAs3DVector(options, "start", [0, -1, 0])
-      e = parseOptionAs3DVector(options, "end", [0, 1, 0])
-      r = parseOptionAsFloat(options, "radius", 1)
-      rEnd = parseOptionAsFloat(options, "radiusEnd", r)
-      rStart = parseOptionAsFloat(options, "radiusStart", r)
+      
+      h = parseOptionAsFloat(options, "h", 1)
+      s = new Vector3D([0, 0, 0])
+      e = new Vector3D([0, 0, h])
+      #s = parseOptionAs3DVector(options, "start", [0, -1, 0])
+      #e = parseOptionAs3DVector(options, "end", [0, 1, 0])
+      
+      r = parseOptionAsFloat(options, "r", 1)
+      rEnd = parseOptionAsFloat(options, "r2", r)
+      rStart = parseOptionAsFloat(options, "r1", r)
+      
+      if options.d1?
+        rEnd = parseOptionAsFloat(options, "d2", r)/2
+        rStart = parseOptionAsFloat(options, "d1", r)/2
+        
       throw new Error("Radius should be non-negative")  if (rEnd < 0) or (rStart < 0)
       throw new Error("Either radiusStart or radiusEnd should be positive")  if (rEnd is 0) and (rStart is 0)
       slices = parseOptionAsFloat(options, "resolution", CSGBase.defaultResolution2D)
@@ -452,7 +405,12 @@ define (require)->
       options = options or {}
       p1 = parseOptionAs3DVector(options, "start", [0, -1, 0])
       p2 = parseOptionAs3DVector(options, "end", [0, 1, 0])
-      radius = parseOptionAsFloat(options, "radius", 1)
+      radius = parseOptionAsFloat(options, "r", 1)
+      
+      h = parseOptionAsFloat(options, "h", 1)
+      s = new Vector3D([0, 0, 0])
+      e = new Vector3D([0, 0, h])
+      
       direction = p2.minus(p1)
       defaultnormal = undefined
       if Math.abs(direction.x) > Math.abs(direction.y)
@@ -537,6 +495,4 @@ define (require)->
     "Sphere": Sphere
     "Cylinder": Cylinder
     "RoundedCylinder":RoundedCylinder
-    "oldSphere":oldSphere
-    "oldCube":oldCube
     }

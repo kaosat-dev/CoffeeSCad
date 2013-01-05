@@ -5,8 +5,6 @@ define (require)->
   CSG={}
    
   globals = require './csg.globals'
-  console.log "globals"
-  console.log globals.CSG.staticTag
   _CSGDEBUG = globals._CSGDEBUG
   CSG.staticTag = globals.CSG.staticTag
   CSG.getTag = globals.CSG.getTag
@@ -511,10 +509,6 @@ define (require)->
       new CSG.Plane(normal, w)
   
     @fromVector3Ds : (a, b, c) ->
-      #console.log("here")
-      #  console.log(a);
-      #  console.log(b);
-      #  console.log(c);
       n = b.minus(a).cross(c.minus(a)).unit()
       new CSG.Plane(n, n.dot(a))
   
@@ -962,10 +956,8 @@ define (require)->
     getTag: ->
       result = @tag
       unless result
-        console.log "no result tag "+ @tag
         result = CSG.getTag()
         @tag = result
-      console.log " tag "+ @tag
       result
     
     # get a string uniquely identifying this object
@@ -1294,11 +1286,11 @@ define (require)->
       ismirror = (mirrorvalue < 0)
       ismirror
   
-    @unity = ->
+    @unity : ->
       # return the unity matrix
       new CSG.Matrix4x4()
   
-    @rotationX = (degrees) ->
+    @rotationX : (degrees) ->
       # Create a rotation matrix for rotating around the x axis
       radians = degrees * Math.PI * (1.0 / 180.0)
       cos = Math.cos(radians)
@@ -1307,7 +1299,7 @@ define (require)->
       new CSG.Matrix4x4(els)
   
   
-    @rotationY = (degrees) ->
+    @rotationY : (degrees) ->
       # Create a rotation matrix for rotating around the y axis
       radians = degrees * Math.PI * (1.0 / 180.0)
       cos = Math.cos(radians)
@@ -1315,9 +1307,7 @@ define (require)->
       els = [cos, 0, -sin, 0, 0, 1, 0, 0, sin, 0, cos, 0, 0, 0, 0, 1]
       new CSG.Matrix4x4(els)
   
-  
-  
-    @rotationZ = (degrees) ->
+    @rotationZ : (degrees) ->
       # Create a rotation matrix for rotating around the z axis
       radians = degrees * Math.PI * (1.0 / 180.0)
       cos = Math.cos(radians)
@@ -1325,8 +1315,7 @@ define (require)->
       els = [cos, sin, 0, 0, -sin, cos, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
       new CSG.Matrix4x4(els)
   
-  
-    @rotation = (rotationCenter, rotationAxis, degrees) ->
+    @rotation : (rotationCenter, rotationAxis, degrees) ->
       # Matrix for rotation about arbitrary point and axis
       rotationCenter = new CSG.Vector3D(rotationCenter)
       rotationAxis = new CSG.Vector3D(rotationAxis)
@@ -1339,18 +1328,14 @@ define (require)->
       transformation = transformation.multiply(CSG.Matrix4x4.translation(rotationCenter))
       transformation
   
-  
-  
-    @translation = (v) ->
+    @translation : (v) ->
       # Create an affine matrix for translation:
-      
       # parse as CSG.Vector3D, so we can pass an array or a CSG.Vector3D
       vec = new CSG.Vector3D(v)
       els = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, vec.x, vec.y, vec.z, 1]
       new CSG.Matrix4x4(els)
   
-  
-    @mirroring = (plane) ->
+    @mirroring : (plane) ->
       # Create an affine matrix for mirroring into an arbitrary plane:
       nx = plane.normal.x
       ny = plane.normal.y
@@ -1359,7 +1344,7 @@ define (require)->
       els = [(1.0 - 2.0 * nx * nx), (-2.0 * ny * nx), (-2.0 * nz * nx), 0, (-2.0 * nx * ny), (1.0 - 2.0 * ny * ny), (-2.0 * nz * ny), 0, (-2.0 * nx * nz), (-2.0 * ny * nz), (1.0 - 2.0 * nz * nz), 0, (-2.0 * nx * w), (-2.0 * ny * w), (-2.0 * nz * w), 1]
       new CSG.Matrix4x4(els)
   
-    @scaling = (v) ->
+    @scaling : (v) ->
       # Create an affine matrix for scaling:
       
       # parse as CSG.Vector3D, so we can pass an array or a CSG.Vector3D
@@ -1435,6 +1420,6 @@ define (require)->
     "PolygonShared": CSG.PolygonShared
     "Shared": CSG.Shared
     "Path2D": CSG.Path2D
-    "Matrix4x4": CSG.Path2D
+    "Matrix4x4": CSG.Matrix4x4
     "OrthoNormalBasis": CSG.OrthoNormalBasis
   }

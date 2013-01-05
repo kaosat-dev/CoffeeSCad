@@ -28,7 +28,8 @@ define (require)->
     @defaultResolution2D : 32
     @defaultResolution3D : 12
     
-    constructor:->
+    constructor:(options)->
+      super options
       @polygons = []
       @properties = new Properties()
       @isCanonicalized = true
@@ -277,50 +278,20 @@ define (require)->
         islast = (i is (csgs.length - 1))
         result = result.unionSub(csgs[i], islast, islast)
         i++
-      
-      console.log "union result"
-      console.log result
       result
       
     unionSub: (csg, retesselate, canonicalize) ->
       unless @mayOverlap(csg)
-        console.log "non intersect"
         @unionForNonIntersecting csg
       else
-        console.log "intersect"
         a = new Tree(@polygons)
         b = new Tree(csg.polygons)
-        console.log a
-        console.log b
-        console.log "#################"
-        
         a.clipTo b, false
         #b.clipTo(a, true) # ERROR: this doesn't work
-        #FIXME: error is already apparent here: mismatch in polygontree children count -1
-        #and in rootnode.polygonTreenodes : 5 elements instead of one !
-        console.log a
-        console.log b
-        console.log "#################"
-        
         b.clipTo a
-        console.log a
-        console.log b
-        console.log "#################"
-        
         b.invert()
-        console.log a
-        console.log b
-        console.log "#################"
-        
         b.clipTo a
-        console.log a
-        console.log b
-        console.log "#################"
-        
         b.invert()
-        console.log a
-        console.log b
-        console.log "#################"
         
         newpolygons = a.allPolygons().concat(b.allPolygons())
         result = CSGBase.fromPolygons(newpolygons)
@@ -544,11 +515,16 @@ define (require)->
         newvertices.reverse()  if ismirror
         new Polygon(newvertices, p.shared, newplane)
       )
-      result = CSGBase.fromPolygons(newpolygons)
-      result.properties = @properties._transform(matrix4x4)
-      result.isRetesselated = @isRetesselated
-      result.isCanonicalized = @isCanonicalized
-      result
+      #result = CSGBase.fromPolygons(newpolygons)
+      #result.properties = @properties._transform(matrix4x4)
+      #result.isRetesselated = @isRetesselated
+      #result.isCanonicalized = @isCanonicalized
+      #result
+      
+      #result = CSGBase.fromPolygons(newpolygons)
+      @polygons= newpolygons
+      @properties= @properties._transform(matrix4x4)
+      @
     
     
     expandSelf: (radius, resolution) ->
