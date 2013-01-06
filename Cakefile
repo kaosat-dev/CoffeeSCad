@@ -135,6 +135,16 @@ task 'watch', 'Watch src/ for changes',(options) ->
     if path.extname(srcPath) == ".tmpl"
       deleteTemplate(srcPath)
 
+task 'serve', 'minimal web server for testing', (options) ->
+  connect = require('connect')
+  servePath = path.resolve('.')
+  server = connect.createServer connect.static(servePath)
+  server.listen(8090)
+
+task 'serveWatch', 'serve the files and run the watch task', (options) ->
+  invoke('serve')
+  invoke('watch')
+
 task 'cpTemplates', 'Copy all templates into the correct folders', ->
   glob "**/*.tmpl", null, (er, files) ->
     for file in files
