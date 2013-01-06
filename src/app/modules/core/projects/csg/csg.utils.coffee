@@ -552,7 +552,7 @@ define (require)->
       result
   
   
-  class CSG.fuzzyCSGFactory 
+  class CSG.FuzzyCSGFactory 
     constructor: ->
       @vertexfactory = new CSG.fuzzyFactory(3, 1e-5)
       @planefactory = new CSG.fuzzyFactory(4, 1e-5)
@@ -589,12 +589,20 @@ define (require)->
       )
       new Polygon(newvertices, newshared, newplane)
   
-    getCSG: (sourcecsg) ->
+    getCSG: (sourceCsg) ->
+      #deprecated
       _this = this
-      newpolygons = sourcecsg.polygons.map((polygon) ->
+      newpolygons = sourceCsg.polygons.map((polygon) ->
         _this.getPolygon polygon
       )
       CSGBase.fromPolygons newpolygons
+      
+    getCSGPolygons: (sourceCsg) ->
+      _this = this
+      newpolygons = sourceCsg.polygons.map((polygon) ->
+        _this.getPolygon polygon
+      )
+      newpolygons
 
       
   return CSG  

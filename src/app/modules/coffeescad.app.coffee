@@ -70,127 +70,44 @@ define (require)->
       @project = new Project()
       @project.create_part
         name:"config"
-        
-        content_0:"""#This is the project's main configurationfil
-        #It is better to keep global configuration elements here
-        toto = new Cube
-          radius:[50,50,25]
-          center:[50,50,25]
-          
-        toto.name = "toto"
-        #console.log "toto"
-        #console.log JSON.stringify toto
-        
-        tutu = new Cube
-          radius:[100,25,25]
-          center:[100,25,25]
-        
-        tutu.name = "tutu"
-        #console.log "tutu"
-        #console.log JSON.stringify tutu
-        
-        tmp =toto.union(tutu)
-        tmp.name = "result"
-        #console.log "result"
-        #console.log JSON.stringify tmp
-        
-        return tmp
-        """
-        content1:"""#This is the project's main configuration file 
-        #It is better to keep global configuration elements here
-        toto = new Cube
-          radius:[50,50,25]
-          center:[50,50,25]
-          
-        toto.name = "toto"
-        console.log "toto"
-        #console.log JSON.stringify toto
-        
-        tutu = new Cube
-          radius:[100,25,25]
-          center:[100,25,25]
-        
-        tutu.name = "tutu" 
-        console.log "tutu"
-        #console.log JSON.stringify tutu
-        
-        tmp =toto.union(tutu)
-        tmp.name = "result"
-        console.log "result"
-        #console.log JSON.stringify tmp
-        
-        ###
-        for i, poly of tutu.polygons
-          vs = poly.vertices
-          
-          vsLine = ""
-          for i, vertex of vs
-            vsLine+= "\#{vertex.pos} "
-          console.log vsLine
-          vn = poly.plane.normal
-          console.log "\#{vn}\n\\\n" 
-        ###
-        #register(Thinga.__proto__.constructor.name, truc)
-        return tmp
-        """
-        
-        content_:"""#This is the project's main configuration file
-        #It is better to keep global configuration elements here
-        toto = new Cube
-          radius:[25,50,25]
-          center:[12.5,25,12.5]
-        s = new Sphere
-          radius:75
-                
-        return s.subtract(toto)
-        """
-        content222:"""#This is the project's main configuration file
+        content:"""
+        #This is the project's main configuration fil
         #It is better to keep global configuration elements here
         class Thinga extends Meta
           constructor:(options) ->
             super options
             @toto = new Cube
-              radius:[50,100,50]
+              size:[50,100,50]
             @c1 = new Cube
-              radius:[50,25,50]
+              size:[50,25,50]
               center:[100,-12.5,0]
-              
-            s = new Sphere
-              radius:75
-            c = new Cylinder
-              start:[0, 0, -100]
-              end: [0, 0, 100]
-              radius:20
-              
-            @unionSelf(@toto)
-            @unionSelf(@c1)
-            @unionSelf(s)
-            #@unionSelf(c)
-            @subtractSelf(c)
-            
-            #@expandSelf 3, 12
-            
-        truc = new Thinga()
-        c = new Cube
-          radius:[100,50,100]
-          center:[100,0,0]
-        troc = truc.subtract c
-        
+               
+            s = new Sphere(r:75, $fn:45)
+            c = new Cylinder(h:300, r:20).color([0.8,0.5,0.2])
+               
+            @union(@toto.color([0.2,0.8,0.5]))
+            @union(@c1)
+            @union(s.color([0.6,0.8,0.9]))
+            @subtract(c.translate([10,0,-150]))
+             
+        thinga1 = new Thinga()
+        ###
         tmp = new SpecialScrew()
-        
         console.log "BOM:"
         for i, v of classRegistry
           console.log "You Have: \#{v} \#{i} (s)"
-       
+        
         doMagic()
-        return truc.color([0.9,0.2,0])
+        ###        
+        
+        return thinga1#.color([0.9,0.2,0])
         """
-        content:"""
-        #test
+        content_:"""
+        #test 
         sphere = new Sphere
           d: 100
           $fn: 10
-          center: [-100,-25,0]
+          center: [87.505,-25,20]
         cube = new Cube
           size: 100
           #center: [100,0,0]
@@ -203,11 +120,45 @@ define (require)->
           d1:25
           d2:75
           center:[100,0,0]
-        #Don't forget to 'return' what you want t o see rendered (api might change)
         
-        console.log cube
-        cube.translate [0,100,0]
-        return sphere.union(cube).union(cone).subtract(cylinder)
+        cube.translate [0,10,0]
+        
+        #cube.union(cone).subtract(cylinder).union(sphere)
+        cube.color([0.8,0,0])
+        cylinder.color([0,1,0])
+        cone.color([0,0,1])
+        sphere.color([0.9,0.5,0])
+        sphere.union(cube).union(cone).subtract(cylinder)
+        
+        cube2 = cube.clone().color([0.5,0.5,1]).translate(120)
+        cube3 = cube.clone().translate([-25,150,0])
+        cube3.rotate([0,50,100])
+        
+        
+        return sphere.union([cube2,cube3])
+        """
+        content_1:"""
+        #Yeah , we can use classes!
+        class Thingy
+          constructor: (@thickness=10, @pos=[0,0,0], @rot=[0,0,0]) ->
+            
+            shape1 = fromPoints [[0,0], [150,50], [0,-50]]
+            shape1.expand((20,25))
+            shape = shape.extrude
+              offset:[0, 0, @thickness]
+            
+            cyl = new Cylinder(r:10, $fn:12, h:100, center:true)
+
+            @subtract(cyl).translate(@pos).rotate(@rot).color([1,0.5,0])
+            
+        
+        #Here we create two new class instances
+        thing = new Thingy(35)
+        thing2 = new Thingy(25)
+        
+        res = thing.clone().union(thing2).mirroredX().color([0.2,0.5,0.6]))
+        res.rotateX(37).rotateZ(5).translate([0,0,100])
+        return res
         """
           
       @project.create_part

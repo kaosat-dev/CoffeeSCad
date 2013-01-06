@@ -64,7 +64,7 @@ define (require)->
       result.properties.cube.facecenters = [new Connector(new Vector3D([r.x, 0, 0]).plus(c), [1, 0, 0], [0, 0, 1]), new Connector(new Vector3D([-r.x, 0, 0]).plus(c), [-1, 0, 0], [0, 0, 1]), new Connector(new Vector3D([0, r.y, 0]).plus(c), [0, 1, 0], [0, 0, 1]), new Connector(new Vector3D([0, -r.y, 0]).plus(c), [0, -1, 0], [0, 0, 1]), new Connector(new Vector3D([0, 0, r.z]).plus(c), [0, 0, 1], [1, 0, 0]), new Connector(new Vector3D([0, 0, -r.z]).plus(c), [0, 0, -1], [1, 0, 0])]
       
       #FIXME: if possible remove this additional operation (this one is here to have positioning a la openscad)
-      result = result.translate(r)
+      result.translate(r)
       @properties= result.properties
       @polygons= result.polygons
       @isCanonicalized = result.isCanonicalized
@@ -240,7 +240,6 @@ define (require)->
       if options.d
         radius = parseOptionAsFloat(options, "d", 0.5)/2
       
-      console.log radius
       resolution = parseOptionAsInt(options, "$fn", CSGBase.defaultResolution3D)
       xvector = undefined
       yvector = undefined

@@ -1,6 +1,8 @@
 define (require)->
-
-  class CAG 
+  Side = requ
+  TransformBase = require './transformBase'
+  
+  class CAGBase extends TransformBase
     # CAG: solid area geometry: like CSG but 2D
     # Each area consists of a number of sides
     # Each side is a line between 2 points
@@ -8,8 +10,8 @@ define (require)->
       @sides = []
   
     @fromSides : (sides) ->
-      # Construct a CAG from a list of `CAG.Side` instances.
-      cag = new CAG()
+      # Construct a CAG from a list of `Side` instances.
+      cag = new CAGBase()
       cag.sides = sides
       cag
   
@@ -20,12 +22,12 @@ define (require)->
       numpoints = points.length
       throw new Error("CAG shape needs at least 3 points")  if numpoints < 3
       sides = []
-      prevpoint = new CSG.Vector2D(points[numpoints - 1])
-      prevvertex = new CAG.Vertex(prevpoint)
+      prevpoint = new Vector2D(points[numpoints - 1])
+      prevvertex = new Vertex2D(prevpoint)
       points.map (p) ->
-        point = new CSG.Vector2D(p)
-        vertex = new CAG.Vertex(point)
-        side = new CAG.Side(prevvertex, vertex)
+        point = new Vector2D(p)
+        vertex = new Vertex2D(point)
+        side = new Side(prevvertex, vertex)
         sides.push side
         prevvertex = vertex
     
@@ -41,12 +43,12 @@ define (require)->
       # Like CAG.fromPoints but does not check if it's a valid polygon.
       # Points should rotate counter clockwise
       sides = []
-      prevpoint = new CSG.Vector2D(points[points.length - 1])
-      prevvertex = new CAG.Vertex(prevpoint)
+      prevpoint = new Vector2D(points[points.length - 1])
+      prevvertex = new Vertex2D(prevpoint)
       points.map (p) ->
-        point = new CSG.Vector2D(p)
-        vertex = new CAG.Vertex(point)
-        side = new CAG.Side(prevvertex, vertex)
+        point = new Vector2D(p)
+        vertex = new Vertex2D(point)
+        side = new Side(prevvertex, vertex)
         sides.push side
         prevvertex = vertex
     
@@ -56,7 +58,7 @@ define (require)->
       # Converts a CSG to a CAG. The CSG must consist of polygons with only z coordinates +1 and -1
       # as constructed by CAG.toCSG(-1, 1). This is so we can use the 3D union(), intersect() etc
       sides = csg.polygons.map((p) ->
-        CAG.Side.fromFakePolygon p
+        Side.fromFakePolygon p
       )
       CAG.fromSides sides
   
@@ -72,8 +74,8 @@ define (require)->
       while vertexindex < numvertices
         x = vertexData[arrayindex++]
         y = vertexData[arrayindex++]
-        pos = new CSG.Vector2D(x, y)
-        vertex = new CAG.Vertex(pos)
+        pos = new Vector2D(x, y)
+        vertex = new Vertex2D(pos)
         vertices.push vertex
         vertexindex++
       sides = []
@@ -84,7 +86,7 @@ define (require)->
       while sideindex < numsides
         vertexindex0 = bin.sideVertexIndices[arrayindex++]
         vertexindex1 = bin.sideVertexIndices[arrayindex++]
-        side = new CAG.Side(vertices[vertexindex0], vertices[vertexindex1])
+        side = new Side(vertices[vertexindex0], vertices[vertexindex1])
         sides.push side
         sideindex++
       cag = CAG.fromSides(sides)
@@ -120,7 +122,7 @@ define (require)->
       #    });
       str = "CAG.fromSides([\n"
       @sides.map (side) ->
-        str += "  new CAG.Side(new CAG.Vertex(new CSG.Vector2D(" + side.vertex0.pos.x + "," + side.vertex0.pos.y + ")), new CAG.Vertex(new CSG.Vector2D(" + side.vertex1.pos.x + "," + side.vertex1.pos.y + "))),\n"
+        str += "  new Side(new Vertex2D(new Vector2D(" + side.vertex0.pos.x + "," + side.vertex0.pos.y + ")), new Vertex2D(new Vector2D(" + side.vertex1.pos.x + "," + side.vertex1.pos.y + "))),\n"
   
       str += "]);\n"
       str
@@ -240,7 +242,7 @@ define (require)->
     getBounds: ->
       minpoint = undefined
       if @sides.length is 0
-        minpoint = new CSG.Vector2D(0, 0)
+        minpoint = new Vector2D(0, 0)
       else
         minpoint = @sides[0].vertex0.pos
       maxpoint = minpoint
@@ -332,12 +334,12 @@ define (require)->
           while step <= numsteps
             angle = angle1 + step / numsteps * (angle2 - angle1)
             angle = angle2  if step is numsteps # prevent rounding errors
-            point = pcenter.plus(CSG.Vector2D.fromAngleDegrees(angle).times(radius))
+            point = pcenter.plus(Vector2D.fromAngleDegrees(angle).times(radius))
             points.push point  if (not fullcircle) or (step > 0)
             step++
           newcag = CAG.fromPointsNoCheck(points)
           cags.push newcag
-      result = new CAG()
+      result = new CAGBase()
       result = result.union(cags)
       result
   
@@ -444,7 +446,7 @@ define (require)->
       if @isCanonicalized
         this
       else
-        factory = new CAG.fuzzyCAGFactory()
+        factory = new FuzzyCAGFactory()
         result = factory.getCAG(this)
         result.isCanonicalized = true
         result

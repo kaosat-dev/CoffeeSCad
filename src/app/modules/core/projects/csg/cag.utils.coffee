@@ -1,6 +1,11 @@
 define (require)->
-  class CAG.fuzzyCAGFactory = ->
-    @vertexfactory = new CSG.fuzzyFactory(2, 1e-5)
+  maths = require './csg.maths'
+  utils = require './csg.utils'
+  FuzzyCSGFactory = utils.FuzzyCSGFactory
+  CAG = {}
+  
+  class CAG.FuzzyCAGFactory
+    @vertexfactory = new FuzzyCSGFactory(2, 1e-5)
   
     getVertex: (sourcevertex) ->
       elements = [sourcevertex.pos._x, sourcevertex.pos._y]
@@ -21,4 +26,4 @@ define (require)->
       )
       CAG.fromSides newsides
       
-  return CAG.fuzzyCAGFactory
+  return CAG

@@ -1,5 +1,6 @@
 define (require)->
-  class CAG.Circle extends CAG
+  
+  class Circle extends CAGBase
     constructor: (options) ->
       # Construct a circle
       #   options:
@@ -19,13 +20,13 @@ define (require)->
       while i <= resolution
         radians = 2 * Math.PI * i / resolution
         point = CSG.Vector2D.fromAngleRadians(radians).times(radius).plus(center)
-        vertex = new CAG.Vertex(point)
-        sides.push new CAG.Side(prevvertex, vertex)  if i > 0
+        vertex = new Vertex2D(point)
+        sides.push new Side(prevvertex, vertex)  if i > 0
         prevvertex = vertex
         i++
-      CAG.fromSides sides
+      CAGBase.fromSides sides
   
-  class CAG.Rectangle extends CAG
+  class Rectangle extends CAG
     # Construct a rectangle
     #   options:
     #     center: a 2D center point
@@ -38,9 +39,9 @@ define (require)->
       r = CSG.parseOptionAs2DVector(options, "radius", [1, 1])
       rswap = new CSG.Vector2D(r.x, -r.y)
       points = [c.plus(r), c.plus(rswap), c.minus(r), c.minus(rswap)]
-      CAG.fromPoints points
+      CAGBase.fromPoints points
   
-  class CAG.RoundedRectangle extends CAG
+  class RoundedRectangle extends CAG
     #     var r = CSG.roundedRectangle({
     #       center: [0, 0],
     #       radius: [2, 1],
@@ -65,7 +66,7 @@ define (require)->
       rect = rect.expand(roundradius, resolution)  if roundradius > 0
       rect
       
-  class CAG.Vertex 
+  class Vertex2D 
     constructor : (pos) ->
       @pos = pos
   
@@ -78,8 +79,8 @@ define (require)->
   
   class CAG.Side 
     constructor : (vertex0, vertex1) ->
-      throw new Error("Assertion failed")  unless vertex0 instanceof CAG.Vertex
-      throw new Error("Assertion failed")  unless vertex1 instanceof CAG.Vertex
+      throw new Error("Assertion failed")  unless vertex0 instanceof Vertex2D
+      throw new Error("Assertion failed")  unless vertex1 instanceof Vertex2D
       @vertex0 = vertex0
       @vertex1 = vertex1
   
@@ -110,7 +111,7 @@ define (require)->
         p2 = pointsZeroZ[1]
       else
         throw new Error("Assertion failed")
-      result = new CAG.Side(new CAG.Vertex(p1), new CAG.Vertex(p2))
+      result = new CAG.Side(new Vertex2D(p1), new Vertex2D(p2))
       result
   
     toString: ->
@@ -124,7 +125,7 @@ define (require)->
     transform: (matrix4x4) ->
       newp1 = @vertex0.pos.transform(matrix4x4)
       newp2 = @vertex1.pos.transform(matrix4x4)
-      new CAG.Side(new CAG.Vertex(newp1), new CAG.Vertex(newp2))
+      new CAG.Side(new Vertex2D(newp1), new Vertex2D(newp2))
   
     flipped: ->
       new CAG.Side(@vertex1, @vertex0)
