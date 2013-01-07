@@ -70,8 +70,8 @@ define (require)->
       @project = new Project()
       @project.create_part
         name:"config"
-        content:"""
-        #This is the project's main configuration fil
+        content_0:"""
+        #This is the project's main configuration file
         #It is better to keep global configuration elements here
         class Thinga extends Meta
           constructor:(options) ->
@@ -102,7 +102,7 @@ define (require)->
         
         return thinga1#.color([0.9,0.2,0])
         """
-        content_:"""
+        content_1:"""
         #test 
         sphere = new Sphere
           d: 100
@@ -137,7 +137,7 @@ define (require)->
         
         return sphere.union([cube2,cube3])
         """
-        content_1:"""
+        content_2:"""
         #Yeah , we can use classes!
         class Thingy
           constructor: (@thickness=10, @pos=[0,0,0], @rot=[0,0,0]) ->
@@ -160,6 +160,17 @@ define (require)->
         res.rotateX(37).rotateZ(5).translate([0,0,100])
         return res
         """
+        content:"""
+        #another tes
+        circle = new Circle(r:25)
+        console.log circle
+        c= circle.extrude(offset: [0, 0, 100])
+        ###
+        tmp = new SpecialScrew()
+        ###
+        return c#.color([0.9,0.2,0])
+        """
+        
           
       @project.create_part
         name:"assembly"

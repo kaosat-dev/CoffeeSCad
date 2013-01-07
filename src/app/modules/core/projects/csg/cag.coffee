@@ -1,6 +1,11 @@
 define (require)->
-  Side = requ
   TransformBase = require './transformBase'
+  
+  maths = require './csg.maths'
+  Vertex = maths.Vertex
+  Vector2D = maths.Vector2D
+  Side = maths.Side
+  
   
   class CAGBase extends TransformBase
     # CAG: solid area geometry: like CSG but 2D
@@ -116,7 +121,6 @@ define (require)->
       str
   
     toDebugString: ->
-      
       #    this.sides.sort(function(a,b){
       #      return a.vertex0.pos.x - b.vertex0.pos.x; 
       #    });

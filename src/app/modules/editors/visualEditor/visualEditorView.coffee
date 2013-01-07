@@ -1178,7 +1178,7 @@ define (require) ->
         console.log "CSG conversion result ok:"
       
       
-    fromCsg_:(csg)=>
+    fromCsg:(csg)=>
       CsgProcessor  = require 'modules/core/projects/csg/csg.processor'
       resultCSG = new CsgProcessor().processScript(@model.get("content"))
       @model.csg = resultCSG #FIXME: remove this at all costs (needs overall reorganization perhaps), but a view should not modify a model like this ? or should it?
@@ -1207,7 +1207,7 @@ define (require) ->
       console.log "bleh"
       @_render()
       
-    fromCsg:(csg)=>
+    fromCsg_:(csg)=>
       #cleanup of old class registry
       if @model.csg?
         window.classRegistry={}

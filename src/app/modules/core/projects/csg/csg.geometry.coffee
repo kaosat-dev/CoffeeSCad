@@ -1,5 +1,6 @@
 define (require)->
-  CSGBase = require './csg'
+  base = require './csg'
+  CSGBase = base.CSGBase
   
   maths = require './csg.maths'
   Vertex = maths.Vertex
@@ -488,6 +489,7 @@ define (require)->
       @isCanonicalized = result.isCanonicalized
       @isRetesselated = result.isRetesselated
     
+
   return {
     "Cube": Cube
     "RoundedCube": RoundedCube

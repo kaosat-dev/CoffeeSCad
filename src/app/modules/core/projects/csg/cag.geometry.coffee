@@ -1,5 +1,22 @@
 define (require)->
+  base = require './csg'
+  CAGBase = base.CAGBase
   
+  maths = require './csg.maths'
+  Vertex = maths.Vertex
+  Vertex2D = maths.Vertex
+  Vector2D = maths.Vector2D
+  Side = maths.Side
+  
+  globals = require './csg.globals'
+  defaultResolution2D = globals.defaultResolution2D
+  
+  utils = require './csg.utils'
+  parseOptionAs2DVector = utils.parseOptionAs2DVector
+  parseOptionAsFloat = utils.parseOptionAsFloat
+  parseOptionAsInt = utils.parseOptionAsInt
+  
+  ###2D shapes###
   class Circle extends CAGBase
     constructor: (options) ->
       # Construct a circle
@@ -10,38 +27,43 @@ define (require)->
       #   returns a CAG object
       #
       options = options or {}
-      center = CSG.parseOptionAs2DVector(options, "center", [0, 0])
-      radius = CSG.parseOptionAsFloat(options, "radius", 1)
-      resolution = CSG.parseOptionAsInt(options, "resolution", CSG.defaultResolution2D)
+      center = parseOptionAs2DVector(options, "center", [0, 0])
+      radius = parseOptionAsFloat(options, "r", 1)
+      resolution = parseOptionAsInt(options, "$fn", defaultResolution2D)
       sides = []
       prevvertex = undefined
       i = 0
     
       while i <= resolution
         radians = 2 * Math.PI * i / resolution
-        point = CSG.Vector2D.fromAngleRadians(radians).times(radius).plus(center)
+        point = Vector2D.fromAngleRadians(radians).times(radius).plus(center)
         vertex = new Vertex2D(point)
         sides.push new Side(prevvertex, vertex)  if i > 0
         prevvertex = vertex
         i++
-      CAGBase.fromSides sides
+      console.log "circle"
+      console.log radius
+      console.log resolution
+      console.log sides
+      @sides = sides
   
-  class Rectangle extends CAG
+  class Rectangle extends CAGBase
     # Construct a rectangle
     #   options:
     #     center: a 2D center point
     #     radius: a 2D vector with width and height
-    #   returns a CAG object
+    #   returns a CAGBase object
     #
     constructor: (options) ->
       options = options or {}
-      c = CSG.parseOptionAs2DVector(options, "center", [0, 0])
-      r = CSG.parseOptionAs2DVector(options, "radius", [1, 1])
-      rswap = new CSG.Vector2D(r.x, -r.y)
+      c = parseOptionAs2DVector(options, "center", [0, 0])
+      r = parseOptionAs2DVector(options, "radius", [1, 1])
+      rswap = new Vector2D(r.x, -r.y)
       points = [c.plus(r), c.plus(rswap), c.minus(r), c.minus(rswap)]
-      CAGBase.fromPoints points
+      result = CAGBase.fromPoints points
+      @sides = result.sides
   
-  class RoundedRectangle extends CAG
+  class RoundedRectangle extends CAGBase
     #     var r = CSG.roundedRectangle({
     #       center: [0, 0],
     #       radius: [2, 1],
@@ -50,15 +72,15 @@ define (require)->
     #     });
     constructor: (options) ->
       options = options or {}
-      center = CSG.parseOptionAs2DVector(options, "center", [0, 0])
-      radius = CSG.parseOptionAs2DVector(options, "radius", [1, 1])
-      roundradius = CSG.parseOptionAsFloat(options, "roundradius", 0.2)
-      resolution = CSG.parseOptionAsFloat(options, "resolution", CSG.defaultResolution2D)
+      center = parseOptionAs2DVector(options, "center", [0, 0])
+      radius = parseOptionAs2DVector(options, "radius", [1, 1])
+      roundradius = parseOptionAsFloat(options, "roundradius", 0.2)
+      resolution = parseOptionAsFloat(options, "resolution", defaultResolution2D)
       maxroundradius = Math.min(radius.x, radius.y)
       maxroundradius -= 0.1
       roundradius = Math.min(roundradius, maxroundradius)
       roundradius = Math.max(0, roundradius)
-      radius = new CSG.Vector2D(radius.x - roundradius, radius.y - roundradius)
+      radius = new Vector2D(radius.x - roundradius, radius.y - roundradius)
       rect = CAG.rectangle(
         center: center
         radius: radius
@@ -66,77 +88,9 @@ define (require)->
       rect = rect.expand(roundradius, resolution)  if roundradius > 0
       rect
       
-  class Vertex2D 
-    constructor : (pos) ->
-      @pos = pos
+  return {
+    "Rectangle": Rectangle
+    "RoundedRectangle": RoundedRectangle
+    "Circle": Circle
+    }    
   
-    getTag: ->
-      result = @tag
-      unless result
-        result = CSG.getTag()
-        @tag = result
-      result
-  
-  class CAG.Side 
-    constructor : (vertex0, vertex1) ->
-      throw new Error("Assertion failed")  unless vertex0 instanceof Vertex2D
-      throw new Error("Assertion failed")  unless vertex1 instanceof Vertex2D
-      @vertex0 = vertex0
-      @vertex1 = vertex1
-  
-    @fromFakePolygon = (polygon) ->
-      throw new Error("Assertion failed")  unless polygon.vertices.length is 4
-      pointsZeroZ = []
-      indicesZeroZ = []
-      i = 0
-    
-      while i < 4
-        pos = polygon.vertices[i].pos
-        if (pos.z >= -1.001) and (pos.z < -0.999)
-    
-        else throw new Error("Assertion failed")  unless (pos.z >= 0.999) and (pos.z < 1.001)
-        if pos.z > 0
-          pointsZeroZ.push new CSG.Vector2D(pos.x, pos.y)
-          indicesZeroZ.push i
-        i++
-      throw new Error("Assertion failed")  unless pointsZeroZ.length is 2
-      d = indicesZeroZ[1] - indicesZeroZ[0]
-      p1 = undefined
-      p2 = undefined
-      if d is 1
-        p1 = pointsZeroZ[1]
-        p2 = pointsZeroZ[0]
-      else if d is 3
-        p1 = pointsZeroZ[0]
-        p2 = pointsZeroZ[1]
-      else
-        throw new Error("Assertion failed")
-      result = new CAG.Side(new Vertex2D(p1), new Vertex2D(p2))
-      result
-  
-    toString: ->
-      "(" + @vertex0.pos.x + "," + @vertex0.pos.y + ") -> (" + @vertex1.pos.x + "," + @vertex1.pos.y + ")"
-    #    return "("+Math.round(this.vertex0.pos.x*10)/10+","+Math.round(this.vertex0.pos.y*10)/10+") -> ("+Math.round(this.vertex1.pos.x*10)/10+","+Math.round(this.vertex1.pos.y*10)/10+")";
-    
-    toPolygon3D: (z0, z1) ->
-      vertices = [new CSG.Vertex(@vertex0.pos.toVector3D(z0)), new CSG.Vertex(@vertex1.pos.toVector3D(z0)), new CSG.Vertex(@vertex1.pos.toVector3D(z1)), new CSG.Vertex(@vertex0.pos.toVector3D(z1))]
-      new CSG.Polygon(vertices)
-  
-    transform: (matrix4x4) ->
-      newp1 = @vertex0.pos.transform(matrix4x4)
-      newp2 = @vertex1.pos.transform(matrix4x4)
-      new CAG.Side(new Vertex2D(newp1), new Vertex2D(newp2))
-  
-    flipped: ->
-      new CAG.Side(@vertex1, @vertex0)
-  
-    direction: ->
-      @vertex1.pos.minus @vertex0.pos
-  
-    getTag: ->
-      result = @tag
-      unless result
-        result = CSG.getTag()
-        @tag = result
-      result
-  return

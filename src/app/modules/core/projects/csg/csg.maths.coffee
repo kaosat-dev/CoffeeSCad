@@ -1408,6 +1408,82 @@ define (require)->
       newrighthandvector = rightpoint_transformed.minus(origin_transformed)
       newbasis = new CSG.OrthoNormalBasis(newplane, newrighthandvector)
       newbasis
+      
+      
+  class CSG.Vertex2D 
+    constructor : (pos) ->
+      @pos = pos
+  
+    getTag: ->
+      result = @tag
+      unless result
+        result = CSG.getTag()
+        @tag = result
+      result
+  
+  class CSG.Side 
+    constructor : (vertex0, vertex1) ->
+      #FIXME : why do these not work ?
+      #throw new Error("Assertion failed")  unless vertex0 instanceof CSG.Vertex2D
+      #throw new Error("Assertion failed")  unless vertex1 instanceof CSG.Vertex2D
+      @vertex0 = vertex0
+      @vertex1 = vertex1
+  
+    @fromFakePolygon = (polygon) ->
+      throw new Error("Assertion failed")  unless polygon.vertices.length is 4
+      pointsZeroZ = []
+      indicesZeroZ = []
+      i = 0
+    
+      while i < 4
+        pos = polygon.vertices[i].pos
+        if (pos.z >= -1.001) and (pos.z < -0.999)
+    
+        else throw new Error("Assertion failed")  unless (pos.z >= 0.999) and (pos.z < 1.001)
+        if pos.z > 0
+          pointsZeroZ.push new CSG.Vector2D(pos.x, pos.y)
+          indicesZeroZ.push i
+        i++
+      throw new Error("Assertion failed")  unless pointsZeroZ.length is 2
+      d = indicesZeroZ[1] - indicesZeroZ[0]
+      p1 = undefined
+      p2 = undefined
+      if d is 1
+        p1 = pointsZeroZ[1]
+        p2 = pointsZeroZ[0]
+      else if d is 3
+        p1 = pointsZeroZ[0]
+        p2 = pointsZeroZ[1]
+      else
+        throw new Error("Assertion failed")
+      result = new CAG.Side(new Vertex2D(p1), new Vertex2D(p2))
+      result
+  
+    toString: ->
+      "(" + @vertex0.pos.x + "," + @vertex0.pos.y + ") -> (" + @vertex1.pos.x + "," + @vertex1.pos.y + ")"
+    #    return "("+Math.round(this.vertex0.pos.x*10)/10+","+Math.round(this.vertex0.pos.y*10)/10+") -> ("+Math.round(this.vertex1.pos.x*10)/10+","+Math.round(this.vertex1.pos.y*10)/10+")";
+    
+    toPolygon3D: (z0, z1) ->
+      vertices = [new CSG.Vertex(@vertex0.pos.toVector3D(z0)), new CSG.Vertex(@vertex1.pos.toVector3D(z0)), new CSG.Vertex(@vertex1.pos.toVector3D(z1)), new CSG.Vertex(@vertex0.pos.toVector3D(z1))]
+      new CSG.Polygon(vertices)
+  
+    transform: (matrix4x4) ->
+      newp1 = @vertex0.pos.transform(matrix4x4)
+      newp2 = @vertex1.pos.transform(matrix4x4)
+      new CSG.Side(new CSG.Vertex2D(newp1), new CSG.Vertex2D(newp2))
+  
+    flipped: ->
+      new CSG.Side(@vertex1, @vertex0)
+  
+    direction: ->
+      @vertex1.pos.minus @vertex0.pos
+  
+    getTag: ->
+      result = @tag
+      unless result
+        result = CSG.getTag()
+        @tag = result
+      result
   
   return {
     "Vector3D": CSG.Vector3D
@@ -1422,4 +1498,7 @@ define (require)->
     "Path2D": CSG.Path2D
     "Matrix4x4": CSG.Matrix4x4
     "OrthoNormalBasis": CSG.OrthoNormalBasis
+    #cag
+    "Vertex2D":CSG.Vertex2D
+    "Side":CSG.Side
   }

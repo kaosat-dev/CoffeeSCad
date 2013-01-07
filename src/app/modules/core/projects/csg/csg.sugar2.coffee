@@ -2,11 +2,18 @@ define (require)->
   $ = require 'jquery'
   _ = require 'underscore'
   Backbone = require 'backbone'
-  shapes = require './csg.geometry' 
-  CSGBase= require './csg' 
-  Cube = shapes.Cube
-  Sphere = shapes.Sphere
-  Cylinder=shapes.Cylinder
+  
+  base = require './csg' 
+  CSGBase= base.CSGBase
+  
+  shapes3d = require './csg.geometry'
+  shapes2d = require './cag.geometry' 
+  
+  Cube = shapes3d.Cube
+  Sphere = shapes3d.Sphere
+  Cylinder= shapes3d.Cylinder
+  Rectangle = shapes2d.Rectangle
+  Circle = shapes2d.Circle
   
   
   try
@@ -15,6 +22,8 @@ define (require)->
     window.Cube = Cube
     window.Sphere = Sphere
     window.Cylinder = Cylinder
+    window.Rectangle = Rectangle
+    window.Circle = Circle
     
     window.CSG={}
   
