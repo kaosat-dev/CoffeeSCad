@@ -4,7 +4,7 @@ define (require) ->
   require 'bootstrap'
   #csg = require 'csg'
   THREE = require 'three'
-  THREE.CSG = require 'three_csg'
+  #THREE.CSG = require 'three_csg'
   combo_cam = require 'combo_cam'
   detector = require 'detector'
   stats = require  'stats'
@@ -15,6 +15,8 @@ define (require) ->
   threedView_template = require "text!./visualEditorView.tmpl"
   requestAnimationFrame = require 'modules/core/utils/anim'
   orbit_ctrl = require 'orbit_ctrl'
+  
+  THREE.CSG = require 'modules/core/projects/csg/csg.Three'
   
   #TODO:
   #FIXME: memory leaks: When removing objects from scene do we really need: renderer.deallocateObject(Object); ?
