@@ -771,7 +771,7 @@ define (require)->
     extrude: (offsetvector) ->
       #FIXME !!!!! WARNING, now this method returns polygons, not CSG
       # Extrude a polygon into the direction offsetvector
-      # Returns a CSG object
+      # Returns a CSG object 
       newpolygons = []
       polygon1 = this
       direction = polygon1.plane.normal.dot(offsetvector)
@@ -1082,9 +1082,9 @@ define (require)->
         pointindex = i
         pointindex = numpoints - 1  if pointindex < 0
         point = @points[pointindex]
-        vertex = new CAG.Vertex(point)
+        vertex = new CSG.Vertex2D(point)
         if i > startindex
-          side = new CAG.Side(prevvertex, vertex)
+          side = new CSG.Side(prevvertex, vertex)
           sides.push side
         prevvertex = vertex
         i++
@@ -1409,7 +1409,6 @@ define (require)->
       newbasis = new CSG.OrthoNormalBasis(newplane, newrighthandvector)
       newbasis
       
-      
   class CSG.Vertex2D 
     constructor : (pos) ->
       @pos = pos
@@ -1456,7 +1455,7 @@ define (require)->
         p2 = pointsZeroZ[1]
       else
         throw new Error("Assertion failed")
-      result = new CAG.Side(new Vertex2D(p1), new Vertex2D(p2))
+      result = new CSG.Side(new CSG.Vertex2D(p1), new CSG.Vertex2D(p2))
       result
   
     toString: ->

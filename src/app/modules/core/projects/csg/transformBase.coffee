@@ -6,7 +6,7 @@ define (require)->
   
   class TransformBase 
     # Add several convenience methods to the classes that support a transform() method:
-    mirrored = (plane) ->
+    mirrored : (plane) ->
       @transform Matrix4x4.mirroring(plane)
   
     mirroredX : ->
@@ -46,10 +46,10 @@ define (require)->
   
     rotate : (degrees, rotationCenter) ->
       rotationCenter = [0, 0, 0]  unless rotationCenter?
-      tmp = @translate(rotationCenter)
-      tmp = tmp.transform(Matrix4x4.rotationX(degrees[0]))
-      tmp = tmp.transform(Matrix4x4.rotationY(degrees[1]))
-      tmp = tmp.transform(Matrix4x4.rotationZ(degrees[2]))
-      tmp
+      @translate(rotationCenter)
+      @transform(Matrix4x4.rotationX(degrees[0]))
+      @transform(Matrix4x4.rotationY(degrees[1]))
+      @transform(Matrix4x4.rotationZ(degrees[2]))
+      @
       
   return TransformBase

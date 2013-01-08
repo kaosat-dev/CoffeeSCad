@@ -4,7 +4,8 @@ define (require)->
   Backbone = require 'backbone'
   
   base = require './csg' 
-  CSGBase= base.CSGBase
+  CSGBase = base.CSGBase
+  CAGBase = base.CAGBase
   
   shapes3d = require './csg.geometry'
   shapes2d = require './cag.geometry' 
@@ -19,6 +20,7 @@ define (require)->
   try
     #FIXME: bunch of hacks, needs cleanup
     window.CSGBase = CSGBase
+    window.CAGBase = CAGBase
     window.Cube = Cube
     window.Sphere = Sphere
     window.Cylinder = Cylinder

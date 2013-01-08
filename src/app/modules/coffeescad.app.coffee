@@ -137,38 +137,41 @@ define (require)->
         
         return sphere.union([cube2,cube3])
         """
-        content_2:"""
-        #Yeah , we can use classes!
-        class Thingy
+        content:"""
+        #Yeah , we can use classes
+        class Thingy extends CSGBase
           constructor: (@thickness=10, @pos=[0,0,0], @rot=[0,0,0]) ->
-            
-            shape1 = fromPoints [[0,0], [150,50], [0,-50]]
-            shape1.expand((20,25))
-            shape = shape.extrude
-              offset:[0, 0, @thickness]
+            super
+            shape = CAGBase.fromPoints([[0,0], [150,50], [0,-50]])
+            shape.expand(20,25)
+            shape = shape.extrude(offset:[0, 0, @thickness])
             
             cyl = new Cylinder(r:10, $fn:12, h:100, center:true)
-
-            @subtract(cyl).translate(@pos).rotate(@rot).color([1,0.5,0])
-            
         
+            @union(shape).subtract(cyl).translate(@pos).rotate(@rot).color([1,0.5,0])
+            
         #Here we create two new class instances
         thing = new Thingy(35)
         thing2 = new Thingy(25)
         
-        res = thing.clone().union(thing2).mirroredX().color([0.2,0.5,0.6]))
+        res = thing.clone().mirroredX().color([0.2,0.5,0.6]).union(thing2)
         res.rotateX(37).rotateZ(5).translate([0,0,100])
         return res
         """
-        content:"""
-        #another tes
-        circle = new Circle(r:25)
-        console.log circle
-        c= circle.extrude(offset: [0, 0, 100])
+        content__:"""
+        #another test 
+        circle = new Circle(r:25,center:[10,10])
+        rectangle = new Rectangle(size:25)
+        
+        circle.intersect(rectangle)
+        c = circle.extrude(offset: [0, 0, 100], slices:100,twist:180)
+        
+        #r = rectangle.extrude(offset: [0, 0, 120], slices:1)
+        
         ###
         tmp = new SpecialScrew()
         ###
-        return c#.color([0.9,0.2,0])
+        return c.color([0.9,0.4,0])
         """
         
           

@@ -41,10 +41,6 @@ define (require)->
         sides.push new Side(prevvertex, vertex)  if i > 0
         prevvertex = vertex
         i++
-      console.log "circle"
-      console.log radius
-      console.log resolution
-      console.log sides
       @sides = sides
   
   class Rectangle extends CAGBase
@@ -57,7 +53,7 @@ define (require)->
     constructor: (options) ->
       options = options or {}
       c = parseOptionAs2DVector(options, "center", [0, 0])
-      r = parseOptionAs2DVector(options, "radius", [1, 1])
+      r = parseOptionAs2DVector(options, "size", [1, 1])
       rswap = new Vector2D(r.x, -r.y)
       points = [c.plus(r), c.plus(rswap), c.minus(r), c.minus(rswap)]
       result = CAGBase.fromPoints points
@@ -66,22 +62,22 @@ define (require)->
   class RoundedRectangle extends CAGBase
     #     var r = CSG.roundedRectangle({
     #       center: [0, 0],
-    #       radius: [2, 1],
+    #       size: [2, 1],
     #       roundradius: 0.2,
     #       resolution: 8,
     #     });
     constructor: (options) ->
       options = options or {}
       center = parseOptionAs2DVector(options, "center", [0, 0])
-      radius = parseOptionAs2DVector(options, "radius", [1, 1])
+      radius = parseOptionAs2DVector(options, "size", [1, 1])
       roundradius = parseOptionAsFloat(options, "roundradius", 0.2)
-      resolution = parseOptionAsFloat(options, "resolution", defaultResolution2D)
+      resolution = parseOptionAsFloat(options, "$fn", defaultResolution2D)
       maxroundradius = Math.min(radius.x, radius.y)
       maxroundradius -= 0.1
       roundradius = Math.min(roundradius, maxroundradius)
       roundradius = Math.max(0, roundradius)
       radius = new Vector2D(radius.x - roundradius, radius.y - roundradius)
-      rect = CAG.rectangle(
+      rect = new Rectangle(
         center: center
         radius: radius
       )

@@ -7,6 +7,7 @@ define (require)->
   Line2D   = maths.Line2D
   OrthoNormalBasis = maths.OrthoNormalBasis
   Polygon = maths.Polygon
+  Side    = maths.Side
   
   CSG={}
 
@@ -51,8 +52,6 @@ define (require)->
     result = !!result
     result
   
-  
-
   CSG.solve2Linear = (a, b, c, d, u, v) ->
     # solve 2x2 linear equation:
     # [ab][x] = [u]
@@ -606,7 +605,8 @@ define (require)->
 
 
   class CSG.FuzzyCAGFactory
-    @vertexfactory = new CSG.FuzzyCSGFactory(2, 1e-5)
+    constructor:->
+      @vertexfactory = new CSG.fuzzyFactory(2, 1e-5)
   
     getVertex: (sourcevertex) ->
       elements = [sourcevertex.pos._x, sourcevertex.pos._y]
@@ -618,15 +618,21 @@ define (require)->
     getSide: (sourceside) ->
       vertex0 = @getVertex(sourceside.vertex0)
       vertex1 = @getVertex(sourceside.vertex1)
-      new CAG.Side(vertex0, vertex1)
+      new Side(vertex0, vertex1)
   
     getCAG: (sourcecag) ->
       _this = this
       newsides = sourcecag.sides.map((side) ->
         _this.getSide side
       )
-      CAG.fromSides newsides
+      CAGBase.fromSides newsides
       
+    getCAGSides:(sourceCag) ->
+      _this = this
+      newsides = sourceCag.sides.map((side) ->
+        _this.getSide side
+      )
+      newsides
       
   return CSG  
   ### 

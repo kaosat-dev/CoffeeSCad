@@ -4,6 +4,7 @@ define (require)->
   
   maths = require './csg.maths'
   Vertex = maths.Vertex
+  Vertex2D = maths.Vertex2D
   Vector3D = maths.Vector3D
   Polygon = maths.Polygon
   PolygonShared = maths.PolygonShared
@@ -20,9 +21,10 @@ define (require)->
   reTesselateCoplanarPolygons = utils.reTesselateCoplanarPolygons
   parseOptionAs2DVector = utils.parseOptionAs2DVector
   parseOptionAs3DVector = utils.parseOptionAs3DVector
-  parseOptionAsFloat = utils.parseOptionAs3DVector
+  parseOptionAsFloat = utils.parseOptionAsFloat
   parseOptionAsInt = utils.parseOptionAsInt
   FuzzyCSGFactory = utils.FuzzyCSGFactory
+  FuzzyCAGFactory = utils.FuzzyCAGFactory
   
   globals = require './csg.globals'
   _CSGDEBUG = globals._CSGDEBUG
@@ -307,7 +309,7 @@ define (require)->
         i++
       @
    
-    unionSub: (csg, retesselate, canonicalize) =>
+    unionSub: (csg, retesselate, canonicalize) ->
       unless @mayOverlap(csg)
         @unionForNonIntersecting csg
       else
@@ -1263,6 +1265,11 @@ define (require)->
     # Each side is a line between 2 points
     constructor: ->
       @sides = []
+      @isCanonicalized=false
+  
+    clone:->
+      newInstance = $.extend(true, {}, @)
+      return newInstance
   
     @fromSides : (sides) ->
       # Construct a CAG from a list of `Side` instances.
@@ -1358,7 +1365,7 @@ define (require)->
       polygons = @sides.map((side) ->
         side.toPolygon3D z0, z1
       )
-      CSG.fromPolygons polygons
+      CSGBase.fromPolygons polygons
   
     toDebugString1: ->
       @sides.sort (a, b) ->
@@ -1427,13 +1434,21 @@ define (require)->
         cags = [cag]
       r = @toCSG(-1, 1)
       cags.map (cag) ->
-        r = r.unionSub(cag.toCSG(-1, 1), false, false)
+        r.unionSub(cag.toCSG(-1, 1), false, false)
   
+      ###
       r = r.reTesselated()
       r = r.canonicalized()
       cag = CAGBase.fromFakeCSG(r)
       cag_canonicalized = cag.canonicalized()
       cag_canonicalized
+      ###
+      r.reTesselated()
+      r.canonicalized()
+      cag = CAGBase.fromFakeCSG(r)
+      @sides = cag.sides
+      @isCanonicalized = cag.isCanonicalized
+      @ 
   
     subtract: (cag) ->
       cags = undefined
@@ -1443,13 +1458,22 @@ define (require)->
         cags = [cag]
       r = @toCSG(-1, 1)
       cags.map (cag) ->
-        r = r.subtractSub(cag.toCSG(-1, 1), false, false)
-  
+        r.subtractSub(cag.toCSG(-1, 1), false, false)
+      ### 
       r = r.reTesselated()
       r = r.canonicalized()
       r = CAGBase.fromFakeCSG(r)
       r = r.canonicalized()
       r
+      ###
+      r.reTesselated()
+      r.canonicalized()
+      r = CAGBase.fromFakeCSG(r)
+      r.canonicalized()
+      @sides = r.sides
+      @isCanonicalized = cag.isCanonicalized
+      @
+      
   
     intersect: (cag) ->
       cags = undefined
@@ -1459,22 +1483,30 @@ define (require)->
         cags = [cag]
       r = @toCSG(-1, 1)
       cags.map (cag) ->
-        r = r.intersectSub(cag.toCSG(-1, 1), false, false)
+        r.intersectSub(cag.toCSG(-1, 1), false, false)
   
-      r = r.reTesselated()
-      r = r.canonicalized()
+      r.reTesselated()
+      r.canonicalized()
       r = CAGBase.fromFakeCSG(r)
-      r = r.canonicalized()
-      r
+      r.canonicalized()
+      @sides = r.sides
+      @isCanonicalized = cag.isCanonicalized
+      @
+      
   
     transform: (matrix4x4) ->
       ismirror = matrix4x4.isMirroring()
       newsides = @sides.map((side) ->
         side.transform matrix4x4
       )
+      ###
       result = CAGBase.fromSides(newsides)
       result = result.flipped()  if ismirror
       result
+      ###
+      @sides = newsides
+      @flipped() if ismirror
+      @
       
     area: ->
       # see http://local.wasp.uwa.edu.au/~pbourke/geometry/polyarea/ :
@@ -1490,8 +1522,14 @@ define (require)->
       newsides = @sides.map((side) ->
         side.flipped()
       )
+      ###
       newsides.reverse()
       CAGBase.fromSides newsides
+      ###
+      @sides = newsides
+      @sides.reverse()
+      @
+
   
     getBounds: ->
       minpoint = undefined
@@ -1598,22 +1636,20 @@ define (require)->
       result
   
     expand: (radius, resolution) ->
-      result = @union(@expandedShell(radius, resolution))
-      result
+      @union(@expandedShell(radius, resolution))
+      @
   
     contract: (radius, resolution) ->
-      result = @subtract(@expandedShell(radius, resolution))
-      result
+      @subtract(@expandedShell(radius, resolution))
+      @
   
     extrude: (options) ->
       # extruded=cag.extrude({offset: [0,0,10], twistangle: 360, twiststeps: 100});
       # linear extrusion of 2D shape, with optional twist
-      # The 2d shape is placed in z=0 plane and extruded into direction <offset> (a CSG.Vector3D)
+      # The 2d shape is placed in z=0 plane and extruded into direction <offset> (a Vector3D)
       # The final face is rotated <twistangle> degrees. Rotation is done around the origin of the 2d shape (i.e. x=0, y=0)
       # twiststeps determines the resolution of the twist (should be >= 1)  
       # returns a CSG object
-      
-      # empty!
       return new CSGBase()  if @sides.length is 0
       offsetvector = parseOptionAs3DVector(options, "offset", [0, 0, 1])
       twistangle = parseOptionAsFloat(options, "twist", 0)
@@ -1627,24 +1663,23 @@ define (require)->
   
       while step <= twiststeps
         stepfraction = step / twiststeps
-        transformedcag = this
+        transformedcag = this.clone()
         angle = twistangle * stepfraction
         transformedcag = transformedcag.rotateZ(angle)  unless angle is 0
-        translatevector = new CSG.Vector2D(offsetvector.x, offsetvector.y).times(stepfraction)
+        translatevector = new Vector2D(offsetvector.x, offsetvector.y).times(stepfraction)
         transformedcag = transformedcag.translate(translatevector)
         bounds = transformedcag.getBounds()
-        bounds[0] = bounds[0].minus(new CSG.Vector2D(1, 1))
-        bounds[1] = bounds[1].plus(new CSG.Vector2D(1, 1))
+        bounds[0] = bounds[0].minus(new Vector2D(1, 1))
+        bounds[1] = bounds[1].plus(new Vector2D(1, 1))
         stepz = offsetvector.z * stepfraction
         if (step is 0) or (step is twiststeps)
-          
           # bottom or top face:
           csgshell = transformedcag.toCSG(stepz - 1, stepz + 1)
-          csgplane = CSG.fromPolygons([new CSG.Polygon([new CSG.Vertex(new CSG.Vector3D(bounds[0].x, bounds[0].y, stepz)), new CSG.Vertex(new CSG.Vector3D(bounds[1].x, bounds[0].y, stepz)), new CSG.Vertex(new CSG.Vector3D(bounds[1].x, bounds[1].y, stepz)), new CSG.Vertex(new CSG.Vector3D(bounds[0].x, bounds[1].y, stepz))])])
+          csgplane = CSGBase.fromPolygons([new Polygon([new Vertex(new Vector3D(bounds[0].x, bounds[0].y, stepz)), new Vertex(new Vector3D(bounds[1].x, bounds[0].y, stepz)), new Vertex(new Vector3D(bounds[1].x, bounds[1].y, stepz)), new Vertex(new Vector3D(bounds[0].x, bounds[1].y, stepz))])])
           flip = (step is 0)
           flip = not flip  if offsetvector.z < 0
-          csgplane = csgplane.inverse()  if flip
-          csgplane = csgplane.intersect(csgshell)
+          csgplane.inverse()  if flip
+          csgplane.intersect(csgshell)
           
           # only keep the polygons in the z plane:
           csgplane.polygons.map (polygon) ->
@@ -1657,8 +1692,10 @@ define (require)->
           while sideindex < numsides
             thisside = transformedcag.sides[sideindex]
             prevside = prevtransformedcag.sides[sideindex]
-            p1 = new CSG.Polygon([new CSG.Vertex(thisside.vertex1.pos.toVector3D(stepz)), new CSG.Vertex(thisside.vertex0.pos.toVector3D(stepz)), new CSG.Vertex(prevside.vertex0.pos.toVector3D(prevstepz))])
-            p2 = new CSG.Polygon([new CSG.Vertex(thisside.vertex1.pos.toVector3D(stepz)), new CSG.Vertex(prevside.vertex0.pos.toVector3D(prevstepz)), new CSG.Vertex(prevside.vertex1.pos.toVector3D(prevstepz))])
+            #FIXME: see if it is possible to solve the weird triangle structure visual glitches by changing these
+            p1 = new Polygon([new Vertex(thisside.vertex1.pos.toVector3D(stepz)), new Vertex(thisside.vertex0.pos.toVector3D(stepz)), new Vertex(prevside.vertex0.pos.toVector3D(prevstepz))])
+            p2 = new Polygon([new Vertex(thisside.vertex1.pos.toVector3D(stepz)), new Vertex(prevside.vertex0.pos.toVector3D(prevstepz)), new Vertex(prevside.vertex1.pos.toVector3D(prevstepz))])
+            
             if offsetvector.z < 0
               p1 = p1.flipped()
               p2 = p2.flipped()
@@ -1669,7 +1706,7 @@ define (require)->
         prevstepz = stepz
         step++
       # for step  
-      CSG.fromPolygons newpolygons
+      CSGBase.fromPolygons newpolygons
     
     check: ->
       # check if we are a valid CAG (for debugging)
@@ -1698,12 +1735,12 @@ define (require)->
   
     canonicalized: ->
       if @isCanonicalized
-        this
+        return @
       else
         factory = new FuzzyCAGFactory()
-        result = factory.getCAG(this)
-        result.isCanonicalized = true
-        result
+        @polygons = factory.getCAGSides(@)
+        @isCanonicalized = true
+        @
   
     getOutlinePaths: ->
       cag = @canonicalized()
@@ -1780,7 +1817,6 @@ define (require)->
         return false  if Math.abs(d0.cross(d1)) < 1e-9 # lines are parallel
         alphas = CSG.solve2Linear(-d0.x, d1.x, -d0.y, d1.y, p0start.x - p1start.x, p0start.y - p1start.y)
         return true  if (alphas[0] > 1e-6) and (alphas[0] < 0.999999) and (alphas[1] > 1e-5) and (alphas[1] < 0.999999)
-      
       #    if( (alphas[0] >= 0) && (alphas[0] <= 1) && (alphas[1] >= 0) && (alphas[1] <= 1) ) return true;
       false
       
