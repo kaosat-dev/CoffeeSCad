@@ -1,4 +1,5 @@
 define (require) ->
+  THREE = require 'three'
   #
   #    THREE.CSG
   # @author Chandler Prall <chandler.prall@gmail.com> http://chandler.prallfamily.com
@@ -156,13 +157,50 @@ define (require) ->
           j++
         i++
         
+      
+      connectors = []
+      searchForConnectors = (obj)->
+        for index, prop of obj
+          if (typeof prop) != "function"
+            #console.log prop
+            #console.log "type "+ typeof prop
+            if prop.constructor.name is "Connector"
+              #console.log "connector"
+              connector = {}
+              point = prop.point
+              axisvector = prop.axisvector
+              geometry = new THREE.CubeGeometry(10,10,10)
+              geometry.basePoint = new THREE.Vector3(point.x, point.y, point.z)
+             
+              ###
+              geometry = new THREE.Geometry()
+              geometry.vertices.push(new THREE.Vector3(point.x, point.y, point.z))
+              end = new THREE.Vector3(point.x+axisvector.x, point.y+axisvector.y, point.z+axisvector.z)
+              end.multiplyScalar(3)
+              geometry.vertices.push(end)
+              ###
+              
+              connectors.push(geometry)
+            ###
+            try
+              if "point" of prop
+                #console.log "haspoint"
+            catch error
+            ###
+            searchForConnectors(prop)
+      
+      searchForConnectors(properties)
+      ###   
       for index, prop of properties
         if (typeof prop) != "function"
           console.log "property"
           console.log prop
-          for i,p of prop
-            console.log typeof prop
-        
+          if "axisvector" of prop
+            console.log "blaaaah"
+          #for i,p of prop
+          #  console.log typeof prop
+      ###
+      three_geometry.connectors  = connectors
       three_geometry.computeBoundingBox()
       three_geometry
   

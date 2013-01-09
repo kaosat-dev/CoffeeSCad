@@ -137,7 +137,7 @@ define (require)->
         
         return sphere.union([cube2,cube3])
         """
-        content:"""
+        content____:"""
         #Yeah , we can use classes
         class Thingy extends CSGBase
           constructor: (@thickness=10, @pos=[0,0,0], @rot=[0,0,0]) ->
@@ -174,7 +174,27 @@ define (require)->
         return c.color([0.9,0.4,0])
         """
         
-          
+        contentzer:"""
+        #bla
+        cube = new Cube(size: 100)
+        
+        cube2 = cube.clone()
+        cube.rotate([50,50,0]).translate([2,1,50])
+        
+        
+        return cube.union(cube2)
+        """
+        content:"""
+        #2d hull
+        circle = new Circle(r:10,center:[0,0])
+        rectangle = new Rectangle(size:20)
+        
+        hulled = CAGBase.hull(circle,rectangle)
+        hulled = circle.extrude(offset: [0, 0, 100])
+        
+        return hulled.color([0.9,0.4,0])
+        """
+        
       @project.create_part
         name:"assembly"
       @project.create_part

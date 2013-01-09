@@ -1,5 +1,6 @@
 define (require)->
   
+  #set of "global methods"
   union = (csg)->
     csgs = undefined
     if csg instanceof Array
@@ -21,3 +22,4 @@ define (require)->
       csgs = [csg]
     for csg in csgs
       csg.transform Matrix4x4.scaling(f)
+

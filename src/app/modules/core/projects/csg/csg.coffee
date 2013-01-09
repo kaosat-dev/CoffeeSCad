@@ -1300,6 +1300,80 @@ define (require)->
       result = result.flipped()  if area < 0
       result = result.canonicalized()
       result
+    
+    @hull : (cag) ->
+      #quickhull hull implementation experiment
+      #see here http://westhoffswelt.de/blog/0040_quickhull_introduction_and_php_implementation.html/
+      cags = undefined
+      if cag instanceof Array
+        cags = cag
+      else
+        cags = [cag]
+      
+      pts = []
+      #--------------------------------------
+      #First two points on the convex hull
+      minPoint = {x:+Infinity,y:0}
+      maxPoint = {x:-Infinity,y:0}
+      cags.map (cag) ->
+        for side in cag.sides
+          v0 = side.vertex0.pos
+          v1 = side.vertex1.pos
+            
+          if v0.x<minPoint.x
+            console.log "her"
+            minPoint = v0
+          if v0.x>maxPoint.x
+            maxPoint = v0
+          if v1.x<minPoint.x
+            minPoint=v1
+          if v1.x>maxPoint.x
+            maxPoint = v1
+            
+          pts.push(side.vertex0.pos)
+          pts.push(side.vertex1.pos)
+     
+      sign=(a,b,c)->
+          return ((b.x - a.x)*(c.y - a.y) - (b.y - a.y)*(c.x - a.x))
+      console.log "found min: #{minPoint} and max: #{maxPoint}"
+      #--------------------------------------
+      #divide into two sets of point : on the left and right from the line created by minPoint->maxPoint
+      rightSet = []
+      leftSet = []
+      for point in pts
+        #console.log "point #{point}"
+        xp = sign(minPoint,maxPoint,point)
+        if xp > 0
+            #console.log 'on left side'
+            leftSet.push(point)
+        else if xp < 0
+            #console.log 'on right side'
+            rightSet.push(point)
+        else
+            #console.log 'on the same line!'
+            rightSet.push(point)
+      console.log "left:"
+      console.log leftSet
+      console.log "right:"
+      console.log rightSet
+      #--------------------------------------
+      #max distance search
+      maxDistPoint = null
+      
+      #--------------------------------------
+      #Point exclusion
+      PointInTriangle = (pt, v1, v2, v3)->
+        b1 = sign(pt, v1, v2) < 0.0
+        b2 = sign(pt, v2, v3) < 0.0
+        b3 = sign(pt, v3, v1) < 0.0
+        return ((b1 == b2) and (b2 == b3))
+      for point in leftSet
+        if PointInTriangle(point, maxDistPoint, minPoint, maxPoint)
+      
+      for point in rightSet
+      
+      result = new CAGBase()
+      result
   
     @fromPointsNoCheck : (points) ->
       # Like CAGBase.fromPoints but does not check if it's a valid polygon.
@@ -1436,13 +1510,6 @@ define (require)->
       cags.map (cag) ->
         r.unionSub(cag.toCSG(-1, 1), false, false)
   
-      ###
-      r = r.reTesselated()
-      r = r.canonicalized()
-      cag = CAGBase.fromFakeCSG(r)
-      cag_canonicalized = cag.canonicalized()
-      cag_canonicalized
-      ###
       r.reTesselated()
       r.canonicalized()
       cag = CAGBase.fromFakeCSG(r)
@@ -1459,13 +1526,6 @@ define (require)->
       r = @toCSG(-1, 1)
       cags.map (cag) ->
         r.subtractSub(cag.toCSG(-1, 1), false, false)
-      ### 
-      r = r.reTesselated()
-      r = r.canonicalized()
-      r = CAGBase.fromFakeCSG(r)
-      r = r.canonicalized()
-      r
-      ###
       r.reTesselated()
       r.canonicalized()
       r = CAGBase.fromFakeCSG(r)
@@ -1499,11 +1559,7 @@ define (require)->
       newsides = @sides.map((side) ->
         side.transform matrix4x4
       )
-      ###
-      result = CAGBase.fromSides(newsides)
-      result = result.flipped()  if ismirror
-      result
-      ###
+
       @sides = newsides
       @flipped() if ismirror
       @

@@ -21,8 +21,6 @@ define (require) ->
   #TODO:
   #FIXME: memory leaks: When removing objects from scene do we really need: renderer.deallocateObject(Object); ?
   
-  #just for testing
-  
   class MyAxisHelper
     constructor:(size, xcolor, ycolor, zcolor)->
       geometry = new THREE.Geometry()
@@ -505,7 +503,7 @@ define (require) ->
     configure:(settings)=>
       if settings.get("renderer")
           renderer = settings.get("renderer")
-          if renderer =="webgl"
+          if renderer == "webgl"
             if detector.webgl
               console.log "Gl Renderer"
               @renderer = new THREE.WebGLRenderer 
@@ -1183,12 +1181,17 @@ define (require) ->
     fromCsg:(csg)=>
       CsgProcessor  = require 'modules/core/projects/csg/csg.processor'
       resultCSG = new CsgProcessor().processScript(@model.get("content"))
+      
       @model.csg = resultCSG #FIXME: remove this at all costs (needs overall reorganization perhaps), but a view should not modify a model like this ? or should it?
       
       geom = THREE.CSG.fromCSG(resultCSG)
       shine= 1500
       spec= 10000000000
-      mat = new THREE.MeshPhongMaterial({color:  0xFFFFFF , shading: THREE.SmoothShading,  shininess: shine, specular: spec, metal: true, vertexColors: THREE.VertexColors}) 
+      if @renderer instanceof THREE.CanvasRenderer
+        mat = new THREE.MeshLambertMaterial({color:  0xFFFFFF}) 
+        mat.overdraw = true
+      else 
+        mat = new THREE.MeshPhongMaterial({color:  0xFFFFFF , shading: THREE.SmoothShading,  shininess: shine, specular: spec, metal: true, vertexColors: THREE.VertexColors}) 
       
       if @mesh?
         @scene.remove @mesh
@@ -1202,11 +1205,27 @@ define (require) ->
       @mesh.material.wireframe = @settings.get("wireframe")
       @mesh.name = "CSG_OBJ"
       
+      if @settings.get("showConnectors") is true
+        for i, conn of geom.connectors
+          ###
+          mat =  new THREE.LineBasicMaterial({color: 0xff0000})
+          line = new THREE.Line(conn, mat)
+          @mesh.add line
+          ###
+          mat =  new THREE.MeshLambertMaterial({color: 0xff0000})
+          mesh = new THREE.Mesh(conn, mat)
+          
+          mesh.position = conn.basePoint
+          @mesh.add mesh   
+        
+      @mesh.doubleSided = true
+      
+      console.log @mesh
+      
       @scene.add @mesh
       @controller.objects = [@mesh]
 
       @vent.trigger("parseCsgDone", @)
-      console.log "bleh"
       @_render()
       
     fromCsg_:(csg)=>

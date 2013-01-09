@@ -3,6 +3,7 @@ define (require)->
   Vector3D = csgMaths.Vector3D
   CSG={}
   
+  
   class CSG.Properties
     # # Class Properties
     # This class is used to store properties of a solid
@@ -86,13 +87,19 @@ define (require)->
       # make the normal vector truly normal:
       n = @normalvector.cross(axisvector).unit()
       normalvector = axisvector.cross(n)
-      new CSG.Connector(@point, axisvector, normalvector)
+      @axisvector = axisvector
+      @normalvector = normalvector
+      @
   
     transform: (matrix4x4) ->
       point = @point.multiply4x4(matrix4x4)
       axisvector = @point.plus(@axisvector).multiply4x4(matrix4x4).minus(point)
       normalvector = @point.plus(@normalvector).multiply4x4(matrix4x4).minus(point)
-      new CSG.Connector(point, axisvector, normalvector)
+      #new CSG.Connector(point, axisvector, normalvector)
+      @point = point
+      @axisvector = axisvector
+      @normalvector = normalvector
+      @
     
     getTransformationTo: (other, mirror, normalrotation) ->
       # Get the transformation matrix to connect this Connector to another connector

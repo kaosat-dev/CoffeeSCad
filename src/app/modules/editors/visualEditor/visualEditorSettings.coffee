@@ -20,6 +20,8 @@ define (require)->
         
         showAxes     : true
         
+        showConnectors: false
+        
         showGrid     : true
         gridSize     : 1000
         gridStep     : 100
