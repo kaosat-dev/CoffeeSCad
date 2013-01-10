@@ -54,6 +54,8 @@ define (require)->
       options = options or {}
       c = parseOptionAs2DVector(options, "center", [0, 0])
       r = parseOptionAs2DVector(options, "size", [1, 1])
+      #TODO:remove the hack below
+      r = r.dividedBy(2)
       rswap = new Vector2D(r.x, -r.y)
       points = [c.plus(r), c.plus(rswap), c.minus(r), c.minus(rswap)]
       result = CAGBase.fromPoints points

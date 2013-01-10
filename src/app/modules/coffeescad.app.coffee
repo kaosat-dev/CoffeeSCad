@@ -186,11 +186,13 @@ define (require)->
         """
         content:"""
         #2d hull
-        circle = new Circle(r:10,center:[0,0])
+        #circle = new Circle(r:10,center:[0,0])
         rectangle = new Rectangle(size:20)
+        rectangle2 = new Rectangle(size:20)
+        rectangle2.translate([100,0,0])
         
-        hulled = CAGBase.hull(circle,rectangle)
-        hulled = circle.extrude(offset: [0, 0, 100])
+        hulled = CAGBase.hull(rectangle,rectangle2)
+        hulled = hulled.extrude(offset: [0, 0, 100])
         
         return hulled.color([0.9,0.4,0])
         """

@@ -51,18 +51,6 @@ define (require)->
       result = false  if result is 0
     result = !!result
     result
-  
-  CSG.solve2Linear = (a, b, c, d, u, v) ->
-    # solve 2x2 linear equation:
-    # [ab][x] = [u]
-    # [cd][y]   [v]
-    det = a * d - b * c
-    invdet = 1.0 / det
-    x = u * d - b * v
-    y = -u * c + a * v
-    x *= invdet
-    y *= invdet
-    [x, y]
     
   insertSorted = (array, element, comparefunc) ->
     leftbound = 0

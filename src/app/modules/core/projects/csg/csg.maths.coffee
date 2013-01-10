@@ -12,6 +12,19 @@ define (require)->
   CSG.IsFloat = (n) ->
     (not isNaN(n)) or (n is Infinity) or (n is -Infinity)
   
+  CSG.solve2Linear = (a, b, c, d, u, v) ->
+    # solve 2x2 linear equation:
+    # [ab][x] = [u]
+    # [cd][y]   [v]
+    det = a * d - b * c
+    invdet = 1.0 / det
+    x = u * d - b * v
+    y = -u * c + a * v
+    x *= invdet
+    y *= invdet
+    [x, y]
+  
+  
   class  CSG.Vector2D 
     # Represents a 2 element vector
     constructor : (x, y) ->
@@ -1497,6 +1510,7 @@ define (require)->
     "Path2D": CSG.Path2D
     "Matrix4x4": CSG.Matrix4x4
     "OrthoNormalBasis": CSG.OrthoNormalBasis
+    "solve2Linear":CSG.solve2Linear
     #cag
     "Vertex2D":CSG.Vertex2D
     "Side":CSG.Side
