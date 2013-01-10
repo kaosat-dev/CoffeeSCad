@@ -184,14 +184,26 @@ define (require)->
         
         return cube.union(cube2)
         """
-        content:"""
+        contentdfg:"""
         #2d hull
         #circle = new Circle(r:10,center:[0,0])
         rectangle = new Rectangle(size:50)
         rectangle2 = new Rectangle(size:20)
         rectangle2.translate([100,0,0])
         
-        hulled = CAGBase.hull(rectangle,rectangle2)
+        hulled = quickHull2d(rectangle,rectangle2)
+        hulled = hulled.extrude(offset: [0, 0, 100])
+        
+        return hulled.color([0.9,0.4,0])
+        """
+        content:"""
+        #2d hull
+        circle = new Circle(r:25,center:[0,0],$fn:10)
+        rectangle = new Rectangle(size:20)
+        rectangle2 = new Rectangle(size:20)
+        rectangle2.translate([100,0,0])
+        circle.translate([0,-25,0])
+        hulled = quickHull2d(circle,rectangle2)
         hulled = hulled.extrude(offset: [0, 0, 100])
         
         return hulled.color([0.9,0.4,0])

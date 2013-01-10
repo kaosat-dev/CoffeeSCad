@@ -16,6 +16,8 @@ define (require)->
   Rectangle = shapes2d.Rectangle
   Circle = shapes2d.Circle
   
+  extras = require './extras'
+  quickHull2d = extras.quickHull2d
   
   try
     #FIXME: bunch of hacks, needs cleanup
@@ -26,6 +28,8 @@ define (require)->
     window.Cylinder = Cylinder
     window.Rectangle = Rectangle
     window.Circle = Circle
+    
+    window.quickHull2d = quickHull2d
     
     window.CSG={}
   
