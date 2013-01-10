@@ -187,7 +187,7 @@ define (require)->
         content:"""
         #2d hull
         #circle = new Circle(r:10,center:[0,0])
-        rectangle = new Rectangle(size:20)
+        rectangle = new Rectangle(size:50)
         rectangle2 = new Rectangle(size:20)
         rectangle2.translate([100,0,0])
         
