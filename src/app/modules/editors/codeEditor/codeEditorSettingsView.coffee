@@ -5,12 +5,7 @@ define (require)->
   marionette  = require 'marionette'
   forms       = require 'forms'
   forms_bstrap= require 'forms_bootstrap'
-  s_template  = require "text!templates/settings.tmpl"
-  sh_template = require "text!templates/settingsHeader.tmpl"
-  sha_template = require "text!templates/settingsHeaderAll.tmpl"
   
-  sc_template = require "text!templates/settingsContent.tmpl"
-  sca_template = require "text!templates/settingsContentAll.tmpl"
   
   class EditorSettingsForm extends Backbone.Form
 

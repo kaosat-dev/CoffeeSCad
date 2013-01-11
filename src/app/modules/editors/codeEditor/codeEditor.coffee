@@ -5,9 +5,11 @@ define (require)->
   marionette = require 'marionette'
   
   vent = require 'modules/core/vent'
+  reqRes = require 'modules/core/reqRes'
   Project = require 'modules/core/projects/project'
   
   CodeEditorSettings = require './codeEditorSettings'
+  CodeEditorSettingsView = require './codeEditorSettingsView'
   CodeEditorRouter = require "./codeEditorRouter"
   CodeEditorView = require './multiFileView'
   
@@ -34,10 +36,14 @@ define (require)->
     init:=>
       @addInitializer ->
         @vent.trigger "app:started", "#{@title}"
+      
+      reqRes.addHandler "foo", ()->
+        res = new CodeEditorSettingsView({model:@settings})
+        return "foo requested. CODE EDITOR RESPONDING "
         
     onStart:()=>
       @mainRegion.show new CodeEditorView 
         model:    @project
         settings: @settings
-      
+  
   return CodeEditor

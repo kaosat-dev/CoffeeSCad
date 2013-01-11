@@ -2,7 +2,6 @@ define (require)->
   $ = require 'jquery'
   _ = require 'underscore'
   Backbone = require 'backbone'
-  LocalStorage = require 'localstorage'
   
   
   class CodeEditorSettings extends Backbone.Model

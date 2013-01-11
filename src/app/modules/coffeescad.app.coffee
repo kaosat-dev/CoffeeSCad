@@ -1,36 +1,21 @@
-###
-Documentation functions
-=======================
-
-These functions extract relevant documentation info from AST nodes as returned
-by the coffeescript parser.
-###
-
 define (require)->
   $ = require 'jquery'
   _ = require 'underscore'
   marionette = require 'marionette'
   
   vent = require './core/vent'
+  Settings = require './core/settings/settings'
   
-  contentTemplate = require "text!./core/content.tmpl"
   MenuView = require './core/menuView'
-  Project = require "./core/projects/project"  
+  Project = require './core/projects/project'
   
-  class MainLayout extends Backbone.Marionette.Layout
-    template: contentTemplate
-    regions:
-      menu:    "#menu"
-      content: "#content"
-      
-    constructor:(options)->
-      super options
-      @headerRegion.show @layout
-      
+  SettingsView = require './core/settings/settingsView'
+  ModalRegion = require './core/utils/modalRegion' 
+  
+
   class CoffeeScadApp extends Backbone.Marionette.Application
     ###
-    This docstring documents MyClass. It can include *Markdown* syntax,
-    which will be converted to html.
+    Main application class, gets instanciated only once on startup
     ###
     root: "/CoffeeSCad/index.html/"
     title: "Coffeescad"
@@ -41,12 +26,14 @@ define (require)->
     constructor:(options)->
       super options
       @vent = vent
+      @settings = new Settings()
       @addRegions @regions
         
       @on("initialize:before",@onInitializeBefore)
       @on("initialize:after",@onInitializeAfter)
       @on("start", @onStart)
       @vent.on("app:started", @onAppStarted)
+      @vent.on("settings:show", @onSettingsShow)
       
       @initLayout()
       @initData()
@@ -59,7 +46,6 @@ define (require)->
       ###
     initLayout:=>
       @menuView = new MenuView()
-      #@layout = new MainLayout()
       @headerRegion.show @menuView
     
     initSettings:->
@@ -235,6 +221,16 @@ define (require)->
       
     onAppStarted:(appName)->
       console.log "I see app: #{appName} has started"
+      
+    onSettingsShow:()->
+      console.log "showing settings"
+      Settings = require './core/settings/settings'
+      settings = new Settings()
+      settingsView = new SettingsView
+        model : settings 
+      
+      modReg = new ModalRegion({elName:"settings"})
+      modReg.show settingsView
       
     onInitializeBefore:()->
       console.log "before init"

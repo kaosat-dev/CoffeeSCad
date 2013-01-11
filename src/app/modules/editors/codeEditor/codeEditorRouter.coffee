@@ -3,7 +3,10 @@ define (require)->
   _ = require 'underscore'
   Backbone = require 'backbone'
   marionette = require 'marionette'
+  
   vent = require 'modules/core/vent'
+  reqRes = require 'modules/core/reqRes'#request response system , see backbone marionnette docs
+  
   
   class CodeEditorRouter extends Backbone.Marionette.AppRouter
     #appRoutes: 

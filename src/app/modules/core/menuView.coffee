@@ -62,9 +62,10 @@ define (require)->
     
     
   class ExportersView extends Backbone.Marionette.CollectionView
-    
-  
+   
+   
   class AboutView 
+  
   
   class MainMenuView extends Backbone.Marionette.Layout
     template: mainMenu_template
@@ -83,7 +84,9 @@ define (require)->
       "click .undo":          "onUndoClicked"
       "click .redo":          "onRedoClicked"
       
-      "click .showEditor":    ()->vent.trigger("showEditor")
+      "click .settings":      ()->vent.trigger("settings:show")
+      
+      "click .showEditor":    ()->vent.trigger("codeEditor:show")
       
     constructor:(options)->
       super options

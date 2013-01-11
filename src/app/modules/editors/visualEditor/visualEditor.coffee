@@ -5,11 +5,14 @@ define (require)->
   marionette = require 'marionette'
   
   vent = require 'modules/core/vent'
+  reqRes = require 'modules/core/reqRes'
   Project = require 'modules/core/projects/project'
   
   VisualEditorSettings = require './visualEditorSettings'
+  VisualEditorSettingsView = require './visualEditorSettingsView'
   VisualEditorRouter = require "./visualEditorRouter"
   VisualEditorView = require './visualEditorView'
+  
   
   class VisualEditor extends Backbone.Marionette.Application
     title: "VisualEditor"
@@ -32,6 +35,8 @@ define (require)->
     init:=>
       @addInitializer ->
         @vent.trigger "app:started", "#{@title}"
+      reqRes.addHandler "foo", ()->
+        return "foo requested. VISUAL EDITOR RESPONDING"
         
     onStart:()=>
       @mainRegion.show new VisualEditorView 
