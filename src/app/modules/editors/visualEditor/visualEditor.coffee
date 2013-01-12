@@ -22,6 +22,7 @@ define (require)->
     constructor:(options)->
       super options
       
+      @appSettings = options.appSettings ? null
       @settings = options.settings ? new VisualEditorSettings()
       @project= options.project ? new Project()
       @vent = vent
@@ -33,10 +34,14 @@ define (require)->
       @addRegions @regions
       
     init:=>
+      if @appSettings?
+        @appSettings.registerSettingClass("VisualEditor", VisualEditorSettings)
+      
       @addInitializer ->
         @vent.trigger "app:started", "#{@title}"
-      reqRes.addHandler "foo", ()->
-        return "foo requested. VISUAL EDITOR RESPONDING"
+        
+      reqRes.addHandler "VisualEditorSettingsView", ()->
+        return VisualEditorSettingsView
         
     onStart:()=>
       @mainRegion.show new VisualEditorView 

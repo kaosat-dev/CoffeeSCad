@@ -25,11 +25,16 @@ define (require)->
     registerSettingClass:(settingName, settingClass)->
       #register a new setting class by name (a setting object containing params for a specific sub app)
       @settingNames[settingName] = settingClass
+      #yuck
+      @add new settingClass()
+      @            
     
     parse: (response)=>
       #TODO yuck, do we really need custom classes for each piece of settings?
       for i, v of response
         response[i]= new  @settingNames[v.name](v)
+        
+        ###
         switch v.name
           when "General"
             response[i]= new  GeneralSettings(v)
@@ -41,6 +46,7 @@ define (require)->
             response[i]= new  KeyBindings(v)
           when "Gists"
             response[i]= new  GitHubSettings(v)
+       ###
       return response
       
     clear:()=>
@@ -57,8 +63,8 @@ define (require)->
       console.log "_____________"
       ###
       
-    byName:(name)->
-      """Return a specific setting by name"""
+    getByName:(name)->
+      """Return a specific sub setting by name"""
       result = this.filter (setting)->
         return setting.get('name')==name
       return result[0]

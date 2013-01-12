@@ -1258,8 +1258,8 @@ define (require) ->
         @mesh.material.wireframe = @settings.get("wireframe")
         @mesh.name = "CSG_OBJ"
         
-        ###TOTALLY useless, and slow, mirror effect 
-        resultCSG = app.csgProcessor.processScript(@model.get("content")+".mirroredZ()")
+        #TOTALLY useless, and slow, mirror effect 
+        resultCSG = new CsgProcessor().processScript(@model.get("content")+".mirroredZ()")
         geom = THREE.CSG.fromCSG(resultCSG)
         mat = new THREE.MeshPhongMaterial({color:  0xFFFFFF , shading: THREE.SmoothShading,  shininess: shine, specular: spec, metal: true, vertexColors: THREE.VertexColors}) 
         mat.opacity = 0.5
@@ -1267,7 +1267,7 @@ define (require) ->
         #mirrormesh.rotation.set(0,90,0)
         #mirrormesh.position.set(@mesh.position.x,@mesh.position.y,-@mesh.position.z-50)
         @mesh.add mirrormesh
-        ###
+        
         
         
         @scene.add @mesh

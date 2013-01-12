@@ -33,15 +33,8 @@ define (require)->
     
     constructor:(options) ->
       super options
-      @app = require 'app'
     
     onRender:()=>
-      results = reqRes.request("foo")
-      console.log reqRes
-      console.log "GOT REQUEST RESULT"
-      console.log results
-      console.log reqRes
-      
       #show tab nav
       sHeaderView = new SettingHeader
         collection: @model
@@ -49,6 +42,7 @@ define (require)->
       #show tab panes
       sContentView = new SettingContent
         collection: @model
+        
       @tabContent.show sContentView
 
       $(@ui.tabHeaders).find('li:first').addClass('active')
@@ -57,6 +51,67 @@ define (require)->
       defaultItem.removeClass('fade')
  
   #-------------------------------------------------------------------#   
+
+  class SettingHeaderItemView extends Backbone.Marionette.ItemView
+    template: sh_template
+    tagName: "li"
+  
+  
+  class SettingHeader extends Backbone.Marionette.CompositeView
+    itemView: SettingHeaderItemView
+    tagName: "ul"
+    template: sha_template
+    itemViewContainer: "#settingsHeaderUl"
+    ui:
+      globalContainer: "#settingsHeaderUl"
+    
+    constructor:(options) ->
+      super options
+      
+    onRender:()=>
+      $(@ui.globalContainer).find('li:first').tab('show')
+
+
+  class SettingContentItemView extends Backbone.Marionette.ItemView
+    template: sc_template
+    
+    onRender:()=>
+      @$el.addClass("tab-pane")
+      @$el.addClass("fade")
+      @$el.attr('id',@model.get("name"))
+    
+  class SettingContent extends Backbone.Marionette.CompositeView
+    itemView: SettingContentItemView
+    template: sca_template
+    itemViewContainer: "#settingsContentAll"
+    
+    constructor:(options) ->
+      super options
+      @forms = []
+      @specificViews =   
+        "GeneralSettings":  GeneralSettingsWrapper
+        #"KeyBindings"   :   KeyBindingsWrapper
+
+    getItemView: (item) =>
+      view = SettingContentItemView
+      if item?
+        try
+          if @specificViews.hasOwnProperty(item.constructor.name)
+            view = @specificViews[item.constructor.name]
+          else
+            #here we send a "request/response to get the correct view (decoupling)"
+            name = item.get("name")
+            view = reqRes.request("#{name}SettingsView")
+        catch error 
+          console.log "error: #{error}"
+      return view
+        
+    onRender:()=>
+      for index, childView of @children
+        if childView.wrappedForm?
+          @forms.push(childView.wrappedForm)
+ 
+ 
   class GeneralSettingsForm extends Backbone.Form
 
     constructor:(options)->
@@ -84,60 +139,5 @@ define (require)->
       @$el.addClass("fade")
       @$el.attr('id',@model.get("name"))
       return @el    
-      
-  class SettingHeaderItemView extends Backbone.Marionette.ItemView
-    template: sh_template
-    tagName: "li"
-  
-  class SettingHeader extends Backbone.Marionette.CompositeView
-    itemView: SettingHeaderItemView
-    tagName: "ul"
-    template: sha_template
-    itemViewContainer: "#settingsHeaderUl"
-    ui:
-      globalContainer: "#settingsHeaderUl"
-    
-    constructor:(options) ->
-      super options
-      
-    onRender:()=>
-      $(@ui.globalContainer).find('li:first').tab('show')
-
-  ####
-
-  class SettingContentItemView extends Backbone.Marionette.ItemView
-    template: sc_template
-    
-    onRender:()=>
-      @$el.addClass("tab-pane")
-      @$el.addClass("fade")
-      @$el.attr('id',@model.get("name"))
-    
-  class SettingContent extends Backbone.Marionette.CompositeView
-    itemView: SettingContentItemView
-    template: sca_template
-    itemViewContainer: "#settingsContentAll"
-    
-    constructor:(options) ->
-      super options
-      @forms = []
-      @specificViews =   
-        "GeneralSettings":  GeneralSettingsWrapper
-        #"KeyBindings"   :   KeyBindingsWrapper
-              
-    getItemView: (item) =>
-      view = SettingContentItemView
-      if item?
-        try
-          if @specificViews.hasOwnProperty(item.constructor.name)
-            view = @specificViews[item.constructor.name]
-        catch error 
-          console.log "error: #{error}"
-      return view
-      
-    onRender:()=>
-      for index, childView of @children
-        if childView.wrappedForm?
-          @forms.push(childView.wrappedForm)
  
   return SettingsView

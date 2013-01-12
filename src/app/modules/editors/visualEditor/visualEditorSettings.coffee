@@ -1,13 +1,12 @@
 define (require)->
-  $ = require 'jquery'
-  _ = require 'underscore'
   Backbone = require 'backbone'
 
-  class GlViewSettings extends Backbone.Model
+
+  class VisualEditorSettings extends Backbone.Model
       idAttribute: 'name'
       defaults:
-        name: "GlView"
-        title: "3d view"
+        name: "VisualEditor"
+        title: "Visual Editor"
         
         csgRenderMode: "onCodeChange" #can be either "onCodeChange", "onCodeChangeDelayed", "onDemand", "onSave"
         csgRenderDelay: 1.0
@@ -43,4 +42,5 @@ define (require)->
         
       constructor:(options)->
         super options
-  return GlViewSettings
+        
+  return VisualEditorSettings

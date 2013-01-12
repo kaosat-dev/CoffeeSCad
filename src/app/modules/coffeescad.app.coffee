@@ -190,7 +190,7 @@ define (require)->
         rectangle2.translate([100,0,0])
         circle.translate([0,-25,0])
         hulled = quickHull2d(circle,rectangle2)
-        hulled = hulled.extrude(offset: [0, 0, 100])
+        hulled = hulled.extrude(offset: [0, 0, 100],twist:180,slices:100)
         
         return hulled.color([0.9,0.4,0])
         """
@@ -209,25 +209,25 @@ define (require)->
         regions: 
           mainRegion: "#code"
         project: @project
+        appSettings: @settings
       codeEditor.start()
       
       VisualEditor = require './editors/visualEditor/visualEditor'
       visualEditor = new VisualEditor
         regions: 
           mainRegion: "#visual"
-        project:
-          @project
+        project: @project
+        appSettings: @settings
       visualEditor.start()
       
     onAppStarted:(appName)->
       console.log "I see app: #{appName} has started"
       
-    onSettingsShow:()->
+    onSettingsShow:()=>
       console.log "showing settings"
       Settings = require './core/settings/settings'
-      settings = new Settings()
       settingsView = new SettingsView
-        model : settings 
+        model : @settings 
       
       modReg = new ModalRegion({elName:"settings"})
       modReg.show settingsView

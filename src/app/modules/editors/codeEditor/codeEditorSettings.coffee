@@ -1,6 +1,4 @@
 define (require)->
-  $ = require 'jquery'
-  _ = require 'underscore'
   Backbone = require 'backbone'
   
   
@@ -11,7 +9,7 @@ define (require)->
       
     idAttribute: 'name'
     defaults:
-      name: "Editor"
+      name: "CodeEditor"
       title: "Code editor"
       
       #general

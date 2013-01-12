@@ -22,6 +22,7 @@ define (require)->
     constructor:(options)->
       super options
       
+      @appSettings = options.appSettings ? null
       @settings = options.settings ? new CodeEditorSettings()
       @project= options.project ? new Project()
       @vent = vent
@@ -34,12 +35,14 @@ define (require)->
       @addRegions @regions
       
     init:=>
+      if @appSettings?
+        @appSettings.registerSettingClass("CodeEditor", CodeEditorSettings)
+        
       @addInitializer ->
         @vent.trigger "app:started", "#{@title}"
       
-      reqRes.addHandler "foo", ()->
-        res = new CodeEditorSettingsView({model:@settings})
-        return "foo requested. CODE EDITOR RESPONDING "
+      reqRes.addHandler "CodeEditorSettingsView", ()->
+        return CodeEditorSettingsView
         
     onStart:()=>
       @mainRegion.show new CodeEditorView 
