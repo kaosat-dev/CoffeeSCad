@@ -55,6 +55,7 @@ define (require)->
             title: "background color2 (gradient)" 
             type: 'Text'
             #options: ['solid', 'gradient']
+            
         options.fieldsets=[
           "legend": "CsgRender settings"
           "fields": ["csgRenderMode","csgRenderDelay"]

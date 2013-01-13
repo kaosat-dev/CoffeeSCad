@@ -45,6 +45,8 @@ define (require)->
         return CodeEditorSettingsView
         
     onStart:()=>
+      @settings = @appSettings.getByName("CodeEditor")
+      
       @mainRegion.show new CodeEditorView 
         model:    @project
         settings: @settings

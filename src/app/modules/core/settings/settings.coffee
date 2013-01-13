@@ -12,11 +12,9 @@ define (require)->
       super options
       @settingNames = new Object()
       @bind("reset", @onReset)
-      @init()
-    
-    init:()=>
-      @add new GeneralSettings()
-      @add new KeyBindings()
+      
+      @registerSettingClass("General", GeneralSettings)
+      @registerSettingClass("KeyBindings", KeyBindings) 
       
     save:()=>
       @each (model)-> 
@@ -33,30 +31,17 @@ define (require)->
       #TODO yuck, do we really need custom classes for each piece of settings?
       for i, v of response
         response[i]= new  @settingNames[v.name](v)
-        
-        ###
-        switch v.name
-          when "General"
-            response[i]= new  GeneralSettings(v)
-          when "GlView"
-            response[i]= new  GlViewSettings(v)
-          when "Editor"
-            response[i]= new  EditorSettings(v)
-          when "Keys"
-            response[i]= new  KeyBindings(v)
-          when "Gists"
-            response[i]= new  GitHubSettings(v)
-       ###
       return response
       
     clear:()=>
       @each (model)-> 
         model.destroy()
       
-    onReset:()->
+    onReset:()=>
       if @models.length == 0
-        #console.log "fetched empty collection"
-        @init()
+        for index, settingClassName of @settingNames
+          @add new @settingNames[settingClassName]()
+          
       ###
       console.log "collection reset" 
       console.log @
@@ -83,11 +68,11 @@ define (require)->
   class KeyBindings extends Backbone.Model
     idAttribute: 'name'
     defaults:
-      name: "Keys"
+      name: "KeyBindings"
       title: "Key Bindings"
       general:
-        ["undo":   "CTRL+Z",
-        "redo":   "CTRL+Y"]
+        undo:   "CTRL+Z"
+        redo:   "CTRL+Y"
       
     constructor:(options)->
       super options

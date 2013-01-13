@@ -44,6 +44,8 @@ define (require)->
         return VisualEditorSettingsView
         
     onStart:()=>
+      @settings = @appSettings.getByName("VisualEditor")
+      
       @mainRegion.show new VisualEditorView 
         model:    @project.pfiles.at(0)
         settings: @settings

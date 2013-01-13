@@ -203,29 +203,14 @@ define (require)->
       
     onStart:()=>
       console.log "app started"
-      
-      CodeEditor = require './editors/codeEditor/codeEditor'
-      codeEditor = new CodeEditor
-        regions: 
-          mainRegion: "#code"
-        project: @project
-        appSettings: @settings
-      codeEditor.start()
-      
-      VisualEditor = require './editors/visualEditor/visualEditor'
-      visualEditor = new VisualEditor
-        regions: 
-          mainRegion: "#visual"
-        project: @project
-        appSettings: @settings
-      visualEditor.start()
+      @codeEditor.start()
+      @visualEditor.start()
       
     onAppStarted:(appName)->
       console.log "I see app: #{appName} has started"
       
     onSettingsShow:()=>
       console.log "showing settings"
-      Settings = require './core/settings/settings'
       settingsView = new SettingsView
         model : @settings 
       
@@ -234,6 +219,22 @@ define (require)->
       
     onInitializeBefore:()->
       console.log "before init"
+      CodeEditor = require './editors/codeEditor/codeEditor'
+      @codeEditor = new CodeEditor
+        regions: 
+          mainRegion: "#code"
+        project: @project
+        appSettings: @settings
+      
+      
+      VisualEditor = require './editors/visualEditor/visualEditor'
+      @visualEditor = new VisualEditor
+        regions: 
+          mainRegion: "#visual"
+        project: @project
+        appSettings: @settings
+      
+      @settings.fetch()
       
     onInitializeAfter:()=>
       """For exampel here close and 'please wait while app loads' display"""

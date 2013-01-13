@@ -45,6 +45,9 @@ require.config
     collectionbinder :"../assets/js/plugins/backbone.CollectionBinder.min"
     forms :           "../assets/js/plugins/backbone.forms"
     forms_bootstrap : "../assets/js/plugins/backbone.forms.bootstrap"
+    forms_list      : "../assets/js/plugins/backbone.forms.list.min"  
+    backbone_nested:  "../assets/js/plugins/backbone.nested.min"
+    
     
     three_csg:        "../assets/js/plugins/ThreeCSG"
     combo_cam:        "../assets/js/plugins/CombinedCamera"
@@ -73,6 +76,13 @@ require.config
     forms:  
       deps:    ["backbone","underscore"]
       exports:  "forms"
+    forms_bootstrap:
+      deps: ["forms"]
+    forms_list:
+      deps: ["forms"]
+    
+    backbone_nested:
+      deps:["backbone"]
     
     CoffeeScript:
       exports:  "CoffeeScript"

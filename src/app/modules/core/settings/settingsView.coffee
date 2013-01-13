@@ -5,6 +5,7 @@ define (require)->
   marionette  = require 'marionette'
   forms       = require 'forms'
   forms_bstrap= require 'forms_bootstrap'
+  #forms_list  = require 'forms_list'
   
   s_template  = require "text!./settings.tmpl"
   sh_template = require "text!./settingsHeader.tmpl"
@@ -90,7 +91,7 @@ define (require)->
       @forms = []
       @specificViews =   
         "GeneralSettings":  GeneralSettingsWrapper
-        #"KeyBindings"   :   KeyBindingsWrapper
+        "KeyBindings"   :   KeyBindingsWrapper
 
     getItemView: (item) =>
       view = SettingContentItemView
@@ -130,6 +131,40 @@ define (require)->
     constructor:(options)->
       super options
       @wrappedForm = new GeneralSettingsForm
+        model: @model
+       
+    render:()=>
+      tmp = @wrappedForm.render()
+      @$el.append(tmp.el)
+      @$el.addClass("tab-pane")
+      @$el.addClass("fade")
+      @$el.attr('id',@model.get("name"))
+      return @el    
+      
+      
+  class KeybindingsForm extends Backbone.Form
+    constructor:(options)->
+      console.log "options"
+      console.log options
+      if not options.schema
+        options.schema = 
+          general:
+            type: "Object"
+            title:''
+            subSchema:
+              undo:
+                title:"undo"
+                type:"Text"
+              redo:
+                title:"redo"
+                type:"Text"
+        
+      super options
+      
+  class KeyBindingsWrapper extends Backbone.Marionette.ItemView
+    constructor:(options)->
+      super options
+      @wrappedForm = new KeybindingsForm
         model: @model
        
     render:()=>

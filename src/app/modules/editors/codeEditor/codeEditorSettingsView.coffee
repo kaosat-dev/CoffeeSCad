@@ -7,22 +7,55 @@ define (require)->
   forms_bstrap= require 'forms_bootstrap'
   
   
-  class EditorSettingsForm extends Backbone.Form
-
+  class CodeEditorSettingsForm extends Backbone.Form
     constructor:(options)->
       if not options.schema
         options.schema=
           startLine    : 'Number'
+          undoDepth    : 'Number'
+          linting      :
+            type: "Object"
+            title:''
+            subSchema:
+              max_line_length: 
+                title : 'Max line length'
+                type: 'Object'
+                subSchema:
+                  value:
+                    title:'Max line length' 
+                    type: 'Number'
+                  level: 
+                    title: 'Max line length Error Level'
+                    type: 'Select'
+                    options : ["ignore","warning", "error"]
+              no_tabs:
+                title: 'No tabs'
+                type: 'Object'
+                subSchema:
+                  level: 
+                    type: 'Select'
+                    options : ["ignore","warning", "error"]
+              indentation:
+                title: "Indentation"
+                type: "Object"
+                subSchema:
+                  value:{type:'Number'}
+                  level: 
+                    type: 'Select'
+                    options : ["ignore","warning", "error"]
         options.fieldsets=[
           "legend": "General settings"
-          "fields": ["startLine"]
+          "fields": ["startLine","undoDepth"]
+        ,
+          "legend":"Linting"
+          "fields": ["linting.indentation","linting.max_line_length","linting.no_tabs"]
         ]
       super options
-  
+      
   class CodeEditorSettingsView extends Backbone.Marionette.ItemView
     constructor:(options)->
       super options
-      @wrappedForm = new EditorSettingsForm
+      @wrappedForm = new CodeEditorSettingsForm
         model: @model
        
     render:()=>

@@ -646,7 +646,7 @@ Form.validators = (function() {
         message: Form.helpers.createTemplate(options.message, options)
       };
       
-      if (value === null || value === undefined || value === '') return err;
+      if (value === null || value === undefined || value === false || value === '') return err;
     };
   };
   
@@ -825,6 +825,11 @@ Form.Field = (function() {
       
       //Create the element
       var $field = $(templates[schema.template](this.renderingContext(schema, editor)));
+
+      //Remove <label> if it's not wanted
+      if (schema.title === false) {
+        $field.find('label[for="'+editor.id+'"]').first().remove();
+      }
       
       //Render editor
       $field.find('.bbf-tmp-editor').replaceWith(editor.render().el);
@@ -1346,8 +1351,6 @@ Form.editors = (function() {
     },
     
     getValue: function() {
-        //console.log("blehg");
-        //var tmp = this.$el.prop('checked') ;
       return this.$el.prop('checked');
     },
     
@@ -1588,7 +1591,7 @@ Form.editors = (function() {
     className: 'bbf-radio',
     
     events: {
-      'click input[type=radio]:not(:checked)': function() {
+      'change input[type=radio]': function() {
         this.trigger('change', this);
       },
       'focus input[type=radio]': function() {
