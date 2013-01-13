@@ -74,10 +74,16 @@ can get rid of a lot of curly braces etc is a good fit
  
 - **Q** : I am a developper, where is the "meat" of the code ?
 
- **A** It is in the **App/CS** (for coffeescript) folder: I am currently developping using the coffeescript "watch" feature 
- to compile the various .coffee files to js ie: 
- 	after cloning the project, just go into the OpenCoffeScad folder and type **coffee -co . --watch src**
- 	(you need to have coffeescript install)
+ **A** In the dev branch it is in the src folder
+ 
+- **Q** : Can I try CoffeeScad locally ?
+
+ **A** Sure !  If you want to contribute/play around with newer versions locally
+ you can use the included CakeFile : 
+ - after installing the depencies : type: "npm install -d"   tp Install the dependencies from the package.json file
+ - just type cake serveWatch from the root folder to watch/compile the files and launch a small webserver
+ - you can then go to  http://127.0.0.1:8090/ in your browser to use the dev version of CoffeeSCad
+ 
  
 Inspiration
 =============
