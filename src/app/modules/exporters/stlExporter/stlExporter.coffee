@@ -7,7 +7,6 @@ define (require) ->
     ###
     
     constructor:->
-     
       @mimeType = "application/sla"
     
     export:(csgObject)=>

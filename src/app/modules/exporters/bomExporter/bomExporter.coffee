@@ -11,6 +11,6 @@ define (require) ->
     
     export:(project)=>
       
-  return StlExporter
+  return BomExporter
  
   

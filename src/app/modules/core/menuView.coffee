@@ -62,6 +62,18 @@ define (require)->
     
     
   class ExportersView extends Backbone.Marionette.CollectionView
+    
+    my_template_html = "<div><%= args.name %></div>"
+    itemView: Backbone.Marionette.ItemView.extend(template: (serialized_model) ->
+      name = serialized_model.name
+      _.template my_template_html,
+        name: name
+      ,
+        variable: "args"
+    
+    )
+    
+    #itemView: Backbone.Marionette.ItemView
    
    
   class AboutView 
@@ -71,8 +83,8 @@ define (require)->
     template: mainMenu_template
     regions:
       recentProjects:   "#recentProjects"
-      examples:         "#examples"
-      exporters:        "#exporters"
+      examplesStub:         "#examples"
+      exportersStub:        "#exporters"
       
     events:
       "click .newProject":    ()->vent.trigger("project:new")
@@ -91,6 +103,8 @@ define (require)->
     constructor:(options)->
       super options
       @vent = vent
+      @connector= options.connectors ? {}
+      @exporters= options.exporters ? {}
       
       @vent.on("file:selected", @onFileSelected)
       
@@ -140,6 +154,11 @@ define (require)->
      onRender:=>
        $('#undoBtn').addClass("disabled")
        $('#redoBtn').addClass("disabled")
+       
+       
+       exportersCollection = new Backbone.Collection @exporters
+
+       @exportersStub.show(new ExportersView({collection:exportersCollection}))
         
        
   

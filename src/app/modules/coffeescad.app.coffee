@@ -28,9 +28,17 @@ define (require)->
       @settings = new Settings()
       
       @editors = []
-      @exporter = []
-      @connectors = []
-        
+      @exporters = {}
+      @connectors = {}
+      
+      #Exporters
+      BomExporter = require './exporters/bomExporter/bomExporter'
+      StlExporter = require './exporters/stlExporter/stlExporter'
+      
+      @exporters["stl"] = new StlExporter()
+      @exporters["bom"] = new BomExporter()
+      
+      #events
       @on("initialize:before",@onInitializeBefore)
       @on("initialize:after",@onInitializeAfter)
       @on("start", @onStart)
@@ -38,12 +46,14 @@ define (require)->
       @vent.on("settings:show", @onSettingsShow)
       
       @addRegions @regions
-      
       @initLayout()
       @initData()
      
     initLayout:=>
-      @menuView = new MenuView()
+      @menuView = new MenuView
+        connector: @connectors
+        exporters: @exporters
+        
       @headerRegion.show @menuView
     
     initSettings:->
@@ -223,7 +233,6 @@ define (require)->
           mainRegion: "#code"
         project: @project
         appSettings: @settings
-      
       
       VisualEditor = require './editors/visualEditor/visualEditor'
       @visualEditor = new VisualEditor
