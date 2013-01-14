@@ -1,8 +1,14 @@
 define (require)->
-  $ = require 'jquery'
-  _ = require 'underscore'
-  Backbone = require 'backbone'
   marionette = require 'marionette'
+
+
+  ###
+  @vent.bind("downloadStlRequest", stlexport)#COMMAND
+  @vent.bind("fileSaveRequest", saveProject)#COMMAND
+  @vent.bind("fileLoadRequest", loadProject)#COMMAND
+  @vent.bind("fileDeleteRequest", deleteProject)#COMMAND
+  @vent.bind("editorShowRequest", showEditor)#COMMAND
+  ###
 
   """Exploring backbone marionettes' commands"""
   class Commands extends Backbone.Wreqr.Commands

@@ -1,7 +1,7 @@
 define (require)->
   
   
-  class GitHubSettings extends Backbone.Model
+  class GitHubConnectorSettings extends Backbone.Model
     idAttribute: 'name'
     defaults:
       name: "Gists"

@@ -41,6 +41,7 @@ define (require)->
       @addInitializer ->
         @vent.trigger "app:started", "#{@title}"
       
+      #if requested we send back the type of SettingsView to use for this specific sub app
       reqRes.addHandler "CodeEditorSettingsView", ()->
         return CodeEditorSettingsView
         

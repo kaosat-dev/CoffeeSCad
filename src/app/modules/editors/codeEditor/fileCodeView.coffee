@@ -80,7 +80,6 @@ define (require)->
     modelSaved: (model)=>
       
     settingsChanged:(settings, value)=> 
-      console.log("Settings changed")
       for key, val of @settings.changedAttributes()
         switch key
           when "startLine"

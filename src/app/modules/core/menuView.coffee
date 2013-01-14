@@ -83,10 +83,10 @@ define (require)->
       
       "click .undo":          "onUndoClicked"
       "click .redo":          "onRedoClicked"
-      
+
       "click .settings":      ()->vent.trigger("settings:show")
-      
       "click .showEditor":    ()->vent.trigger("codeEditor:show")
+      "click .dropBoxLogin":   ()->vent.trigger("dropbox:LoginRequest")#should be a command 
       
     constructor:(options)->
       super options

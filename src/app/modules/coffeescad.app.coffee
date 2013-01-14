@@ -21,13 +21,15 @@ define (require)->
     title: "Coffeescad"
     regions:
       headerRegion: "#header"
-      #mainRegion: "#content"
       
     constructor:(options)->
       super options
       @vent = vent
       @settings = new Settings()
-      @addRegions @regions
+      
+      @editors = []
+      @exporter = []
+      @connectors = []
         
       @on("initialize:before",@onInitializeBefore)
       @on("initialize:after",@onInitializeAfter)
@@ -35,15 +37,11 @@ define (require)->
       @vent.on("app:started", @onAppStarted)
       @vent.on("settings:show", @onSettingsShow)
       
+      @addRegions @regions
+      
       @initLayout()
       @initData()
-      ###
-      @vent.bind("downloadStlRequest", stlexport)#COMMAND
-      @vent.bind("fileSaveRequest", saveProject)#COMMAND
-      @vent.bind("fileLoadRequest", loadProject)#COMMAND
-      @vent.bind("fileDeleteRequest", deleteProject)#COMMAND
-      @vent.bind("editorShowRequest", showEditor)#COMMAND
-      ###
+     
     initLayout:=>
       @menuView = new MenuView()
       @headerRegion.show @menuView

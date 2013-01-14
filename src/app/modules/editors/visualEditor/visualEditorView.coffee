@@ -411,6 +411,15 @@ define (require) ->
           when 'helpersColor'
             if @axes?
               @axes.material.color.setHex(val)
+          when 'showConnectors'
+            if val
+              THREE.SceneUtils.traverseHierarchy @mesh, (object)-> 
+                if object.name is "connectors"
+                  object.visible = true 
+            else
+              THREE.SceneUtils.traverseHierarchy @mesh, (object)-> 
+                if object.name is "connectors"
+                  object.visible = false 
             
       @_render()  
        
@@ -1205,22 +1214,21 @@ define (require) ->
       @mesh.material.wireframe = @settings.get("wireframe")
       @mesh.name = "CSG_OBJ"
       
-      if @settings.get("showConnectors") is true
-        for i, conn of geom.connectors
-          ###
-          mat =  new THREE.LineBasicMaterial({color: 0xff0000})
-          line = new THREE.Line(conn, mat)
-          @mesh.add line
-          ###
-          mat =  new THREE.MeshLambertMaterial({color: 0xff0000})
-          mesh = new THREE.Mesh(conn, mat)
-          
-          mesh.position = conn.basePoint
-          @mesh.add mesh   
+      #get object connectors
+      for i, conn of geom.connectors
+        ###
+        mat =  new THREE.LineBasicMaterial({color: 0xff0000})
+        line = new THREE.Line(conn, mat)
+        @mesh.add line
+        ###
+        mat =  new THREE.MeshLambertMaterial({color: 0xff0000})
+        mesh = new THREE.Mesh(conn, mat)
+        mesh.name = "connectors"
+        
+        mesh.position = conn.basePoint
+        @mesh.add mesh   
         
       @mesh.doubleSided = true
-      
-      console.log @mesh
       
       @scene.add @mesh
       @controller.objects = [@mesh]

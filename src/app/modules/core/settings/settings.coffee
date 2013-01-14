@@ -39,8 +39,9 @@ define (require)->
       
     onReset:()=>
       if @models.length == 0
-        for index, settingClassName of @settingNames
-          @add new @settingNames[settingClassName]()
+        for index, settingClass of @settingNames
+          subSetting = new settingClass()
+          @add subSetting
           
       ###
       console.log "collection reset" 

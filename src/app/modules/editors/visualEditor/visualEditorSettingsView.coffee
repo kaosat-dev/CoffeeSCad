@@ -28,6 +28,7 @@ define (require)->
             title:      'Object self shadowing'
           
           showAxes     : 'Checkbox' 
+          showConnectors: 'Checkbox'
           showGrid     : 'Checkbox' 
           gridSize     : 'Number'  
           gridStep     : 'Number'
@@ -67,7 +68,7 @@ define (require)->
           "fields": ["position","projection","center","wireframe"]
         ,
           "legend":"Axes and Grid settings"
-          "fields": ["showAxes","helpersColor", "showGrid","gridSize","gridStep","gridColor","gridOpacity"]
+          "fields": ["showAxes","helpersColor","showConnectors", "showGrid","gridSize","gridStep","gridColor","gridOpacity"]
         , 
           "legend":"Extra settings"
           "fields": ["bgColor","bgColor2", "showStats"]

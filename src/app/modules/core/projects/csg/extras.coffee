@@ -633,14 +633,11 @@ define (require)->
           points.push(v1Pos)
     
     points = _(points).sortBy (u) -> [u._x, u._y]
-    console.log points.length   
+    #console.log points.length   
     hullPoints = quickHullSub3(points)
-    
-    console.log("ENDRESULT POINTS: Length#{hullPoints.length}, points:\n #{hullPoints}")
-    
+    #console.log("ENDRESULT POINTS: Length#{hullPoints.length}, points:\n #{hullPoints}")
     #hullPoints = makeClockWise(hullPoints)
-    console.log "finalHullPoints:\n #{hullPoints}"
-    
+    #console.log "finalHullPoints:\n #{hullPoints}"
     result = CAGBase.fromPoints(hullPoints)
     result
     

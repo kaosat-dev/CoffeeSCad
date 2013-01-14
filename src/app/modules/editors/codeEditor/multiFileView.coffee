@@ -62,7 +62,6 @@ define (require)->
     constructor:(options)->
       super options
       @settings = options.settings
-      
 
     onRender:=>
       #show console

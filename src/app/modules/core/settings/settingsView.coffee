@@ -144,8 +144,6 @@ define (require)->
       
   class KeybindingsForm extends Backbone.Form
     constructor:(options)->
-      console.log "options"
-      console.log options
       if not options.schema
         options.schema = 
           general:
