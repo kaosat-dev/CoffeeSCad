@@ -62,19 +62,6 @@ define (require)->
     
     
   class ExportersView extends Backbone.Marionette.CollectionView
-    
-    my_template_html = "<div><%= args.name %></div>"
-    itemView: Backbone.Marionette.ItemView.extend(template: (serialized_model) ->
-      name = serialized_model.name
-      _.template my_template_html,
-        name: name
-      ,
-        variable: "args"
-    
-    )
-    
-    #itemView: Backbone.Marionette.ItemView
-   
    
   class AboutView 
   
@@ -85,6 +72,9 @@ define (require)->
       recentProjects:   "#recentProjects"
       examplesStub:         "#examples"
       exportersStub:        "#exporters"
+    
+    ui: 
+      toto: "#exporters"
       
     events:
       "click .newProject":    ()->vent.trigger("project:new")
@@ -98,12 +88,13 @@ define (require)->
 
       "click .settings":      ()->vent.trigger("settings:show")
       "click .showEditor":    ()->vent.trigger("codeEditor:show")
+      
       "click .dropBoxLogin":   ()->vent.trigger("dropbox:LoginRequest")#should be a command 
       
     constructor:(options)->
       super options
       @vent = vent
-      @connector= options.connectors ? {}
+      @connectors= options.connectors ? {}
       @exporters= options.exporters ? {}
       
       @vent.on("file:selected", @onFileSelected)
@@ -151,17 +142,22 @@ define (require)->
       if not  $('#redoBtn').hasClass "disabled"
         @vent.trigger("file:redoRequest")
      
+     onToto:->
+       console.log "toto"
+     
      onRender:=>
        $('#undoBtn').addClass("disabled")
        $('#redoBtn').addClass("disabled")
        
+       for index,exporterName of @exporters
+         className = "start#{index[0].toUpperCase() + index[1..-1]}Exporter"
+         console.log "className "+className
+         #@events["click .#{className}"] = ()->vent.trigger("#{index}Exporter:Start")
+         @events["click .#{className}"] = "onToto"
+           
+         @ui.toto.append("<li ><a href='#' class='#{className}'>#{index}</li>") 
        
-       exportersCollection = new Backbone.Collection @exporters
-
-       @exportersStub.show(new ExportersView({collection:exportersCollection}))
-        
-       
-  
+       console.log @events
   
   class MainMenuView_old extends marionette.CompositeView
     template: mainMenu_template
