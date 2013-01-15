@@ -44,8 +44,8 @@ define (require)->
       @on("start", @onStart)
       @vent.on("app:started", @onAppStarted)
       @vent.on("settings:show", @onSettingsShow)
-      @vent.on("bomExporter:start", ()-> console.log "lkjhjk")
-      @vent.on("stlExporter:start", ()-> console.log "lkjhjk")
+      @vent.on("bomExporter:start", ()-> console.log "command: start bom exporter")
+      @vent.on("stlExporter:start", ()-> console.log "command: start stl exporter")
       
       @addRegions @regions
       @initLayout()

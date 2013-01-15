@@ -128,36 +128,32 @@ define (require)->
         $('#updateBtn').addClass("disabled")
         $('#exportStl').removeClass("disabled") 
       
-     onFileSelected:(model)=>
-       $('#undoBtn').addClass("disabled")
-       $('#redoBtn').addClass("disabled")
-       
-     onUndoClicked:->
+    onFileSelected:(model)=>
+      $('#undoBtn').addClass("disabled")
+      $('#redoBtn').addClass("disabled")
+     
+    onUndoClicked:->
       console.log $('#undoBtn')
       if not  $('#undoBtn').hasClass "disabled"
         console.log "triggering undo Request"
         @vent.trigger("file:undoRequest")
         
-     onRedoClicked:->
+    onRedoClicked:->
       if not  $('#redoBtn').hasClass "disabled"
         @vent.trigger("file:redoRequest")
      
-     onToto:->
-       console.log "toto"
-     
-     onRender:=>
+    onRender:=>
        $('#undoBtn').addClass("disabled")
        $('#redoBtn').addClass("disabled")
        
        for index,exporterName of @exporters
          className = "start#{index[0].toUpperCase() + index[1..-1]}Exporter"
          console.log "className "+className
-         #@events["click .#{className}"] = ()->vent.trigger("#{index}Exporter:Start")
-         @events["click .#{className}"] = "onToto"
+         @events["click .#{className}"] = ()->vent.trigger("#{index}Exporter:start")
            
          @ui.toto.append("<li ><a href='#' class='#{className}'>#{index}</li>") 
-       
        console.log @events
+       @delegateEvents()
   
   class MainMenuView_old extends marionette.CompositeView
     template: mainMenu_template
