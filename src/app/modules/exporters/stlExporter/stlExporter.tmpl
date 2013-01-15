@@ -1,5 +1,16 @@
 <script id="stlExporterTmpl" type="text/x-underscore-template">
-	  FileName: 
-	  <input type="text" value="<%=name%>.stl"/>
-	  <a class="exportStl">Export Stl</a>
+	<div class="modal-header">
+		<h3 id="myModalLabel"><i class="icon-cogs icon-large"></i> Stl Export</h3>
+	</div>
+	<div class="modal-body">
+		<form>
+			 <label for="fileName">FileName</label>
+			<input id="fileNameinput" type="text" name="fileName" value="<%= name %>.stl"/>
+		</form>
+	</div>
+	<div class="modal-footer">
+		<button class="btn" data-dismiss="modal">Close</button>
+		<a id="stlExportBtn" class="exportStl btn btn-primary disabled" >Export</a>
+	</div>
+	
 </script>

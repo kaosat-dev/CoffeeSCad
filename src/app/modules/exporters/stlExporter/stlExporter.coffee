@@ -1,14 +1,49 @@
 define (require) ->
   utils = require "modules/core/utils/utils"
+  marionette = require 'marionette'
   
-  class StlExporter
+  vent = require 'modules/core/vent'
+  reqRes = require 'modules/core/reqRes'
+  Project = require 'modules/core/projects/project'
+  ModalRegion = require 'modules/core/utils/modalRegion' 
+  
+  StlExporterView = require './stlExporterView'
+  
+  
+  class StlExporter extends Backbone.Marionette.Application
     ###
     Exports the given csg tree to the stl file format (binary only for now)
     ###
-    
-    constructor:->
+    constructor:(options)->
+      super options
+      @vent=vent
       @mimeType = "application/sla"
+      @on "start", @onStart
     
+    start:(options)->
+      @project= options.project ? new Project()
+      reqRes.addHandler "stlexportBlobUrl", ()=>
+        try
+          blobUrl = @export(@project.pfiles.at(0).csg)
+          return blobUrl
+        catch error
+          return null
+      
+      @trigger("initialize:before", options)
+      @initCallbacks.run(options, this)
+      @trigger("initialize:after", options)
+      @trigger("start", options)
+     
+    onStart:()=>
+      stlExporterView = new StlExporterView
+        model:@project
+      modReg = new ModalRegion({elName:"exporter"})
+      modReg.on("closed", @stop)
+      modReg.show stlExporterView
+    
+    stop:->
+      console.log "closing stl exporter"
+      
     export:(csgObject)=>
       @csgObject=csgObject
       @currentObject = null

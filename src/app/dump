@@ -1,4 +1,9 @@
-      
+      #superoptions = merge defaults, options
+    #console.log pos
+    #@pos=pos
+    #@rot=rot
+    #@union  new Cube(size:[50,100,50],center:@pos)
+    #console.log "undefined is undefined"    
  
     
     setup:(options)=>

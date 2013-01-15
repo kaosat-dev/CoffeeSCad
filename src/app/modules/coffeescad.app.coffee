@@ -44,8 +44,8 @@ define (require)->
       @on("start", @onStart)
       @vent.on("app:started", @onAppStarted)
       @vent.on("settings:show", @onSettingsShow)
-      @vent.on("bomExporter:start", ()-> console.log "command: start bom exporter")
-      @vent.on("stlExporter:start", ()-> console.log "command: start stl exporter")
+      @vent.on("bomExporter:start", ()=> @exporters["bom"].start({project:@project}))
+      @vent.on("stlExporter:start", ()=> @exporters["stl"].start({project:@project}))
       
       @addRegions @regions
       @initLayout()
@@ -66,39 +66,58 @@ define (require)->
       @project = new Project()
       @project.create_part
         name:"config"
-        content_0:"""
-        #This is the project's main configuration file
-        #It is better to keep global configuration elements here
-        class Thinga extends Meta
+        #FIXME: apparently the csg refac broken the TJUNCTION system: MUST FIX (Error: !sidemapisempty)
+        content_BROKEN:"""
+        #just a comment
+        class Thinga extends Part
           constructor:(options) ->
             super options
             @toto = new Cube
               size:[50,100,50]
-            @c1 = new Cube
-              size:[50,25,50]
-              center:[100,-12.5,0]
-               
-            s = new Sphere(r:75, $fn:45)
+            s = new Sphere(r:75, $fn:10)
             c = new Cylinder(h:300, r:20).color([0.8,0.5,0.2])
-               
             @union(@toto.color([0.2,0.8,0.5]))
-            @union(@c1)
+            #@union(s.color([0.6,0.8,0.9]))
+            @subtract(c.translate([10,0,-150]))
+        
+        thinga1 = new Thinga()
+        
+        return thinga1#.color([0.9,0.2,0])
+        """
+        content:"""
+        #just a comment
+        class Thinga extends Part
+          constructor:(options) ->
+            super options
+            @toto = new Cube
+              size:[50,100,50]
+            s = new Sphere(r:75, $fn:10)
+            c = new Cylinder(h:300, r:20).color([0.8,0.5,0.2])
+            @union(@toto.color([0.2,0.8,0.5]))
             @union(s.color([0.6,0.8,0.9]))
             @subtract(c.translate([10,0,-150]))
-             
-        thinga1 = new Thinga()
-        ###
-        tmp = new SpecialScrew()
-        console.log "BOM:"
-        for i, v of classRegistry
-          console.log "You Have: \#{v} \#{i} (s)"
         
-        doMagic()
-        ###        
+        class WobblyBobbly extends Part
+          constructor:(options) ->
+            defaults = {pos:15,rot:27}
+            options = merge defaults, options
+            {@pos, @rot} = options
+            super options
+            console.log @pos
+            @union  new Cube(size:[50,100,50],center:@pos)
+        
+        thinga1 = new Thinga()
+        thinga2 = new Thinga()
+        thinga3 = thinga2.clone()
+        
+        wobble = new WobblyBobbly({pos:24})
+        
         
         return thinga1#.color([0.9,0.2,0])
         """
         content_1:"""
+        #This is the project's main configuration file
+        #It is better to keep global configuration elements here
         #test 
         sphere = new Sphere
           d: 100
@@ -192,7 +211,7 @@ define (require)->
         
         return hulled.color([0.9,0.4,0])
         """
-        content:"""
+        content_dsfd:"""
         #2d hull
         circle = new Circle(r:25,center:[0,0],$fn:10)
         rectangle = new Rectangle(size:20)
@@ -220,11 +239,10 @@ define (require)->
       console.log "I see app: #{appName} has started"
       
     onSettingsShow:()=>
-      console.log "showing settings"
       settingsView = new SettingsView
         model : @settings 
       
-      modReg = new ModalRegion({elName:"settings"})
+      modReg = new ModalRegion({elName:"settings",large:true})
       modReg.show settingsView
       
     onInitializeBefore:()->

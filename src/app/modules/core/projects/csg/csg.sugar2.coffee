@@ -35,15 +35,28 @@ define (require)->
   
     window.classRegistry={}
     window.otherRegistry={}
-    #classRegistry= {}
     
-    register=(classname,klass)=>
+    
+    register=(classname, klass, params)=>
+      ###Registers a class (instance) based on its name,  
+      and params (different params need to show up as different object in the bom for examples)
+      ### 
+      
+      #console.log arg for arg in arguments
       #console.log "registering " + classname
+      #TODO: generate hash
+      compressedParams =  JSON.stringify(params) 
+      console.log "Params #{compressedParams}"
+      
       if not (classname of classRegistry)
-        window.classRegistry[classname] = 0
-        window.otherRegistry[classname]={}
+        window.classRegistry[classname] = {}
+        #window.classRegistry[classname] = 0
+        window.otherRegistry[classname]= {}
+        if not (compressedParams of classRegistry[classname])
+          window.classRegistry[classname][compressedParams] = 0
           
-      window.classRegistry[classname]+=1
+      #window.classRegistry[classname] += 1
+      window.classRegistry[classname][compressedParams] += 1
       window.otherRegistry[classname] =  klass  
       
     
@@ -56,14 +69,27 @@ define (require)->
         #console.log klass
         #console.log JSON.stringify klass
     
-    class Meta extends CSGBase
+    #FROM COFFEESCRIPT HELPERS
+    merge = (options, overrides) ->
+      extend (extend {}, options), overrides
+
+    extend = (object, properties) ->
+      for key, val of properties
+        object[key] = val
+      object
+    
+    window.merge = merge
+    window.extend = extend
+    
+    class Part extends CSGBase
       constructor:(options)->
+        console.log "bqsfdqsd"+options
         super options
         parent= @__proto__.__proto__.constructor.name
         #console.log "Parent:"+parent
-        register(@__proto__.constructor.name, @)
+        register(@__proto__.constructor.name, @, options)
     
-    class Screw extends Meta
+    class Screw extends Part
        constructor:(options)->
         super options
         c = new Cube
@@ -78,7 +104,7 @@ define (require)->
         @unionSelf head#head.translate [0,0,100]
         
     window.classRegistry = classRegistry
-    window.Meta = Meta
+    window.Part = Part
     window.Screw = Screw
     window.SpecialScrew= SpecialScrew
     

@@ -1233,7 +1233,13 @@ define (require) ->
       @scene.add @mesh
       @controller.objects = [@mesh]
 
+      #TODO: clean this up
       @vent.trigger("parseCsgDone", @)
+      @vent.trigger("project:compiled",@)#temporary hack to set attributes of project
+      @vent.trigger("project:setBomData",window.classRegistry)
+      
+      
+      
       @_render()
       
     fromCsg_:(csg)=>

@@ -9,6 +9,7 @@ define (require)->
   mainMenu_template = require "text!./mainMenu2.tmpl"
   sF_template = require "text!./menuFiles.tmpl"
   
+  
   class RecentFilesView extends Backbone.Marionette.ItemView
     template: sF_template
     tagName:  "li"
@@ -63,6 +64,7 @@ define (require)->
     
   class ExportersView extends Backbone.Marionette.CollectionView
    
+   
   class AboutView 
   
   
@@ -74,7 +76,7 @@ define (require)->
       exportersStub:        "#exporters"
     
     ui: 
-      toto: "#exporters"
+      exportersStub: "#exporters"
       
     events:
       "click .newProject":    ()->vent.trigger("project:new")
@@ -105,9 +107,6 @@ define (require)->
       @on "csg:parserender:mouseup" ,=>
         if not  $('#updateBtn').hasClass "disabled"
           @vent.trigger("parseCsgRequest", @)
-      @on "download:stl:mouseup" ,=>
-        if not $('#exportStl').hasClass "disabled"
-          @vent.trigger("downloadStlRequest", @) 
         
       @vent.bind "file:undoAvailable", ->
         $('#undoBtn').removeClass("disabled")
@@ -141,18 +140,25 @@ define (require)->
     onRedoClicked:->
       if not  $('#redoBtn').hasClass "disabled"
         @vent.trigger("file:redoRequest")
-     
+    
+    onstlExport:->
+      console.log "stl Export"
+    onbomExport:->
+      console.log "bom export"
+    
     onRender:=>
        $('#undoBtn').addClass("disabled")
        $('#redoBtn').addClass("disabled")
        
        for index,exporterName of @exporters
          className = "start#{index[0].toUpperCase() + index[1..-1]}Exporter"
-         console.log "className "+className
-         @events["click .#{className}"] = ()->vent.trigger("#{index}Exporter:start")
-           
-         @ui.toto.append("<li ><a href='#' class='#{className}'>#{index}</li>") 
-       console.log @events
+         event = "#{index}Exporter:start"
+         @events["click .#{className}"] = do(event)-> ->@vent.trigger(event)
+         #TODO: move this in constructor
+         #see http://www.mennovanslooten.nl/blog/post/62 and http://rzrsharp.net/2011/06/27/what-does-coffeescripts-do-do.html
+         #for more explanation (or lookup "anonymous functions inside loops")
+         @ui.exportersStub.append("<li ><a href='#' class='#{className}'>#{index}</li>") 
+         
        @delegateEvents()
   
   class MainMenuView_old extends marionette.CompositeView
