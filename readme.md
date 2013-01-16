@@ -1,4 +1,4 @@
-![Coffeescad v0_3_preview](https://github.com/kaosat-dev/CoffeeSCad/dev/coffeescad_v0.3.0_pre.png)
+![Coffeescad v0_3_preview](https://raw.github.com/kaosat-dev/CoffeeSCad/dev/coffeescad_v0.3.0_pre.png)
 
 CoffeeSCad
 =============
