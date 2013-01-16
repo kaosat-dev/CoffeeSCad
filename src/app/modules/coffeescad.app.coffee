@@ -89,31 +89,28 @@ define (require)->
         class Thinga extends Part
           constructor:(options) ->
             super options
-            @toto = new Cube
-              size:[50,100,50]
-            s = new Sphere(r:75, $fn:10)
-            c = new Cylinder(h:300, r:20).color([0.8,0.5,0.2])
-            @union(@toto.color([0.2,0.8,0.5]))
-            @union(s.color([0.6,0.8,0.9]))
+            @cb = new Cube({size:[50,100,50]})
+            c = new Cylinder({h:300, r:20}).color([0.8,0.5,0.2])
+            @union(@cb.color([0.2,0.8,0.5]))
             @subtract(c.translate([10,0,-150]))
         
         class WobblyBobbly extends Part
           constructor:(options) ->
-            defaults = {pos:15,rot:27}
+            defaults = {pos:[0,0,0],rot:[0,0,0]}
             options = merge defaults, options
             {@pos, @rot} = options
             super options
-            console.log @pos
-            @union  new Cube(size:[50,100,50],center:@pos)
+            @union  new Cube(size:[50,100,50],center:@pos).rotate(@rot)
         
         thinga1 = new Thinga()
         thinga2 = new Thinga()
-        thinga3 = thinga2.clone()
+        #thinga3 = thinga2.clone()
         
-        wobble = new WobblyBobbly({pos:24})
+        wobble = new WobblyBobbly(rot:[5,25,150],pos:[-100,150,10])
+        wobble2 = new WobblyBobbly(pos:[0,10,20])
+        wobble3 = new WobblyBobbly(pos:[0,10,20])
         
-        
-        return thinga1#.color([0.9,0.2,0])
+        return wobble
         """
         content_1:"""
         #This is the project's main configuration file

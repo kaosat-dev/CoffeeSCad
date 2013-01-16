@@ -8,19 +8,21 @@ define (require)->
     el: "#none"
 
     constructor:(options) ->
-      super options
-      
+      @large = options.large
       elName = options.elName
       @makeEl(elName)
-      @$el = $("##{elName}")
+      options.el = "##{elName}"
       
+      super options
       _.bindAll(this)
+      
       @on("view:show", @showModal, @)
       
     makeEl:(elName)->
-      $ '<div/>',
-        id: elName,
-      .appendTo('body')
+      if ($("#" + elName).length == 0)
+        $ '<div/>',
+          id: elName,
+        .appendTo('body')
       
     getEl: (selector)->
       $el = $(selector)
@@ -30,9 +32,13 @@ define (require)->
     showModal: (view)=>
       view.on("close", @hideModal, @)
       #FIXME: weird bug: modal() does not add a modal class, but an "in" class to the div ??
-      @$el.modal({'show':true}).addClass('modal-big').addClass('modal')
+      @$el.modal({'show':true,'backdrop':false}).addClass('modal fade')
+      if @large
+        @$el.addClass('modal-big')
         
     hideModal: ->
       @$el.modal 'hide'
+      @$el.remove()
+      @trigger("closed")
       
   return ModalRegion

@@ -21,7 +21,7 @@ define (require) ->
     
     start:(options)=>
       @project= options.project ? new Project()
-      reqRes.addHandler "bomExportBlobUrl", ()=>
+      reqRes.addHandler "bomExportUrl", ()=>
         try
           blobUrl = @export(@project)
           return blobUrl
@@ -34,9 +34,24 @@ define (require) ->
       @trigger("start", options)
     
     onStart:()=>
+      #hack
+      @partsCollection = null
+      if @project.get("partRegistry")?
+        @partsCollection = new Backbone.Collection()
+        for name,params of @project.get("partRegistry")
+          for param, number of params
+            #console.log "name #{name}, number:#{number} "
+            #console.log param
+            variantName = "Default"
+            if param != ""
+              variantName=""
+            @partsCollection.add { name: name,variant:variantName, params: param,number: number } 
+      
+      @project.set("partsCollection", @partsCollection)
+            
       bomExporterView = new BomExporterView
-        model: @project
-      modReg = new ModalRegion({elName:"exporter"})
+        model: @project  
+      modReg = new ModalRegion({elName:"exporter",large:true})
       modReg.on("closed", @stop)
       modReg.show bomExporterView
     
@@ -64,15 +79,14 @@ define (require) ->
       
     export:(project)=>
       try
-        data = []
-        blob = new Blob(data, {type: @mimeType})
+        jsonResult = @partsCollection.toJSON()
+        jsonResult = encodeURIComponent(JSON.stringify(jsonResult))
       catch error
-        console.log "Failed to generate bom blob data: #{error}"
+        console.log "Failed to generate bom data url: #{error}"
       
-      windowURL=utils.getWindowURL()
-      outputFileBlobUrl = windowURL.createObjectURL(blob)
-      if not outputFileBlobUrl then throw new Error("createObjectURL() failed") 
-      return outputFileBlobUrl   
+      exportUrl = "data:text/json;charset=utf-8," + jsonResult
+      if not exportUrl then throw new Error("createing object url failed") 
+      return exportUrl   
       
   return BomExporter
  

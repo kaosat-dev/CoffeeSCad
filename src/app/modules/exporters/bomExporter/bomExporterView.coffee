@@ -30,34 +30,19 @@ define (require)->
     
     onExport:->
       vent.trigger("export:bom")
-      exportBlobUrl = reqRes.request("bomExportBlobUrl")
-      if exportBlobUrl != null
+      exportUrl = reqRes.request("bomExportUrl")
+      
+      if exportUrl != null
         fileName = @model.get("name")
-        @ui.exportButton.prop("download", "#{@ui.fileNameinput.val()}.json")
-        @ui.exportButton.prop("href", exportBlobUrl)
+        @ui.exportButton.prop("download", "#{@ui.fileNameinput.val()}")
+        @ui.exportButton.prop("href", exportUrl)
         
     onRender:->
       if @model.get("compiled")
           @ui.exportButton.removeClass "disabled"
-      
-      console.log @model.get("partRegistry")
-      #hack
-      partsCollection = null
-      if @model.get("partRegistry")?
-        partsCollection = new Backbone.Collection()
-        for name,params of @model.get("partRegistry")
-          for param, number of params
-            console.log "name #{name}, number:#{number} "
-            console.log param
-            partsCollection.add { name: name, params: param,number: number }
-        
-        
-      console.log @model.get("partRegistry")   
-      console.log partsCollection
+          
       @partsList.show new BomPartListView
-        collection:partsCollection
-       
-      
+        collection:@model.get("partsCollection")
           
     #serializeData: ()->
     #  null

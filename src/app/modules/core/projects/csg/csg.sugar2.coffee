@@ -45,15 +45,19 @@ define (require)->
       #console.log arg for arg in arguments
       #console.log "registering " + classname
       #TODO: generate hash
-      compressedParams =  JSON.stringify(params) 
+      
+      if not params?
+        compressedParams=""
+      else
+        compressedParams =  JSON.stringify(params) 
       console.log "Params #{compressedParams}"
       
       if not (classname of classRegistry)
         window.classRegistry[classname] = {}
         #window.classRegistry[classname] = 0
         window.otherRegistry[classname]= {}
-        if not (compressedParams of classRegistry[classname])
-          window.classRegistry[classname][compressedParams] = 0
+      if not (compressedParams of classRegistry[classname])
+        window.classRegistry[classname][compressedParams] = 0
           
       #window.classRegistry[classname] += 1
       window.classRegistry[classname][compressedParams] += 1
@@ -83,7 +87,6 @@ define (require)->
     
     class Part extends CSGBase
       constructor:(options)->
-        console.log "bqsfdqsd"+options
         super options
         parent= @__proto__.__proto__.constructor.name
         #console.log "Parent:"+parent

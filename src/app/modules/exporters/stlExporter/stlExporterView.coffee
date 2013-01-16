@@ -30,7 +30,7 @@ define (require)->
       vent.trigger("export:stl")
       exportBlobUrl = reqRes.request("stlexportBlobUrl")
       if exportBlobUrl != null
-        @ui.exportButton.prop("download", "#{@ui.fileNameinput.val()}.stl")
+        @ui.exportButton.prop("download", "#{@ui.fileNameinput.val()}")
         @ui.exportButton.prop("href", exportBlobUrl)
         
     onRender:->
