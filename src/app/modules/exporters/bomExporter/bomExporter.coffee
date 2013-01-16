@@ -39,13 +39,14 @@ define (require) ->
       if @project.get("partRegistry")?
         @partsCollection = new Backbone.Collection()
         for name,params of @project.get("partRegistry")
-          for param, number of params
+          for param, quantity of params
             #console.log "name #{name}, number:#{number} "
             #console.log param
             variantName = "Default"
             if param != ""
               variantName=""
-            @partsCollection.add { name: name,variant:variantName, params: param,number: number } 
+             
+            @partsCollection.add { name: name,variant:variantName, params: param,quantity: quantity, included:true } 
       
       @project.set("partsCollection", @partsCollection)
             

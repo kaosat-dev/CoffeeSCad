@@ -10,9 +10,17 @@ define (require)->
   class BomPartView extends Backbone.Marionette.ItemView
     template: bomPartTemplate
     tagName:  'tr'
-    
+
+    events:
+      "input #quantity":   "onQuantityChange"    
+
     constructor:(options)->
       super options
+      
+    onQuantityChange:(ev)->
+      newQuantity = ev.target.value
+      @model.set("quantity", newQuantity)
+      
       
   class BomPartListView extends Backbone.Marionette.CompositeView
     template: bomPartsListTemplate

@@ -43,7 +43,12 @@ define (require)->
           
       @partsList.show new BomPartListView
         collection:@model.get("partsCollection")
-          
+    
+    onClose:->
+      #todo: how to remove event handler correctly for anonymous functions?
+      #@vent.off("project:new")
+      #@vent.off("project:compiled")
+      
     #serializeData: ()->
     #  null
         
