@@ -1,7 +1,4 @@
-IMPORTANT!!
-===========
-This does not impact the master version or the demo but, As of the Dec 11, 2012 commit, the dev branch is "unusable",
-and will be in a **semi broken state** until I finish the current (huge) refactoring pass.
+![Coffeescad v0_3_preview](https://github.com/kaosat-dev/CoffeeSCad/dev/coffeescad_v0.3.0_pre.png)
 
 CoffeeSCad
 =============
@@ -16,6 +13,11 @@ Feedback, bug reports, ideas and contributions are welcome !
 
 CoffeeSCad was originally built on the great OpenJsCad project but is *not* compatible with it anymore at this point, although a good portion
 of the cgs codebase is still the same.
+
+IMPORTANT!!
+===========
+This does not impact the master version or the demo but, As of the Dec 11, 2012 commit, the dev branch is "unusable",
+and will be in a **semi broken state** until I finish the current (huge) refactoring pass.
 
 Features
 =============
