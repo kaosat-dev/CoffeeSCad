@@ -86,6 +86,22 @@ define (require)->
         """
         content:"""
         #just a comment
+        console.log project
+        ###
+        console.log "options"
+        console.log options
+        console.log "toto"
+        console.log toto
+        try
+          console.log options.toto
+        catch error
+          console.log "options.toto does not work"
+        try
+          console.log toto
+        catch error
+          console.log "toto does not work"
+        ###
+        
         class Thinga extends Part
           constructor:(options) ->
             super options
@@ -105,12 +121,16 @@ define (require)->
         thinga1 = new Thinga()
         thinga2 = new Thinga()
         #thinga3 = thinga2.clone()
+        project.add(thinga1.translate([-150,0,0]))
+        
         
         wobble = new WobblyBobbly(rot:[5,25,150],pos:[-100,150,10])
         wobble2 = new WobblyBobbly(pos:[0,10,20])
-        wobble3 = new WobblyBobbly(pos:[0,10,20])
+        wobble3 = new WobblyBobbly(pos:[-100,10,20])
         
-        return wobble
+        project.add(wobble)
+        project.add(wobble2)
+        project.add(wobble3)
         """
         content_1:"""
         #This is the project's main configuration file

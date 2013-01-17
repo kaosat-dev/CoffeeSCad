@@ -33,6 +33,7 @@ define (require)->
     
     window.CSG={}
   
+    #for object instance registration
     window.classRegistry={}
     window.otherRegistry={}
     

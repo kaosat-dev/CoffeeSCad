@@ -14,7 +14,39 @@ define (require) ->
     construtor:()->
       @debug=true
       
+      
     processScript:(script, filename) ->
+      #experimental process script
+      
+      #csg=@rebuildSolid()
+      base = require './csg' 
+      CSGBase = base.CSGBase
+      #main project alias ?
+      class Project extends CSGBase
+        constructor:()->
+          super
+          @parts = []
+        add:(objects...)->
+          for obj in objects
+            @parts.push(obj)
+          console.log @parts
+      @project = new Project()
+      
+      @script = @compileFormatCoffee(script)
+      csgTmp = @rebuildSolid()
+      
+      console.log "rootProject object"
+      console.log @project
+      
+      for part in @project.parts
+        console.log("part")
+        console.log part
+        @project.union(part)
+      
+      return @project
+      
+    processScript_old:(script, filename) ->
+      #original process script
       csg=null
       # script: coffeescript code
       # filename: optional, the name of the .coscad file
@@ -84,10 +116,11 @@ define (require) ->
       
       textblock = CoffeeScript.compile(fullSource, {bare: true})
 
-      formated = "function main()"
-      formated += "{"
+      formated=""
+      #formated += "function main(options)"
+      #formated += "{ "
       formated += textblock
-      formated += "}\n"
+      #formated += "}\n"
       if @debug_ing#TODO correct this
         console.log("Formated scad #{formated}")
       return formated
@@ -111,6 +144,15 @@ define (require) ->
       
     
     parseJsCadScriptSync: (script, mainParameters, debugging) -> 
+            
+      #window.project = new Project()
+      #mainParameters = {project:new Project()}
+      
+      jsonifiedParams = JSON.stringify(mainParameters)
+      console.log "params"
+      console.log jsonifiedParams
+      
+      
       workerscript = ""
       workerscript += script;
       if @debuging
@@ -123,10 +165,16 @@ define (require) ->
         workerscript += "\n\n// Now press F11 twice to enter your main() function:\n\n"
         workerscript += "debugger;\n"
     
-      workerscript += "return main("+JSON.stringify(mainParameters)+");"  
-      f = new Function(workerscript)
+      #workerscript += "return main("+jsonifiedParams+");"  
+      #workerscript += "return main({toto:24});"
+      #console.log "workerscript"
+      #console.log workerscript
+      options={}
+      f = new Function("project",workerscript)
+      console.log "parsedScript" 
+      console.log f
       #OpenCoffeeScad.log.prevLogTime = Date.now()
-      result = f()
+      result = f(@project)
       return result
       
     convertToSolid : (obj) ->

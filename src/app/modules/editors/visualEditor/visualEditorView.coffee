@@ -1191,6 +1191,9 @@ define (require) ->
       CsgProcessor  = require 'modules/core/projects/csg/csg.processor'
       resultCSG = new CsgProcessor().processScript(@model.get("content"))
       
+      console.log "Got result CSG"
+      console.log resultCSG
+      
       @model.csg = resultCSG #FIXME: remove this at all costs (needs overall reorganization perhaps), but a view should not modify a model like this ? or should it?
       
       geom = THREE.CSG.fromCSG(resultCSG)
