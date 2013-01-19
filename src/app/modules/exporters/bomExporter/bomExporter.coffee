@@ -34,6 +34,7 @@ define (require) ->
       @trigger("start", options)
     
     onStart:()=>
+      ### 
       #hack
       @partsCollection = null
       if @project.get("partRegistry")?
@@ -49,7 +50,8 @@ define (require) ->
             @partsCollection.add { name: name,variant:variantName, params: param,quantity: quantity, included:true } 
       
       @project.set("partsCollection", @partsCollection)
-            
+      ###   
+          
       bomExporterView = new BomExporterView
         model: @project  
       modReg = new ModalRegion({elName:"exporter",large:true})

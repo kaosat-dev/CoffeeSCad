@@ -44,7 +44,7 @@ define (require) ->
       
       return new THREE.Line(geometry, material, THREE.LinePieces)
   
-  class VisualEditorView extends marionette.ItemView
+  class VisualEditorView extends Backbone.Marionette.ItemView
     template: threedView_template
     ui:
       renderBlock :   "#glArea"
@@ -64,14 +64,31 @@ define (require) ->
       "mousedown .toggleAA":            "toggleAA"
       "mousedown .toggleAutoUpdate":    "toggleAutoUpdate"
       
+    constructor:(options, settings)->
+      super options
+      @vent = vent 
+      @settings = options.settings
+        
+      @stats = new stats()
+      @stats.domElement.style.position = 'absolute'
+      @stats.domElement.style.top = '30px'
+      @stats.domElement.style.zIndex = 100
+        
+      @bindTo(@settings, "change", @settingsChanged)
+      #@bindTo(@model, "change", @modelChanged)
+      
+      #Controls:
+      @dragging = false
+      ##########
+      @width = 800
+      @height = 600
+      @init()
+      
+      # Save image into localStorage
+      #var imgAsDataURL = imgCanvas.toDataURL("image/png");
+      #try 
+      #  localStorage.setItem("elephant", imgAsDataURL);
     
-    ###
-    triggers: 
-      "mousedown .toggleGrid":    "toggleGrid:mousedown"
-      "mousedown .toggleAxes":    "toggleAxes:mousedown"
-      "mousedown .toggleShadows": "toggleShadows:mousedown"
-      "mousedown .toggleAA":      "toggleAA:mousedown"
-    ###  
     
     toggleGrid: (ev)=>
         toggled = @settings.get("showGrid")
@@ -423,31 +440,6 @@ define (require) ->
             
       @_render()  
        
-    constructor:(options, settings)->
-      super options
-      @vent = vent 
-      @settings = options.settings #or new GlViewSettings() #TODO fix this horrible hack
-        
-      @stats = new stats()
-      @stats.domElement.style.position = 'absolute'
-      @stats.domElement.style.top = '30px'
-      @stats.domElement.style.zIndex = 100
-        
-      @bindTo(@settings, "change", @settingsChanged)
-      #Controls:
-      @dragging = false
-      ##########
-      @width = 800
-      @height = 600
-      @init()
-      
-      
-
-      # Save image into localStorage
-      #var imgAsDataURL = imgCanvas.toDataURL("image/png");
-      #try 
-      #  localStorage.setItem("elephant", imgAsDataURL);
-      
     init:()=>
       @renderer=null
       #TODO: do this properly
@@ -668,8 +660,6 @@ define (require) ->
       @scene.add(spotLight)
       
       @camera.add(pointLight)
-      
-      
       
     setupView:(val)=>
       resetCam=()=>
@@ -1186,8 +1176,46 @@ define (require) ->
       if csgResult?
         console.log "CSG conversion result ok:"
       
-      
     fromCsg:(csg)=>
+      #console.log "model(project) changed, updating view"
+      res = @model.compile()
+      #console.log "result of csg compile"
+      #console.log res
+      
+      @controller.objects = []
+      for index, part of res.parts
+        @_importGeom(part)
+            
+      #TODO: clean this up
+      #@vent.trigger("parseCsgDone", @)
+      #@vent.trigger("project:compiled",@)#temporary hack to set attributes of project
+      #@vent.trigger("project:setBomData",window.classRegistry)
+      @_render()
+      
+    _importGeom:(csgObj)=>
+      geom = THREE.CSG.fromCSG(csgObj)
+      shine= 1500
+      spec= 10000000000
+      if @renderer instanceof THREE.CanvasRenderer
+        mat = new THREE.MeshLambertMaterial({color:  0xFFFFFF}) 
+        mat.overdraw = true
+      else 
+        mat = new THREE.MeshPhongMaterial({color:  0xFFFFFF , shading: THREE.SmoothShading,  shininess: shine, specular: spec, metal: true, vertexColors: THREE.VertexColors}) 
+      mesh = new THREE.Mesh(geom, mat)
+      mesh.castShadow =  @settings.get("shadows")
+      mesh.receiveShadow = @settings.get("selfShadows") and @settings.get("shadows")
+      mesh.material.wireframe = @settings.get("wireframe")
+      mesh.name = csgObj.constructor.name #"CSG_OBJ"
+      @scene.add mesh
+      @controller.objects.push(mesh)
+      #recursive, for sub objects
+      if csgObj.parts?
+        for index, part of csgObj.parts
+          @_importGeom(part)
+      
+      
+        
+    fromCsg_2:(csg)=>
       CsgProcessor  = require 'modules/core/projects/csg/csg.processor'
       resultCSG = new CsgProcessor().processScript(@model.get("content"))
       

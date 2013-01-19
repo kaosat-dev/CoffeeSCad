@@ -1,49 +1,84 @@
 define (require) ->
-  CoffeeScript = require 'CoffeeScript'  
+  CoffeeScript = require 'CoffeeScript'
+  
+  utils = require "modules/core/utils/utils"
+    
   csgSugar = require "./csg.sugar2"
-  ##ORDER OF ALGORITHM
-  #1-setJsCad
-  #   1-1-getParamDefinitions
-  #   1-2-createParamControls (optional?)
-      
-  #   1-3 rebuildSolid
-  #     useSynch= debug 
+  ##Inner workflow
+  #- linting ?
+  #- Compile
+  #   - Preprocess (resolve includes, parameters (defines))
+  #   - Compile Coffeescript to js
+  #- rebuildSolid (convert data to geometry) : can be in sync mode (ui thread, simple) or async (web workers)
    
   class CsgProcessor
     #minimal version of csg processor, for future cleanup of the rest
     construtor:()->
-      @debug=true
+      @sync = true
+      @debug = true
       
-      
-    processScript:(script, filename) ->
-      #experimental process script
-      
-      #csg=@rebuildSolid()
+    processScript2:(script, sync=true)-> 
+      @sync = sync
+      #experimental process script V2
       base = require './csg' 
       CSGBase = base.CSGBase
       #main project alias ?
-      class Project extends CSGBase
+      class Assembly extends CSGBase
         constructor:()->
           super
           @parts = []
+          @params = []
+          
+        add:(objects...)->
+          for obj in objects
+            @parts.push(obj)
+          #console.log @parts
+      @assemblyRoot = new Assembly()
+      
+      @script = @compileFormatCoffee(script)
+      csgTmp = @rebuildSolid()
+      
+      ###
+      console.log "rootProject object"
+      console.log @assemblyRoot
+      
+      for part in @assemblyRoot.parts
+        console.log("part")
+        console.log part
+        @assemblyRoot.union(part)
+      ###
+      return @assemblyRoot
+       
+      
+    processScript:(script, filename) ->
+      #experimental process script
+      base = require './csg' 
+      CSGBase = base.CSGBase
+      #main project alias ?
+      class Assembly extends CSGBase
+        constructor:()->
+          super
+          @parts = []
+          @params = []
+          
         add:(objects...)->
           for obj in objects
             @parts.push(obj)
           console.log @parts
-      @project = new Project()
+      @assemblyRoot = new Assembly()
       
       @script = @compileFormatCoffee(script)
       csgTmp = @rebuildSolid()
       
       console.log "rootProject object"
-      console.log @project
+      console.log @assemblyRoot
       
-      for part in @project.parts
+      for part in @assemblyRoot.parts
         console.log("part")
         console.log part
-        @project.union(part)
+        @assemblyRoot.union(part)
       
-      return @project
+      return @assemblyRoot
       
     processScript_old:(script, filename) ->
       #original process script
@@ -93,10 +128,8 @@ define (require) ->
         
     compileFormatCoffee:(source)->
       #console.log("Compiling & formating coffeescad code")
-      
       app = require "app"   
       lib = app.lib
-      
       window.include= (options)=>
         pp=pp
       
@@ -119,6 +152,7 @@ define (require) ->
       formated=""
       #formated += "function main(options)"
       #formated += "{ "
+      formated += ""
       formated += textblock
       #formated += "}\n"
       if @debug_ing#TODO correct this
@@ -127,55 +161,136 @@ define (require) ->
       
     rebuildSolid:() =>
       @debug = true
-      if @debug ==true
-        @processing = true
-        #TODO: clean way to handle these type of messages
-        #@statusspan.text = "Processing, please wait..."
-        paramValues = null
-        try
-          obj = @parseJsCadScriptSync(@script, paramValues, @debugging)
-          obj = @convertToSolid(obj)
-          @processing = false
-          return obj
-        catch error
-          #console.log "failed to rebuild solid: #{error}"
-          @processing = false
-          throw error
-      
+      @processing = true
+      paramValues = null
+      console.log "Using sync rebuild:#{@sync}"
+      try
+        if @sync
+          obj = @parseScriptSync(@script, paramValues, @debugging)
+          #@worker = @parseJsCadScriptASync(@script, paramValues, (err, obj)-> 
+          #@setCurrentObject(obj)
+        else
+          obj = @parseScriptASync(@script, paramValues, @debugging)
+        obj = @convertToSolid(obj)
+        @processing = false
+        return obj
+      catch error
+        @processing = false
+        throw error
     
-    parseJsCadScriptSync: (script, mainParameters, debugging) -> 
-            
-      #window.project = new Project()
-      #mainParameters = {project:new Project()}
+    parseScriptSync: (script, mainParameters, debugging) -> 
+      #Parse the given coffeescad script in the UI thread (blocking but simple)
       
-      jsonifiedParams = JSON.stringify(mainParameters)
-      console.log "params"
-      console.log jsonifiedParams
+      #jsonifiedParams = JSON.stringify(mainParameters)
+      base = require './csg' 
+      CSGBase = base.CSGBase
+      CAGBase = base.CAGBase
+  
+      shapes3d = require './csg.geometry'
+      shapes2d = require './cag.geometry' 
       
+      Cube = shapes3d.Cube
+      Sphere = shapes3d.Sphere
+      Cylinder= shapes3d.Cylinder
+      Rectangle = shapes2d.Rectangle
+      Circle = shapes2d.Circle
+      
+      extras = require './extras'
+      quickHull2d = extras.quickHull2d
+      #dependencyNames = "CSGBase", "CAGBase", "shapes3d", "shapes2d", "Cube", "Sphere","Cylinder","Rectangle","Circle","quickHull2d"
+      dependencies = [CSGBase, CAGBase, shapes3d, shapes2d, Cube, Sphere,Cylinder,Rectangle,Circle,quickHull2d]
       
       workerscript = ""
       workerscript += script;
       if @debuging
-        workerscript += "\n\n\n\n\n\n\n/* -------------------------------------------------------------------------\n"
-        workerscript += "OpenJsCad debugging\n\nAssuming you are running Chrome:\nF10 steps over an instruction\nF11 steps into an instruction\n"
-        workerscript += "F8  continues running\nPress the (||) button at the bottom to enable pausing whenever an error occurs\n"
-        workerscript += "Click on a line number to set or clear a breakpoint\n"
-        workerscript += "For more information see: http://code.google.com/chrome/devtools/docs/overview.html\n\n"
-        workerscript += "------------------------------------------------------------------------- */\n"
-        workerscript += "\n\n// Now press F11 twice to enter your main() function:\n\n"
+        workerscript += "//Debugging;\n"
         workerscript += "debugger;\n"
     
-      #workerscript += "return main("+jsonifiedParams+");"  
-      #workerscript += "return main({toto:24});"
-      #console.log "workerscript"
-      #console.log workerscript
       options={}
       f = new Function("project",workerscript)
-      console.log "parsedScript" 
-      console.log f
       #OpenCoffeeScad.log.prevLogTime = Date.now()
-      result = f(@project)
+      result = f(@assemblyRoot)
       return result
+    
+    parseScriptASync:(script, params, callback)->
+      #Parse the given coffeescad script in a seperate thread (web worker)
+    
+    _processScriptASync:(script, params, callback)->
+      workerscript = ""
+      workerscript += script
+      
+      testMethod=()->
+        self.postMessage({cmd: 'rendered', result: result_compact})
+      
+      blobURL = utils.textToBlobUrl(workerscript)
+      worker = new Worker(blobURL)
+      worker.onmessage = (e) ->
+        if e.data
+          if e.data.cmd is "rendered"
+            resulttype = e.data.result.class
+            result = undefined
+            if resulttype is "CSG"
+              result = CSG.fromCompactBinary(e.data.result)
+            else if resulttype is "CAG"
+              result = CAG.fromCompactBinary(e.data.result)
+            else
+              throw new Error("Cannot parse result")
+            callback null, result
+          else if e.data.cmd is "error"
+            callback e.data.err, null
+          else console.log e.data.txt  if e.data.cmd is "log"
+    
+      worker.onerror = (e) ->
+        errtxt = "Error in line " + e.lineno + ": " + e.message
+        callback errtxt, null
+    
+      worker.postMessage cmd: "render"
+      # Start the worker.
+      worker
+    
+    parseCoffeeSCadScriptASync_old = (script, mainParameters, callback) ->
+      # callback: should be function(error, csg)
+      baselibraries = ["./js/csg.js", "./js/openjscad.js"]
+      baseurl = document.location + ""
+      workerscript = ""
+      workerscript += script
+      workerscript += "\n\n\n\n//// The following code is added by OpenJsCad:\n"
+      workerscript += "var _csg_libraries=" + JSON.stringify(baselibraries) + ";\n"
+      workerscript += "var _csg_baseurl=" + JSON.stringify(baseurl) + ";\n"
+      workerscript += "var _csg_makeAbsoluteURL=" + OpenJsCad.makeAbsoluteUrl.toString() + ";\n"
+      
+      workerscript += "_csg_libraries = _csg_libraries.map(function(l){return _csg_makeAbsoluteURL(l,_csg_baseurl);});\n"
+      workerscript += "_csg_libraries.map(function(l){importScripts(l)});\n"
+      workerscript += "self.addEventListener('message', function(e) {if(e.data && e.data.cmd == 'render'){"
+      workerscript += "  OpenJsCad.runMainInWorker(" + JSON.stringify(mainParameters) + ");"
+      
+      workerscript += "}},false);\n"
+      blobURL = OpenJsCad.textToBlobUrl(workerscript)
+      throw new Error("Your browser doesn't support Web Workers. Please update to Chrome, Firefox or Opera")  unless window.Worker
+      worker = new Worker(blobURL)
+      worker.onmessage = (e) ->
+        if e.data
+          if e.data.cmd is "rendered"
+            resulttype = e.data.result.class
+            result = undefined
+            if resulttype is "CSG"
+              result = CSG.fromCompactBinary(e.data.result)
+            else if resulttype is "CAG"
+              result = CAG.fromCompactBinary(e.data.result)
+            else
+              throw new Error("Cannot parse result")
+            callback null, result
+          else if e.data.cmd is "error"
+            callback e.data.err, null
+          else console.log e.data.txt  if e.data.cmd is "log"
+    
+      worker.onerror = (e) ->
+        errtxt = "Error in line " + e.lineno + ": " + e.message
+        callback errtxt, null
+    
+      worker.postMessage cmd: "render"
+      # Start the worker.
+      worker
       
     convertToSolid : (obj) ->
       ###
@@ -189,166 +304,8 @@ define (require) ->
       ###
       return obj
 
-
-#######################
-  class CsgProcessor_old
-    constructor: (debug, @currentObject, @statusdiv, @viewer)->
-      console.log "in processor init"
-      @debug = if debug? then debug else true 
-      console.log "debug #{@debug},@statusdiv : #{@statusdiv}, @viewer: #{@viewer}"
-      
-    abort:()->
-      
-    setError:(errorMsg)->
-      console.log("ERROR: #{errorMsg}")
-      
-    setCurrentObject: (obj) =>
-      #console.log("Setting current object")
-      @currentObject = obj
-      if(@viewer)
-        #console.log("I HAVE A VIEWER")
-        csg = @convertToSolid(obj)
-        @viewer.setCsg(csg)
-      @hasValidCurrentObject = true
-      ext = @extensionForCurrentObject()
-      return
-      #@generateOutputFileButton.innerHTML = "Generate "+ext.toUpperCase();
-      
-    convertToSolid : (obj) ->
-      if( (typeof(obj) == "object") && ((obj instanceof CAG)) )
-        # convert a 2D shape to a thin solid:
-        obj=obj.extrude({offset: [0,0,0.1]})
-      else if( (typeof(obj) == "object") && ((obj instanceof CSG)) )
-        # obj already is a solid
-      else
-        throw new Error("Cannot convert to solid");
-      return obj
-      
-    extensionForCurrentObject: ()->
-      extension
-      if(this.currentObject instanceof CSG)
-        extension = "stl"
-      else if(this.currentObject instanceof CAG)
-        extension = "dxf"
-      else
-        throw new Error("Not supported")
-      return extension
-  
-    clearViewer:()->
-      @clearOutputFile()
-      @setCurrentObject(new CSG())
-      @hasValidCurrentObject = false
-      @enableItems()
-      
-    clearOutputFile:()->
-      if @hasOutputFile
-        @hasOutputFile = false
-        if(@outputFileDirEntry)
-          @outputFileDirEntry.removeRecursively(()->)
-          @outputFileDirEntry=null
-        if @outputFileBlobUrl
-          OpenJsCad.revokeBlobUrl(@outputFileBlobUrl)
-          @outputFileBlobUrl = null
-        @enableItems()
-        if @onchange
-          this.onchange()
-      
-    enableItems: () ->
-      
-    ###
-    runMainInWorker: (mainParams) -> 
-      try
-        #TODO: adapt this to coffeescad
-        if (typeof(main) != 'function') 
-          throw new Error('Your jscad file should contain a function main() which returns a CSG solid or a CAG area.')
-          #OpenJsCad.log.prevLogTime = Date.now()
-          result = main(mainParameters);
-          if( (typeof(result) != "object") || ((!(result instanceof CSG)) && (!(result instanceof CAG))))
-            throw new Error("Your main() function should return a CSG solid or a CAG area.")
-          result_compact = result.toCompactBinary()
-          result = null # not needed anymore
-          #self.postMessage({cmd: 'rendered', result: result_compact});
-          
-      catch error
-        errorTxt = error.stack
-        if errtxt?
-          errorTxt = error.toString()
-          postMessage({cmd: 'error', err: errorTxt})
-    ###
-     
-    parseJsCadScriptSync: (script, mainParameters, debugging) -> 
-      #console.log("Synch Parsing")
-      workerscript = ""
-      workerscript += script;
-      if @debuging
-        workerscript += "\n\n\n\n\n\n\n/* -------------------------------------------------------------------------\n"
-        workerscript += "OpenJsCad debugging\n\nAssuming you are running Chrome:\nF10 steps over an instruction\nF11 steps into an instruction\n"
-        workerscript += "F8  continues running\nPress the (||) button at the bottom to enable pausing whenever an error occurs\n"
-        workerscript += "Click on a line number to set or clear a breakpoint\n"
-        workerscript += "For more information see: http://code.google.com/chrome/devtools/docs/overview.html\n\n"
-        workerscript += "------------------------------------------------------------------------- */\n"
-        workerscript += "\n\n// Now press F11 twice to enter your main() function:\n\n"
-        workerscript += "debugger;\n"
-    
-      workerscript += "return main("+JSON.stringify(mainParameters)+");"  
-      #console.log("workerscript #{workerscript}")
-      f = new Function(workerscript)
-      #OpenCoffeeScad.log.prevLogTime = Date.now()
-      result = f()
-      return result
-      
-    parseCoffeesCadScriptSync: (script, mainParameters, debugging) -> 
-      #console.log("Synch Parsing")
-      workerscript = ""
-      workerscript += script;
-      if @debuging
-        workerscript += "\n\n\n\n\n\n\n/* -------------------------------------------------------------------------\n"
-        workerscript += "OpenJsCad debugging\n\nAssuming you are running Chrome:\nF10 steps over an instruction\nF11 steps into an instruction\n"
-        workerscript += "F8  continues running\nPress the (||) button at the bottom to enable pausing whenever an error occurs\n"
-        workerscript += "Click on a line number to set or clear a breakpoint\n"
-        workerscript += "For more information see: http://code.google.com/chrome/devtools/docs/overview.html\n\n"
-        workerscript += "------------------------------------------------------------------------- */\n"
-        workerscript += "\n\n// Now press F11 twice to enter your main() function:\n\n"
-        workerscript += "debugger;\n"
-     
-      workerscript += "return main("+JSON.stringify(mainParameters)+");"  
-      #console.log("workerscript #{workerscript}")
-      f = new Function(workerscript)
-      #OpenCoffeeScad.log.prevLogTime = Date.now()
-      result = f()
-      return result
-      
-    setCoffeeSCad: (script, filename) ->
-      # script: javascript code
-      # filename: optional, the name of the .jscad file
-      filename = if !filename then "openjscad.jscad"
-      filename = filename.replace(/\.jscad$/i, "")
-      #@abort()
-      @clearViewer()
-      @paramDefinitions = []
-      @paramControls = []
-      @script = null
-      #@.setError("")
-      scripthaserrors = false
-      try
-        #@paramDefinitions = @getParamDefinitions(script)
-       # console.log("@paramDefinitions: #{@paramDefinitions}")
-       # @createParamControls() : TODO work on this parametrization
-      catch e 
-        @setError(e.toString())
-        #@statusspan.innerHTML = "Error."
-        scripthaserrors = true
-  
-      if(!scripthaserrors)
-        @script = @compileFormatCoffee(script)
-        @filename = filename
-        @rebuildSolid()
-        #console.log("No errors in script")
-      else
-        #console.log("Errors in script")
-        #@enableItems()
-        #if(@onchange) @onchange();
-        
+  #######################
+  ###
     createParamControls: ->
       #@parameterstable.innerHTML = ""
       @paramControls = []
@@ -518,7 +475,7 @@ define (require) ->
     preprocessCode:(code)->
       #just some experimental js code for fetching all CSG and CAG methods, to add them as no-namespace methods
       #into the project code : ie , "CSG.cube()" should become simply "cube()"
-      ###   
+  
       function getMethods(obj)
       {
           var res = [];

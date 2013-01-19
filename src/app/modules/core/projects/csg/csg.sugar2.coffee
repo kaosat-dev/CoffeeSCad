@@ -37,7 +37,6 @@ define (require)->
     window.classRegistry={}
     window.otherRegistry={}
     
-    
     register=(classname, klass, params)=>
       ###Registers a class (instance) based on its name,  
       and params (different params need to show up as different object in the bom for examples)
@@ -51,7 +50,7 @@ define (require)->
         compressedParams=""
       else
         compressedParams =  JSON.stringify(params) 
-      console.log "Params #{compressedParams}"
+      #console.log "Params #{compressedParams}"
       
       if not (classname of classRegistry)
         window.classRegistry[classname] = {}
@@ -90,28 +89,10 @@ define (require)->
       constructor:(options)->
         super options
         parent= @__proto__.__proto__.constructor.name
-        #console.log "Parent:"+parent
         register(@__proto__.constructor.name, @, options)
-    
-    class Screw extends Part
-       constructor:(options)->
-        super options
-        c = new Cube
-          radius:[50,50,100]
-        @unionSelf c
-        
-    class SpecialScrew extends Screw
-      constructor:(options)->
-        super options
-        head = new Cube
-          radius:[75,75,10]
-        @unionSelf head#head.translate [0,0,100]
-        
+  
     window.classRegistry = classRegistry
     window.Part = Part
-    window.Screw = Screw
-    window.SpecialScrew= SpecialScrew
-    
     window.register=register
     window.doMagic=doMagic
     # class ReallySpecialScrew extends SpecialScrew

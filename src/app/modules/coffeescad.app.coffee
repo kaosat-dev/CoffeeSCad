@@ -64,11 +64,11 @@ define (require)->
     
     initData:->
       @project = new Project()
-      @project.create_part
+      @project.createFile
         name:"config"
         #FIXME: apparently the csg refac broken the TJUNCTION system: MUST FIX (Error: !sidemapisempty)
         content_BROKEN:"""
-        #just a comment
+        #just a comment :fix me
         class Thinga extends Part
           constructor:(options) ->
             super options
@@ -240,12 +240,12 @@ define (require)->
         
         return hulled.color([0.9,0.4,0])
         """
-        
-      @project.create_part
+      ###   
+      @project.createFile
         name:"assembly"
-      @project.create_part
+      @project.createFile
         name:"testPart"
-      
+      ###
       
     onStart:()=>
       console.log "app started"

@@ -4,8 +4,7 @@ define (require)->
   Backbone = require 'backbone'
   LocalStorage = require 'localstorage'
  
-  CsgProcessor    = require "./csg/csg.processor"
-  
+  CsgProcessor = require "./csg/csg.processor"
   debug  = false
   #TODO: add support for multiple types of storage, settable per project
   #syncType = Backbone.LocalStorage
@@ -13,7 +12,7 @@ define (require)->
   class ProjectFile extends Backbone.Model
     idAttribute: 'name'
     defaults:
-      name:     "mainPart"
+      name:     "mainFile"
       ext:      "coscad"
       content:  ""
            
@@ -24,7 +23,7 @@ define (require)->
       @storedContent = @get("content") #This is used for "dirtyness compare" , might be optimisable (storage vs time , hash vs direct compare)
       @bind("change", @onChanged)
       @bind("sync",   @onSynched)
-      
+    
     onChanged:()=>
       if @storedContent == @get("content")
           @dirty = false
@@ -55,11 +54,11 @@ define (require)->
       console.log response      
       return response  
     ###
-    
+   
   class Project extends Backbone.Model
-    """Main aspect of coffeescad : contains all the parts
+    """Main aspect of coffeescad : contains all the files
     * project is a top level element ("folder"+metadata)
-    * a project contains files /parts
+    * a project contains files 
     * a project can reference another project (includes)
     """
     
@@ -67,9 +66,6 @@ define (require)->
     defaults:
       name:     "TestProject"
       lastModificationDate: null
-      
-    #@exporter : new CsgStlExporterMin()
-    @csgProcessor : new CsgProcessor()
     
     constructor:(options)->
       super options
@@ -81,9 +77,31 @@ define (require)->
       @files = []
       @pfiles = new ProjectFiles()
       
-      locStorName = @get("name")+"-parts"
+      classRegistry={}
+      @bom = {}
+      
+      locStorName = @get("name")+"-files"
       @pfiles.localStorage= new Backbone.LocalStorage(locStorName)
       storageType = "localStorage"#can be localStorage, dropbox, github
+      
+    compile:()=>
+      #experimental
+      @csgProcessor = new CsgProcessor()
+      console.log "compiling project"
+      #for now just limit to one file
+      script = @pfiles.at(0).get("content")
+      #console.log "current script : #{script}"
+      res = @csgProcessor.processScript2(script,true)
+      #@set({"partRegistry":window.classRegistry}, {silent: true})
+      partRegistry = window.classRegistry
+      @bom = new Backbone.Collection()
+      for name,params of partRegistry
+        for param, quantity of params
+          variantName = "Default"
+          if param != ""
+            variantName=""
+          @bom.add { name: name,variant:variantName, params: param,quantity: quantity, included:true }   
+      res
       
     onReset:()->
       if debug
@@ -103,17 +121,18 @@ define (require)->
       for key, val of @changedAttributes()
         switch key
           when "name"
-            locStorName = val+"-parts"
+            locStorName = val+"-files"
             @pfiles.localStorage= new Backbone.LocalStorage(locStorName)
             
-    onPartSaved:(partName)=>
+    onFileSaved:(fileName)=>
       @set("lastModificationDate",new Date())
-      for part of @pfiles
-        if part.dirty
+      for file of @pfiles
+        if file.dirty
           return
       @trigger "allSaved"
       
-    onPartChanged:()=>
+    onFileChanged:(fileName)=>
+      @trigger "change"
       
     isNew2:()->
       return @new 
@@ -121,10 +140,10 @@ define (require)->
     add:(pFile)=>
       @pfiles.add pFile
       @files.push pFile.get("name")
-      pFile.bind("change", ()=> @trigger "change")
-      pFile.bind("saved" , ()=> @onPartSaved(pFile.get("id")))
+      pFile.bind("change", ()=> @onFileChanged(pFile.get("id")))
+      pFile.bind("saved" , ()=> @onFileSaved(pFile.get("id")))
       pFile.bind("dirtied", ()=> @trigger "dirtied")
-      pFile.bind("cleaned", ()=> @onPartSaved(pFile.get("id")))
+      pFile.bind("cleaned", ()=> @onFileSaved(pFile.get("id")))
     
     remove:(pFile)=>
       index = @files.indexOf(pFile.get("name"))
@@ -142,11 +161,11 @@ define (require)->
         pFile.fetch()
       return pFile
       
-    create_part:(options)->
-      part = new ProjectFile
-        name: options.name ? "a Part"
+    createFile:(options)->
+      file = new ProjectFile
+        name: options.name ? "a File"
         content: options.content ? " \n\n"    
-      @add part      
+      @add file      
     ###
     parse: (response)=>
       console.log("in proj parse")
