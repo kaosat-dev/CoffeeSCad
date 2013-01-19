@@ -83,12 +83,10 @@ define (require) ->
       @width = 800
       @height = 600
       @init()
-      
       # Save image into localStorage
       #var imgAsDataURL = imgCanvas.toDataURL("image/png");
       #try 
       #  localStorage.setItem("elephant", imgAsDataURL);
-    
     
     toggleGrid: (ev)=>
         toggled = @settings.get("showGrid")
@@ -100,7 +98,6 @@ define (require) ->
           $(ev.target).removeClass("uicon-off")
         return false
         
-     
     toggleAxes:(ev)=>
         toggled = @settings.get("showAxes")
         if toggled
@@ -232,49 +229,29 @@ define (require) ->
       v = new THREE.Vector3((mouseX/@width)*2-1, -(mouseY/@height)*2+1, 0.5)
       @projector.unprojectVector(v, @camera)
       ray = new THREE.Ray(@camera.position, v.subSelf(@camera.position).normalize())
-      intersects = ray.intersectObjects(@controller.objects)
+      #intersects = ray.intersectObjects(@controller.objects)
+      intersects=ray.intersectObjects(@scene.children, true )
       
-      reset_col=()=>
+      unselect=()=>
         if @current?
-          #newMat = new THREE.MeshLambertMaterial
-          #  color: 0xCC0000
-          #@current.material = newMat
+          @current.selected=false
           @current.material = @current.origMaterial
-          if @current.cageView?
-            @scene.remove @current.cageView
+          if @current.cage?
+            @current.remove @current.cage
+            @current.cage = null
           @current=null
-          
-      draw_impact=(position)=>
-        sprite = new THREE.Sprite(
-          map: @particleTexture
-          transparent: true
-          useScreenCoordinates: false
-          scaleByViewport:false)
-        sprite.position = position
-        @scene.add(sprite)
-          
+      
+      if @current?
+        unselect()
       if intersects? 
         if intersects.length > 0
-          #display impact
-          #draw_impact(intersects[ 0 ].point)
           if intersects[0].object.name != "workplane"
-            if @current != intersects[0].object
               @current = intersects[0].object
               newMat = new  THREE.MeshLambertMaterial
                 color: 0xCC0000
-              #newMat = new THREE.MeshBasicMaterial({color: 0x808080, wireframe: true, shading:THREE.FlatShading})
-              #newMat = new THREE.LineBasicMaterial({color: 0xFFFFFF, lineWidth: 1})
               @current.origMaterial = @current.material
               @current.material = newMat
               @addCage @current
-              if @current.cageView?
-                @scene.add @current.cageView
-          else
-            reset_col()
-        else
-          reset_col()
-      else
-        reset_col()
       @_render()
     
     switchModel:(newModel)->
@@ -935,75 +912,72 @@ define (require) ->
     addCage:(mesh)=>
       helpersColor = @settings.get("helpersColor")
       helpersColor = new THREE.Color().setHex(helpersColor)
+      #attempt to draw bounding box
+      try
+        bbox = mesh.geometry.boundingBox
+        length = bbox.max.x-bbox.min.x
+        width  = bbox.max.y-bbox.min.y
+        height = bbox.max.z-bbox.min.z
+        
+        cageGeo= new THREE.CubeGeometry(length,width,height)
+        v=(x,y,z)->
+           return new THREE.Vector3(x,y,z)
+       
+        ###lineMat = new THREE.LineBasicMaterial
+          color: helpersColor
+          lineWidth: 2
+        ###
+        lineMat = new THREE.MeshBasicMaterial
+          color: helpersColor
+          wireframe: true
+          shading:THREE.FlatShading
+        
+        cage = new THREE.Mesh(cageGeo, lineMat)
+        #cage = new THREE.Line(cageGeo, lineMat, THREE.Lines)
+        middlePoint=(geometry)->
+          middle  = new THREE.Vector3()
+          middle.x  = ( geometry.boundingBox.max.x + geometry.boundingBox.min.x ) / 2
+          middle.y  = ( geometry.boundingBox.max.y + geometry.boundingBox.min.y ) / 2
+          middle.z  = ( geometry.boundingBox.max.z + geometry.boundingBox.min.z ) / 2
+          return middle
+        
+        delta = middlePoint(mesh.geometry)
+        cage.position = delta
+           
+        ###
+        texture = @drawText2(height.toFixed(2))
+        testLabel = new THREE.Sprite
+          map: texture
+          useScreenCoordinates: false
+          #alignment: THREE.SpriteAlignment.bottom
+        testLabel.position.set(-length/2,-width/2,0)
+        cage.add testLabel
+        ###
+        widthLabel=@drawText("w: #{width.toFixed(2)}")
+        widthLabel.position.set(-length/2-10,0,height/2)
+        
+        lengthLabel=@drawText("l: #{length.toFixed(2)}")
+        lengthLabel.position.set(0,-width/2-10,height/2)
+  
+        heightLabel=@drawText("h: #{height.toFixed(2)}")
+        heightLabel.position.set(-length/2-10,-width/2-10,height/2)
+        
+        cage.add widthLabel
+        cage.add lengthLabel
+        cage.add heightLabel
       
-      bbox = mesh.geometry.boundingBox
-      length = bbox.max.x-bbox.min.x
-      width  = bbox.max.y-bbox.min.y
-      height = bbox.max.z-bbox.min.z
-      
-      cageGeo= new THREE.CubeGeometry(length,width,height)
-      v=(x,y,z)->
-         return new THREE.Vector3(x,y,z)
-     
-      ###lineMat = new THREE.LineBasicMaterial
-        color: helpersColor
-        lineWidth: 2
-      ###
-      lineMat = new THREE.MeshBasicMaterial
-        color: helpersColor
-        wireframe: true
-        shading:THREE.FlatShading
-      
-      cage = new THREE.Mesh(cageGeo, lineMat)
-      #cage = new THREE.Line(cageGeo, lineMat, THREE.Lines)
-      middlePoint=(geometry)->
-        middle  = new THREE.Vector3()
-        middle.x  = ( geometry.boundingBox.max.x + geometry.boundingBox.min.x ) / 2
-        middle.y  = ( geometry.boundingBox.max.y + geometry.boundingBox.min.y ) / 2
-        middle.z  = ( geometry.boundingBox.max.z + geometry.boundingBox.min.z ) / 2
-        return middle
-      
-      delta = middlePoint(mesh.geometry)
-      cage.position = delta
-      
-      
-      ###
-      texture = @drawText2(height.toFixed(2))
-      testLabel = new THREE.Sprite
-        map: texture
-        useScreenCoordinates: false
-        #alignment: THREE.SpriteAlignment.bottom
-      testLabel.position.set(-length/2,-width/2,0)
-      cage.add testLabel
-      ###
-      
-      
-      
-      widthLabel=@drawText("w: #{width.toFixed(2)}")
-      widthLabel.position.set(-length/2-10,0,height/2)
-      
-      lengthLabel=@drawText("l: #{length.toFixed(2)}")
-      lengthLabel.position.set(0,-width/2-10,height/2)
-
-      heightLabel=@drawText("h: #{height.toFixed(2)}")
-      heightLabel.position.set(-length/2-10,-width/2-10,height/2)
-      
-      cage.add widthLabel
-      cage.add lengthLabel
-      cage.add heightLabel
-      
-      
-
-      #TODO: solve z fighting issue
-      widthArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,0),50, 0xFF7700)
-      lengthArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,0),50, 0x77FF00)
-      heightArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(-length/2,-width/2,-height/2),height, 0x0077FF)
-      
-      cage.add widthArrow
-      cage.add lengthArrow
-      cage.add heightArrow
-      
-      mesh.cageView= cage
+        #TODO: solve z fighting issue
+        widthArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,0),50, 0xFF7700)
+        lengthArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,0),50, 0x77FF00)
+        heightArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(-length/2,-width/2,-height/2),height, 0x0077FF)
+        
+        cage.add widthArrow
+        cage.add lengthArrow
+        cage.add heightArrow
+        
+        mesh.cage = cage
+        mesh.add cage
+      catch error
       
     drawText:(text)=>
       helpersColor = @settings.get("helpersColor")
@@ -1182,17 +1156,21 @@ define (require) ->
       #console.log "result of csg compile"
       #console.log res
       
+      if @assembly?
+        @scene.remove @assembly
+        @current=null
+      
+      @assembly = new THREE.Mesh(new THREE.Geometry())
+      @assembly.name = "assembly"
+      
       @controller.objects = []
       for index, part of res.parts
-        @_importGeom(part)
-            
-      #TODO: clean this up
-      #@vent.trigger("parseCsgDone", @)
-      #@vent.trigger("project:compiled",@)#temporary hack to set attributes of project
-      #@vent.trigger("project:setBomData",window.classRegistry)
+        @_importGeom(part,@assembly)
+        
+      @scene.add @assembly 
       @_render()
       
-    _importGeom:(csgObj)=>
+    _importGeom:(csgObj,rootObj)=>
       geom = THREE.CSG.fromCSG(csgObj)
       shine= 1500
       spec= 10000000000
@@ -1206,12 +1184,13 @@ define (require) ->
       mesh.receiveShadow = @settings.get("selfShadows") and @settings.get("shadows")
       mesh.material.wireframe = @settings.get("wireframe")
       mesh.name = csgObj.constructor.name #"CSG_OBJ"
-      @scene.add mesh
+      mesh.geometry.computeCentroids()
+      rootObj.add mesh
       @controller.objects.push(mesh)
       #recursive, for sub objects
       if csgObj.parts?
         for index, part of csgObj.parts
-          @_importGeom(part)
+          @_importGeom(part,mesh)
       
       
         

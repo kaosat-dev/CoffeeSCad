@@ -207,7 +207,7 @@ define (require) ->
         workerscript += "debugger;\n"
     
       options={}
-      f = new Function("project",workerscript)
+      f = new Function("assembly",workerscript)
       #OpenCoffeeScad.log.prevLogTime = Date.now()
       result = f(@assemblyRoot)
       return result

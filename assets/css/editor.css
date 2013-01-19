@@ -31,6 +31,11 @@ text-decoration: none;
 text-shadow: 0 1px 0 white;
 }
 
+.navbar .divider-vertical
+{
+	height:30px;
+}
+
 #content{
 	position: fixed;
 	top: 35px;
@@ -243,7 +248,7 @@ ui-icon ui-icon-closethick .ui-state-hover
 
 /*-------------------------------------*/	
 /*viewer*/
-canvas { cursor: move; }
+/*canvas { cursor: move; }*/
 	.navbar .container { height: 1em; }
 	
 .uicons:hover
@@ -284,7 +289,6 @@ legend + .control-group
 }
 /*-------------------------------------*/	
 /*misc*/
-
 
 .ui-dialog-titlebar { height: 2em; }
 

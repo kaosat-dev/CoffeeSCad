@@ -84,9 +84,14 @@ define (require)->
         
         return thinga1#.color([0.9,0.2,0])
         """
+        content_basic:"""
+        #just a comment
+        cb = new Cube({size:[50,100,50]})
+        project.add(cb)
+        """
         content:"""
         #just a comment
-        console.log project
+        console.log assembly
         ###
         console.log "options"
         console.log options
@@ -121,16 +126,16 @@ define (require)->
         thinga1 = new Thinga()
         thinga2 = new Thinga()
         #thinga3 = thinga2.clone()
-        project.add(thinga1.translate([-150,0,0]))
+        assembly.add(thinga1.translate([-150,0,0]))
         
         
         wobble = new WobblyBobbly(rot:[5,25,150],pos:[-100,150,10])
         wobble2 = new WobblyBobbly(pos:[0,10,20])
         wobble3 = new WobblyBobbly(pos:[-100,10,20])
         
-        project.add(wobble)
-        project.add(wobble2)
-        project.add(wobble3)
+        assembly.add(wobble)
+        assembly.add(wobble2)
+        assembly.add(wobble3)
         """
         content_1:"""
         #This is the project's main configuration file
