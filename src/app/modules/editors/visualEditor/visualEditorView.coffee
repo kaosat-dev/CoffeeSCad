@@ -229,7 +229,6 @@ define (require) ->
       v = new THREE.Vector3((mouseX/@width)*2-1, -(mouseY/@height)*2+1, 0.5)
       @projector.unprojectVector(v, @camera)
       ray = new THREE.Ray(@camera.position, v.subSelf(@camera.position).normalize())
-      #intersects = ray.intersectObjects(@controller.objects)
       intersects=ray.intersectObjects(@scene.children, true )
       
       unselect=()=>
@@ -263,7 +262,6 @@ define (require) ->
         @scene.remove @current.cageView
         @current=null
       
-      @controller.objects = []
       @model = newModel
       @bindTo(@model, "change", @modelChanged)
       @fromCsg @model
@@ -407,11 +405,11 @@ define (require) ->
               @axes.material.color.setHex(val)
           when 'showConnectors'
             if val
-              THREE.SceneUtils.traverseHierarchy @mesh, (object)-> 
+              THREE.SceneUtils.traverseHierarchy @assembly, (object)-> 
                 if object.name is "connectors"
                   object.visible = true 
             else
-              THREE.SceneUtils.traverseHierarchy @mesh, (object)-> 
+              THREE.SceneUtils.traverseHierarchy @assembly, (object)-> 
                 if object.name is "connectors"
                   object.visible = false 
             
@@ -424,9 +422,6 @@ define (require) ->
       @renderer.shadowMapEnabled = true
       @renderer.shadowMapAutoUpdate = true
       
-      @controller = new THREE.Object3D()     
-      @controller.name = "picker" 
-      @controller.objects = []
       
       @projector = new THREE.Projector()
       @setupScene()
@@ -1151,24 +1146,25 @@ define (require) ->
         console.log "CSG conversion result ok:"
       
     fromCsg:(csg)=>
-      #console.log "model(project) changed, updating view"
-      res = @model.compile()
-      #console.log "result of csg compile"
-      #console.log res
-      
-      if @assembly?
-        @scene.remove @assembly
-        @current=null
-      
-      @assembly = new THREE.Mesh(new THREE.Geometry())
-      @assembly.name = "assembly"
-      
-      @controller.objects = []
-      for index, part of res.parts
-        @_importGeom(part,@assembly)
+      try
+        #console.log "model(project) changed, updating view"
+        res = @model.compile()
+        if @assembly?
+          @scene.remove @assembly
+          @current=null
         
-      @scene.add @assembly 
-      @_render()
+        @assembly = new THREE.Mesh(new THREE.Geometry())
+        @assembly.name = "assembly"
+        
+        for index, part of res.parts
+          @_importGeom(part,@assembly)
+          
+        @scene.add @assembly 
+      catch error
+        console.log "Csg Generation error: #{error} "
+        @vent.trigger("csgParseError", error)
+      finally
+        @_render()
       
     _importGeom:(csgObj,rootObj)=>
       geom = THREE.CSG.fromCSG(csgObj)
@@ -1183,46 +1179,11 @@ define (require) ->
       mesh.castShadow =  @settings.get("shadows")
       mesh.receiveShadow = @settings.get("selfShadows") and @settings.get("shadows")
       mesh.material.wireframe = @settings.get("wireframe")
-      mesh.name = csgObj.constructor.name #"CSG_OBJ"
+      mesh.name = csgObj.constructor.name
       mesh.geometry.computeCentroids()
-      rootObj.add mesh
-      @controller.objects.push(mesh)
-      #recursive, for sub objects
-      if csgObj.parts?
-        for index, part of csgObj.parts
-          @_importGeom(part,mesh)
       
-      
-        
-    fromCsg_2:(csg)=>
-      CsgProcessor  = require 'modules/core/projects/csg/csg.processor'
-      resultCSG = new CsgProcessor().processScript(@model.get("content"))
-      
-      console.log "Got result CSG"
-      console.log resultCSG
-      
-      @model.csg = resultCSG #FIXME: remove this at all costs (needs overall reorganization perhaps), but a view should not modify a model like this ? or should it?
-      
-      geom = THREE.CSG.fromCSG(resultCSG)
-      shine= 1500
-      spec= 10000000000
       if @renderer instanceof THREE.CanvasRenderer
-        mat = new THREE.MeshLambertMaterial({color:  0xFFFFFF}) 
-        mat.overdraw = true
-      else 
-        mat = new THREE.MeshPhongMaterial({color:  0xFFFFFF , shading: THREE.SmoothShading,  shininess: shine, specular: spec, metal: true, vertexColors: THREE.VertexColors}) 
-      
-      if @mesh?
-        @scene.remove @mesh
-        try
-          @scene.remove @current.cageView
-          @current=null
-        
-      @mesh = new THREE.Mesh(geom, mat)
-      @mesh.castShadow =  @settings.get("shadows")
-      @mesh.receiveShadow = @settings.get("selfShadows") and @settings.get("shadows")
-      @mesh.material.wireframe = @settings.get("wireframe")
-      @mesh.name = "CSG_OBJ"
+        @mesh.doubleSided = true
       
       #get object connectors
       for i, conn of geom.connectors
@@ -1232,106 +1193,18 @@ define (require) ->
         @mesh.add line
         ###
         mat =  new THREE.MeshLambertMaterial({color: 0xff0000})
-        mesh = new THREE.Mesh(conn, mat)
-        mesh.name = "connectors"
-        
-        mesh.position = conn.basePoint
-        @mesh.add mesh   
-        
-      @mesh.doubleSided = true
-      
-      @scene.add @mesh
-      @controller.objects = [@mesh]
-
-      #TODO: clean this up
-      @vent.trigger("parseCsgDone", @)
-      @vent.trigger("project:compiled",@)#temporary hack to set attributes of project
-      @vent.trigger("project:setBomData",window.classRegistry)
-      
-      
-      
-      @_render()
-      
-    fromCsg_:(csg)=>
-      #cleanup of old class registry
-      if @model.csg?
-        window.classRegistry={}
-      try
-        CsgProcessor  = require 'modules/core/projects/csg/csg.processor'
-        resultCSG = new CsgProcessor().processScript(@model.get("content"))
-        @model.csg = resultCSG #FIXME: remove this at all costs (needs overall reorganization perhaps), but a view should not modify a model like this ? or should it?
-        
-        geom = THREE.CSG.fromCSG(resultCSG)
-        
-        #mat = new THREE.MeshBasicMaterial({color: 0xffffff,shading:THREE.FlatShading, vertexColors: THREE.VertexColors })
-        #mat = new THREE.LineBasicMaterial({color: 0xFFFFFF, lineWidth: 1})
-        #mat = new THREE.MeshLambertMaterial({color: 0xFFFFFF,shading:THREE.FlatShading, vertexColors: THREE.VertexColors})
-        shine= 1500
-        spec= 10000000000
-        mat = new THREE.MeshPhongMaterial({color:  0xFFFFFF , shading: THREE.SmoothShading,  shininess: shine, specular: spec, metal: true, vertexColors: THREE.VertexColors}) 
-        
-        if @mesh?
-          @scene.remove @mesh
-          try
-            @scene.remove @current.cageView
-            @current=null
-          
-        @mesh = new THREE.Mesh(geom, mat)
-        @mesh.castShadow =  @settings.get("shadows")
-        @mesh.receiveShadow = @settings.get("selfShadows") and @settings.get("shadows")
-        @mesh.material.wireframe = @settings.get("wireframe")
-        @mesh.name = "CSG_OBJ"
-        
-        #TOTALLY useless, and slow, mirror effect 
-        resultCSG = new CsgProcessor().processScript(@model.get("content")+".mirroredZ()")
-        geom = THREE.CSG.fromCSG(resultCSG)
-        mat = new THREE.MeshPhongMaterial({color:  0xFFFFFF , shading: THREE.SmoothShading,  shininess: shine, specular: spec, metal: true, vertexColors: THREE.VertexColors}) 
-        mat.opacity = 0.5
-        mirrormesh = new THREE.Mesh(geom, mat)
-        #mirrormesh.rotation.set(0,90,0)
-        #mirrormesh.position.set(@mesh.position.x,@mesh.position.y,-@mesh.position.z-50)
-        @mesh.add mirrormesh
-        
-        
-        
-        @scene.add @mesh
-        @controller.objects = [@mesh]
-      
-      catch error
-        @scene.remove @mesh
-        @model.csg = null
-        console.log "Csg Generation error: #{error} "
-        @vent.trigger("csgParseError", error)
-        
-        #cleanup of old class registry
-        window.classRegistry={}
-        
-      finally
-        @vent.trigger("parseCsgDone", @)
-        @_render()
-
-    addObjs: () =>
-      @cube = new THREE.Mesh(new THREE.CubeGeometry(50,50,50),new THREE.MeshBasicMaterial({color: 0x000000}))
-      @scene.add(@cube)
-      #set up material
-      sphereMaterial =
-      new THREE.MeshLambertMaterial
-        color: 0xCC0000
-      
-      radius = 50
-      segments = 16
-      rings = 16
-
-      sphere = new THREE.Mesh(
-      
-        new THREE.SphereGeometry(
-          radius,
-          segments,
-          rings),
-      
-        sphereMaterial)
-      sphere.name="Shinyyy"
-      @scene.add(sphere)
+        connectorMesh = new THREE.Mesh(conn, mat)
+        connectorMesh.name = "connectors"
+        connectorMesh.position = conn.basePoint
+        if @settings.get('showConnectors') == false
+          connectorMesh.visible = false
+        mesh.add connectorMesh   
+       
+      rootObj.add mesh
+      #recursive, for sub objects
+      if csgObj.parts?
+        for index, part of csgObj.parts
+          @_importGeom(part,mesh)
       
 
   return VisualEditorView

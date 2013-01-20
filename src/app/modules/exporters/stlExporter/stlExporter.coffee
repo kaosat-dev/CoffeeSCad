@@ -24,7 +24,7 @@ define (require) ->
       @project= options.project ? new Project()
       reqRes.addHandler "stlexportBlobUrl", ()=>
         try
-          blobUrl = @export(@project.pfiles.at(0).csg)
+          blobUrl = @export(@project.rootAssembly)
           return blobUrl
         catch error
           return null
@@ -44,8 +44,17 @@ define (require) ->
     stop:->
       console.log "closing stl exporter"
       
-    export:(csgObject)=>
-      @csgObject=csgObject
+    export:(csgObject,mergeAll=true)=>
+      console.log "csgObject"
+      console.log @project
+      
+      if mergeAll
+        mergedObj = csgObject.clone()
+        for part in csgObject.parts
+          mergedObj.union(part)
+        @csgObject = mergedObj
+      else
+        @csgObject = csgObject
       @currentObject = null
       try
         @currentObject = @csgObject.fixTJunctions()

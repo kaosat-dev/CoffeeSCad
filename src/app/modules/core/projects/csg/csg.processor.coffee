@@ -17,7 +17,7 @@ define (require) ->
       @sync = true
       @debug = true
       
-    processScript2:(script, sync=true)-> 
+    processScript2:(script, sync=true, mergeAll=false)-> 
       @sync = sync
       #experimental process script V2
       base = require './csg' 
@@ -37,16 +37,10 @@ define (require) ->
       
       @script = @compileFormatCoffee(script)
       csgTmp = @rebuildSolid()
-      
-      ###
-      console.log "rootProject object"
-      console.log @assemblyRoot
-      
-      for part in @assemblyRoot.parts
-        console.log("part")
-        console.log part
-        @assemblyRoot.union(part)
-      ###
+      if mergeAll
+        for part in @assemblyRoot.parts
+          @assemblyRoot.union(part)
+
       return @assemblyRoot
        
       
