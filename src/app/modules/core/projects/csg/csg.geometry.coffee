@@ -346,7 +346,7 @@ define (require)->
         
       throw new Error("Radius should be non-negative")  if (rEnd < 0) or (rStart < 0)
       throw new Error("Either radiusStart or radiusEnd should be positive")  if (rEnd is 0) and (rStart is 0)
-      slices = parseOptionAsFloat(options, "resolution", CSGBase.defaultResolution2D)
+      slices = parseOptionAsFloat(options, "$fn", CSGBase.defaultResolution2D)
       ray = e.minus(s)
       axisZ = ray.unit()
       axisX = axisZ.randomNonParallelVector().unit()
@@ -381,7 +381,6 @@ define (require)->
       @polygons= result.polygons
       @isCanonicalized = result.isCanonicalized
       @isRetesselated = result.isRetesselated
-   
   
   class RoundedCylinder extends CSGBase
     # Like a cylinder, but with rounded ends instead of flat

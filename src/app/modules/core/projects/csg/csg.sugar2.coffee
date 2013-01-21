@@ -90,6 +90,10 @@ define (require)->
         super options
         parent= @__proto__.__proto__.constructor.name
         register(@__proto__.constructor.name, @, options)
+        
+        defaults = {manufactured:true}
+        options = merge defaults, options
+        @manufactured = options.manufactured
   
     window.classRegistry = classRegistry
     window.Part = Part
@@ -101,27 +105,6 @@ define (require)->
 
   catch error
     console.log "ERROR"+error
-  csgSugar = ""
-  csgSugar += """typeIsArray = Array.isArray || ( value ) -> return {}.toString.call( value ) is '[object Array]'
-  \n"""
-  csgSugar += """Cube=(options)=> 
-    if "size" of options
-      if typeIsArray options.size
-        options.radius = options.size.map (comp) -> comp/2
-      else
-        options.radius = options.size
-    if "$fn" of options
-      options.resolution = options.$fn
-    if "r" of options
-      options.roundradius = options.r
-    if "d" of options
-      options.roundradius = options.d/2
-    if "center" of options
-      if options.center == true
-        options.center= [0,0,0]
-    if not result?
-        result = Cube options
-    return result
-  \n"""
-  csgSugar = ""
+  csgSugar = """
+  """
   return csgSugar

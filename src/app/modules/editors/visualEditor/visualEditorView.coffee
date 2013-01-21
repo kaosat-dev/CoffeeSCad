@@ -1146,25 +1146,25 @@ define (require) ->
         console.log "CSG conversion result ok:"
       
     fromCsg:(csg)=>
-      try
-        #console.log "model(project) changed, updating view"
-        res = @model.compile()
-        if @assembly?
-          @scene.remove @assembly
-          @current=null
+      #try
+      #console.log "model(project) changed, updating view"
+      res = @model.compile()
+      if @assembly?
+        @scene.remove @assembly
+        @current=null
+      
+      @assembly = new THREE.Mesh(new THREE.Geometry())
+      @assembly.name = "assembly"
+      
+      for index, part of res.parts
+        @_importGeom(part,@assembly)
         
-        @assembly = new THREE.Mesh(new THREE.Geometry())
-        @assembly.name = "assembly"
-        
-        for index, part of res.parts
-          @_importGeom(part,@assembly)
-          
-        @scene.add @assembly 
-      catch error
-        console.log "Csg Generation error: #{error} "
-        @vent.trigger("csgParseError", error)
-      finally
-        @_render()
+      @scene.add @assembly 
+      #catch error
+      #  console.log "Csg Generation error: #{error} "
+      #  @vent.trigger("csgParseError", error)
+      #finally
+      @_render()
       
     _importGeom:(csgObj,rootObj)=>
       geom = THREE.CSG.fromCSG(csgObj)

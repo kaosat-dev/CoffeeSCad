@@ -519,18 +519,18 @@ define (require)->
         newset[key] = true
         lookuptable[quantizedvalue] = newset
   
-    @isEmptySet = (obj) ->
+    @isEmptySet : (obj) ->
       for key of obj
         return false
       true
     
-    @intersectSets = (set1, set2) ->
+    @intersectSets : (set1, set2) ->
       result = {}
       for key of set1
         result[key] = true  if key of set2
       result
     
-     @joinSets = (set1, set2) ->
+    @joinSets : (set1, set2) ->
       result = {}
       for key of set1
         result[key] = true
@@ -570,10 +570,7 @@ define (require)->
     getPolygon: (sourcepolygon) ->
       newplane = @getPlane(sourcepolygon.plane)
       newshared = @getPolygonShared(sourcepolygon.shared)
-      _this = this
-      newvertices = sourcepolygon.vertices.map((vertex) ->
-        _this.getVertex vertex
-      )
+      newvertices = (@getVertex vertex for vertex in sourcepolygon.vertices)
       new Polygon(newvertices, newshared, newplane)
   
     getCSG: (sourceCsg) ->
@@ -585,11 +582,8 @@ define (require)->
       CSGBase.fromPolygons newpolygons
       
     getCSGPolygons: (sourceCsg) ->
-      _this = this
-      newpolygons = sourceCsg.polygons.map((polygon) ->
-        _this.getPolygon polygon
-      )
-      newpolygons
+      #returns new polygons based on sourceCSG
+      newpolygons =(@getPolygon polygon for polygon in sourceCsg.polygons)
 
 
   class CSG.FuzzyCAGFactory

@@ -368,6 +368,7 @@ define (require)->
         @subtractSub(csgs[i], islast, islast)
         i++
       @
+
     
     subtractSub: (csg, retesselate, canonicalize) ->
       a = new Tree(@polygons)
@@ -697,15 +698,24 @@ define (require)->
         factory = new FuzzyCSGFactory()
         @polygons = factory.getCSGPolygons(@)
         @isCanonicalized = true
+        
+        console.log "in canonicalized"
+        #debug, attempting to trace origin of redundant vertices
+        for poly, i in @polygons
+          console.log "Polygon #{i}"
+          for vertex in poly.vertices
+            console.log("Pos: #{vertex.pos} Tag:#{vertex.tag} PseudoTag:#{vertex.pseudoTag}")
+          console.log ""
         @
   
     reTesselated: ->
+      #redundant vertices issues (overlapping ones, causing the stl export problem) comes from here (finally traced it down)
       if @isRetesselated
         return @
       else
-        csg = @canonicalized()
+        @canonicalized()
         polygonsPerPlane = {}
-        csg.polygons.map (polygon) ->
+        @polygons.map (polygon) ->
           planetag = polygon.plane.getTag()
           sharedtag = polygon.shared.getTag()
           planetag += "/" + sharedtag
@@ -724,6 +734,13 @@ define (require)->
         @polygons = destpolygons
         @isRetesselated = true
         @canonicalized()
+        
+        console.log "in ReTesselated"
+        for poly, i in @polygons
+          console.log "Polygon #{i}"
+          for vertex in poly.vertices
+            console.log("Pos: #{vertex.pos} Tag:#{vertex.tag} PseudoTag:#{vertex.pseudoTag}")
+          console.log ""
         @
         
     getBounds: ->
@@ -807,7 +824,7 @@ define (require)->
       #   myConnector: a CSG.Connector of this solid
       #   otherConnector: a CSG.Connector to which myConnector should be connected
       #   mirror: false: the 'axis' vectors of the connectors should point in the same direction
-      #           true: the 'axis' vectors of the connectors should point in opposite direction
+      #           true: the 'axis' vector[{"vertices":[{"pos":{"_x":0,"_y":17.320508075688767,"_z":0},"tag":109},{"pos":{"_x":0,"_y":17.320508075688764,"_z":50},"tag":110},{"pos":{"_x":0,"_y":100,"_z":50},"tag":111},{"pos":{"_x":0,"_y":100,"_z":0},"tag":112}],"shared":{"color":null,"name":null,"tag":102},"plane":{"normal":{"_x":-1,"_y":0,"_z":0},"w":0,"tag":101}},{"vertices":[{"pos":{"_x":50,"_y":0,"_z":0},"tag":113},{"pos":{"_x":50,"_y":100,"_z":0},"tag":114},{"pos":{"_x":50,"_y":100,"_z":50},"tag":115},{"pos":{"_x":50,"_y":0,"_z":50},"tag":116}],"shared":{"color":null,"name":null,"tag":102},"plane":{"normal":{"_x":1,"_y":0,"_z":0},"w":50,"tag":103}},{"vertices":[{"pos":{"_x":29.999999999999975,"_y":0,"_z":0},"tag":117},{"pos":{"_x":50,"_y":0,"_z":0},"tag":113},{"pos":{"_x":50,"_y":0,"_z":50},"tag":116},{"pos":{"_x":29.99999999999997,"_y":0,"_z":50},"tag":118}],"shared":{"color":null,"name":null,"tag":102},"plane":{"normal":{"_x":0,"_y":-1,"_z":0},"w":0,"tag":104}},{"vertices":[{"pos":{"_x":0,"_y":100,"_z":0},"tag":112},{"pos":{"_x":0,"_y":100,"_z":50},"tag":111},{"pos":{"_x":50,"_y":100,"_z":50},"tag":115},{"pos":{"_x":50,"_y":100,"_z":0},"tag":114}],"shared":{"color":null,"name":null,"tag":102},"plane":{"normal":{"_x":0,"_y":1,"_z":0},"w":100,"tag":105}},{"vertices":[{"pos":{"_x":50,"_y":100,"_z":0},"tag":114},{"pos":{"_x":50,"_y":0,"_z":0},"tag":113},{"pos":{"_x":29.999999999999975,"_y":0,"_z":0},"tag":117},{"pos":{"_x":0,"_y":17.320508075688767,"_z":0},"tag":109},{"pos":{"_x":0,"_y":100,"_z":0},"tag":112}],"shared":{"color":null,"name":null,"tag":102},"plane":{"normal":{"_x":0,"_y":0,"_z":-1},"w":0,"tag":106}},{"vertices":[{"pos":{"_x":50,"_y":0,"_z":50},"tag":116},{"pos":{"_x":50,"_y":100,"_z":50},"tag":115},{"pos":{"_x":0,"_y":100,"_z":50},"tag":111},{"pos":{"_x":0,"_y":17.320508075688764,"_z":50},"tag":110},{"pos":{"_x":29.99999999999997,"_y":0,"_z":50},"tag":118}],"shared":{"color":null,"name":null,"tag":102},"plane":{"normal":{"_x":0,"_y":0,"_z":1},"w":50,"tag":107}},{"vertices":[{"pos":{"_x":29.999999999999975,"_y":0,"_z":0},"tag":117},{"pos":{"_x":29.99999999999997,"_y":0,"_z":50},"tag":118},{"pos":{"_x":0,"_y":17.320508075688764,"_z":50},"tag":110},{"pos":{"_x":0,"_y":17.320508075688767,"_z":0},"tag":109}],"shared":{"color":null,"name":null,"tag":102},"plane":{"normal":{"_x":-0.4999999999999998,"_y":-0.8660254037844389,"_z":0},"w":-15,"tag":108}}] s of the connectors should point in opposite direction
       #   normalrotation: degrees of rotation between the 'normal' vectors of the two
       #                   connectors
       matrix = myConnector.getTransformationTo(otherConnector, mirror, normalrotation)
@@ -826,7 +843,6 @@ define (require)->
       #result
       @polygons = polygons
       @
-      
   
     setColor: (red, green, blue) ->
       newshared = new PolygonShared([red, green, blue])
@@ -952,7 +968,14 @@ define (require)->
       #  not be used for further CSG operations!
       #  
       idx = undefined
-      csg = @canonicalized()
+      
+      csg = @clone().canonicalized()
+      
+      for poly, i in csg.polygons
+        console.log "Polygon #{i}"
+        for vertex in poly.vertices
+          console.log("Pos: #{vertex.pos} Tag:#{vertex.tag} PseudoTag:#{vertex.pseudoTag}")
+        console.log ""
       sidemap = {}
       polygonindex = 0
   
@@ -963,6 +986,7 @@ define (require)->
           vertex = polygon.vertices[0]
           vertextag = vertex.getTag()
           vertexindex = 0
+          console.log("vertex: #{vertex}")
   
           while vertexindex < numvertices
             nextvertexindex = vertexindex + 1
@@ -972,7 +996,6 @@ define (require)->
             sidetag = vertextag + "/" + nextvertextag
             reversesidetag = nextvertextag + "/" + vertextag
             if reversesidetag of sidemap
-              
               # this side matches the same side in another polygon. Remove from sidemap:
               ar = sidemap[reversesidetag]
               ar.splice -1, 1

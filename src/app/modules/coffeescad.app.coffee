@@ -67,29 +67,34 @@ define (require)->
       @project.createFile
         name:"config"
         #FIXME: apparently the csg refac broken the TJUNCTION system: MUST FIX (Error: !sidemapisempty)
-        content_BROKEN:"""
+        content:"""
+        #just a comment :fix me
+        toto = new Cube(size:[50,100,50])
+        c = new Cylinder(h:300, r:20,$fn:3)
+        toto = toto.subtract(c.translate([10,0,-150]))
+        assembly.add(toto)
+        """
+        
+        contentsfd:"""
         #just a comment :fix me
         class Thinga extends Part
           constructor:(options) ->
             super options
-            @toto = new Cube
-              size:[50,100,50]
-            s = new Sphere(r:75, $fn:10)
-            c = new Cylinder(h:300, r:20).color([0.8,0.5,0.2])
-            @union(@toto.color([0.2,0.8,0.5]))
-            #@union(s.color([0.6,0.8,0.9]))
+            @toto = new Cube(size:[50,100,50])
+            c = new Cylinder(h:300, r:20,$fn:3)
+            @union(@toto)
             @subtract(c.translate([10,0,-150]))
         
         thinga1 = new Thinga()
         
-        return thinga1#.color([0.9,0.2,0])
+        assembly.add(thinga1)
         """
         content_basic:"""
         #just a comment
         cb = new Cube({size:[50,100,50]})
         project.add(cb)
         """
-        content:"""
+        content____s:"""
         #just a comment
         console.log assembly
         ###
