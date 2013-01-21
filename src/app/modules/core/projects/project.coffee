@@ -95,14 +95,15 @@ define (require)->
       res = @csgProcessor.processScript2(script,true)
       #@set({"partRegistry":window.classRegistry}, {silent: true})
       partRegistry = window.classRegistry
-        
+      console.log  partRegistry 
       @bom = new Backbone.Collection()
       for name,params of partRegistry
         for param, quantity of params
           variantName = "Default"
           if param != ""
             variantName=""
-          @bom.add { name: name,variant:variantName, params: param,quantity: quantity, included:true } 
+          
+          @bom.add { name: name,variant:variantName, params: param,quantity: quantity, manufactured:true, included:true } 
       
       @rootAssembly = res
            
