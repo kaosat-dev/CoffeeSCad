@@ -11,6 +11,7 @@ define (require)->
   Vector2D = maths.Vector2D
   Side = maths.Side
   solve2Linear = maths.solve2Linear
+  OrthoNormalBasis = maths.OrthoNormalBasis
   
   props = require './csg.props'
   Properties = props.CSG.Properties
@@ -42,6 +43,11 @@ define (require)->
       @properties = new Properties()
       @isCanonicalized = true
       @isRetesselated = true
+      @children= [] 
+      
+    add:(objects...)->
+      for obj in objects
+        @children.push(obj)
       
     clone:()->
       _clone=(obj)->
@@ -103,7 +109,7 @@ define (require)->
         Polygon.fromObject p
       )
       csg = CSGBase.fromPolygons(polygons)
-      csg = csg.canonicalized()
+      csg = csg.canonicalize()
       csg
       
     @fromCompactBinary : (bin) ->
@@ -178,7 +184,7 @@ define (require)->
       result
   
     toCompactBinary: ->
-      csg = @canonicalized()
+      csg = @canonicalize()
       numpolygons = csg.polygons.length
       numpolygonvertices = 0
       numvertices = 0
@@ -263,7 +269,7 @@ define (require)->
     toPointCloud: (cuberadius) ->
       # For debugging
       # Creates a new solid with a tiny cube at every vertex of the source solid
-      csg = @reTesselated()
+      csg = @reTesselate()
       result = new  CSGBase()
       
       # make a list of all unique vertices
@@ -280,7 +286,7 @@ define (require)->
           radius: cuberadius
         )
         result = result.unionSub(cube, false, false)
-      result = result.reTesselated()
+      result = result.reTesselate()
       result
    
     union:(csg) ->
@@ -325,8 +331,11 @@ define (require)->
         
         @polygons = a.allPolygons().concat(b.allPolygons())
         @properties = @properties._merge(csg.properties)
-        @reTesselated()  if retesselate
-        @canonicalized()  if canonicalize
+        #invalidate @isCanonicalized & @isRetesselated
+        @isCanonicalized = false
+        @isRetesselated = false
+        @reTesselate()  if retesselate
+        @canonicalize()  if canonicalize
         @cachedBoundingBox = null
         @
         
@@ -381,8 +390,11 @@ define (require)->
     
       @polygons = a.allPolygons()
       @properties = @properties._merge(csg.properties)
-      @reTesselated()  if retesselate
-      @canonicalized()  if canonicalize
+      #invalidate @isCanonicalized & @isRetesselated
+      @isCanonicalized = false
+      @isRetesselated = false
+      @reTesselate()  if retesselate
+      @canonicalize()  if canonicalize
       @cachedBoundingBox = null
       @
     
@@ -427,17 +439,18 @@ define (require)->
       a.invert()
       @polygons = a.allPolygons()
       @properties = @properties._merge(csg.properties)
-      @reTesselated()  if retesselate
-      @canonicalized()  if canonicalize
+      #invalidate @isCanonicalized & @isRetesselated
+      @isCanonicalized = false
+      @isRetesselated = false
+      @reTesselate()  if retesselate
+      @canonicalize()  if canonicalize
       @cachedBoundingBox = null
       @
       
     inverse: ->
       # Return a new CSG solid with solid and empty space switched. This solid is
       # not modified.
-      flippedpolygons = @polygons.map((p) ->
-        p.flipped()
-      )
+      flippedpolygons = (polygon.flipped() for polygon in sourceCsg.polygons)
       @polygons = flippedpolygons
       # TODO: flip properties
       @cachedBoundingBox = null
@@ -479,7 +492,7 @@ define (require)->
       # Expand the solid
       # resolution: number of points per 360 degree for the rounded corners
       result = @expandedShell(radius, resolution, true)
-      result = result.reTesselated()
+      result = result.reTesselate()
       #result.properties = @properties # keep original properties
       @polygons = result.polygons
       @isRetesselated = result.isRetesselated
@@ -491,7 +504,7 @@ define (require)->
       # resolution: number of points per 360 degree for the rounded corners
       expandedshell = @expandedShell(radius, resolution, false)
       result = @subtract(expandedshell)
-      result = result.reTesselated()
+      result = result.reTesselate()
       result.properties = @properties # keep original properties
       result
   
@@ -503,7 +516,7 @@ define (require)->
       # unionWithThis: if true, the resulting solid will be united with 'this' solid;
       #   the result is a true expansion of the solid
       #   If false, returns only the shell 
-      csg = @reTesselated()
+      csg = @reTesselate()
       result = undefined
       if unionWithThis
         result = csg
@@ -511,14 +524,17 @@ define (require)->
         result = new  CSGBase()
       
       # first extrude all polygons:
-      csg.polygons.map (polygon) ->
+      extrudePolygon=(polygon)->
         extrudevector = polygon.plane.normal.unit().times(2 * radius)
         translatedpolygon = polygon.translate(extrudevector.times(-0.5))
         extrudedface = translatedpolygon.extrude(extrudevector)
         extrudedface = CSGBase.fromPolygons extrudedface
         result = result.unionSub(extrudedface, false, false)
-  
       
+      console.log "here"
+      polygons = (extrudePolygon(polygon) for polygon in csg.polygons)
+      csg.polygons = polygons
+      console.log "csg polys #{polygons}"
       # Make a list of all unique vertex pairs (i.e. all sides of the solid)
       # For each vertex pair we collect the following:
       #   v1: first coordinate
@@ -529,9 +545,7 @@ define (require)->
         numvertices = polygon.vertices.length
         prevvertex = polygon.vertices[numvertices - 1]
         prevvertextag = prevvertex.getTag()
-        i = 0
-  
-        while i < numvertices
+        for i in [0...numvertices]
           vertex = polygon.vertices[i]
           vertextag = vertex.getTag()
           vertextagpair = undefined
@@ -552,8 +566,6 @@ define (require)->
           obj.planenormals.push polygon.plane.normal
           prevvertextag = vertextag
           prevvertex = vertex
-          i++
-  
       
       # now construct a cylinder on every side
       # The cylinder is always an approximation of a true cylinder: it will have <resolution> polygons 
@@ -575,12 +587,9 @@ define (require)->
         angles = []
         
         # first of all equally spaced around the cylinder:
-        i = 0
-  
-        while i < resolution
+        for i in [0...resolution]
           angle = i * Math.PI * 2 / resolution
           angles.push angle
-          i++
         
         # and also at every normal of all touching planes:
         vertexpair.planenormals.map (planenormal) ->
@@ -608,9 +617,8 @@ define (require)->
         endfacevertices = []
         polygons = []
         prevangle = undefined
-        i = -1
   
-        while i < numangles
+        for i in [-1...numangles]
           angle = angles[(if (i < 0) then (i + numangles) else i)]
           si = Math.sin(angle)
           co = Math.cos(angle)
@@ -628,7 +636,7 @@ define (require)->
               polygons.push polygon
             prevp1 = p1
             prevp2 = p2
-          i++
+            
         endfacevertices.reverse()
         polygons.push new Polygon(startfacevertices)
         polygons.push new Polygon(endfacevertices)
@@ -664,9 +672,8 @@ define (require)->
         # and find a suitable z axis. We will use the normal which is most perpendicular to the x axis:
         bestzaxis = null
         bestzaxisorthogonality = 0
-        i = 1
-  
-        while i < vertexobj.normals.length
+        
+        for i in [1...vertexobj.normals.length]
           normal = vertexobj.normals[i].unit()
           cross = xaxis.cross(normal)
           crosslength = cross.length()
@@ -674,46 +681,37 @@ define (require)->
             if crosslength > bestzaxisorthogonality
               bestzaxisorthogonality = crosslength
               bestzaxis = normal
-          i++
+              
         bestzaxis = xaxis.randomNonParallelVector()  unless bestzaxis
         yaxis = xaxis.cross(bestzaxis).unit()
         zaxis = yaxis.cross(xaxis)
-        console.log "here s"
         sphere = sphereUtil(
           center: vertexobj.pos
           radius: radius
           resolution: resolution
           axes: [xaxis, yaxis, zaxis]
         )
-        console.log "here sdfs"
         result = result.unionSub(sphere, false, false)
-        console.log "here toto"
       console.log "at end"
       result
       
-    canonicalized: ->
+    canonicalize: ->
+      #"merges" duplicate vertices : if two vertices share the same position (or close to)
+      #returns the first one, discards the second
       if @isCanonicalized
         return @
       else
         factory = new FuzzyCSGFactory()
         @polygons = factory.getCSGPolygons(@)
         @isCanonicalized = true
-        
-        console.log "in canonicalized"
-        #debug, attempting to trace origin of redundant vertices
-        for poly, i in @polygons
-          console.log "Polygon #{i}"
-          for vertex in poly.vertices
-            console.log("Pos: #{vertex.pos} Tag:#{vertex.tag} PseudoTag:#{vertex.pseudoTag}")
-          console.log ""
         @
   
-    reTesselated: ->
+    reTesselate: ->
       #redundant vertices issues (overlapping ones, causing the stl export problem) comes from here (finally traced it down)
       if @isRetesselated
         return @
       else
-        @canonicalized()
+        @canonicalize()
         polygonsPerPlane = {}
         @polygons.map (polygon) ->
           planetag = polygon.plane.getTag()
@@ -732,15 +730,11 @@ define (require)->
             reTesselateCoplanarPolygons sourcepolygons, retesselayedpolygons
             destpolygons = destpolygons.concat(retesselayedpolygons)
         @polygons = destpolygons
-        @isRetesselated = true
-        @canonicalized()
         
-        console.log "in ReTesselated"
-        for poly, i in @polygons
-          console.log "Polygon #{i}"
-          for vertex in poly.vertices
-            console.log("Pos: #{vertex.pos} Tag:#{vertex.tag} PseudoTag:#{vertex.pseudoTag}")
-          console.log ""
+        @isRetesselated = true
+        #this is done in order to force canonicalization
+        @isCanonicalized = false 
+        @canonicalize()
         @
         
     getBounds: ->
@@ -749,11 +743,8 @@ define (require)->
         minpoint = new Vector3D(0, 0, 0)
         maxpoint = new Vector3D(0, 0, 0)
         polygons = @polygons
-        numpolygons = polygons.length
-        i = 0
-  
-        while i < numpolygons
-          polygon = polygons[i]
+        
+        getMinMaxPoints=(polygon, i)=>
           bounds = polygon.boundingBox()
           if i is 0
             minpoint = bounds[0]
@@ -761,7 +752,9 @@ define (require)->
           else
             minpoint = minpoint.min(bounds[0])
             maxpoint = maxpoint.max(bounds[1])
-          i++
+            
+        (getMinMaxPoints(polygon, i) for polygon,i in polygons)
+       
         @cachedBoundingBox = [minpoint, maxpoint]
       @cachedBoundingBox
     
@@ -781,30 +774,36 @@ define (require)->
         return false  if mybounds[0].z > otherbounds[1].z
         true
     
-    cutByPlane: (plane) ->
-      # Cut the solid by a plane. Returns the solid on the back side of the plane
-      return new  CSGBase()  if @polygons.length is 0
+    cutByPlane: (plane, cutTop=true) ->
+      # Cut the solid by a plane. Returns the solid on the back side of the plane (cutTop == true ) or the front side (cutTop==false)
+      return @ if @polygons.length is 0
       
       # Ideally we would like to do an intersection with a polygon of inifinite size
       # but this is not supported by our implementation. As a workaround, we will create
       # a cube, with one face on the plane, and a size larger enough so that the entire
       # solid fits in the cube.
       
+      #do we keep the top or the bottom
+      if not cutTop
+        plane.flipped()
+      
       # find the max distance of any vertex to the center of the plane:
       planecenter = plane.normal.times(plane.w)
       maxdistance = 0
-      @polygons.map (polygon) ->
-        polygon.vertices.map (vertex) ->
+      
+      getMaxDistance = (polygon)=>
+        for vertex in polygon.vertices
           distance = vertex.pos.distanceToSquared(planecenter)
           maxdistance = distance  if distance > maxdistance
-  
+        
+      (getMaxDistance(polygon) for polygon in @polygons)
   
       maxdistance = Math.sqrt(maxdistance)
       maxdistance *= 1.01 # make sure it's really larger
       
       # Now build a polygon on the plane, at any point farther than maxdistance from the plane center:
       vertices = []
-      orthobasis = new CSG.OrthoNormalBasis(plane)
+      orthobasis = new OrthoNormalBasis(plane)
       vertices.push new Vertex(orthobasis.to3D(new Vector2D(maxdistance, -maxdistance)))
       vertices.push new Vertex(orthobasis.to3D(new Vector2D(-maxdistance, -maxdistance)))
       vertices.push new Vertex(orthobasis.to3D(new Vector2D(-maxdistance, maxdistance)))
@@ -812,12 +811,12 @@ define (require)->
       polygon = new Polygon(vertices, null, plane.flipped())
       
       # and extrude the polygon into a cube, backwards of the plane:
-      cube = polygon.extrude(plane.normal.times(-maxdistance))
-      
+      cube = CSGBase.fromPolygons( polygon.extrude(plane.normal.times(-maxdistance)))
       # Now we can do the intersection:
-      result = @intersect(cube)
-      result.properties = @properties # keep original properties
-      result
+      @intersect(cube)
+      #result.properties = @properties # keep original properties
+      #result
+      @
   
     connectTo: (myConnector, otherConnector, mirror, normalrotation) ->
       # Connect a solid to another solid, such that two CSG.Connectors become connected
@@ -844,10 +843,6 @@ define (require)->
       @polygons = polygons
       @
   
-    setColor: (red, green, blue) ->
-      newshared = new PolygonShared([red, green, blue])
-      @setShared newshared
-  
     color: (rgb) ->
       newshared = new PolygonShared([rgb[0], rgb[1], rgb[2]])
       @setShared newshared
@@ -861,7 +856,7 @@ define (require)->
       else
         
         # get a list of unique planes in the CSG:
-        csg = @canonicalized()
+        csg = @canonicalize()
         planemap = {}
         csg.polygons.map (polygon) ->
           planemap[polygon.plane.getTag()] = polygon.plane
@@ -946,7 +941,6 @@ define (require)->
       cut3d.projectToOrthoNormalBasis orthobasis
       
     fixTJunctions: ->
-      console.log "fixing TJUNCTIONS"
       #
       #  fixTJunctions:
       #
@@ -968,14 +962,7 @@ define (require)->
       #  not be used for further CSG operations!
       #  
       idx = undefined
-      
-      csg = @clone().canonicalized()
-      
-      for poly, i in csg.polygons
-        console.log "Polygon #{i}"
-        for vertex in poly.vertices
-          console.log("Pos: #{vertex.pos} Tag:#{vertex.tag} PseudoTag:#{vertex.pseudoTag}")
-        console.log ""
+      csg = @clone().canonicalize()
       sidemap = {}
       polygonindex = 0
   
@@ -986,7 +973,6 @@ define (require)->
           vertex = polygon.vertices[0]
           vertextag = vertex.getTag()
           vertexindex = 0
-          console.log("vertex: #{vertex}")
   
           while vertexindex < numvertices
             nextvertexindex = vertexindex + 1
@@ -1076,20 +1062,18 @@ define (require)->
           endtag = vertex1.getTag()
           sidetag = starttag + "/" + endtag
           
-          # console.log("deleteSide("+sidetag+")");
           throw new Error("Assertion failed")  unless sidetag of sidemap
           idx = -1
           sideobjs = sidemap[sidetag]
-          i = 0
-  
-          while i < sideobjs.length
+          for i in [0...sideobjs.length]
             sideobj = sideobjs[i]
             continue  unless sideobj.vertex0 is vertex0
             continue  unless sideobj.vertex1 is vertex1
-            continue  unless sideobj.polygonindex is polygonindex  if polygonindex isnt null
+            if polygonindex?
+              if(sideobj.polygonindex != polygonindex) then continue
             idx = i
             break
-            i++
+            
           throw new Error("Assertion failed")  if idx < 0
           sideobjs.splice idx, 1
           delete sidemap[sidetag]  if sideobjs.length is 0
@@ -1101,7 +1085,9 @@ define (require)->
           throw new Error("Assertion failed")  if idx < 0
           vertextag2sideend[endtag].splice idx, 1
           delete vertextag2sideend[endtag]  if vertextag2sideend[endtag].length is 0
+          
         polygons = csg.polygons.slice(0)
+        
         loop
           sidemapisempty = true
           for sidetag of sidemap
@@ -1122,7 +1108,7 @@ define (require)->
               sideobj = sideobjs[0]
               directionindex = 0
   
-              while directionindex < 2
+              for directionindex in [0...2]
                 startvertex = (if (directionindex is 0) then sideobj.vertex0 else sideobj.vertex1)
                 endvertex = (if (directionindex is 0) then sideobj.vertex1 else sideobj.vertex0)
                 startvertextag = startvertex.getTag()
@@ -1132,9 +1118,8 @@ define (require)->
                   matchingsides = vertextag2sideend[startvertextag]  if startvertextag of vertextag2sideend
                 else
                   matchingsides = vertextag2sidestart[startvertextag]  if startvertextag of vertextag2sidestart
-                matchingsideindex = 0
   
-                while matchingsideindex < matchingsides.length
+                for matchingsideindex in [0...matchingsides.length]
                   matchingsidetag = matchingsides[matchingsideindex]
                   matchingside = sidemap[matchingsidetag][0]
                   matchingsidestartvertex = (if (directionindex is 0) then matchingside.vertex0 else matchingside.vertex1)
@@ -1197,8 +1182,6 @@ define (require)->
                         directionindex = 2 # skip reverse direction check
                         donesomething = true
                         break
-                  matchingsideindex++
-                directionindex++
             # if(distancesquared < 1e-10)
             # if( (t > 0) && (t < 1) )
             # if(endingstidestartvertextag == endvertextag)
@@ -1212,7 +1195,6 @@ define (require)->
         newcsg.isCanonicalized = true
         newcsg.isRetesselated = true
         csg = newcsg
-      # if(!sidemapisempty)
       sidemapisempty = true
       for sidetag of sidemap
         sidemapisempty = false
@@ -1323,7 +1305,7 @@ define (require)->
       area = result.area()
       throw new Error("Degenerate polygon!")  if Math.abs(area) < 1e-5
       result = result.flipped()  if area < 0
-      result = result.canonicalized()
+      result = result.canonicalize()
       result
     
     
@@ -1416,7 +1398,7 @@ define (require)->
       str
   
     toCompactBinary: ->
-      cag = @canonicalized()
+      cag = @canonicalize()
       numsides = cag.sides.length
       vertexmap = {}
       vertices = []
@@ -1463,8 +1445,8 @@ define (require)->
       cags.map (cag) ->
         r.unionSub(cag.toCSG(-1, 1), false, false)
   
-      r.reTesselated()
-      r.canonicalized()
+      r.reTesselate()
+      r.canonicalize()
       cag = CAGBase.fromFakeCSG(r)
       @sides = cag.sides
       @isCanonicalized = cag.isCanonicalized
@@ -1479,10 +1461,10 @@ define (require)->
       r = @toCSG(-1, 1)
       cags.map (cag) ->
         r.subtractSub(cag.toCSG(-1, 1), false, false)
-      r.reTesselated()
-      r.canonicalized()
+      r.reTesselate()
+      r.canonicalize()
       r = CAGBase.fromFakeCSG(r)
-      r.canonicalized()
+      r.canonicalize()
       @sides = r.sides
       @isCanonicalized = cag.isCanonicalized
       @
@@ -1498,10 +1480,10 @@ define (require)->
       cags.map (cag) ->
         r.intersectSub(cag.toCSG(-1, 1), false, false)
   
-      r.reTesselated()
-      r.canonicalized()
+      r.reTesselate()
+      r.canonicalize()
       r = CAGBase.fromFakeCSG(r)
-      r.canonicalized()
+      r.canonicalize()
       @sides = r.sides
       @isCanonicalized = cag.isCanonicalized
       @
@@ -1575,7 +1557,7 @@ define (require)->
       resolution = 4  if resolution < 4
       cags = []
       pointmap = {}
-      cag = @canonicalized()
+      cag = @canonicalize()
       cag.sides.map (side) ->
         d = side.vertex1.pos.minus(side.vertex0.pos)
         dl = d.length()
@@ -1752,7 +1734,7 @@ define (require)->
         @
   
     getOutlinePaths: ->
-      cag = @canonicalized()
+      cag = @canonicalize()
       sideTagToSideMap = {}
       startVertexTagToSideTagMap = {}
       cag.sides.map (side) ->

@@ -67,7 +67,7 @@ define (require)->
       @project.createFile
         name:"config"
         #FIXME: apparently the csg refac broken the TJUNCTION system: MUST FIX (Error: !sidemapisempty)
-        content:"""
+        content____s:"""
         #just a comment :fix me
         toto = new Cube(size:[50,100,50])
         c = new Cylinder(h:300, r:20,$fn:3)
@@ -94,7 +94,7 @@ define (require)->
         cb = new Cube({size:[50,100,50]})
         project.add(cb)
         """
-        content____s:"""
+        content:"""
         #just a comment
         console.log assembly
         ###
@@ -130,9 +130,12 @@ define (require)->
         
         thinga1 = new Thinga()
         thinga2 = new Thinga()
-        #thinga3 = thinga2.clone()
-        assembly.add(thinga1.translate([-150,0,0]))
         
+        #thinga1.getBounds()
+        plane = Plane.fromNormalAndPoint([0, 0, 1], [0, 0, 25])
+        thinga1.cutByPlane(plane)
+        #thinga1.expand(3,5)
+        assembly.add(thinga1.translate([100,0,0]))
         
         wobble = new WobblyBobbly(rot:[5,25,150],pos:[-100,150,10])
         wobble2 = new WobblyBobbly(pos:[0,10,20])
@@ -141,6 +144,9 @@ define (require)->
         assembly.add(wobble)
         assembly.add(wobble2)
         assembly.add(wobble3)
+        
+        
+        
         """
         content_1:"""
         #This is the project's main configuration file

@@ -16,6 +16,9 @@ define (require)->
   Rectangle = shapes2d.Rectangle
   Circle = shapes2d.Circle
   
+  maths = require './csg.maths'
+  Plane = maths.Plane
+  
   extras = require './extras'
   quickHull2d = extras.quickHull2d
   
@@ -30,6 +33,7 @@ define (require)->
     window.Circle = Circle
     
     window.quickHull2d = quickHull2d
+    window.Plane = Plane
     
     window.CSG={}
   
@@ -66,7 +70,6 @@ define (require)->
     
     doMagic=()=>
       for i,v of window.otherRegistry
-        #console.log "i #{i}, v #{v}"
         console.log i
         klass= v
         #console.log "klassString"

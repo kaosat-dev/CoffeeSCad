@@ -18,27 +18,23 @@ define (require) ->
       @debug = true
       
     processScript2:(script, sync=true, mergeAll=false)-> 
-      @sync = sync
       #experimental process script V2
+      @sync = sync
       base = require './csg' 
       CSGBase = base.CSGBase
+      
       #main project alias ?
       class Assembly extends CSGBase
         constructor:()->
           super
-          @parts = []
           @params = []
-          
-        add:(objects...)->
-          for obj in objects
-            @parts.push(obj)
-          #console.log @parts
+      
       @assemblyRoot = new Assembly()
       
       @script = @compileFormatCoffee(script)
       csgTmp = @rebuildSolid()
       if mergeAll
-        for part in @assemblyRoot.parts
+        for part in @assemblyRoot.children
           @assemblyRoot.union(part)
 
       return @assemblyRoot

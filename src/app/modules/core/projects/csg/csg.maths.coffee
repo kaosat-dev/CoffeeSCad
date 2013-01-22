@@ -312,14 +312,8 @@ define (require)->
     # colors. Custom vertex classes need to provide a `pos` property
     # `flipped()`, and `interpolate()` methods that behave analogous to the ones
     # defined by `CSG.Vertex`.
-    @_pseudoTag=0
     constructor: (pos) ->
       @pos = pos
-      
-      #for debugging weird duplicate vertex issues
-      @pseudoTag =CSG.Vertex._pseudoTag+1
-      CSG.Vertex._pseudoTag+=1
-      #@pseudoTag=Math.floor(Math.random()*101)
   
     @fromObject : (obj) ->
       # create from an untyped object with identical property names:

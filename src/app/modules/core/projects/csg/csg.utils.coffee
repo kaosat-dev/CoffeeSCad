@@ -583,7 +583,7 @@ define (require)->
       
     getCSGPolygons: (sourceCsg) ->
       #returns new polygons based on sourceCSG
-      newpolygons =(@getPolygon polygon for polygon in sourceCsg.polygons)
+      newpolygons = (@getPolygon polygon for polygon in sourceCsg.polygons)
 
 
   class CSG.FuzzyCAGFactory

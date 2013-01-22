@@ -49,12 +49,14 @@ define (require) ->
       console.log @project
       
       if mergeAll
+        #merge all children of the root object
         mergedObj = csgObject.clone()
-        for part in csgObject.parts
+        for part in csgObject.children
           mergedObj.union(part)
         @csgObject = mergedObj
       else
         @csgObject = csgObject
+        
       @currentObject = null
       try
         @currentObject = @csgObject.fixTJunctions()
