@@ -18,7 +18,6 @@ define (require) ->
   
   THREE.CSG = require 'modules/core/projects/csg/csg.Three'
   
-  #TODO:
   #FIXME: memory leaks: When removing objects from scene do we really need: renderer.deallocateObject(Object); ?
   
   class MyAxisHelper
@@ -1156,7 +1155,7 @@ define (require) ->
       @assembly = new THREE.Mesh(new THREE.Geometry())
       @assembly.name = "assembly"
       
-      for index, part of res.parts
+      for index, part of res.children
         @_importGeom(part,@assembly)
         
       @scene.add @assembly 
@@ -1183,7 +1182,7 @@ define (require) ->
       mesh.geometry.computeCentroids()
       
       if @renderer instanceof THREE.CanvasRenderer
-        @mesh.doubleSided = true
+        mesh.doubleSided = true
       
       #get object connectors
       for i, conn of geom.connectors
@@ -1202,9 +1201,9 @@ define (require) ->
        
       rootObj.add mesh
       #recursive, for sub objects
-      if csgObj.parts?
-        for index, part of csgObj.parts
-          @_importGeom(part,mesh)
+      if csgObj.children?
+        for index, child of csgObj.children
+          @_importGeom(child, mesh)
       
 
   return VisualEditorView
