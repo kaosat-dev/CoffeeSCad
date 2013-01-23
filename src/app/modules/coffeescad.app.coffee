@@ -39,6 +39,7 @@ define (require)->
       @exporters["bom"] = new BomExporter()
       
       #events
+      $(window).bind('beforeunload',@onAppClosing)
       @on("initialize:before",@onInitializeBefore)
       @on("initialize:after",@onInitializeAfter)
       @on("start", @onStart)
@@ -46,6 +47,7 @@ define (require)->
       @vent.on("settings:show", @onSettingsShow)
       @vent.on("bomExporter:start", ()=> @exporters["bom"].start({project:@project}))
       @vent.on("stlExporter:start", ()=> @exporters["stl"].start({project:@project}))
+      
       
       @addRegions @regions
       @initLayout()
@@ -66,7 +68,6 @@ define (require)->
       @project = new Project()
       @project.createFile
         name:"config"
-        #FIXME: apparently the csg refac broken the TJUNCTION system: MUST FIX (Error: !sidemapisempty)
         content____s:"""
         #just a comment :fix me
         toto = new Cube(size:[50,100,50])
@@ -74,7 +75,6 @@ define (require)->
         toto = toto.subtract(c.translate([10,0,-150]))
         assembly.add(toto)
         """
-        
         contentsfd:"""
         #just a comment :fix me
         class Thinga extends Part
@@ -144,9 +144,6 @@ define (require)->
         assembly.add(wobble)
         assembly.add(wobble2)
         assembly.add(wobble3)
-        
-        
-        
         """
         content_1:"""
         #This is the project's main configuration file
@@ -270,7 +267,11 @@ define (require)->
       
     onAppStarted:(appName)->
       console.log "I see app: #{appName} has started"
-      
+    
+    onAppClosing:()->
+      console.log "app closing, bye"
+      return 'You have unsaved changes!'
+    
     onSettingsShow:()=>
       settingsView = new SettingsView
         model : @settings 

@@ -5,28 +5,36 @@ define (require)->
   
   #Ensure you point to where your spec folder is, base directory is app/,
   specs=[]
-  #specs.push("./test/spec/project.spec")
-  specs.push("spec/settings.spec")
+  #core
+  specs.push("./spec/library.spec")
+  specs.push("./spec/project.spec")
+  specs.push("./spec/csg.spec")
+  specs.push("./spec/settings.spec")
+  
+  #editors
+  
+  #exporters
+  specs.push("./spec/exporters/stlExporter/stlExporter.spec")
+  specs.push("./spec/exporters/bomExporter/bomExporter.spec")
+  
   
   jasmineEnv = jasmine.getEnv()
   jasmineEnv.updateInterval = 1000
   
-  jasmineEnv.addReporter(new jasmine.TrivialReporter())
-
+  trivialReporter = new jasmine.TrivialReporter()
+  jasmineEnv.addReporter(trivialReporter)
+  
+  jasmineEnv.specFilter = (spec) ->
+    return trivialReporter.specFilter(spec)
+    
   $ ->
     require specs, ->
       jasmineEnv.execute()
     
   #require specs, ()->
-    
     #ConsoleJasmineReporter2 = require('./lib/consoleJasmineReporter2').ConsoleJasmineReporter
     #jasmine.getEnv().addReporter(new ConsoleJasmineReporter2())
     #Set up the jasmine reporters once each spec has been loaded
-    
-  #jasmineEnv.execute()
-    
-    
-  
   ### 
   requirejs specs, ()-> 
     jasmine = require('./test/Vendor/jasmine').jasmine

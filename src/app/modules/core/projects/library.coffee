@@ -4,6 +4,8 @@ define (require)->
   Backbone = require 'backbone'
   LocalStorage = require 'localstorage'
   
+  Project = require './project'
+  
   class Library extends Backbone.Collection
     """
     a library contains multiple projects
@@ -20,6 +22,11 @@ define (require)->
     comparator: (project)->
       date = new Date(project.get('lastModificationDate'))
       return date.getTime()
+    
+    
+    getProjectByStore:(storageType="brower")->
+      switch storageType
+        when "brower"
     
     save:()=>
       @each (model)-> 
@@ -48,14 +55,15 @@ define (require)->
           #console.log "NO id specified2"
           res = super(options)
           return res
-        
+    
+    ###   
     parse: (response)=>
       #console.log("in lib parse")
       for i, v of response
         response[i].pfiles = new ProjectFiles(response[i].pfiles)
       return response
-      
-      
+    ###
+    
     onReset:()->
       #if @models.length == 0
       #  @save()

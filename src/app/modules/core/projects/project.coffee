@@ -36,7 +36,6 @@ define (require)->
     
     onSynched:()=>
       #when save is sucessfull
-      console.log "synching"
       @storedContent = @get("content")
       @dirty=false
       @trigger "saved"
@@ -81,9 +80,17 @@ define (require)->
       @bom = new Backbone.Collection()
       @rootAssembly = {}
       
-      locStorName = @get("name")+"-files"
-      @pfiles.localStorage= new Backbone.LocalStorage(locStorName)
-      storageType = "localStorage"#can be localStorage, dropbox, github
+      #can be browser, dropbox, github
+      @storageType = "browser"
+    
+    switchStorage:(storageType)->
+      @storageType = storageType
+      switch storageType
+        when "browser"
+          locStorName = @get("name")+"-files"
+          @pfiles.sync = ""
+          @pfiles.localStorage= new Backbone.LocalStorage(locStorName)
+      
       
     compile:()=>
       #experimental
@@ -106,7 +113,6 @@ define (require)->
           @bom.add { name: name,variant:variantName, params: param,quantity: quantity, manufactured:true, included:true } 
       
       @rootAssembly = res
-           
       res
       
     onReset:()->

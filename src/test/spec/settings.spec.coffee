@@ -1,15 +1,24 @@
 define (require)->
-  $ = require 'jquery'
-  _ = require 'underscore'
-  Settings= require "/CoffeeSCad/app/modules/core/settings/settings"
+  Settings= require "modules/core/settings/settings"
 
-  describe "settings", ->
+  describe "Settings", ->
     settings = null
     beforeEach ->
       settings = new Settings() 
       
-    it 'can return a specific setting by name' , ->
-      generalSettings= settings.byName("General")
+    it 'can return a specific sub setting by name' , ->
+      console.log settings
+      generalSettings = settings.getByName("General")
+      expect(generalSettings.get("name")).toBe "General"
+    
+    it 'can register a setting class for modular use', ->
+      class TestSettings extends Backbone.Model
+        idAttribute: 'name'
+        defaults:
+          name: "TestSubApp"
+          title: "Test Sub App"
+          dummySetting: 42
       
-      expect(generalSettings.name).toBe "General"
-  
+      settings.registerSettingClass("TestSubApp", TestSettings)
+      expect(settings.settingNames["TestSubApp"]).toBe(TestSettings)
+      expect(settings.getByName("TestSubApp").get("dummySetting")).toBe(42)

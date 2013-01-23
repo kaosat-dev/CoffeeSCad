@@ -1,9 +1,11 @@
 define (require) ->
   CoffeeScript = require 'CoffeeScript'
   
+  reqRes = require 'modules/core/reqRes'
   utils = require "modules/core/utils/utils"
-    
   csgSugar = require "./csg.sugar2"
+  
+  
   ##Inner workflow
   #- linting ?
   #- Compile
@@ -38,7 +40,6 @@ define (require) ->
           @assemblyRoot.union(part)
 
       return @assemblyRoot
-       
       
     processScript:(script, filename) ->
       #experimental process script
@@ -117,14 +118,17 @@ define (require) ->
       return includes
         
     compileFormatCoffee:(source)->
+      #Compile coffeescript code to js, add formating , included libs etc
       #console.log("Compiling & formating coffeescad code")
-      app = require "app"   
+      libsSource = ""
+      
+      ###
+      FIXME: refactor includes system
       lib = app.lib
       window.include= (options)=>
         pp=pp
       
-      libsSource = ""
-      
+      extSource = reqRes.request("#{otherProjectName}/#{otherProjectFileName}")
       includes = @processIncludes(source)
       #console.log "includes"+ includes
       for index, inc of includes
@@ -134,9 +138,10 @@ define (require) ->
           if mainPart?
             includeSrc = mainPart.get("content")
             libsSource+= includeSrc+ "\n" 
-      libsSource+="\n"      
-      fullSource = csgSugar + libsSource + source
-      
+      libsSource+="\n"   
+      ###
+         
+      fullSource = libsSource + source
       textblock = CoffeeScript.compile(fullSource, {bare: true})
 
       formated=""

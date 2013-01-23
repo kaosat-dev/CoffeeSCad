@@ -23,12 +23,9 @@ define (require) ->
     start:(options)->
       @project= options.project ? new Project()
       reqRes.addHandler "stlexportBlobUrl", ()=>
-        try
-          blobUrl = @export(@project.rootAssembly)
-          return blobUrl
-        catch error
-          return null
-      
+        blobUrl = @export(@project.rootAssembly)
+        return blobUrl
+          
       @trigger("initialize:before", options)
       @initCallbacks.run(options, this)
       @trigger("initialize:after", options)
@@ -45,30 +42,39 @@ define (require) ->
       console.log "closing stl exporter"
       
     export:(csgObject,mergeAll=true)=>
-      console.log "csgObject"
-      console.log @project
-      
-      if mergeAll
-        #merge all children of the root object
-        mergedObj = csgObject.clone()
-        for part in csgObject.children
-          mergedObj.union(part)
-        @csgObject = mergedObj
-      else
-        @csgObject = csgObject
-        
-      @currentObject = null
       try
-        @currentObject = @csgObject.fixTJunctions()
-        data = @_generateBinary()
-        blob = new Blob(data, {type: @mimeType})
+        try
+          if mergeAll
+            #merge all children of the csg object
+            mergedObj = csgObject.clone()
+            for part in csgObject.children
+              mergedObj.union(part)
+            @csgObject = mergedObj
+          else
+            @csgObject = csgObject
+        catch error
+          errorMsg = "Failed to merge csgObject children with error: #{error}"
+          console.log errorMsg
+          throw new Error(errorMsg) 
+          
+        @currentObject = null
+        try
+          @currentObject = @csgObject.fixTJunctions()
+          data = @_generateBinary()
+          blob = new Blob(data, {type: @mimeType})
+        catch error
+          errorMsg = "Failed to generate stl blob data: #{error}"
+          console.log errorMsg
+          throw new Error(errorMsg) 
+          
+        windowURL=utils.getWindowURL()
+        @outputFileBlobUrl = windowURL.createObjectURL(blob)
+        if not @outputFileBlobUrl then throw new Error("createObjectURL() failed") 
+        return @outputFileBlobUrl
+        
       catch error
-        console.log "Failed to generate stl blob data: #{error}"
-      
-      windowURL=utils.getWindowURL()
-      @outputFileBlobUrl = windowURL.createObjectURL(blob)
-      if not @outputFileBlobUrl then throw new Error("createObjectURL() failed") 
-      return @outputFileBlobUrl   
+        @vent.trigger("stlExport:error", error)
+        return null
     
     _generateBinary:()->
       blobData = []

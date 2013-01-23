@@ -1,48 +1,71 @@
 define (require)->
   $ = require 'jquery'
   _ = require 'underscore'
-  Project = require "modules/core/project/project"
+  Project = require "modules/core/projects/project"
   
-  describe "library", ->
-    lib = null
-    
-    beforeEach ->
-      lib = new Library()
-  
-    #it 'can save itself' , ->
-    #  #lib.save()
-    #  expect(lib.files).toBe(["bla","bli"])
-  
-  
-  describe "project", ->
+  describe "Project ", ->
     project = null
     
     beforeEach ->
       project = new Project
         name:"test_project"
     
-    it 'can add files to itself' , ->
-      part = new ProjectFile
-        name: "a part"
-        ext: "coscad"
-        content: ""    
-      project.add(part)
-      expect(project.files.length).toBe 1
-      expect(project.pfiles.length).toBe 1
-      expect(project.files[0]).toBe("a part")
-     
-    it 'can remove files from itself' , ->
-      part = new ProjectFile
-        name: "a part"
-        ext: "coscad"
-        content: ""    
+    it 'can make new project files',->
+      project.createFile
+        name:"testFileName"
+        content:"testContent"
       
-      project.add(part)
-      project.remove(part)
+      expect(project.pfiles.at(0).get("name")).toBe("testFileName")
+    
+    it 'can remove files from itself' , ->
+      file = project.createFile
+        name:"testFileName"
+        content:"testContent" 
+      
+      project.remove(file)
       expect(project.files.length).toBe 0
+      
+    it 'compiles the contents of its files into an assembly of parts', ->
+      project.createFile
+        name:"testFileName"
+        content:"""
+        class TestPart extends Part
+          constructor:(options) ->
+            super options
+            @union(new Cylinder(h:300, r:20,$fn:3))
+        
+        testPart = new TestPart()
+        assembly.add(testPart)
+        """
+      project.compile()
+      expect(project.rootAssembly.children[0].polygons.length).toBe(9)
+   
+    it 'generates bom data when compiling',->
+      project.createFile
+        name:"testFileName"
+        content:"""
+        class TestPart extends Part
+          constructor:(options) ->
+            super options
+            @union(new Cylinder(h:300, r:20,$fn:3))
+        
+        testPart = new TestPart()
+        assembly.add(testPart)
+        """
+      project.compile()
+      expBom = new Backbone.Collection()
+      expPart = new Backbone.Model
+        included: true
+        manufactured: true
+        name: "TestPart"
+        params: ""
+        quantity: 2
+        variant: "Default"
+      expBom.add  expPart
+      expect(JSON.stringify(project.bom)).toEqual('[{"name":"TestPart","variant":"Default","params":"","quantity":2,"manufactured":true,"included":true}]')
    
    #########################
-   
+   ### 
    describe "projectFile", ->
     project = null
     part = null
@@ -70,6 +93,6 @@ define (require)->
       part.set("content","DummyContent")
       part.save()
       expect(part.dirty).toBe false
-     
+    ### 
     
       
