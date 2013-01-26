@@ -63,6 +63,25 @@ define (require)->
         variant: "Default"
       expBom.add  expPart
       expect(JSON.stringify(project.bom)).toEqual('[{"name":"TestPart","variant":"Default","params":"","quantity":2,"manufactured":true,"included":true}]')
+      
+    it 'is marked as "dirty" when one of its files gets modified', ->
+      expect(project.dirty).toBe(false)
+      project.createFile
+        name:"testFileName"
+        content:"""
+        class TestPart extends Part
+          constructor:(options) ->
+            super options
+            @union(new Cylinder(h:300, r:20,$fn:3))
+        
+        testPart = new TestPart()
+        assembly.add(testPart)
+        """
+      expect(project.dirty).toBe(true)
+      project.dirty = false
+      project.pfiles.at(0).set("content","")
+      expect(project.dirty).toBe(true)
+     
    
    #########################
    ### 

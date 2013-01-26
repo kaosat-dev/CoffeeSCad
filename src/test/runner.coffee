@@ -6,7 +6,7 @@ define (require)->
   #Ensure you point to where your spec folder is, base directory is app/,
   specs=[]
   #core
-  specs.push("./spec/library.spec")
+  #specs.push("./spec/library.spec")
   specs.push("./spec/project.spec")
   specs.push("./spec/csg.spec")
   specs.push("./spec/settings.spec")

@@ -77,9 +77,11 @@ define (require)->
     
     ui: 
       exportersStub: "#exporters"
+      connectorsStub: "#connectors"
       
     events:
       "click .newProject":    ()->vent.trigger("project:new")
+      "click .newFile":       ()->vent.trigger("project:file:new")
       "click .saveasProject": ()->vent.trigger("project:saveAs")
       "click .saveProject":   ()->vent.trigger("project:save")
       "click .loadProject":   ()->vent.trigger("project:load")
@@ -91,7 +93,7 @@ define (require)->
       "click .settings":      ()->vent.trigger("settings:show")
       "click .showEditor":    ()->vent.trigger("codeEditor:show")
       
-      "click .dropBoxLogin":   ()->vent.trigger("dropbox:LoginRequest")#should be a command 
+      #"click .dropBoxLogin":   ()->vent.trigger("dropbox:LoginRequest")#should be a command 
       
     constructor:(options)->
       super options
@@ -104,7 +106,7 @@ define (require)->
       @on "file:new:mouseup" ,=>
         @vent.trigger("fileNewRequest", @)
       
-      @on "csg:parserender:mouseup" ,=>
+      @on "project:compiled" ,=>
         if not  $('#updateBtn').hasClass "disabled"
           @vent.trigger("parseCsgRequest", @)
         
@@ -141,11 +143,6 @@ define (require)->
       if not  $('#redoBtn').hasClass "disabled"
         @vent.trigger("file:redoRequest")
     
-    onstlExport:->
-      console.log "stl Export"
-    onbomExport:->
-      console.log "bom export"
-    
     onRender:=>
        $('#undoBtn').addClass("disabled")
        $('#redoBtn').addClass("disabled")
@@ -158,6 +155,18 @@ define (require)->
          #see http://www.mennovanslooten.nl/blog/post/62 and http://rzrsharp.net/2011/06/27/what-does-coffeescripts-do-do.html
          #for more explanation (or lookup "anonymous functions inside loops")
          @ui.exportersStub.append("<li ><a href='#' class='#{className}'>#{index}</li>") 
+           
+       for index,connectorName of @connectors
+         className = "login#{index[0].toUpperCase() + index[1..-1]}"
+         event = "#{index}Connector:login"
+         console.log "event #{event}"
+         @events["click .#{className}"] = do(event)-> ->@vent.trigger(event)
+           
+         @vent.on("#{index}Connector:loggedIn",()->console.log("#{index}Connector logged IN successfully"))
+         @vent.on("#{index}Connector:loggedOut",()->console.log("#{index}Connector logged OUT successfully"))
+         #TODO: move this in constructor
+         #<li class="dropBoxLogin"><a href="#">DropBox</a></li>
+         @ui.connectorsStub.append("<li ><a href='#' class='#{className}'>#{index}</li>") 
          
        @delegateEvents()
   

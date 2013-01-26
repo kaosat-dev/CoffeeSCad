@@ -20,6 +20,8 @@ require.config
     stats:            "../assets/js/libs/Stats"
     utils:            "../assets/js/libs/utils"
     
+    dropbox:          "../assets/js/libs/dropbox"
+    
     #plugins
     jquery_hotkeys:   "../assets/js/plugins/jquery.hotkeys"
     jquery_ui:        "../assets/js/plugins/jquery-ui-1.9.0.custom.min"
@@ -137,6 +139,10 @@ require.config
     jquery_jstree:
       deps: ["jquery"]
       exports: "jquery_jstree"
+      
+    dropbox: 
+      deps:    ["jquery"]
+      exports : "Dropbox"
 
   
 

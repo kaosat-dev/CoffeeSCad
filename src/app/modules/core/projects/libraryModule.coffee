@@ -5,13 +5,10 @@ define (require)->
   marionette = require 'marionette'
   
   
-  class ProjectController extends Backbone.Marionette.Controller
+  class LibraryModule extends Backbone.Marionette.Controller
 
     constructor: (options)->
-      @stuff = options.stuff
 
-    doStuff: ()->
-      @trigger("stuff:done", @stuff)
 
     _CreateNewProject:()=>
       @project = new Project({name:'TestProject'}) 

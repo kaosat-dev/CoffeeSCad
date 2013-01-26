@@ -7,7 +7,7 @@ define (require)->
   class DropBoxStorage
     constructor:->
       @client = new Dropbox.Client
-        key: "your app key here"
+        key: "h8OY5h+ah3A=|AS0FmmbZJrmc8/QbpU6lMzrCd5lSGZPCKVtjMlA7ZA=="
         sandbox: true
       
     authentificate:()=>
@@ -32,22 +32,30 @@ define (require)->
           # If you're using dropbox.js, the only cause behind this error is that
           # the user token expired.
           # Get the user through the authentication flow again.
+          throw new Error("DropBox token expired") 
         when 404 then
           # The file or folder you tried to access is not in the user's Dropbox.
           # Handling this error is specific to your application.
+          throw new Error("Failed to find the specified file or folder") 
         when 507 then
           # The user is over their Dropbox quota.
           # Tell them their Dropbox is full. Refreshing the page won't help.
+          throw new Error("Dropbox quota exceeded") 
         when 503 then
           # Too many API requests. Tell the user to try again later.
           # Long-term, optimize your code to use fewer API calls.
+          throw new Error("Dropbox: too many requests") 
         when 400  then
+          throw new Error("Dropbox: bad input parameter") 
           # Bad input parameter
         when 403 then 
           # Bad OAuth request.
+          throw new Error("Dropbox: bad oauth request") 
         when 405 then
           # Request method not expected
+          throw new Error("Dropbox: unexpected request method") 
         else
+          throw new Error("Dropbox: uknown error") 
           # Caused by a bug in dropbox.js, in your application, or in Dropbox.
           # Tell the user an error occurred, ask them to refresh the page.
       
@@ -192,7 +200,4 @@ define (require)->
         d.resolve(data)
       return d.promise()
         
-        
-      
-  store = new DropBoxStorage
-  return store 
+  return DropBoxStorage 

@@ -3,7 +3,7 @@ define (require)->
   _ = require 'underscore'
   Backbone = require 'backbone'
   marionette = require 'marionette'
-  projectController = require 'modules/projects/projectController'
+  projectController = require 'libraryModule'
   
   class ProjectRouter extends Backbone.Marionette.AppRouter
     controller: projectController

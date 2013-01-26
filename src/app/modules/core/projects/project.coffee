@@ -63,7 +63,7 @@ define (require)->
     
     idAttribute: 'name'
     defaults:
-      name:     "TestProject"
+      name:     "Project"
       lastModificationDate: null
     
     constructor:(options)->
@@ -156,6 +156,10 @@ define (require)->
       pFile.bind("saved" , ()=> @onFileSaved(pFile.get("id")))
       pFile.bind("dirtied", ()=> @trigger "dirtied")
       pFile.bind("cleaned", ()=> @onFileSaved(pFile.get("id")))
+      
+      #we added a new file, so project as changed -> mark as dirty
+      @dirty=true
+      @trigger "dirtied"
     
     remove:(pFile)=>
       index = @files.indexOf(pFile.get("name"))

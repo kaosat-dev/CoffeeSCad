@@ -55,13 +55,5 @@ define (require)->
     constructor:( options) ->
       super options
       @app = require 'app'
-      
-      ###
-      @on "file:load:mouseup" ,=>
-        console.log "blah blah load"
-        fileName = $(@ui.fileNameInput).val()
-        @app.vent.trigger("fileLoadRequest", fileName)
-        @.close()    
-      ###
   
   return {SaveView,LoadView}

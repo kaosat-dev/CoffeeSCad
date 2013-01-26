@@ -13,7 +13,13 @@
                       		<b class="caret"></b>
                       	</a>
                       	<ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
-				    		<li id ="newFileBtn" class="newFile"><a tabindex="-1" href="#"><i class="icon-file"></i>New</a></li>
+				    		<li id ="newFileBtn" class="dropdown-submenu">
+				    			<a tabindex="-1" href="#"><i class="icon-file"></i>New</a>
+				    			<ul class="dropdown-menu">
+				    				<li class="newProject"><a tabindex="-1" href="#">Project</a></li>
+				    				<li class="newFile"><a tabindex="-1" href="#">File</a></li>
+				    			</ul>
+				    		</li>
                       		<li id ="saveFileBtn" class="saveFile"><a tabindex="-1" href="#"><i class="icon-save"></i>Save</a></li>
 				    			<li id ="saveFileAsBtn" class="saveFileAs"><a tabindex="-1" href="#"><i class="icon-save"></i>Save As</a></li>
 				    			<li id ="loadFileBtn" class="loadFile"><a tabindex="-1" href="#"><i class="icon-file"></i>Load</a></li>
@@ -99,8 +105,8 @@
                      	Login
                      	<b class="caret"></b>
                      	</a>
-                     	<ul class="dropdown-menu">
-                     		<li class="dropBoxLogin"><a href="#">DropBox</a></li>
+                     	<ul id="connectors" class="dropdown-menu">
+                     		
                      	</ul>
                      </li>
                       <li>

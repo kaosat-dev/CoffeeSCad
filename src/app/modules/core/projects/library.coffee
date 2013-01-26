@@ -23,10 +23,9 @@ define (require)->
       date = new Date(project.get('lastModificationDate'))
       return date.getTime()
     
-    
     getProjectByStore:(storageType="brower")->
       switch storageType
-        when "brower"
+        when "browser"
     
     save:()=>
       @each (model)-> 
