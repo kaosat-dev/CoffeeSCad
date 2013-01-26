@@ -54,6 +54,10 @@ define (require)->
       @vent.on("bomExporter:start", ()=> @exporters["bom"].start({project:@project}))
       @vent.on("stlExporter:start", ()=> @exporters["stl"].start({project:@project}))
       
+      #just temporary
+      @vent.on("project:save", @onNewProject)
+      @vent.on("project:load")
+      
       
       @addRegions @regions
       @initLayout()
@@ -150,6 +154,9 @@ define (require)->
       
       modReg = new ModalRegion({elName:"settings",large:true})
       modReg.show settingsView
+      
+    onNewProject:()=>
+      console.log "new project"
       
     onInitializeBefore:()->
       console.log "before init"

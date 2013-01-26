@@ -157,16 +157,33 @@ define (require)->
          @ui.exportersStub.append("<li ><a href='#' class='#{className}'>#{index}</li>") 
            
        for index,connectorName of @connectors
+         #TODO: move this in constructor
+         
          className = "login#{index[0].toUpperCase() + index[1..-1]}"
          event = "#{index}Connector:login"
-         console.log "event #{event}"
          @events["click .#{className}"] = do(event)-> ->@vent.trigger(event)
-           
-         @vent.on("#{index}Connector:loggedIn",()->console.log("#{index}Connector logged IN successfully"))
-         @vent.on("#{index}Connector:loggedOut",()->console.log("#{index}Connector logged OUT successfully"))
-         #TODO: move this in constructor
-         #<li class="dropBoxLogin"><a href="#">DropBox</a></li>
-         @ui.connectorsStub.append("<li ><a href='#' class='#{className}'>#{index}</li>") 
+         
+         logoutClassName = "logout#{index[0].toUpperCase() + index[1..-1]}"
+         logoutEvent = "#{index}Connector:logout"
+         @events["click .#{logoutClassName}"] = do(logoutEvent)-> ->@vent.trigger(logoutEvent)
+         
+         console.log "logoutClassName: #{logoutClassName}, logoutEvent: #{logoutEvent}"
+         
+         onLoggedIn=()=>
+           selector = "##{className}"
+           console.log("#{index}Connector logged IN successfully")
+           $(selector).replaceWith("<li id='#{logoutClassName}' ><a href='#' class='#{logoutClassName}'><i class='icon-signout' style='color:green'/>  #{index} - Signed out</a></li>")
+         
+         onLoggedOut=()=>
+           selector = "##{logoutClassName}"
+           console.log("#{index}Connector logged Out successfully")
+           $(selector).replaceWith("<li id='#{className}' ><a href='#' class='#{className}'><i class='icon-signin' style='color:red'/>  #{index} - Signed In</a></li>")
+         
+         @vent.on("#{index}Connector:loggedIn",()->onLoggedIn())
+         @vent.on("#{index}Connector:loggedOut",()->onLoggedOut())
+         
+         
+         @ui.connectorsStub.append("<li id='#{className}'><a href='#' class='#{className}'><i class='icon-signin' style='color:red'/>  #{index} - Signed Out</a></li>") 
          
        @delegateEvents()
   

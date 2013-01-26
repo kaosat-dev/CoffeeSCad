@@ -26,7 +26,6 @@ define (require)->
       console.log "all is fine"
       
     showError:(error)->
-      console.log "error in dropbox"
       switch error.status
         when 401 then
           # If you're using dropbox.js, the only cause behind this error is that
