@@ -156,34 +156,33 @@ define (require)->
          #for more explanation (or lookup "anonymous functions inside loops")
          @ui.exportersStub.append("<li ><a href='#' class='#{className}'>#{index}</li>") 
            
-       for index,connectorName of @connectors
+       for index, connector of @connectors
          #TODO: move this in constructor
-         
-         className = "login#{index[0].toUpperCase() + index[1..-1]}"
-         event = "#{index}Connector:login"
-         @events["click .#{className}"] = do(event)-> ->@vent.trigger(event)
-         
-         logoutClassName = "logout#{index[0].toUpperCase() + index[1..-1]}"
-         logoutEvent = "#{index}Connector:logout"
-         @events["click .#{logoutClassName}"] = do(logoutEvent)-> ->@vent.trigger(logoutEvent)
-         
-         console.log "logoutClassName: #{logoutClassName}, logoutEvent: #{logoutEvent}"
-         
-         onLoggedIn=()=>
-           selector = "##{className}"
-           console.log("#{index}Connector logged IN successfully")
-           $(selector).replaceWith("<li id='#{logoutClassName}' ><a href='#' class='#{logoutClassName}'><i class='icon-signout' style='color:green'/>  #{index} - Signed out</a></li>")
-         
-         onLoggedOut=()=>
-           selector = "##{logoutClassName}"
-           console.log("#{index}Connector logged Out successfully")
-           $(selector).replaceWith("<li id='#{className}' ><a href='#' class='#{className}'><i class='icon-signin' style='color:red'/>  #{index} - Signed In</a></li>")
-         
-         @vent.on("#{index}Connector:loggedIn",()->onLoggedIn())
-         @vent.on("#{index}Connector:loggedOut",()->onLoggedOut())
-         
-         
-         @ui.connectorsStub.append("<li id='#{className}'><a href='#' class='#{className}'><i class='icon-signin' style='color:red'/>  #{index} - Signed Out</a></li>") 
+         if connector.isLogginRequired
+           loginClassName = "login#{index[0].toUpperCase() + index[1..-1]}"
+           loginEvent = "#{index}Connector:login"
+           @events["click .#{loginClassName}"] = do(loginEvent)-> ->@vent.trigger(loginEvent)
+           
+           logoutClassName = "logout#{index[0].toUpperCase() + index[1..-1]}"
+           logoutEvent = "#{index}Connector:logout"
+           @events["click .#{logoutClassName}"] = do(logoutEvent)-> ->@vent.trigger(logoutEvent)
+           
+           
+           onLoggedIn=()=>
+             selector = "##{loginClassName}"
+             console.log("#{index}Connector logged IN successfully")
+             $(selector).replaceWith("<li id='#{logoutClassName}' ><a href='#' class='#{logoutClassName}'><i class='icon-signout' style='color:green'/>  #{index} - Signed out</a></li>")
+           
+           onLoggedOut=()=>
+             selector = "##{logoutClassName}"
+             console.log("#{index}Connector logged Out successfully")
+             $(selector).replaceWith("<li id='#{loginClassName}' ><a href='#' class='#{loginClassName}'><i class='icon-signin' style='color:red'/>  #{index} - Signed In</a></li>")
+           
+           @vent.on("#{index}Connector:loggedIn",()->onLoggedIn())
+           @vent.on("#{index}Connector:loggedOut",()->onLoggedOut())
+           
+           
+           @ui.connectorsStub.append("<li id='#{loginClassName}'><a href='#' class='#{loginClassName}'><i class='icon-signin' style='color:red'/>  #{index} - Signed Out</a></li>") 
          
        @delegateEvents()
   

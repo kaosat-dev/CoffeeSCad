@@ -42,7 +42,9 @@ define (require)->
       
       #Connectors
       DropBoxConnector = require './connectors/dropbox/dropBoxConnector'
+      BrowserConnector = require './connectors/browser/browserConnector'
       @connectors["dropBox"] = new DropBoxConnector()
+      @connectors["browser"] = new BrowserConnector()
       
       #events
       $(window).bind('beforeunload',@onAppClosing)
@@ -55,9 +57,9 @@ define (require)->
       @vent.on("stlExporter:start", ()=> @exporters["stl"].start({project:@project}))
       
       #just temporary
-      @vent.on("project:save", @onNewProject)
-      @vent.on("project:load")
-      
+      @vent.on("project:new", @onNewProject)
+      @vent.on("project:save", @onSaveProject)
+      @vent.on("project:load", @onLoadProject)
       
       @addRegions @regions
       @initLayout()
@@ -156,7 +158,31 @@ define (require)->
       modReg.show settingsView
       
     onNewProject:()=>
-      console.log "new project"
+      projectBrowserView = new ProjectBrowserView
+        model: @project
+        operation: "new"
+        connectors: @connectors
+      
+      modReg = new ModalRegion({elName:"library",large:true})
+      modReg.show projectBrowserView
+    
+    onSaveProject:=>
+      projectBrowserView = new ProjectBrowserView
+        model: @project
+        operation: "save"
+        connectors: @connectors
+      
+      modReg = new ModalRegion({elName:"library",large:true})
+      modReg.show projectBrowserView
+    
+    onLoadProject:=>
+      projectBrowserView = new ProjectBrowserView
+        model: @project
+        operation: "load"
+        connectors: @connectors
+      
+      modReg = new ModalRegion({elName:"library",large:true})
+      modReg.show projectBrowserView
       
     onInitializeBefore:()->
       console.log "before init"
