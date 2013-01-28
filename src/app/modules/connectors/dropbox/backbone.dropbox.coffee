@@ -76,10 +76,8 @@ define (require)->
           
           console.log("id"+model.get("id"))
           id = model.id
-          ### 
           if model.get "ext"
             id = "#{id}.#{model.get('ext')}"
-          ###
           @writeFile(id, JSON.stringify(model))
           return model.toJSON()
           

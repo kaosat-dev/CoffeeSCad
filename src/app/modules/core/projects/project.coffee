@@ -7,7 +7,6 @@ define (require)->
   CsgProcessor = require "./csg/csg.processor"
   debug  = false
   #TODO: add support for multiple types of storage, settable per project
-  #syncType = Backbone.LocalStorage
   
   class ProjectFile extends Backbone.Model
     idAttribute: 'name'
@@ -84,6 +83,10 @@ define (require)->
       @bom = new Backbone.Collection()
       @rootAssembly = {}
       
+      
+      @createFile
+        name:".project"#holds project metadata
+        content:""
       #can be browser, dropbox, github
       #@storageType = "browser"
     
@@ -193,7 +196,8 @@ define (require)->
     createFile:(options)->
       file = new ProjectFile
         name: options.name ? "a File"
-        content: options.content ? " \n\n"    
+        content: options.content ? " \n\n"  
+        ext:  options.ext ? "coffee"
       @add file      
     ###
     parse: (response)=>

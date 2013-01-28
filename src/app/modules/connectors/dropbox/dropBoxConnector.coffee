@@ -10,8 +10,8 @@ define (require)->
     a library contains multiple projects, stored on dropbox
     """  
     model: Project
-    sync: backbone_dropbox.sync
-    path: "."
+    #sync: backbone_dropbox.sync
+    path: ""
     defaults:
       recentProjects: []
     
@@ -22,7 +22,11 @@ define (require)->
     comparator: (project)->
       date = new Date(project.get('lastModificationDate'))
       return date.getTime()
-  
+      
+    onReset:()->
+      console.log "DropBoxLibrary reset" 
+      console.log @
+      console.log "_____________"
   
   class DropBoxConnector extends Backbone.Model
     defaults:
@@ -39,13 +43,20 @@ define (require)->
       @vent.on("dropBoxConnector:logout", @logout)
       
       #experimental
-      @lib = new DropBoxLibrary()
+      @lib = new DropBoxLibrary
+        sync: @store.sync
+      @lib.sync = @store.sync
       
     login:=>
       try
         @store.authentificate()
         @loggedIn = true
         @vent.trigger("dropBoxConnector:loggedIn")
+        
+        console.log "dropbox logged in"
+       
+        #@lib.fetch()
+        
       catch error
         @vent.trigger("dropBoxConnector:loginFailed")
         
@@ -83,8 +94,14 @@ define (require)->
         file.pathRoot= project.get("name")
         file.save()
       
-      project.save()
+      #project.save()
       @vent.trigger("project:saved")
+    
+    loadProject:(projectName)=>
+      console.log "dropbox loading project #{projectName}"
+      project =@lib.get(projectName)
+      console.log "loaded:"
+      console.log project
     
     getProjectsName:(callback)=>
       #hack

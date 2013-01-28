@@ -38,6 +38,8 @@ define (require)->
       @vent.on("project:saved",()=>@close())
       @vent.on("project:loaded",()=>@close())
       
+      @vent.on("project:selected",(id)=>$(@ui.fileNameInput).val(id))
+      
     serializeData:->
       operation: @operation
       name: @model.get("name")
@@ -62,6 +64,11 @@ define (require)->
       
       screenshotUrl = reqRes.request("project:getScreenshot")
       @ui.projectThumbNail.attr("src",screenshotUrl)
+      #save thumbnail
+      @model.createFile
+        name:".thumbnail"
+        content:screenshotUrl
+        ext:"png"
       
     onProjectLoadRequested:=>
       fileName = $(@ui.fileNameInput).val()
@@ -73,16 +80,38 @@ define (require)->
     ui: 
       projects: "#projects"
     events:
-      "click :checkbox" : "onStoreSelected"
-      
+      "click .accordion-heading" : "onStoreSelected"
+      "click .projectSelector" : "onProjectSelected"
+     
     constructor:(options)->
       super options
       #hack
       @selected = false
       vent.on("project:saveRequest",@onSaveRequested)
+      vent.on("project:loadRequest",@onLoadRequested)
+      vent.on("connector:selected",@onStoreSelected)
     
-    onStoreSelected:()=>
-      @selected = true
+    onStoreSelected:(name)=>
+      if name.currentTarget?
+        if @selected
+          @selected = false
+          header = @$el.find(".connector-header")
+          header.removeClass('alert-info')
+        else
+          @selected = true
+          header = @$el.find(".connector-header")
+          header.addClass('alert-info')
+          vent.trigger("connector:selected",@model.get("name"))
+      else
+        if name != @model.get("name")
+          @selected = false
+          header = @$el.find(".connector-header")
+          header.removeClass('alert-info')
+    
+    onProjectSelected:(e)=>
+      e.preventDefault()
+      id = $(e.currentTarget).attr("id")
+      vent.trigger("project:selected",id)
     
     onSaveRequested:(fileName)=>
       if @selected
@@ -92,6 +121,10 @@ define (require)->
           @model.targetProject.pfiles.at(0).set("name",fileName)
           @model.saveProject(@model.targetProject)
     
+    onLoadRequested:(fileName)=>
+      if @selected
+        @model.loadProject(fileName)
+    
     onRender:->
       @model.getProjectsName(@onProjectsFetched)
       
@@ -99,8 +132,8 @@ define (require)->
       #console.log "projectNames #{projectNames}"
       #console.log @
       for name in projectNames
-        @ui.projects.append("<li><a href='#'>#{name}</a></li>")
-    
+        @ui.projects.append("<li><a id=#{name} class='projectSelector' href='#'>#{name}</a></li>")
+      @delegateEvents()
     
   class ProjectsStoreView extends Backbone.Marionette.CompositeView
     template:projectStoreListTemplate

@@ -90,6 +90,15 @@ define (require) ->
       
     makeScreeshot:=>
       # Save image into localStorage
+      ###resizing?
+      oldCanvas = @renderer.domElement.toDataURL("image/png")
+      img = new Image()
+      img.src = oldCanvas
+      img.onload = ()-> 
+        canvas.height += 100
+        ctx.drawImage(img, 0, 0)
+      ###
+      
       imgAsDataURL = @renderer.domElement.toDataURL("image/png")
       return imgAsDataURL
     

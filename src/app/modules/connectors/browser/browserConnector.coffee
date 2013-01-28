@@ -40,13 +40,14 @@ define (require)->
       @lib = new BrowserLibrary()
       
     login:=>
+      console.log "browser logged in"
       @loggedIn = true
         
     logout:=>
       @loggedIn = false
     
     saveProject:(project)=>
-      #@lib.add(project)
+      @lib.add(project)
       rootStoreURI = "projects-"+project.get("name")
       project.pfiles.sync = @store.sync
       project.pfiles.localStorage = new Backbone.LocalStorage(rootStoreURI) 
@@ -56,9 +57,13 @@ define (require)->
         file.sync = Backbone.LocalStorage.sync 
         file.localStorage = new Backbone.LocalStorage(rootStoreURI+"-"+file.get("name")) 
         file.save() 
-      #project.save()
+        
+      project.save()
     
     getProjectsName:(callback)=>
+      @lib.fetch()
+      console.log "browser models"
+      console.log @lib.models
       tutu=()=>
         callback(["project1","project2"])
      
