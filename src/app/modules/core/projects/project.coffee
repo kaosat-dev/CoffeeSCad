@@ -13,7 +13,7 @@ define (require)->
     idAttribute: 'name'
     defaults:
       name:     "mainFile"
-      ext:      "coscad"
+      ext:      "coffee"
       content:  ""
            
     constructor:(options)->
@@ -53,6 +53,10 @@ define (require)->
       console.log response      
       return response  
     ###
+    changeSync:(newSync,additional)->
+      for index, file of @models
+        file.sync = @store.sync 
+        file.pathRoot= project.get("name")
    
   class Project extends Backbone.Model
     """Main aspect of coffeescad : contains all the files
@@ -81,7 +85,7 @@ define (require)->
       @rootAssembly = {}
       
       #can be browser, dropbox, github
-      @storageType = "browser"
+      #@storageType = "browser"
     
     switchStorage:(storageType)->
       @storageType = storageType
@@ -114,7 +118,16 @@ define (require)->
       
       @rootAssembly = res
       res
-      
+    
+    ###
+    save:(key, val, options)->
+      super key, val, options
+      console.log "in project, after save"
+      for index, file of @pfiles.models
+        console.log "project subfile" 
+        console.log file
+        file.save()
+    ###  
     onReset:()->
       if debug
         console.log "Project model reset" 

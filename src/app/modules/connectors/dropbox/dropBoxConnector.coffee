@@ -10,6 +10,8 @@ define (require)->
     a library contains multiple projects, stored on dropbox
     """  
     model: Project
+    sync: backbone_dropbox.sync
+    path: "."
     defaults:
       recentProjects: []
     
@@ -56,24 +58,40 @@ define (require)->
         @vent.trigger("dropBoxConnector:logoutFailed")
     
       
-     createProject:(options)=>
-       project = @lib.create(options)
-       project.createFile
+    createProject:(options)=>
+      project = @lib.create(options)
+      project.createFile
         name: project.get("name")
-       project.createFile
+      project.createFile
         name: "config"
+        
+    saveProject:(project)=>
+      @lib.add(project)
+      
+      project.sync=@store.sync
+      project.pathRoot=project.get("name") 
+      
+      #fakeCollection = new Backbone.Collection()
+      #fakeCollection.sync = @store.sync
+      #fakeCollection.path = project.get("name") 
+      #fakeCollection.add(project)
+      
+      project.pfiles.sync = @store.sync
+      project.pfiles.path = project.get("name") 
+      for index, file of project.pfiles.models
+        file.sync = @store.sync 
+        file.pathRoot= project.get("name")
+        file.save()
+      
+      project.save()
+      @vent.trigger("project:saved")
     
-     getProjectsName:(callback)=>
-       #hack
-       #fakeModel = new Backbone.Model()
-       #fakeModel.set("path":"project1")
-       #@store.findAll(fakeModel)
-       
-       #$.wait(@store._readDir("/"))
-       @store.client.readdir "/", (error, entries) ->
-         if error
+    getProjectsName:(callback)=>
+      #hack
+      @store.client.readdir "/", (error, entries) ->
+        if error
           console.log ("error")
-         else
+        else
           console.log entries
           callback(entries)
        

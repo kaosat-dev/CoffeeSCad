@@ -29,11 +29,15 @@ define (require)->
     
     constructor:(options)->
       super options
+      @store = new Backbone.LocalStorage("Projects")
       @isLogginRequired = false
       @loggedIn = true
       @vent = vent
       @vent.on("browserConnector:login", @login)
       @vent.on("browserConnector:logout", @logout)
+      
+      #experimental
+      @lib = new BrowserLibrary()
       
     login:=>
       @loggedIn = true
@@ -41,11 +45,24 @@ define (require)->
     logout:=>
       @loggedIn = false
     
-     getProjectsName:(callback)=>
-       tutu=()=>
-         callback(["project1","project2"])
+    saveProject:(project)=>
+      #@lib.add(project)
+      rootStoreURI = "projects-"+project.get("name")
+      project.pfiles.sync = @store.sync
+      project.pfiles.localStorage = new Backbone.LocalStorage(rootStoreURI) 
        
-       setTimeout tutu, 10
+      
+      for index, file of project.pfiles.models
+        file.sync = Backbone.LocalStorage.sync 
+        file.localStorage = new Backbone.LocalStorage(rootStoreURI+"-"+file.get("name")) 
+        file.save() 
+      #project.save()
+    
+    getProjectsName:(callback)=>
+      tutu=()=>
+        callback(["project1","project2"])
+     
+      setTimeout tutu, 10
        
 
        

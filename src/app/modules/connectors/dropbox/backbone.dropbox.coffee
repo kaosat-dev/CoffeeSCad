@@ -27,30 +27,30 @@ define (require)->
       
     showError:(error)->
       switch error.status
-        when 401 then
+        when 401
           # If you're using dropbox.js, the only cause behind this error is that
           # the user token expired.
           # Get the user through the authentication flow again.
           throw new Error("DropBox token expired") 
-        when 404 then
+        when 404 
           # The file or folder you tried to access is not in the user's Dropbox.
           # Handling this error is specific to your application.
           throw new Error("Failed to find the specified file or folder") 
-        when 507 then
+        when 507 
           # The user is over their Dropbox quota.
           # Tell them their Dropbox is full. Refreshing the page won't help.
           throw new Error("Dropbox quota exceeded") 
-        when 503 then
+        when 503 
           # Too many API requests. Tell the user to try again later.
           # Long-term, optimize your code to use fewer API calls.
           throw new Error("Dropbox: too many requests") 
-        when 400  then
+        when 400  
           throw new Error("Dropbox: bad input parameter") 
           # Bad input parameter
-        when 403 then 
+        when 403  
           # Bad OAuth request.
           throw new Error("Dropbox: bad oauth request") 
-        when 405 then
+        when 405 
           # Request method not expected
           throw new Error("Dropbox: unexpected request method") 
         else
@@ -76,8 +76,10 @@ define (require)->
           
           console.log("id"+model.get("id"))
           id = model.id
+          ### 
           if model.get "ext"
             id = "#{id}.#{model.get('ext')}"
+          ###
           @writeFile(id, JSON.stringify(model))
           return model.toJSON()
           
@@ -86,8 +88,9 @@ define (require)->
           id = model.id
           if model.get "ext"
             id = "#{id}.#{model.get('ext')}"
-          if model.collection.path?
-            id ="#{model.collection.path}/#{id}"
+          if model.collection?
+            if model.collection.path?
+              id ="#{model.collection.path}/#{id}"
           console.log "id: #{id}"
           @writeFile(id, JSON.stringify(model))
           return model.toJSON()

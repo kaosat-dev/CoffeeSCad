@@ -5,18 +5,17 @@
 	<div class="modal-body">
 		<div id="fileNameInput">
 			<label for="name" >Name:</label>
-			<input id="name" type="text" style="width:90%" value="<%=name%>" />
+			<input id="fileName" type="text" style="width:90%" value="<%=name%>" />
 		</div>
 		<div>
 			<div id="projectStores" style="float:left; width: 30%"><!--storage types browser-->
 				Location
 			</div>
-			<div id="projectFiles"  style="float:left; width: 50%">
+			<div id="projectFiles"  style="float:left; width: 40%">
 				Files
 			</div>
-			<div id="thumbNail" style="float:left; width:20%">
-				Thumbnail
-				<img src="toto.png" width="320" height="240"/>
+			<div id="thumbNail" style="float:left; width:30%;background-color:  #262626;">
+				<img id="projectThumbNail" />
 			</div>
 		</div>
 		
@@ -45,9 +44,9 @@
 <script id="projectStoreTmpl" type="text/x-underscore-template">
 	<div class="accordion-group">
 	 	<div class="accordion-heading" >
-	 		<a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
+	 		<a class="accordion-toggle"> <!--data-toggle="collapse" data-parent="#accordion" href="#collapseOne">-->
 				<%= storeType %>
-				<input type="checkbox" value="bla"/>
+				<input type="checkbox"/>
 			</a>
 			
 		</div>

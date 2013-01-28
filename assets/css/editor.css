@@ -323,6 +323,11 @@ body {
     width: 750px;
     margin-left: -370px;
 }
+
+.modal-reallyBig {
+    width: 1024px;
+    margin-left: -502px;
+}
 /*
 .bbf-field .bbf-editor {
     margin-left: 40%;

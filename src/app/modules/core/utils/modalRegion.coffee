@@ -34,7 +34,7 @@ define (require)->
       #FIXME: weird bug: modal() does not add a modal class, but an "in" class to the div ??
       @$el.modal({'show':true,'backdrop':false}).addClass('modal fade')
       if @large
-        @$el.addClass('modal-big')
+        @$el.addClass('modal-reallyBig')
         
     hideModal: ->
       @$el.modal 'hide'
