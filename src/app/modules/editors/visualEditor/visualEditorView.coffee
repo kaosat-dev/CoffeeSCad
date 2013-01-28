@@ -10,6 +10,7 @@ define (require) ->
   stats = require  'stats'
   utils = require 'utils'
   
+  reqRes = require 'modules/core/reqRes'
   vent = require 'modules/core/vent'
   
   threedView_template = require "text!./visualEditorView.tmpl"
@@ -76,16 +77,21 @@ define (require) ->
       @bindTo(@settings, "change", @settingsChanged)
       #@bindTo(@model, "change", @modelChanged)
       
+      #screenshoting
+      reqRes.addHandler "project:getScreenshot", ()=>
+        return @makeScreeshot()
+      
       #Controls:
       @dragging = false
       ##########
       @width = 800
       @height = 600
       @init()
+      
+    makeScreeshot:=>
       # Save image into localStorage
-      #var imgAsDataURL = imgCanvas.toDataURL("image/png");
-      #try 
-      #  localStorage.setItem("elephant", imgAsDataURL);
+      imgAsDataURL = @renderer.domElement.toDataURL("image/png")
+      return imgAsDataURL
     
     toggleGrid: (ev)=>
         toggled = @settings.get("showGrid")
