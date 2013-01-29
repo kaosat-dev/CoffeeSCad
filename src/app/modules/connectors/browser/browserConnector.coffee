@@ -46,6 +46,9 @@ define (require)->
     logout:=>
       @loggedIn = false
     
+    authCheck:()->
+      
+    
     saveProject:(project)=>
       @lib.add(project)
       rootStoreURI = "projects-"+project.get("name")

@@ -84,9 +84,9 @@ define (require)->
       @rootAssembly = {}
       
       
-      @createFile
-        name:".project"#holds project metadata
-        content:""
+      #@createFile
+      #  name:".project"#holds project metadata
+      #  content:""
       #can be browser, dropbox, github
       #@storageType = "browser"
     

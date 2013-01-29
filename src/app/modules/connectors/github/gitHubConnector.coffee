@@ -1,16 +1,16 @@
 define (require)->
-  backbone_dropbox = require './backbone.dropbox'
+  backbone_github = require './backbone.github'
   vent = require 'modules/core/vent'
   
   Project = require 'modules/core/projects/project'
   
   
-  class DropBoxLibrary extends Backbone.Collection
+  class GitHubLibrary extends Backbone.Collection
     """
-    a library contains multiple projects, stored on dropbox
+    a library contains multiple projects, stored on github
     """  
     model: Project
-    #sync: backbone_dropbox.sync
+    #sync: backbone_github.sync
     path: ""
     defaults:
       recentProjects: []
@@ -24,67 +24,59 @@ define (require)->
       return date.getTime()
       
     onReset:()->
-      console.log "DropBoxLibrary reset" 
+      console.log "GitHubLibrary reset" 
       console.log @
       console.log "_____________"
   
-  class DropBoxConnector extends Backbone.Model
+  class GitHubConnector extends Backbone.Model
     defaults:
-      name: "dropBoxConnector"
-      storeType: "dropBox"
+      name: "gitHubConnector"
+      storeType: "gitHub"
     
     constructor:(options)->
       super options
-      @store = new backbone_dropbox()
+      @store = new backbone_github()
       @isLogginRequired = true
       @loggedIn = true
       @vent = vent
-      @vent.on("dropBoxConnector:login", @login)
-      @vent.on("dropBoxConnector:logout", @logout)
+      @vent.on("gitHubConnector:login", @login)
+      @vent.on("gitHubConnector:logout", @logout)
       
       #experimental
-      @lib = new DropBoxLibrary
+      @lib = new GitHubLibrary
         sync: @store.sync
       @lib.sync = @store.sync
       
     login:=>
-      console.log "login requested"
       try
         onLoginSucceeded=()=>
-          console.log "dropbox logged in"
-          localStorage.setItem("dropboxCon-auth",true)
+          console.log "github logged in"
+          localStorage.setItem("githubCon-auth",true)
           @loggedIn = true
-          @vent.trigger("dropBoxConnector:loggedIn")
+          @vent.trigger("gitHubConnector:loggedIn")
         onLoginFailed=(error)=>
-          console.log "dropbox loggin failed"
+          console.log "github loggin failed"
           throw error
           
         loginPromise = @store.authentificate()
         $.when(loginPromise).done(onLoginSucceeded)
                             .fail(onLoginFailed)
+        
         #@lib.fetch()
       catch error
-        @vent.trigger("dropBoxConnector:loginFailed")
+        @vent.trigger("gitHubConnector:loginFailed")
         
     logout:=>
       try
-        onLogoutSucceeded=()=>
-          console.log "dropbox logged out"
-          localStorage.removeItem("dropboxCon-auth")
-          @loggedIn = false
-          @vent.trigger("dropBoxConnector:loggedOut")
-        onLoginFailed=(error)=>
-          console.log "dropbox logout failed"
-          throw error
-          
-        logoutPromise = @store.signOut()
-        $.when(logoutPromise).done(onLogoutSucceeded)
-                            .fail(onLogoutFailed)
-      
+        @store.signOut()
+        @loggedIn = false
+        localStorage.removeItem("githubCon-auth")
+        @vent.trigger("gitHubConnector:loggedOut")
       catch error
-        @vent.trigger("dropBoxConnector:logoutFailed")
+        @vent.trigger("gitHubConnector:logoutFailed")
     
     authCheck:()->
+      #/?_githubjs
       getURLParameter=(paramName)->
         searchString = window.location.search.substring(1)
         i = undefined
@@ -96,23 +88,25 @@ define (require)->
           return unescape(val[1])  if val[0] is paramName
           i++
         null
-      urlAuthOk = getURLParameter("_dropboxjs_scope")
-      console.log "dropboxConnector got redirect param #{urlAuthOk}"
+      urlAuthOk = getURLParameter("_githubjs_scope")
+      console.log "githubConnector got redirect param #{urlAuthOk}"
       
-      authOk = localStorage.getItem("dropboxCon-auth")
-      console.log "dropboxConnector got localstorage Param #{authOk}"
+      authOk = localStorage.getItem("githubCon-auth")
+      console.log "githubConnector got localstorage Param #{authOk}"
 
+      ###
       if urlAuthOk?
-        @login()
         if (!window.location.origin)
           window.location.origin = window.location.protocol+"//"+window.location.host
         bla=()->
           window.history.replaceState('', '', '/')
-        #setTimeout bla, 2
-        window.history.replaceState('', '', '/')
-      else
-        if authOk?
-          @login()
+        setTimeout bla, 2
+      ###
+      
+      if urlAuthOk?
+        @login()
+      if authOk?
+        @login()
       
     createProject:(options)=>
       project = @lib.create(options)
@@ -143,15 +137,10 @@ define (require)->
       @vent.trigger("project:saved")
     
     loadProject:(projectName)=>
-      console.log "dropbox loading project #{projectName}"
-      project = new Project()
-      project.pfiles.sync = @store.sync
-      project.pfiles.path = project.get("name") 
-      project.pfiles.fetch().done(()->console.log "got results back")
-      #project =@lib.get(projectName)
+      console.log "github loading project #{projectName}"
+      project =@lib.get(projectName)
       console.log "loaded:"
       console.log project
-      return project
     
     getProjectsName:(callback)=>
       #hack
@@ -162,4 +151,4 @@ define (require)->
           console.log entries
           callback(entries)
        
-  return DropBoxConnector
+  return GitHubConnector

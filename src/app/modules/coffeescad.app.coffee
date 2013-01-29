@@ -141,14 +141,18 @@ define (require)->
       console.log "app started"
       @codeEditor.start()
       @visualEditor.start()
+      #we check if we came back form an oauth redirect/if we have already been authorized
+      for index, connector of @connectors
+        connector.authCheck()
+      
       
     onAppStarted:(appName)->
       console.log "I see app: #{appName} has started"
     
     onAppClosing:()=>
       console.log "app closing, bye"
-      if @project.dirty
-        return 'You have unsaved changes!'
+      #if @project.dirty
+      #  return 'You have unsaved changes!'
     
     onSettingsShow:()=>
       settingsView = new SettingsView

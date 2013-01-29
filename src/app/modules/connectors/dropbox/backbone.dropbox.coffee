@@ -5,56 +5,64 @@ define (require)->
   Dropbox = require "dropbox"
   
   class DropBoxStorage
-    constructor:->
+    constructor:(debug=false)->
+      @debug = debug
+      
+    authentificate:()=>
       @client = new Dropbox.Client
         key: "h8OY5h+ah3A=|AS0FmmbZJrmc8/QbpU6lMzrCd5lSGZPCKVtjMlA7ZA=="
         sandbox: true
-      
-    authentificate:()=>
       @client.authDriver new Dropbox.Drivers.Redirect(rememberUser:true, useQuery:true)
-      @client.authenticate (error, client)=>
-        if error
-          return @showError(error)
-        @validated()
-        
-    signOut:()->
-      @client.signOut (error)=>
-        if not error?
-          console.log "signout ok"
-
-    validated:()->
-      console.log "all is fine"
       
-    showError:(error)->
+      d = $.Deferred()
+      @client.authenticate (error, client)=>
+        console.log "in auth"
+        console.log error
+        console.log client
+        if error?
+          d.reject(@formatError(error))
+        d.resolve(error)
+      return d.promise()
+      
+    signOut:()->
+      d = $.Deferred()
+      @client.signOut (error)=>
+        if error?
+          d.reject(@formatError(error))
+        else
+          d.resolve(error)
+      return d.promise()
+      
+    formatError:(error)->
       switch error.status
         when 401
           # If you're using dropbox.js, the only cause behind this error is that
           # the user token expired.
           # Get the user through the authentication flow again.
-          throw new Error("DropBox token expired") 
+          return new Error("DropBox token expired") 
         when 404 
           # The file or folder you tried to access is not in the user's Dropbox.
           # Handling this error is specific to your application.
-          throw new Error("Failed to find the specified file or folder") 
+          return new Error("Failed to find the specified file or folder") 
         when 507 
           # The user is over their Dropbox quota.
           # Tell them their Dropbox is full. Refreshing the page won't help.
-          throw new Error("Dropbox quota exceeded") 
+          return new Error("Dropbox quota exceeded") 
         when 503 
           # Too many API requests. Tell the user to try again later.
           # Long-term, optimize your code to use fewer API calls.
-          throw new Error("Dropbox: too many requests") 
+          return new Error("Dropbox: too many requests") 
         when 400  
-          throw new Error("Dropbox: bad input parameter") 
+          return new Error("Dropbox: bad input parameter") 
           # Bad input parameter
         when 403  
           # Bad OAuth request.
-          throw new Error("Dropbox: bad oauth request") 
+          return new Error("Dropbox: bad oauth request") 
         when 405 
           # Request method not expected
-          throw new Error("Dropbox: unexpected request method") 
+          return new Error("Dropbox: unexpected request method") 
         else
-          throw new Error("Dropbox: uknown error") 
+          return new Error("Dropbox: uknown error") 
           # Caused by a bug in dropbox.js, in your application, or in Dropbox.
           # Tell the user an error occurred, ask them to refresh the page.
       
@@ -154,31 +162,31 @@ define (require)->
             success(results)
           return results
       $.when(promise).then(fetchData)    
-      
+      return promise
       
     remove:(name)->
       @client.remove name, (error, userInfo)->
         if error
-          return showError(error)
+          return formatError(error)
         console.log "removed #{name}"
         
     writeFile:(name, content)->
       @client.writeFile name, content, (error, stat) =>
         if error
-          return @showError(error)
+          return @formatError(error)
         console.log ("File saved as revision " + stat.versionTag)
         
     createFolder:(name)->
       @client.mkdir name, (error,stat) =>
         if error
-          return @showError(error)  
+          return @formatError(error)  
         console.log "folder create ok"
         
     _readDir:(path)->
       d = $.Deferred()
       @client.readdir path, (error, entries)=>
         if error
-          return @showError(error)
+          return @formatError(error)
         d.resolve entries
       return d.promise()
         
@@ -186,7 +194,7 @@ define (require)->
       d = $.Deferred()
       @client.readFile path, (error, data)=>
         if error
-          return @showError(error)
+          return @formatError(error)
         d.resolve data
       return d.promise()
     
@@ -195,7 +203,7 @@ define (require)->
       d = $.Deferred()
       @client.findByName path,name, (error, data)=>
         if error
-          return @showError(error)
+          return @formatError(error)
         console.log "found data #{data}"
         d.resolve(data)
       return d.promise()
