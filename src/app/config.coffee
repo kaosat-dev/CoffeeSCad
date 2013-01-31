@@ -21,6 +21,9 @@ require.config
     utils:            "../assets/js/libs/utils"
     
     dropbox:          "../assets/js/libs/dropbox"
+    github:           "../assets/js/libs/github"
+    
+    #base64:           "../assets/js/libs/base64"
     
     #plugins
     jquery_hotkeys:   "../assets/js/plugins/jquery.hotkeys"
@@ -55,8 +58,6 @@ require.config
     combo_cam:        "../assets/js/plugins/CombinedCamera"
     orbit_ctrl:       "../assets/js/plugins/CustomOrbitControls"
     
-    
-
   shim:
     underscore:
       deps: []
@@ -143,7 +144,12 @@ require.config
     dropbox: 
       deps:    ["jquery"]
       exports : "Dropbox"
+    
+    github: 
+      deps:    ["jquery"]
+      exports : "Github"
 
-  
+    #base64:
+    #  exports : "base64"
 
 

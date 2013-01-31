@@ -1,4 +1,6 @@
 define (require)->
+  #base64 = require 'base64'
+  
   backbone_dropbox = require './backbone.dropbox'
   vent = require 'modules/core/vent'
   
@@ -104,11 +106,6 @@ define (require)->
 
       if urlAuthOk?
         @login()
-        if (!window.location.origin)
-          window.location.origin = window.location.protocol+"//"+window.location.host
-        bla=()->
-          window.history.replaceState('', '', '/')
-        #setTimeout bla, 2
         window.history.replaceState('', '', '/')
       else
         if authOk?
@@ -123,34 +120,68 @@ define (require)->
         
     saveProject:(project)=>
       @lib.add(project)
-      
       project.sync=@store.sync
       project.pathRoot=project.get("name") 
-      
-      #fakeCollection = new Backbone.Collection()
-      #fakeCollection.sync = @store.sync
-      #fakeCollection.path = project.get("name") 
-      #fakeCollection.add(project)
       
       project.pfiles.sync = @store.sync
       project.pfiles.path = project.get("name") 
       for index, file of project.pfiles.models
-        file.sync = @store.sync 
-        file.pathRoot= project.get("name")
-        file.save()
+        #file.sync = @store.sync 
+        #file.pathRoot= project.get("name")
+        #file.save()
+        
+        #actual saving of file, not json hack
+        projectName = project.get("name")
+        name = file.get("name")
+        ext = file.get("ext")
+        content =file.get("content")
+        filePath = "#{projectName}/#{name}.#{ext}"
+        
+        if ext == "png"
+          #save thumbnail
+          dataURIComponents = content.split(',')
+          mimeString = dataURIComponents[0].split(':')[1].split(';')[0]
+          if(dataURIComponents[0].indexOf('base64') != -1)
+            data =  atob(dataURIComponents[1])
+            array = []
+            for i in [0...data.length]
+              array.push(data.charCodeAt(i))
+            content = new Blob([new Uint8Array(array)], {type: 'image/jpeg'})
+          else
+            byteString = unescape(dataURIComponents[1])
+            length = byteString.length
+            ab = new ArrayBuffer(length)
+            ua = new Uint8Array(ab)
+            for i in [0...length]
+              ua[i] = byteString.charCodeAt(i)
+        console.log "saving file to #{filePath}"
+        @store.writeFile(filePath, content)
       
       #project.save()
       @vent.trigger("project:saved")
     
     loadProject:(projectName)=>
       console.log "dropbox loading project #{projectName}"
+      
       project = new Project()
+      project.set("name",projectName)
+      
+      parse = (response)->
+        console.log "got response"
+        console.log response
+        #for bla in response
+        #  console.log "response item"
+        #  console.log bla
+        
+      
+      #project.pfiles.parse = parse
       project.pfiles.sync = @store.sync
-      project.pfiles.path = project.get("name") 
+      project.pfiles.path = projectName
       project.pfiles.fetch().done(()->console.log "got results back")
-      #project =@lib.get(projectName)
+      
       console.log "loaded:"
       console.log project
+      @vent.trigger("project:loaded")
       return project
     
     getProjectsName:(callback)=>

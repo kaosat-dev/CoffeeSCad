@@ -1,9 +1,114 @@
 define (require)->
-  backbone_github = require './backbone.github'
+  github = require 'github'
   vent = require 'modules/core/vent'
   
   Project = require 'modules/core/projects/project'
   
+  class GitHubRedirectDriver
+    constructor:->
+      @state=1 #initial   
+      @client_id = "c346489dcec8041bd88f"
+      @redirect_uri=window.location
+      @scopes = "gist"
+      @authUrl = "https://github.com/login/oauth/authorize?client_id=#{@client_id}&redirect_uri=#{window.location}&scope=#{@scopes}"
+    
+    getURLParameter:(paramName)->
+        searchString = window.location.search.substring(1)
+        i = undefined
+        val = undefined
+        params = searchString.split("&")
+        i = 0
+        while i < params.length
+          val = params[i].split("=")
+          return unescape(val[1])  if val[0] is paramName
+          i++
+        null
+    
+    postStuff:(url, params)->
+      params = encodeURIComponent(params)
+      console.log "params"+params
+      request = new XMLHttpRequest()
+      request.open('get', url, true)
+      if ("withCredentials" in request)
+        console.log "cors supported"
+      request.onreadystatechange = => #Call a function when the state changes.
+        console.log "toto"+request.readyState
+        alert request.responseText  if request.readyState is 4 and request.status is 200
+      request.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
+      request.setRequestheader("Origin","http://kaosat-dev.github.com/CoffeeSCad/")
+      request.send(params)
+      
+      console.log "request"
+      console.log request
+      
+    postJsonP:(url,params)->
+      foo=(response)->
+        meta = response.meta
+        data = response.data
+        console.log(meta)
+        console.log(data)
+
+    run:->
+      code = @getURLParameter("code")
+      if code?
+        @state=2
+        console.log("github:phase2")
+      if @state == 1
+        console.log "gihub auth url #{@authUrl}"
+        console.log "redirecting"
+        window.location.href = @authUrl
+      if @state == 2
+        @tokenUrl = "https://github.com/login/oauth/access_token"
+        params = "client_id=#{@client_id}&client_secret=mlkmlk&code=#{code}"
+        console.log "sending code request to url #{@tokenUrl} with params #{params}"
+        
+        @postStuff(@tokenUrl,params)
+        #@tokenUrl = "https://github.com/login/oauth/access_token?client_id=#{@client_id}&client_secret=&code=#{code}"
+        #@postStuff(@tokenUrl,"")
+        foo=(response)->
+          console.log "jsonp response"
+          console.log response
+          
+        ###
+        $.ajax
+          type: "GET"
+          url: @tokenUrl
+          data: null
+          jsonpCallback: 'foo'
+          success: (r)->console.log "github auth phase 2 ok : #{r}"
+          error:(e)->console.log "aie aie error #{e.message}"
+          dataType: 'jsonp'
+        ###
+          
+  class GitHubStore
+    constructor:->
+      @driver= new GitHubRedirectDriver()
+      ###
+      @github = new Github
+        token: "OAUTH_TOKEN"
+        auth: "oauth"
+      ###  
+    authentificate:()=>
+      ###@client = new Dropbox.Client 
+        key: "h8OY5h+ah3A=|AS0FmmbZJrmc8/QbpU6lMzrCd5lSGZPCKVtjMlA7ZA=="
+        sandbox: true
+      ###
+      #@client.authDriver new Dropbox.Drivers.Redirect(rememberUser:true, useQuery:true)
+      @driver.run()
+      console.log "here"
+      d = $.Deferred()
+      ### 
+      @client.authenticate (error, client)=>
+        console.log "in auth"
+        console.log error
+        console.log client
+        if error?
+          d.reject(@formatError(error))
+        d.resolve(error)
+      ###
+      return d.promise()
+      
+    sync:()->
   
   class GitHubLibrary extends Backbone.Collection
     """
@@ -35,7 +140,7 @@ define (require)->
     
     constructor:(options)->
       super options
-      @store = new backbone_github()
+      @store = new GitHubStore()
       @isLogginRequired = true
       @loggedIn = true
       @vent = vent
@@ -48,6 +153,7 @@ define (require)->
       @lib.sync = @store.sync
       
     login:=>
+      console.log "login requested"
       try
         onLoginSucceeded=()=>
           console.log "github logged in"
@@ -61,22 +167,29 @@ define (require)->
         loginPromise = @store.authentificate()
         $.when(loginPromise).done(onLoginSucceeded)
                             .fail(onLoginFailed)
-        
         #@lib.fetch()
       catch error
         @vent.trigger("gitHubConnector:loginFailed")
         
     logout:=>
       try
-        @store.signOut()
-        @loggedIn = false
-        localStorage.removeItem("githubCon-auth")
-        @vent.trigger("gitHubConnector:loggedOut")
+        onLogoutSucceeded=()=>
+          console.log "github logged out"
+          localStorage.removeItem("githubCon-auth")
+          @loggedIn = false
+          @vent.trigger("gitHubConnector:loggedOut")
+        onLoginFailed=(error)=>
+          console.log "github logout failed"
+          throw error
+          
+        logoutPromise = @store.signOut()
+        $.when(logoutPromise).done(onLogoutSucceeded)
+                            .fail(onLogoutFailed)
+      
       catch error
         @vent.trigger("gitHubConnector:logoutFailed")
     
     authCheck:()->
-      #/?_githubjs
       getURLParameter=(paramName)->
         searchString = window.location.search.substring(1)
         i = undefined
@@ -88,25 +201,18 @@ define (require)->
           return unescape(val[1])  if val[0] is paramName
           i++
         null
-      urlAuthOk = getURLParameter("_githubjs_scope")
+      urlAuthOk = getURLParameter("code")
       console.log "githubConnector got redirect param #{urlAuthOk}"
       
       authOk = localStorage.getItem("githubCon-auth")
       console.log "githubConnector got localstorage Param #{authOk}"
 
-      ###
-      if urlAuthOk?
-        if (!window.location.origin)
-          window.location.origin = window.location.protocol+"//"+window.location.host
-        bla=()->
-          window.history.replaceState('', '', '/')
-        setTimeout bla, 2
-      ###
-      
       if urlAuthOk?
         @login()
-      if authOk?
-        @login()
+        window.history.replaceState('', '', '/')
+      else
+        if authOk?
+          @login()
       
     createProject:(options)=>
       project = @lib.create(options)

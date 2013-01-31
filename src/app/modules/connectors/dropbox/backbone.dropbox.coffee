@@ -141,6 +141,7 @@ define (require)->
       promise  = @_readDir(model.path)
       model.trigger('fetch', model, null, options)
       
+      
       fetchData=(entries)=>
         for fileName in entries
           filePath = "#{rootPath}/#{fileName}"
@@ -148,8 +149,22 @@ define (require)->
           promises.push @_readFile(filePath)
         $.when.apply($, promises).done ()=>
           results = arguments
-          results = $.map(results, JSON.parse)
-          console.log("ALL DONE", results)
+          if model.parse?#TODO:is this the right way/fix this this?
+            console.log "in model parse bla"
+            console.log entries
+            results = []
+            for i in [0...entries.length]
+              entry = entries[i]
+              entryData = entry.split('.')
+              ext= entryData[entryData.length - 1]
+              filename = entryData[0...entryData.length-1].join('.')
+              results.push 
+                name:filename
+                ext:ext
+                content:results[i]
+          else
+            results = $.map(results, JSON.parse)
+          #console.log("ALL DONE", results)
           if options.update?
             if options.update == true
               model.update(results)

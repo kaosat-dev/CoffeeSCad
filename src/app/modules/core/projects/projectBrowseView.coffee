@@ -58,6 +58,12 @@ define (require)->
       if @operation is "save"
         screenshotUrl = reqRes.request("project:getScreenshot")
         @ui.projectThumbNail.attr("src",screenshotUrl)
+        @model.createFile
+          name:".thumbnail"
+          content:screenshotUrl
+          ext:"png"
+      else if @operation is "load"
+        $(@ui.fileNameInput).attr("readonly", "readonly")
     
     onProjectNewRequested:=>
       console.log "project creation requested"
@@ -65,29 +71,6 @@ define (require)->
     onProjectSaveRequested:=>
       fileName = @ui.fileNameInput.val()
       vent.trigger("project:saveRequest", fileName)
-      
-      screenshotUrl = reqRes.request("project:getScreenshot")
-      @ui.projectThumbNail.attr("src",screenshotUrl)
-      
-      #save thumbnail
-      dataURIComponents = screenshotUrl.split(',')
-      mimeString = dataURIComponents[0].split(':')[1].split(';')[0]
-      byteString
-      if(dataURIComponents[0].indexOf('base64') != -1)
-        byteString = atob(dataURIComponents[1])
-
-      else
-        byteString = unescape(dataURIComponents[1])
-        length = byteString.length
-        ab = new ArrayBuffer(length)
-        ua = new Uint8Array(ab)
-        for i in [0...length]
-          ua[i] = byteString.charCodeAt(i)
-      
-      @model.createFile
-        name:".thumbnail"
-        content:screenshotUrl
-        ext:"png"
       
     onProjectLoadRequested:=>
       fileName = $(@ui.fileNameInput).val()

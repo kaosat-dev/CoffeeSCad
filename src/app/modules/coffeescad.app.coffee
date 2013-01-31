@@ -42,8 +42,10 @@ define (require)->
       
       #Connectors
       DropBoxConnector = require './connectors/dropbox/dropBoxConnector'
+      #GithubConnector = require './connectors/github/gitHubConnector'
       BrowserConnector = require './connectors/browser/browserConnector'
       @connectors["dropBox"] = new DropBoxConnector()
+      #@connectors["gitHub"] = new GithubConnector()
       @connectors["browser"] = new BrowserConnector()
       
       #events
@@ -69,7 +71,6 @@ define (require)->
       @menuView = new MenuView
         connectors: @connectors
         exporters: @exporters
-        
       @headerRegion.show @menuView
     
     initSettings:->
@@ -134,7 +135,6 @@ define (require)->
         catch error
           console.log "toto does not work"
         ###
-       
         """
       
     onStart:()=>
@@ -144,7 +144,6 @@ define (require)->
       #we check if we came back form an oauth redirect/if we have already been authorized
       for index, connector of @connectors
         connector.authCheck()
-      
       
     onAppStarted:(appName)->
       console.log "I see app: #{appName} has started"
