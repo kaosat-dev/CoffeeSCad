@@ -32,6 +32,7 @@ require.config
     jquery_jstree:    "../assets/js/plugins/jquery.jstree"
     
     bootbox:          "../assets/js/plugins/bootbox.min"
+    contextMenu:      "../assets/js/plugins/bootstrap-contextmenu"
     
     foldcode:         "../assets/js/plugins/foldcode"
     coffeelint:       "../assets/js/plugins/coffeelint"
@@ -66,6 +67,8 @@ require.config
       deps:    ["jquery"]
       exports:  "bootstrap"
     bootbox:
+      dep: ["bootstrap"]
+    contextMenu:
       dep: ["bootstrap"]
     'backbone':
       deps:    ["underscore"]

@@ -2,8 +2,10 @@ define (require)->
   $ = require 'jquery'
   _ = require 'underscore'
   boostrap = require 'bootstrap'
+  contextMenu = require 'contextMenu'
   marionette = require 'marionette'
   jstree = require 'jquery_jstree'
+  
   
   vent = require 'modules/core/vent'
   reqRes = require 'modules/core/reqRes'
@@ -36,6 +38,7 @@ define (require)->
       @operation = options.operation ? "save"
       @connectors = options.connectors ? {}
       @vent = vent
+      @vent.on("project:created",@onOperationSucceeded)
       @vent.on("project:saved",@onOperationSucceeded)
       @vent.on("project:loaded",@onOperationSucceeded)
       @vent.on("project:selected",(id)=>$(@ui.fileNameInput).val(id))
@@ -50,7 +53,7 @@ define (require)->
         #hack, to inject current, existing project to sub views (for saving only)
         connector.targetProject = @model
         tmpCollection.add connector
-        
+       
       @projectStores.show new ProjectsStoreView
         collection:tmpCollection
         model: @model
@@ -69,7 +72,8 @@ define (require)->
         $(@ui.fileNameInput).attr("readonly", "readonly")
     
     onProjectNewRequested:=>
-      console.log "project creation requested"
+      fileName = @ui.fileNameInput.val()
+      vent.trigger("project:newRequest", fileName)
       
     onProjectSaveRequested:=>
       fileName = @ui.fileNameInput.val()
@@ -122,9 +126,10 @@ define (require)->
       super options
       #hack
       @selected = false
+      vent.on("project:newRequest", @onCreateRequested)
       vent.on("project:saveRequest",@onSaveRequested)
       vent.on("project:loadRequest",@onLoadRequested)
-      vent.on("connector:selected",@onStoreSelected)
+      vent.on("connector:selected", @onStoreSelected)
     
     onStoreSelected:(name)=>
       if name.currentTarget?
@@ -151,8 +156,13 @@ define (require)->
       e.preventDefault()
       id = $(e.currentTarget).attr("id")
       vent.trigger("project:selected",id)
+      
       vent.trigger("connector:selected",@model.get("name"))
       @trigger("project:selected", @model)
+    
+    onCreateRequested:(fileName)=>
+      if @selected
+        @model.createProject(fileName)
     
     onSaveRequested:(fileName)=>
       if @selected
@@ -168,12 +178,17 @@ define (require)->
     
     onRender:->
       @model.getProjectsName(@onProjectsFetched)
+      #@$el.attr("href","#")
+      #@$el.attr("data-target","#context-menu")
+      #@$el.contextmenu()
+      #@delegateEvents()
       
     onProjectsFetched:(projectNames)=>
       #console.log "projectNames #{projectNames}"
       #console.log @
       for name in projectNames
-        @ui.projects.append("<li><a id=#{name} class='projectSelector' href='#'>#{name}</a></li>")
+        @ui.projects.append("<li><a id=#{name} class='projectSelector' href='#' data-toggle='context' data-target='#context-menu'>#{name}  </a></li>")
+          
       @delegateEvents()
       
     onClose:->

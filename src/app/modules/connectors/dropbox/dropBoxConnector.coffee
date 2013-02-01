@@ -111,13 +111,22 @@ define (require)->
         if authOk?
           @login()
       
-    createProject:(options)=>
-      project = @lib.create(options)
+    createProject:(fileName)=>
+      #project = @lib.create(options)
+      project = new Project
+        name: fileName
+      project.pfiles.sync = @store.sync
+      project.pfiles.path = project.get("name") 
+      
       project.createFile
-        name: project.get("name")
+        name: fileName
       project.createFile
         name: "config"
-        
+       
+      #FIXME: have one event for both create & load, as in effect , they do the same thing ? (reset views, replace current)
+      #@vent.trigger("project:created",project)  
+      @vent.trigger("project:loaded",project) 
+      
     saveProject:(project)=>
       @lib.add(project)
       project.sync=@store.sync
@@ -165,17 +174,13 @@ define (require)->
       #TODO: check if project exists
       project = new Project()
       project.set({"name":projectName},{silent:true})
-      console.log "new project inload "
-      console.log project
-              
+      
       onProjectLoaded=()=>
-        console.log "loaded:"
         @vent.trigger("project:loaded",project)
       project.pfiles.rawData = true
       project.pfiles.sync = @store.sync
       project.pfiles.path = projectName
       project.pfiles.fetch().done(onProjectLoaded)
-      
       return project
     
     getProjectsName:(callback)=>
@@ -186,5 +191,8 @@ define (require)->
         else
           console.log entries
           callback(entries)
-       
+          
+    getProjectFiles:(projectName)=>
+      
+    
   return DropBoxConnector

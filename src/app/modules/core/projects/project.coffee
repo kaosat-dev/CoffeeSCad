@@ -14,6 +14,8 @@ define (require)->
       name:     "mainFile"
       ext:      "coffee"
       content:  ""
+    
+    sync=null
            
     constructor:(options)->
       super options
