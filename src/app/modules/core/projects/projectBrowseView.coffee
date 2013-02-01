@@ -24,6 +24,7 @@ define (require)->
     ui:
       fileNameInput : "#fileName"
       projectThumbNail: "#projectThumbNail"
+      validationButton: "#validateOperationBtn"
       
     events:
       "click .newProject":   "onProjectNewRequested"
@@ -35,9 +36,8 @@ define (require)->
       @operation = options.operation ? "save"
       @connectors = options.connectors ? {}
       @vent = vent
-      @vent.on("project:saved",()=>@close())
-      @vent.on("project:loaded",()=>@close())
-      
+      @vent.on("project:saved",@onOperationSucceeded)
+      @vent.on("project:loaded",@onOperationSucceeded)
       @vent.on("project:selected",(id)=>$(@ui.fileNameInput).val(id))
       
     serializeData:->
@@ -56,12 +56,15 @@ define (require)->
         model: @model
         
       if @operation is "save"
-        screenshotUrl = reqRes.request("project:getScreenshot")
-        @ui.projectThumbNail.attr("src",screenshotUrl)
-        @model.createFile
-          name:".thumbnail"
-          content:screenshotUrl
-          ext:"png"
+        screenshotPromise = reqRes.request("project:getScreenshot")
+        doScreenShotRes=(screenshotUrl)=>
+          @ui.projectThumbNail.attr("src",screenshotUrl)
+          @model.createFile
+            name:".thumbnail"
+            content:screenshotUrl
+            ext:"png"  
+        $.when(screenshotPromise).done(doScreenShotRes)
+        
       else if @operation is "load"
         $(@ui.fileNameInput).attr("readonly", "readonly")
     
@@ -72,9 +75,39 @@ define (require)->
       fileName = @ui.fileNameInput.val()
       vent.trigger("project:saveRequest", fileName)
       
+      #most of our job is done, disable the view
+      @ui.validationButton.attr("disabled",true)
+      @projectStores.close()
+      
     onProjectLoadRequested:=>
       fileName = $(@ui.fileNameInput).val()
       vent.trigger("project:loadRequest", fileName)
+      
+      ###
+      if @model.dirty
+        bootbox.dialog "Project is unsaved, proceed anyway?", [
+          label: "Ok"
+          class: "btn-inverse"
+          callback: =>
+            @CreateNewProject()
+        ,
+          label: "Cancel"
+          class: "btn-inverse"
+          callback: ->
+        ]
+      ###
+      #most of our job is done, disable the view
+      @ui.validationButton.attr("disabled",true)
+      @projectStores.close()
+    
+    onOperationSucceeded:=>
+      @close()
+      
+    onClose:->
+      #clean up events
+      @vent.off("project:saved",@onOperationSucceeded)
+      @vent.off("project:loaded",@onOperationSucceeded)
+      @vent.off("project:selected",(id)=>$(@ui.fileNameInput).val(id))
   
   
   class StoreView extends Backbone.Marionette.ItemView
@@ -109,19 +142,25 @@ define (require)->
           @selected = false
           header = @$el.find(".connector-header")
           header.removeClass('alert-info')
+        else
+          @selected = true
+          header = @$el.find(".connector-header")
+          header.addClass('alert-info')
     
     onProjectSelected:(e)=>
       e.preventDefault()
       id = $(e.currentTarget).attr("id")
       vent.trigger("project:selected",id)
+      vent.trigger("connector:selected",@model.get("name"))
+      @trigger("project:selected", @model)
     
     onSaveRequested:(fileName)=>
       if @selected
         #console.log "save to #{fileName} requested"
-        if @model.targetProject?
-          @model.targetProject.set("name",fileName)
-          @model.targetProject.pfiles.at(0).set("name",fileName)
-          @model.saveProject(@model.targetProject)
+        projectToSave = @model.targetProject
+        if projectToSave?
+          projectToSave.rename(fileName)
+          @model.saveProject(projectToSave)
     
     onLoadRequested:(fileName)=>
       if @selected
@@ -136,11 +175,25 @@ define (require)->
       for name in projectNames
         @ui.projects.append("<li><a id=#{name} class='projectSelector' href='#'>#{name}</a></li>")
       @delegateEvents()
+      
+    onClose:->
+      #clean up events
+      vent.off("project:saveRequest",@onSaveRequested)
+      vent.off("project:loadRequest",@onLoadRequested)
+      vent.off("connector:selected",@onStoreSelected)
     
   class ProjectsStoreView extends Backbone.Marionette.CompositeView
     template:projectStoreListTemplate
     itemView:StoreView
     
+    constructor:(options)->
+      super options
+      @currentStore = null
+      @on("itemview:project:selected",@toto)
+    
+    toto:(childView, connector)=>
+      console.log connector
+      
     onRenderOLD:->
       @ui.treeTest.jstree 
         "core":

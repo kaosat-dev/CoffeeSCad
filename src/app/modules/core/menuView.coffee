@@ -82,7 +82,7 @@ define (require)->
     events:
       "click .newProject":    ()->vent.trigger("project:new")
       "click .newFile":       ()->vent.trigger("project:file:new")
-      "click .saveasProject": ()->vent.trigger("project:saveAs")
+      "click .saveProjectAs": ()->vent.trigger("project:saveAs")
       "click .saveProject":   ()->vent.trigger("project:save")
       "click .loadProject":   ()->vent.trigger("project:load")
       "click .deleteProject": ()->vent.trigger("project:delete")

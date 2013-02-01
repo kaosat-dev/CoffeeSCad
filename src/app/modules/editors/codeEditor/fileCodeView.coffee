@@ -60,7 +60,13 @@ define (require)->
         @close()
         
     onClose:()=>
-      console.log "closing"
+      #cleanup all vent event
+      @vent.off("file:closed", @onFileClosed)
+      @vent.off("file:selected", @onFileSelected)
+      
+      #TODO: these are commands, not events
+      @vent.off("file:undoRequest", @undo)
+      @vent.off("file:redoRequest", @redo)
     
     switchModel:(newModel)->
       #replace current model with a new one

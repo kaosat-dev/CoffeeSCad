@@ -88,19 +88,29 @@ define (require) ->
       @height = 600
       @init()
       
-    makeScreeshot:=>
-      # Save image into localStorage
-      ###resizing?
-      oldCanvas = @renderer.domElement.toDataURL("image/png")
+    makeScreeshot:(width=300, height=300)=>
+      # Save screenshot of 3d view
+      #resizing
+      srcImg = @renderer.domElement.toDataURL("image/png")
+      canvas = document.createElement("canvas")
+      canvas.width = width
+      canvas.height = height
+      ctx = canvas.getContext('2d')
+      #ctx.fillStyle = "red"
+      #ctx.fillRect(0, 0, canvas.width, canvas.height)
+      d = $.Deferred()
+      imgAsDataURL =null 
       img = new Image()
-      img.src = oldCanvas
-      img.onload = ()-> 
-        canvas.height += 100
-        ctx.drawImage(img, 0, 0)
-      ###
-      
-      imgAsDataURL = @renderer.domElement.toDataURL("image/png")
-      return imgAsDataURL
+      img.onload = ()=> 
+        ctx.drawImage(img, 0,0,width, height)
+        imgAsDataURL = canvas.toDataURL("image/png")
+        d.resolve(imgAsDataURL)
+      img.src = srcImg
+      #imgAsDataURL=canvas.toDataURL("image/png")
+      #imgAsDataURL = @renderer.domElement.toDataURL("image/png")
+      #console.log imgAsDataURL
+      # ,300, 300
+      return d
     
     toggleGrid: (ev)=>
         toggled = @settings.get("showGrid")

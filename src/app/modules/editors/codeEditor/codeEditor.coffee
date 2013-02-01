@@ -30,6 +30,7 @@ define (require)->
         controller: @
         
       @on("start", @onStart)
+      @vent.on("project:loaded",@resetEditor)
       @init()
 
       @addRegions @regions
@@ -48,6 +49,13 @@ define (require)->
     onStart:()=>
       @settings = @appSettings.getByName("CodeEditor")
       
+      @mainRegion.show new CodeEditorView 
+        model:    @project
+        settings: @settings
+        
+    resetEditor:(newProject)=>
+      @project = newProject
+      @mainRegion.close()
       @mainRegion.show new CodeEditorView 
         model:    @project
         settings: @settings

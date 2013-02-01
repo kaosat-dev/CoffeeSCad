@@ -162,26 +162,20 @@ define (require)->
     
     loadProject:(projectName)=>
       console.log "dropbox loading project #{projectName}"
-      
+      #TODO: check if project exists
       project = new Project()
-      project.set("name",projectName)
-      
-      parse = (response)->
-        console.log "got response"
-        console.log response
-        #for bla in response
-        #  console.log "response item"
-        #  console.log bla
-        
-      
-      #project.pfiles.parse = parse
+      project.set({"name":projectName},{silent:true})
+      console.log "new project inload "
+      console.log project
+              
+      onProjectLoaded=()=>
+        console.log "loaded:"
+        @vent.trigger("project:loaded",project)
+      project.pfiles.rawData = true
       project.pfiles.sync = @store.sync
       project.pfiles.path = projectName
-      project.pfiles.fetch().done(()->console.log "got results back")
+      project.pfiles.fetch().done(onProjectLoaded)
       
-      console.log "loaded:"
-      console.log project
-      @vent.trigger("project:loaded")
       return project
     
     getProjectsName:(callback)=>

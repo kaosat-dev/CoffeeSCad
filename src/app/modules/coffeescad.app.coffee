@@ -60,8 +60,10 @@ define (require)->
       
       #just temporary
       @vent.on("project:new", @onNewProject)
+      @vent.on("project:saveAs", @onSaveProject)
       @vent.on("project:save", @onSaveProject)
       @vent.on("project:load", @onLoadProject)
+      @vent.on("project:loaded",@onProjectLoaded)
       
       @addRegions @regions
       @initLayout()
@@ -186,6 +188,9 @@ define (require)->
       
       modReg = new ModalRegion({elName:"library",large:true})
       modReg.show projectBrowserView
+    
+    onProjectLoaded:(newProject)=>
+      @project = newProject
       
     onInitializeBefore:()->
       console.log "before init"

@@ -1,3 +1,4 @@
 <script id="fileTabTmpl" type="text/x-underscore-template">
-	  <a href="#<%=name%>" data-toggle="tab"><%=name%>&nbsp&nbsp<em class="close">&times;</em></a>
+	<% var cleanedName = name.replace('.','\\.')%>
+	<a href="#<%=cleanedName%>" data-toggle="tab"><%=name%>.<%=ext%>&nbsp&nbsp<em class="close">&times;</em></a>
 </script>

@@ -148,10 +148,9 @@ define (require)->
           console.log "file path: #{filePath}"
           promises.push @_readFile(filePath)
         $.when.apply($, promises).done ()=>
-          results = arguments
-          if model.parse?#TODO:is this the right way/fix this this?
-            console.log "in model parse bla"
-            console.log entries
+          preResults = arguments
+          if model.rawData?
+            #console.log entries
             results = []
             for i in [0...entries.length]
               entry = entries[i]
@@ -161,7 +160,7 @@ define (require)->
               results.push 
                 name:filename
                 ext:ext
-                content:results[i]
+                content:preResults[i]
           else
             results = $.map(results, JSON.parse)
           #console.log("ALL DONE", results)
@@ -176,8 +175,8 @@ define (require)->
           if success?
             success(results)
           return results
-      $.when(promise).then(fetchData)    
-      return promise
+      p = $.when(promise).then(fetchData)    
+      return p
       
     remove:(name)->
       @client.remove name, (error, userInfo)->

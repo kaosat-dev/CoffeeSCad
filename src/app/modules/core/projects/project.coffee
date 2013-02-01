@@ -41,7 +41,6 @@ define (require)->
       
   class ProjectFiles extends Backbone.Collection
     model: ProjectFile
-    #localStorage: new Backbone.LocalStorage("_")
     ###
     parse: (response)=>
       console.log("in projFiles parse")
@@ -78,17 +77,40 @@ define (require)->
       @bind("change",@onChanged)
       @files = []
       @pfiles = new ProjectFiles()
+      @pfiles.on("reset",@onFilesReset)
+      @on("change:name", @onProjectNameChanged)
       
       classRegistry={}
       @bom = new Backbone.Collection()
       @rootAssembly = {}
+    
+    onProjectNameChanged:(model, name)=>
+      console.log "project name changed from #{@previous('name')} to #{name}"
+      mainFile = @pfiles.get(@previous('name'))
+      console.log mainFile
+      mainFile.set("name",name)
+    
+    rename:(newName)=>
+      if newName != @get("name")
+        @set("name",newName)
+    
+    onFilesReset:()=>
+      #add various event bindings, reorder certain specific files
+      mainFileName = @get("name")
+      mainFile = @pfiles.get(mainFileName)
+      @pfiles.remove(mainFileName)
+      @pfiles.add(mainFile, {at:0})
       
+      configFileName = "config"
+      configFile = @pfiles.get(configFileName)
+      @pfiles.remove(configFileName)
+      @pfiles.add(configFile, {at:1})
       
-      #@createFile
-      #  name:".project"#holds project metadata
-      #  content:""
-      #can be browser, dropbox, github
-      #@storageType = "browser"
+      for pFile in @pfiles.models
+        pFile.bind("change", ()=> @onFileChanged(pFile.get("id")))
+        pFile.bind("saved" , ()=> @onFileSaved(pFile.get("id")))
+        pFile.bind("dirtied", ()=> @trigger "dirtied")
+        pFile.bind("cleaned", ()=> @onFileSaved(pFile.get("id")))
     
     switchStorage:(storageType)->
       @storageType = storageType
@@ -98,13 +120,15 @@ define (require)->
           @pfiles.sync = ""
           @pfiles.localStorage= new Backbone.LocalStorage(locStorName)
       
-      
     compile:()=>
       #experimental
       @csgProcessor = new CsgProcessor()
       console.log "compiling project"
-      #for now just limit to one file
-      script = @pfiles.at(0).get("content")
+      
+      mainFileName = @get("name")
+      console.log "project name : #{mainFileName} @pfiles"
+      console.log @pfiles
+      script = @pfiles.get(mainFileName).get("content")
       #console.log "current script : #{script}"
       res = @csgProcessor.processScript2(script,true)
       #@set({"partRegistry":window.classRegistry}, {silent: true})

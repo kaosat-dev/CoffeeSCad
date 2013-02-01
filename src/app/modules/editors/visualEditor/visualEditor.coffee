@@ -29,12 +29,10 @@ define (require)->
       @router = new VisualEditorRouter
         controller: @
       @on("start", @onStart)
+      @vent.on("project:loaded",@resetEditor)
       @init()
 
       @addRegions @regions
-      
-      #@vent.on("project:compiled",()=>@project.set("compiled",true))#TODO: remove this , this is a hack
-      #@vent.on("project:setBomData",(data)=>@project.set("partRegistry",data))#TODO: remove this , this is a hack
       
     init:=>
       if @appSettings?
@@ -50,7 +48,14 @@ define (require)->
       @settings = @appSettings.getByName("VisualEditor")
       
       @mainRegion.show new VisualEditorView 
-        model:    @project#.pfiles.at(0)
+        model:    @project
+        settings: @settings
+        
+    resetEditor:(newProject)=>
+      @project = newProject
+      @mainRegion.close()
+      @mainRegion.show new VisualEditorView 
+        model:    @project
         settings: @settings
       
   return VisualEditor

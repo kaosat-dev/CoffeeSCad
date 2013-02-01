@@ -20,6 +20,11 @@ define (require)->
       "click a[data-toggle=\"tab\"]" : "selectFile" 
       "click em.close":    "closeTab"
 
+    constructor:(options)->
+      super options
+      #model binding
+      @model.on("change:name", @render)
+
     selectFile:->
       vent.trigger("file:selected",@model)
       
@@ -79,12 +84,12 @@ define (require)->
       @tabContent.show codeView
 
       #activate first tab      
+      #firstFile = @tabHeaders.$el.find('a:first')
       @tabHeaders.$el.find('a:first').tab('show')
       defaultItem = @tabContent.$el.find('div .tab-pane:first')
       defaultItem.addClass('active')
       defaultItem.removeClass('fade')
       vent.trigger("file:selected",@model.pfiles.first)
-      
       #FIXME not working
       $("a[data-toggle=\"tab\"]").on "shown", (e) ->
         e.target # activated tab
