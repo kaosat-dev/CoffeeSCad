@@ -181,7 +181,7 @@ define (require)->
     remove:(name)->
       @client.remove name, (error, userInfo)->
         if error
-          return formatError(error)
+          return @formatError(error)
         console.log "removed #{name}"
         
     writeFile:(name, content)->

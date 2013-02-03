@@ -2,20 +2,21 @@
 	<div class="modal-header">
 		<h3><%=operation%> project</h3>
 	</div>
-	<div class="modal-body">
+	<div class="modal-body" style="overflow: hidden">
 		<div id="fileNameInput">
 			<label for="name" >Name:</label>
 			<input id="fileName" type="text" style="width:90%" value="<%=name%>" />
 		</div>
-		<div>
+		<div id="storesContainer">
 			<div id="projectStores" style="float:left; width: 30%"><!--storage types browser-->
 				Location
 			</div>
 			<div id="projectFiles"  style="float:left; width: 40%" >
-				Files
-				
+				<ul>
+					
+				</ul>
 			</div>
-			<div id="thumbNail" style="float:left; width:30%;background-color:  #262626;">
+			<div id="thumbNail" style="float:left; width:30%;background-color:  #262626;" class="hide">
 				<img id="projectThumbNail" class="img-rounded"/>
 			</div>
 		</div>
@@ -26,8 +27,12 @@
 			  <option value="coffeescad">Coffeescad Designs</option>
 			</select>
 		</div>-->
-		<div id="errorConsole" style="visibility:hidden">
+		<div id="errorConsole" class="alert hide">
+			<h4 class="alert-heading">Oh snap! You got an error!</h4>
 			Errors
+		</div>
+		<div id="opertationProgress" class="progress progress-striped active hide">
+			<div class="bar" style="width: 100%;"></div>
 		</div>
 	</div>
 	<div class="modal-footer">
@@ -39,21 +44,21 @@
 
 
 <script id="projectStoreListTmpl" type="text/x-underscore-template">
-	<div class="accordion" id="accordion">
+	<div class="accordion" id="accordion" >
 	</div>
 </script>
 
 <script id="projectStoreTmpl" type="text/x-underscore-template">
-	<div class="accordion-group">
+	<div class="accordion-group" id="<%=name%>StoreContent">
 	 	<div class="accordion-heading connector-header" >
 	 		<a class="accordion-toggle"> <!--data-toggle="collapse" data-parent="#accordion" href="#collapseOne">-->
-				<%= storeType %> <i class="icon-question-sign icon-large" rel="tooltip" title="More"></i>
+				<%= storeType %> <i class="icon-question-sign icon-large" rel="tooltip" title="<%=tooltip%>"></i>
 			</a>
 			
 			
 		</div>
 		<div id="collapseOne" class="accordion-body collapse in">
-			<div class="accordion-inner" >
+			<div class="accordion-inner connectorProjectsList" ><!--style="overflow:auto;max-height: 150px">-->
 				<ul id="projects">
 				</ul>
 			</div>

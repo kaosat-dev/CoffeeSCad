@@ -5,6 +5,7 @@ define (require)->
   contextMenu = require 'contextMenu'
   marionette = require 'marionette'
   jstree = require 'jquery_jstree'
+  require 'jquery_sscroll'
   
   
   vent = require 'modules/core/vent'
@@ -25,8 +26,13 @@ define (require)->
     
     ui:
       fileNameInput : "#fileName"
+      thumbNail: "#thumbNail"
       projectThumbNail: "#projectThumbNail"
       validationButton: "#validateOperationBtn"
+      errorConsole: "#errorConsole"
+      storesContainer: "#storesContainer"
+      
+      projectFiles:"#projectFiles"
       
     events:
       "click .newProject":   "onProjectNewRequested"
@@ -41,7 +47,7 @@ define (require)->
       @vent.on("project:created",@onOperationSucceeded)
       @vent.on("project:saved",@onOperationSucceeded)
       @vent.on("project:loaded",@onOperationSucceeded)
-      @vent.on("project:selected",(id)=>$(@ui.fileNameInput).val(id))
+      @vent.on("project:selected",@onProjectSelected)
       
     serializeData:->
       operation: @operation
@@ -53,7 +59,8 @@ define (require)->
         #hack, to inject current, existing project to sub views (for saving only)
         connector.targetProject = @model
         tmpCollection.add connector
-       
+      @stores =  tmpCollection
+      
       @projectStores.show new ProjectsStoreView
         collection:tmpCollection
         model: @model
@@ -62,6 +69,7 @@ define (require)->
         screenshotPromise = reqRes.request("project:getScreenshot")
         doScreenShotRes=(screenshotUrl)=>
           @ui.projectThumbNail.attr("src",screenshotUrl)
+          @ui.thumbNail.removeClass("hide")
           @model.createFile
             name:".thumbnail"
             content:screenshotUrl
@@ -70,10 +78,44 @@ define (require)->
         
       else if @operation is "load"
         $(@ui.fileNameInput).attr("readonly", "readonly")
+        
+      #$(@ui.errorConsole).alert()
+      #$(@ui.errorConsole).css("z-index",12000)
     
+    onProjectSelected:(projectName)=>
+      #hack
+      onProjectFilesResponse=(entries)=>
+        @ui.projectFiles.html("<ul></ul>")
+        for name in projectNames
+          @ui.projectFiles.append("<li><a href='#' >#{name}  </a></li>")
+        @delegateEvents()
+        @ui.projectFiles.slimScroll({size:"10px";height:"300px",alwaysVisible: true})
+      
+      
+      $(@ui.fileNameInput).val(projectName)
+      ### 
+      console.log "connector collection"
+      console.log @stores
+      console.log "current project: #{projectName}"
+      currentConnector = @stores.get("projectName")
+      currentConnector.getProjectFiles(fileNameInput,onProjectFilesResponse)
+      ###
     onProjectNewRequested:=>
       fileName = @ui.fileNameInput.val()
-      vent.trigger("project:newRequest", fileName)
+      if @model.dirty
+        bootbox.dialog "Project is unsaved, you will loose your changes, proceed anyway?", [
+          label: "Ok"
+          class: "btn-inverse"
+          callback: =>
+            vent.trigger("project:newRequest", fileName)
+            #most of our job is done, disable the view
+            #@ui.validationButton.attr("disabled",true)
+            #@projectStores.close()
+        ,
+          label: "Cancel"
+          class: "btn-inverse"
+          callback: ->
+        ]
       
     onProjectSaveRequested:=>
       fileName = @ui.fileNameInput.val()
@@ -82,27 +124,33 @@ define (require)->
       #most of our job is done, disable the view
       @ui.validationButton.attr("disabled",true)
       @projectStores.close()
+      @ui.storesContainer.hide()
       
     onProjectLoadRequested:=>
       fileName = $(@ui.fileNameInput).val()
-      vent.trigger("project:loadRequest", fileName)
-      
-      ###
       if @model.dirty
-        bootbox.dialog "Project is unsaved, proceed anyway?", [
+        bootbox.dialog "Project is unsaved, you will loose your changes, proceed anyway?", [
           label: "Ok"
           class: "btn-inverse"
           callback: =>
-            @CreateNewProject()
+            vent.trigger("project:loadRequest", fileName)
+            #most of our job is done, disable the view
+            @ui.validationButton.attr("disabled",true)
+            @projectStores.close()
+            @ui.storesContainer.hide()
         ,
           label: "Cancel"
           class: "btn-inverse"
           callback: ->
         ]
-      ###
-      #most of our job is done, disable the view
-      @ui.validationButton.attr("disabled",true)
-      @projectStores.close()
+      else
+        vent.trigger("project:loadRequest", fileName)
+        #most of our job is done, disable the view
+        @ui.validationButton.attr("disabled",true)
+        @projectStores.close()
+        @ui.storesContainer.hide()
+       
+      
     
     onOperationSucceeded:=>
       @close()
@@ -118,6 +166,7 @@ define (require)->
     template:projectStoreTemplate
     ui: 
       projects: "#projects"
+      
     events:
       "click .accordion-heading" : "onStoreSelected"
       "click .projectSelector" : "onProjectSelected"
@@ -159,6 +208,7 @@ define (require)->
       
       vent.trigger("connector:selected",@model.get("name"))
       @trigger("project:selected", @model)
+      
     
     onCreateRequested:(fileName)=>
       if @selected
@@ -173,15 +223,12 @@ define (require)->
           @model.saveProject(projectToSave)
     
     onLoadRequested:(fileName)=>
+      console.log "load requested"
       if @selected
         @model.loadProject(fileName)
     
     onRender:->
       @model.getProjectsName(@onProjectsFetched)
-      #@$el.attr("href","#")
-      #@$el.attr("data-target","#context-menu")
-      #@$el.contextmenu()
-      #@delegateEvents()
       
     onProjectsFetched:(projectNames)=>
       #console.log "projectNames #{projectNames}"
@@ -190,7 +237,9 @@ define (require)->
         @ui.projects.append("<li><a id=#{name} class='projectSelector' href='#' data-toggle='context' data-target='#context-menu'>#{name}  </a></li>")
           
       @delegateEvents()
-      
+      @ui.projects.slimScroll({size:"10px";height:"100px",alwaysVisible: true})
+      @$el.find('[rel=tooltip]').tooltip({'placement': 'right'})
+    
     onClose:->
       #clean up events
       vent.off("project:saveRequest",@onSaveRequested)

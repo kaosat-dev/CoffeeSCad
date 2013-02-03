@@ -170,13 +170,15 @@ define (require) ->
       y = ev.offsetY
       @selectObj(x,y)
       
+      #context-menu
+      # = require "modules/core/utils/contextMenu"
+      #@contextMenu = new ContextMenu()
+      #@contextMenu.show()
+      
       #Contextmenu
       ###
       {ContextMenuRegion,ContextMenu} = require "views/contextMenuView"
       @contextMenu = new ContextMenu()
-      @contextMenuRegion = new ContextMenuRegion
-          mouseCoords:[x,y]
-          selection: @current #pass in current selection
       @contextMenuRegion.show @contextMenu
       ###
        
@@ -1149,6 +1151,7 @@ define (require) ->
       @overlayControls.dynamicDampingFactor = 0.3
       ###
       @animate()
+      
     
     _render:()=>
       @renderer.render(@scene, @camera)

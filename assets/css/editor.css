@@ -41,6 +41,11 @@ text-shadow: 0 1px 0 white;
 	top: 35px;
 	left: 5px;
 }
+.tooltip.right {z-index: 50000;}
+/*Project manager */
+
+
+
 /*-------------------------------------*/		
 /*Code Editor*/
 

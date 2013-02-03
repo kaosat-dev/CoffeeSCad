@@ -23,9 +23,12 @@ define (require)->
       return date.getTime()
   
   class BrowserConnector extends Backbone.Model
+    idAttribute: 'name'
     defaults:
       name: "browserConnector"
       storeType: "browser"
+      tooltip:"Connector to localstorage (browser)"
+    
     
     constructor:(options)->
       super options

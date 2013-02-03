@@ -4,6 +4,7 @@ define (require)->
   marionette = require 'marionette'
   require 'bootstrap'
   require 'bootbox'
+  require 'notify'
   
   vent = require './vent'
   mainMenu_template = require "text!./mainMenu2.tmpl"
@@ -170,12 +171,19 @@ define (require)->
            do(index)=>
              onLoggedIn=()=>
                selector = "##{loginClassName}"
-               console.log("#{index}Connector logged IN successfully")
+               $('.notifications').notify
+                message: { text: "#{index}: logged IN" }
+                fadeOut:{enabled:true, delay: 1000 }
+               .show()
+               
                $(selector).replaceWith("<li id='#{logoutClassName}' ><a href='#' class='#{logoutClassName}'><i class='icon-signout' style='color:green'/>  #{index} - Signed In</a></li>")
              
              onLoggedOut=()=>
                selector = "##{logoutClassName}"
-               console.log("#{index}Connector logged Out successfully")
+               $('.notifications').notify
+                message: { text: "#{index}: logged OUT" }
+                fadeOut:{enabled:true, delay: 1000 }
+               .show()
                $(selector).replaceWith("<li id='#{loginClassName}' ><a href='#' class='#{loginClassName}'><i class='icon-signin' style='color:red'/>  #{index} - Signed out</a></li>")
              
              @vent.on("#{index}Connector:loggedIn",()->onLoggedIn())

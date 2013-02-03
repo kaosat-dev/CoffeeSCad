@@ -6,7 +6,6 @@ define (require)->
  
   CsgProcessor = require "./csg/csg.processor"
   debug  = false
-  #TODO: add support for multiple types of storage, settable per project
   
   class ProjectFile extends Backbone.Model
     idAttribute: 'name'
@@ -14,7 +13,7 @@ define (require)->
       name:     "mainFile"
       ext:      "coffee"
       content:  ""
-    
+      
     sync=null
            
     constructor:(options)->

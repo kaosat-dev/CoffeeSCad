@@ -1,22 +1,22 @@
 define (require)->
   $ = require 'jquery'
   bootstrap = require 'bootstrap'
+  contextMenu = require 'contextMenu'
   marionette = require 'marionette'
   
-  class ModalRegion extends Backbone.Marionette.Region
+  class ContextMenu extends Backbone.Marionette.Region
     el: "#none"
 
     constructor:(options) ->
       options = options or {}
-      @large = options.large ? false
-      elName = options.elName ? "dummyDiv"
+      elName = options.elName ? "contextMenu"
       @makeEl(elName)
       options.el = "##{elName}"
       
       super options
       _.bindAll(this)
       
-      @on("view:show", @showModal, @)
+      @on("view:show", @showMenu, @)
       
     makeEl:(elName)->
       if ($("#" + elName).length == 0)
@@ -29,18 +29,12 @@ define (require)->
       $el.on("hidden", @close)
       return $el
       
-    showModal: (view)=>
-      view.on("close", @hideModal, @)
-      @$el.addClass('fade modal')
-      #FIXME: weird bug: modal() does not add a modal class, but an "in" class to the div ??
-      @$el.modal({'show':true,'backdrop':true})
-      if @large
-        @$el.addClass('modal-reallyBig')
+    showMenu: (view)=>
+      view.on("close", @hideMenu, @)
+      @$el.contextmenu()
         
-    hideModal: ->
-      @$el.modal 'hide'
-      @$el.removeClass('fade')
+    hideMenu: ->
       @$el.remove()
       @trigger("closed")
       
-  return ModalRegion
+  return ContextMenu

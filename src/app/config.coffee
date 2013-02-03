@@ -27,12 +27,14 @@ require.config
     
     #plugins
     jquery_hotkeys:   "../assets/js/plugins/jquery.hotkeys"
-    jquery_ui:        "../assets/js/plugins/jquery-ui-1.9.0.custom.min"
+    jquery_ui:        "../assets/js/plugins/jquery-ui-1.10.0.custom"
     jquery_layout:    "../assets/js/plugins/jquery.layout-latest"
     jquery_jstree:    "../assets/js/plugins/jquery.jstree"
+    jquery_sscroll:   "../assets/js/plugins/jquery.slimscroll"
     
     bootbox:          "../assets/js/plugins/bootbox.min"
     contextMenu:      "../assets/js/plugins/bootstrap-contextmenu"
+    notify:           "../assets/js/plugins/bootstrap-notify"
     
     foldcode:         "../assets/js/plugins/foldcode"
     coffeelint:       "../assets/js/plugins/coffeelint"
@@ -70,6 +72,8 @@ require.config
       dep: ["bootstrap"]
     contextMenu:
       dep: ["bootstrap"]
+    notify:
+      dep:["bootstrap"]
     'backbone':
       deps:    ["underscore"]
       exports:  "Backbone"
@@ -143,6 +147,9 @@ require.config
     jquery_jstree:
       deps: ["jquery"]
       exports: "jquery_jstree"
+    jquery_sscroll:
+      deps: ["jquery","jquery_ui"]
+      exports: "jquery_sscroll"
       
     dropbox: 
       deps:    ["jquery"]

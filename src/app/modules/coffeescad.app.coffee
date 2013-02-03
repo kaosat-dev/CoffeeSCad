@@ -60,7 +60,7 @@ define (require)->
       
       #just temporary
       @vent.on("project:new", @onNewProject)
-      @vent.on("project:saveAs", @onSaveProject)
+      @vent.on("project:saveAs", @onSaveAsProject)
       @vent.on("project:save", @onSaveProject)
       @vent.on("project:load", @onLoadProject)
       @vent.on("project:loaded",@onProjectLoaded)
@@ -172,6 +172,15 @@ define (require)->
       modReg.show projectBrowserView
     
     onSaveProject:=>
+      #if project.pfiles.sync != null
+      
+      ###  
+      projectBrowserView = new ProjectBrowserView
+        model: @project
+        operation: "save"
+        connectors: @connectors
+      ###
+    onSaveAsProject:=>
       projectBrowserView = new ProjectBrowserView
         model: @project
         operation: "save"

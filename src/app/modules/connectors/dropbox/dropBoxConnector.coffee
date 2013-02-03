@@ -31,9 +31,11 @@ define (require)->
       console.log "_____________"
   
   class DropBoxConnector extends Backbone.Model
+    idAttribute: 'name'
     defaults:
       name: "dropBoxConnector"
       storeType: "dropBox"
+      tooltip:"Connector to the Dropbox Cloud based storage: requires login"
     
     constructor:(options)->
       super options
@@ -149,6 +151,8 @@ define (require)->
         if ext == "png"
           #save thumbnail
           dataURIComponents = content.split(',')
+          console.log "dataURIComponents"
+          console.log dataURIComponents
           mimeString = dataURIComponents[0].split(':')[1].split(';')[0]
           if(dataURIComponents[0].indexOf('base64') != -1)
             data =  atob(dataURIComponents[1])
@@ -181,6 +185,7 @@ define (require)->
       project.pfiles.sync = @store.sync
       project.pfiles.path = projectName
       project.pfiles.fetch().done(onProjectLoaded)
+      @lib.add(project)
       return project
     
     getProjectsName:(callback)=>
@@ -192,7 +197,14 @@ define (require)->
           console.log entries
           callback(entries)
           
-    getProjectFiles:(projectName)=>
+    getProjectFiles:(projectName,callback)=>
+      #hack
+      @store.client.readdir "/#{projectName}/", (error, entries) ->
+        if error
+          console.log ("error")
+        else
+          console.log entries
+          callback(entries)
       
     
   return DropBoxConnector
