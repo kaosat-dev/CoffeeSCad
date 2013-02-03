@@ -1,6 +1,5 @@
 define (require)->
-  maths = require './csg.maths'
-  console.log "in utils, looking for maths"
+  maths = require './maths'
   Vector2D = maths.Vector2D
   Vector3D = maths.Vector3D
   Vertex   = maths.Vertex
@@ -9,42 +8,41 @@ define (require)->
   Polygon = maths.Polygon
   Side    = maths.Side
   
-  CSG={}
 
-  CSG.parseOption = (options, optionname, defaultvalue) ->
+  parseOption = (options, optionname, defaultvalue) ->
     # Parse an option from the options object
     # If the option is not present, return the default value
     result = defaultvalue
     result = options[optionname]  if optionname of options  if options
     result
   
-  CSG.parseOptionAs3DVector = (options, optionname, defaultvalue) ->
+  parseOptionAs3DVector = (options, optionname, defaultvalue) ->
     # Parse an option and force into a Vector3D. If a scalar is passed it is converted
     # into a vector with equal x,y,z
-    result = CSG.parseOption(options, optionname, defaultvalue)
+    result = parseOption(options, optionname, defaultvalue)
     result = new Vector3D(result)
     result
   
-  CSG.parseOptionAs2DVector = (options, optionname, defaultvalue) ->
+  parseOptionAs2DVector = (options, optionname, defaultvalue) ->
     # Parse an option and force into a Vector2D. If a scalar is passed it is converted
     # into a vector with equal x,y
-    result = CSG.parseOption(options, optionname, defaultvalue)
+    result = parseOption(options, optionname, defaultvalue)
     result = new Vector2D(result)
     result
   
-  CSG.parseOptionAsFloat = (options, optionname, defaultvalue) ->
-    result = CSG.parseOption(options, optionname, defaultvalue)
+  parseOptionAsFloat = (options, optionname, defaultvalue) ->
+    result = parseOption(options, optionname, defaultvalue)
     if typeof (result) is "string"
       result = Number(result)
     else throw new Error("Parameter " + optionname + " should be a number")  unless typeof (result) is "number"
     result
   
-  CSG.parseOptionAsInt = (options, optionname, defaultvalue) ->
-    result = CSG.parseOption(options, optionname, defaultvalue)
+  parseOptionAsInt = (options, optionname, defaultvalue) ->
+    result = parseOption(options, optionname, defaultvalue)
     Number Math.floor(result)
   
-  CSG.parseOptionAsBool = (options, optionname, defaultvalue) ->
-    result = CSG.parseOption(options, optionname, defaultvalue)
+  parseOptionAsBool = (options, optionname, defaultvalue) ->
+    result = parseOption(options, optionname, defaultvalue)
     if typeof (result) is "string"
       result = true  if result is "true"
       result = false  if result is "false"
@@ -65,7 +63,7 @@ define (require)->
         rightbound = testindex
     array.splice leftbound, 0, element
     
-  CSG.interpolateBetween2DPointsForY = (point1, point2, y) ->
+  interpolateBetween2DPointsForY = (point1, point2, y) ->
     # Get the x coordinate of a point with a certain y coordinate, interpolated between two
     # points (Vector2D).
     # Interpolation is robust even if the points have the same y coordinate
@@ -86,7 +84,7 @@ define (require)->
     result = point1.x + t * (point2.x - point1.x)
     result
   
-  CSG.reTesselateCoplanarPolygons = (sourcepolygons, destpolygons) ->
+  reTesselateCoplanarPolygons = (sourcepolygons, destpolygons) ->
     # Retesselation function for a set of coplanar polygons. See the introduction at the top of
     # this file.
     EPS = 1e-5
@@ -283,8 +281,8 @@ define (require)->
               bottomright: vertices2d[nextrightvertexindex]
   
             insertSorted activepolygons, newactivepolygon, (el1, el2) ->
-              x1 = CSG.interpolateBetween2DPointsForY(el1.topleft, el1.bottomleft, middleycoordinate)
-              x2 = CSG.interpolateBetween2DPointsForY(el2.topleft, el2.bottomleft, middleycoordinate)
+              x1 = interpolateBetween2DPointsForY(el1.topleft, el1.bottomleft, middleycoordinate)
+              x2 = interpolateBetween2DPointsForY(el2.topleft, el2.bottomleft, middleycoordinate)
               return 1  if x1 > x2
               return -1  if x1 < x2
               0
@@ -301,13 +299,13 @@ define (require)->
             polygonindex = activepolygon.polygonindex
             vertices2d = polygonvertices2d[polygonindex]
             numvertices = vertices2d.length
-            x = CSG.interpolateBetween2DPointsForY(activepolygon.topleft, activepolygon.bottomleft, ycoordinate)
+            x = interpolateBetween2DPointsForY(activepolygon.topleft, activepolygon.bottomleft, ycoordinate)
             topleft = new Vector2D(x, ycoordinate)
-            x = CSG.interpolateBetween2DPointsForY(activepolygon.topright, activepolygon.bottomright, ycoordinate)
+            x = interpolateBetween2DPointsForY(activepolygon.topright, activepolygon.bottomright, ycoordinate)
             topright = new Vector2D(x, ycoordinate)
-            x = CSG.interpolateBetween2DPointsForY(activepolygon.topleft, activepolygon.bottomleft, nextycoordinate)
+            x = interpolateBetween2DPointsForY(activepolygon.topleft, activepolygon.bottomleft, nextycoordinate)
             bottomleft = new Vector2D(x, nextycoordinate)
-            x = CSG.interpolateBetween2DPointsForY(activepolygon.topright, activepolygon.bottomright, nextycoordinate)
+            x = interpolateBetween2DPointsForY(activepolygon.topright, activepolygon.bottomright, nextycoordinate)
             bottomright = new Vector2D(x, nextycoordinate)
             outpolygon =
               topleft: topleft
@@ -425,7 +423,7 @@ define (require)->
         yindex++
   
   
-  class CSG.fuzzyFactory
+  class FuzzyFactory
     # This class acts as a factory for objects. We can search for an object with approximately
     # the desired properties (say a rectangle with width 2 and height 1) 
     # The lookupOrCreate() method looks for an existing object (for example it may find an existing rectangle
@@ -468,8 +466,8 @@ define (require)->
           valueMultiplied = value * @multiplier
           valueQuantized1 = Math.floor(valueMultiplied)
           valueQuantized2 = Math.ceil(valueMultiplied)
-          CSG.fuzzyFactory.insertKey key, elementLookupTable, valueQuantized1
-          CSG.fuzzyFactory.insertKey key, elementLookupTable, valueQuantized2
+          FuzzyFactory.insertKey key, elementLookupTable, valueQuantized1
+          FuzzyFactory.insertKey key, elementLookupTable, valueQuantized2
           dimension++
       else
         object = @objectTable[key]
@@ -489,10 +487,10 @@ define (require)->
           if dimension is 0
             keyset = elementLookupTable[valueQuantized]
           else
-            keyset = CSG.fuzzyFactory.intersectSets(keyset, elementLookupTable[valueQuantized])
+            keyset = FuzzyFactory.intersectSets(keyset, elementLookupTable[valueQuantized])
         else
           return null
-        return null  if CSG.fuzzyFactory.isEmptySet(keyset)
+        return null  if FuzzyFactory.isEmptySet(keyset)
         dimension++
       
       # return first matching key:
@@ -539,10 +537,10 @@ define (require)->
       result
   
   
-  class CSG.FuzzyCSGFactory 
+  class FuzzyCSGFactory 
     constructor: ->
-      @vertexfactory = new CSG.fuzzyFactory(3, 1e-5)
-      @planefactory = new CSG.fuzzyFactory(4, 1e-5)
+      @vertexfactory = new FuzzyFactory(3, 1e-5)
+      @planefactory = new FuzzyFactory(4, 1e-5)
       @polygonsharedfactory = {}
   
     getPolygonShared: (sourceshared) ->
@@ -586,9 +584,9 @@ define (require)->
       newpolygons = (@getPolygon polygon for polygon in sourceCsg.polygons)
 
 
-  class CSG.FuzzyCAGFactory
+  class FuzzyCAGFactory
     constructor:->
-      @vertexfactory = new CSG.fuzzyFactory(2, 1e-5)
+      @vertexfactory = new FuzzyFactory(2, 1e-5)
   
     getVertex: (sourcevertex) ->
       elements = [sourcevertex.pos._x, sourcevertex.pos._y]
@@ -616,21 +614,17 @@ define (require)->
       )
       newsides
       
-  return CSG  
-  ### 
   return {
-    "CSG":
-      "parseOption": CSG.parseOption
-      "parseOptionAs3DVector": CSG.parseOptionAs3DVector  
-      "parseOptionAs2DVector": CSG.parseOptionAs2DVector
-      "parseOptionAsFloat": CSG.parseOptionAsFloat
-      "parseOptionAsInt": CSG.parseOptionAsInt
-      "parseOptionAsBool": CSG.parseOptionAsBool
-      "IsFloat": CSG.IsFloat
-      "solve2Linear": CSG.solve2Linear
+      "parseOption": parseOption
+      "parseOptionAs3DVector": parseOptionAs3DVector  
+      "parseOptionAs2DVector": parseOptionAs2DVector
+      "parseOptionAsFloat": parseOptionAsFloat
+      "parseOptionAsInt": parseOptionAsInt
+      "parseOptionAsBool": parseOptionAsBool
       "insertSorted": insertSorted
-      "interpolateBetween2DPointsForY": CSG.interpolateBetween2DPointsForY 
-      "reTesselateCoplanarPolygons": CSG.reTesselateCoplanarPolygons 
-      "fuzzyFactory": CSG.fuzzyFactory 
-      "fuzzyCSGFactory": CSG.fuzzyCSGFactory 
-  }###
+      "interpolateBetween2DPointsForY": interpolateBetween2DPointsForY 
+      "reTesselateCoplanarPolygons": reTesselateCoplanarPolygons 
+      "FuzzyFactory": FuzzyFactory 
+      "FuzzyCSGFactory": FuzzyCSGFactory
+      "FuzzyCAGFactory": FuzzyCAGFactory 
+  }

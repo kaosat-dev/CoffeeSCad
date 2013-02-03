@@ -1,6 +1,5 @@
 define (require)->
-  CSG = {}
-  globals = require './csg.globals'
+  globals = require './globals'
   _CSGDEBUG = globals._CSGDEBUG
   
   class PolygonTreeNode 
@@ -186,7 +185,7 @@ define (require)->
     # by picking a polygon to split along.
     # Polygons are not stored directly in the tree, but in PolygonTreeNodes, stored in
     # this.polygontreenodes. Those PolygonTreeNodes are children of the owning
-    # CSG.Tree.polygonTree
+    # Tree.polygonTree
     # This is not a leafy BSP tree since there is
     # no distinction between internal and leaf nodes.
     constructor: (parent) ->

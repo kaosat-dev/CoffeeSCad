@@ -7,8 +7,8 @@ define (require)->
   CSGBase = base.CSGBase
   CAGBase = base.CAGBase
   
-  shapes3d = require './csg.geometry'
-  shapes2d = require './cag.geometry' 
+  shapes3d = require './geometry3d'
+  shapes2d = require './geometry2d' 
   
   Cube = shapes3d.Cube
   Sphere = shapes3d.Sphere
@@ -16,7 +16,7 @@ define (require)->
   Rectangle = shapes2d.Rectangle
   Circle = shapes2d.Circle
   
-  maths = require './csg.maths'
+  maths = require './maths'
   Plane = maths.Plane
   
   extras = require './extras'

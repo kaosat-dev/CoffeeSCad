@@ -3,8 +3,7 @@ define (require)->
   _ = require 'underscore'
   Backbone = require 'backbone'
   LocalStorage = require 'localstorage'
- 
-  CsgProcessor = require "./csg/csg.processor"
+  CsgProcessor = require "./csg/processor"
   debug  = false
   
   class ProjectFile extends Backbone.Model

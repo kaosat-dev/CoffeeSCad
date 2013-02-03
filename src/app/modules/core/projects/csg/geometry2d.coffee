@@ -2,16 +2,16 @@ define (require)->
   base = require './csg'
   CAGBase = base.CAGBase
   
-  maths = require './csg.maths'
+  maths = require './maths'
   Vertex = maths.Vertex
   Vertex2D = maths.Vertex
   Vector2D = maths.Vector2D
   Side = maths.Side
   
-  globals = require './csg.globals'
+  globals = require './globals'
   defaultResolution2D = globals.defaultResolution2D
   
-  utils = require './csg.utils'
+  utils = require './utils'
   parseOptionAs2DVector = utils.parseOptionAs2DVector
   parseOptionAsFloat = utils.parseOptionAsFloat
   parseOptionAsInt = utils.parseOptionAsInt

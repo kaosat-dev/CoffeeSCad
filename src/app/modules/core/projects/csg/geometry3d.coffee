@@ -2,16 +2,16 @@ define (require)->
   base = require './csg'
   CSGBase = base.CSGBase
   
-  maths = require './csg.maths'
+  maths = require './maths'
   Vertex = maths.Vertex
   Vector3D = maths.Vector3D
   Polygon = maths.Polygon
   
-  props = require './csg.props'
-  Properties = props.CSG.Properties
-  Connector = props.CSG.Connector
+  properties = require './properties'
+  Properties = properties.Properties
+  Connector = properties.Connector
    
-  utils = require './csg.utils'
+  utils = require './utils'
   parseOptionAs3DVector = utils.parseOptionAs3DVector
   parseOptionAsFloat = utils.parseOptionAsFloat
   parseOptionAsInt = utils.parseOptionAsInt

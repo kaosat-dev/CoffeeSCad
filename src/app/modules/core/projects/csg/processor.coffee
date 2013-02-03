@@ -1,9 +1,8 @@
 define (require) ->
   CoffeeScript = require 'CoffeeScript'
-  
   reqRes = require 'modules/core/reqRes'
   utils = require "modules/core/utils/utils"
-  csgSugar = require "./csg.sugar2"
+  csgSugar = require "./sugar2"
   
   
   ##Inner workflow
@@ -181,8 +180,8 @@ define (require) ->
       CSGBase = base.CSGBase
       CAGBase = base.CAGBase
   
-      shapes3d = require './csg.geometry'
-      shapes2d = require './cag.geometry' 
+      shapes3d = require './geometry3d'
+      shapes2d = require './geometry2d' 
       
       Cube = shapes3d.Cube
       Sphere = shapes3d.Sphere
@@ -225,9 +224,9 @@ define (require) ->
             resulttype = e.data.result.class
             result = undefined
             if resulttype is "CSG"
-              result = CSG.fromCompactBinary(e.data.result)
+              result = fromCompactBinary(e.data.result)
             else if resulttype is "CAG"
-              result = CAG.fromCompactBinary(e.data.result)
+              result = fromCompactBinary(e.data.result)
             else
               throw new Error("Cannot parse result")
             callback null, result
@@ -269,9 +268,9 @@ define (require) ->
             resulttype = e.data.result.class
             result = undefined
             if resulttype is "CSG"
-              result = CSG.fromCompactBinary(e.data.result)
+              result = fromCompactBinary(e.data.result)
             else if resulttype is "CAG"
-              result = CAG.fromCompactBinary(e.data.result)
+              result = fromCompactBinary(e.data.result)
             else
               throw new Error("Cannot parse result")
             callback null, result

@@ -2,17 +2,16 @@ define (require)->
   Function::property = (prop, desc) ->
     Object.defineProperty @prototype, prop, desc
   
-  CSG={}
    
-  globals = require './csg.globals'
+  globals = require './globals'
   _CSGDEBUG = globals._CSGDEBUG
-  CSG.staticTag = globals.CSG.staticTag
-  CSG.getTag = globals.CSG.getTag
+  staticTag = globals.staticTag
+  getTag = globals.getTag
   
-  CSG.IsFloat = (n) ->
+  IsFloat = (n) ->
     (not isNaN(n)) or (n is Infinity) or (n is -Infinity)
   
-  CSG.solve2Linear = (a, b, c, d, u, v) ->
+  solve2Linear = (a, b, c, d, u, v) ->
     # solve 2x2 linear equation:
     # [ab][x] = [u]
     # [cd][y]   [v]
@@ -25,7 +24,7 @@ define (require)->
     [x, y]
   
   
-  class  CSG.Vector2D 
+  class  Vector2D 
     # Represents a 2 element vector
     constructor : (x, y) ->
       if arguments.length is 2
@@ -35,7 +34,7 @@ define (require)->
         ok = true
         if arguments.length is 1
           if typeof (x) is "object"
-            if x instanceof CSG.Vector2D
+            if x instanceof Vector2D
               @_x = x._x
               @_y = x._y
             else if x instanceof Array
@@ -52,7 +51,7 @@ define (require)->
             @_y = v
         else
           ok = false
-        ok = false  if (not CSG.IsFloat(@_x)) or (not CSG.IsFloat(@_y))  if ok
+        ok = false  if (not IsFloat(@_x)) or (not IsFloat(@_y))  if ok
         throw new Error("wrong arguments")  unless ok
     
     @property 'x',
@@ -64,39 +63,39 @@ define (require)->
       set: (v) -> throw new Error("Vector2D is immutable")
           
     @fromAngle : (radians) ->
-      CSG.Vector2D.fromAngleRadians radians
+      Vector2D.fromAngleRadians radians
     
     @fromAngleDegrees : (degrees) ->
       radians = Math.PI * degrees / 180
-      CSG.Vector2D.fromAngleRadians radians
+      Vector2D.fromAngleRadians radians
     
     @fromAngleRadians : (radians) ->
-      new CSG.Vector2D(Math.cos(radians), Math.sin(radians))
+      new Vector2D(Math.cos(radians), Math.sin(radians))
   
     toVector3D: (z) ->
       # extend to a 3D vector by adding a z coordinate:
-      new CSG.Vector3D(@_x, @_y, z)
+      new Vector3D(@_x, @_y, z)
   
     equals: (a) ->
       (@_x is a._x) and (@_y is a._y)
   
     clone: ->
-      new CSG.Vector2D(@_x, @_y)
+      new Vector2D(@_x, @_y)
   
     negated: ->
-      new CSG.Vector2D(-@_x, -@_y)
+      new Vector2D(-@_x, -@_y)
   
     plus: (a) ->
-      new CSG.Vector2D(@_x + a._x, @_y + a._y)
+      new Vector2D(@_x + a._x, @_y + a._y)
   
     minus: (a) ->
-      new CSG.Vector2D(@_x - a._x, @_y - a._y)
+      new Vector2D(@_x - a._x, @_y - a._y)
   
     times: (a) ->
-      new CSG.Vector2D(@_x * a, @_y * a)
+      new Vector2D(@_x * a, @_y * a)
   
     dividedBy: (a) ->
-      new CSG.Vector2D(@_x / a, @_y / a)
+      new Vector2D(@_x / a, @_y / a)
   
     dot: (a) ->
       @_x * a._x + @_y * a._y
@@ -124,11 +123,11 @@ define (require)->
   
     normal: ->
       # returns the vector rotated by 90 degrees clockwise
-      new CSG.Vector2D(@_y, -@_x)
+      new Vector2D(@_y, -@_x)
   
     multiply4x4: (matrix4x4) ->
       # Right multiply by a 4x4 matrix (the vector is interpreted as a row vector)
-      # Returns a new CSG.Vector2D
+      # Returns a new Vector2D
       matrix4x4.leftMultiply1x2Vector this
   
     transform: (matrix4x4) ->
@@ -146,25 +145,25 @@ define (require)->
       Math.atan2 @_y, @_x
   
     min: (p) ->
-      new CSG.Vector2D(Math.min(@_x, p._x), Math.min(@_y, p._y))
+      new Vector2D(Math.min(@_x, p._x), Math.min(@_y, p._y))
   
     max: (p) ->
-      new CSG.Vector2D(Math.max(@_x, p._x), Math.max(@_y, p._y))
+      new Vector2D(Math.max(@_x, p._x), Math.max(@_y, p._y))
   
     toString: ->
       "(" + @_x + ", " + @_y + ")"
   
-  class CSG.Vector3D
+  class Vector3D
     # # class Vector3D
     # Represents a 3D vector.
     # 
     # Example usage:
     # 
-    #     new CSG.Vector3D(1, 2, 3);
-    #     new CSG.Vector3D([1, 2, 3]);
-    #     new CSG.Vector3D({ x: 1, y: 2, z: 3 });
-    #     new CSG.Vector3D(1, 2); // assumes z=0
-    #     new CSG.Vector3D([1, 2]); // assumes z=0
+    #     new Vector3D(1, 2, 3);
+    #     new Vector3D([1, 2, 3]);
+    #     new Vector3D({ x: 1, y: 2, z: 3 });
+    #     new Vector3D(1, 2); // assumes z=0
+    #     new Vector3D([1, 2]); // assumes z=0
     constructor: (x, y, z) ->
       if arguments.length is 3
         @_x = parseFloat(x)
@@ -178,11 +177,11 @@ define (require)->
         ok = true
         if arguments.length is 1
           if typeof (x) is "object"
-            if x instanceof CSG.Vector3D
+            if x instanceof Vector3D
               @_x = x._x
               @_y = x._y
               @_z = x._z
-            else if x instanceof CSG.Vector2D
+            else if x instanceof Vector2D
               @_x = x._x
               @_y = x._y
               @_z = 0
@@ -212,7 +211,7 @@ define (require)->
             @_z = v
         else
           ok = false
-        ok = false  if (not CSG.IsFloat(@_x)) or (not CSG.IsFloat(@_y)) or (not CSG.IsFloat(@_z))  if ok
+        ok = false  if (not IsFloat(@_x)) or (not IsFloat(@_y)) or (not IsFloat(@_z))  if ok
         throw new Error("wrong arguments")  unless ok
         
     @property 'x',
@@ -228,25 +227,25 @@ define (require)->
       set: (v) -> throw new Error("Vector3D is immutable")
        
     clone: ->
-      new CSG.Vector3D(this)
+      new Vector3D(this)
   
     negated: ->
-      new CSG.Vector3D(-@_x, -@_y, -@_z)
+      new Vector3D(-@_x, -@_y, -@_z)
   
     abs: ->
-      new CSG.Vector3D(Math.abs(@_x), Math.abs(@_y), Math.abs(@_z))
+      new Vector3D(Math.abs(@_x), Math.abs(@_y), Math.abs(@_z))
   
     plus: (a) ->
-      new CSG.Vector3D(@_x + a._x, @_y + a._y, @_z + a._z)
+      new Vector3D(@_x + a._x, @_y + a._y, @_z + a._z)
   
     minus: (a) ->
-      new CSG.Vector3D(@_x - a._x, @_y - a._y, @_z - a._z)
+      new Vector3D(@_x - a._x, @_y - a._y, @_z - a._z)
   
     times: (a) ->
-      new CSG.Vector3D(@_x * a, @_y * a, @_z * a)
+      new Vector3D(@_x * a, @_y * a, @_z * a)
   
     dividedBy: (a) ->
-      new CSG.Vector3D(@_x / a, @_y / a, @_z / a)
+      new Vector3D(@_x / a, @_y / a, @_z / a)
   
     dot: (a) ->
       @_x * a._x + @_y * a._y + @_z * a._z
@@ -264,7 +263,7 @@ define (require)->
       @dividedBy @length()
   
     cross: (a) ->
-      new CSG.Vector3D(@_y * a._z - @_z * a._y, @_z * a._x - @_x * a._z, @_x * a._y - @_y * a._x)
+      new Vector3D(@_y * a._z - @_z * a._y, @_z * a._x - @_x * a._z, @_x * a._y - @_y * a._x)
   
     distanceTo: (a) ->
       @minus(a).length()
@@ -277,7 +276,7 @@ define (require)->
   
     multiply4x4: (matrix4x4) ->
       # Right multiply by a 4x4 matrix (the vector is interpreted as a row vector)
-      # Returns a new CSG.Vector3D
+      # Returns a new Vector3D
       matrix4x4.leftMultiply1x3Vector this
   
     transform: (matrix4x4) ->
@@ -293,32 +292,32 @@ define (require)->
       # find a vector that is somewhat perpendicular to this one
       abs = @abs()
       if (abs._x <= abs._y) and (abs._x <= abs._z)
-        new CSG.Vector3D(1, 0, 0)
+        new Vector3D(1, 0, 0)
       else if (abs._y <= abs._x) and (abs._y <= abs._z)
-        new CSG.Vector3D(0, 1, 0)
+        new Vector3D(0, 1, 0)
       else
-        new CSG.Vector3D(0, 0, 1)
+        new Vector3D(0, 0, 1)
   
     min: (p) ->
-      new CSG.Vector3D(Math.min(@_x, p._x), Math.min(@_y, p._y), Math.min(@_z, p._z))
+      new Vector3D(Math.min(@_x, p._x), Math.min(@_y, p._y), Math.min(@_z, p._z))
   
     max: (p) ->
-      new CSG.Vector3D(Math.max(@_x, p._x), Math.max(@_y, p._y), Math.max(@_z, p._z))
+      new Vector3D(Math.max(@_x, p._x), Math.max(@_y, p._y), Math.max(@_z, p._z))
   
-  class CSG.Vertex 
+  class Vertex 
     # # class Vertex
     # Represents a vertex of a polygon. Use your own vertex class instead of this
     # one to provide additional features like texture coordinates and vertex
     # colors. Custom vertex classes need to provide a `pos` property
     # `flipped()`, and `interpolate()` methods that behave analogous to the ones
-    # defined by `CSG.Vertex`.
+    # defined by `Vertex`.
     constructor: (pos) ->
       @pos = pos
   
     @fromObject : (obj) ->
       # create from an untyped object with identical property names:
-      pos = new CSG.Vector3D(obj.pos)
-      new CSG.Vertex(pos)
+      pos = new Vector3D(obj.pos)
+      new Vertex(pos)
       
     flipped: ->
       # Return a vertex with all orientation-specific data (e.g. vertex normal) flipped. Called when the
@@ -328,7 +327,7 @@ define (require)->
     getTag: ->
       result = @tag
       unless result
-        result = CSG.getTag()
+        result = getTag()
         @tag = result
       result
     
@@ -337,12 +336,12 @@ define (require)->
       # interpolating all properties using a parameter of `t`. Subclasses should
       # override this to interpolate additional properties.
       newpos = @pos.lerp(other.pos, t)
-      new CSG.Vertex(newpos)
+      new Vertex(newpos)
   
     transform: (matrix4x4) ->
-      # Affine transformation of vertex. Returns a new CSG.Vertex
+      # Affine transformation of vertex. Returns a new Vertex
       newpos = @pos.multiply4x4(matrix4x4)
-      new CSG.Vertex(newpos)
+      new Vertex(newpos)
   
     toStlString: ->
       "vertex " + @pos.toStlString() + "\n"
@@ -350,14 +349,14 @@ define (require)->
     toString: ->
       @pos.toString()
       
-  class CSG.Line2D 
+  class Line2D 
     # Represents a directional line in 2D space
     # A line is parametrized by its normal vector (perpendicular to the line, rotated 90 degrees counter clockwise)
     # and w. The line passes through the point <normal>.times(w).
     # normal must be a unit vector!
     # Equation: p is on line if normal.dot(p)==w
     constructor: (normal, w) ->
-      normal = new CSG.Vector2D(normal)
+      normal = new Vector2D(normal)
       w = parseFloat(w)
       l = normal.length()
       
@@ -368,16 +367,16 @@ define (require)->
       @w = w
   
     @fromPoints = (p1, p2) ->
-      p1 = new CSG.Vector2D(p1)
-      p2 = new CSG.Vector2D(p2)
+      p1 = new Vector2D(p1)
+      p2 = new Vector2D(p2)
       direction = p2.minus(p1)
       normal = direction.normal().negated().unit()
       w = p1.dot(normal)
-      new CSG.Line2D(normal, w)
+      new Line2D(normal, w)
   
     reverse: ->
       # same line but opposite direction:
-      new CSG.Line2D(@normal.negated(), -@w)
+      new Line2D(@normal.negated(), -@w)
   
     equals: (l) ->
       l.normal.equals(@normal) and (l.w is @w)
@@ -395,49 +394,49 @@ define (require)->
       x
   
     absDistanceToPoint: (point) ->
-      point = new CSG.Vector2D(point)
+      point = new Vector2D(point)
       point_projected = point.dot(@normal)
       distance = Math.abs(point_projected - @w)
       distance
   
     closestPoint: (point) ->
-      point = new CSG.Vector2D(point)
+      point = new Vector2D(point)
       vector = point.dot(@direction())
       origin.plus vector
     
     intersectWithLine: (line2d) ->
       # intersection between two lines, returns point as Vector2D
-      point = CSG.solve2Linear(@normal.x, @normal.y, line2d.normal.x, line2d.normal.y, @w, line2d.w)
-      point = new CSG.Vector2D(point) 
+      point = solve2Linear(@normal.x, @normal.y, line2d.normal.x, line2d.normal.y, @w, line2d.w)
+      point = new Vector2D(point) 
       point
   
     transform: (matrix4x4) ->
-      origin = new CSG.Vector2D(0, 0)
+      origin = new Vector2D(0, 0)
       pointOnPlane = @normal.times(@w)
       neworigin = origin.multiply4x4(matrix4x4)
       neworiginPlusNormal = @normal.multiply4x4(matrix4x4)
       newnormal = neworiginPlusNormal.minus(neworigin)
       newpointOnPlane = pointOnPlane.multiply4x4(matrix4x4)
       neww = newnormal.dot(newpointOnPlane)
-      new CSG.Line2D(newnormal, neww)
+      new Line2D(newnormal, neww)
   
   
   
-  class CSG.Line3D 
+  class Line3D 
     # Represents a line in 3D space
     # direction must be a unit vector 
     # point is a random point on the line
     constructor: (point, direction) ->
-      point = new CSG.Vector3D(point)
-      direction = new CSG.Vector3D(direction)
+      point = new Vector3D(point)
+      direction = new Vector3D(direction)
       @point = point
       @direction = direction.unit()
   
     @fromPoints = (p1, p2) ->
-      p1 = new CSG.Vector3D(p1)
-      p2 = new CSG.Vector3D(p2)
+      p1 = new Vector3D(p1)
+      p2 = new Vector3D(p2)
       direction = p2.minus(p1).unit()
-      new CSG.Line3D(p1, direction)
+      new Line3D(p1, direction)
     
     @fromPlanes = (p1, p2) ->
       direction = p1.normal.cross(p2.normal)
@@ -452,19 +451,19 @@ define (require)->
         
         # direction vector is mostly pointing towards x
         # find a point p for which x is zero:
-        r = CSG.solve2Linear(p1.normal.y, p1.normal.z, p2.normal.y, p2.normal.z, p1.w, p2.w)
-        origin = new CSG.Vector3D(0, r[0], r[1])
+        r = solve2Linear(p1.normal.y, p1.normal.z, p2.normal.y, p2.normal.z, p1.w, p2.w)
+        origin = new Vector3D(0, r[0], r[1])
       else if (mabsy >= mabsx) and (mabsy >= mabsz)
         
         # find a point p for which y is zero:
-        r = CSG.solve2Linear(p1.normal.x, p1.normal.z, p2.normal.x, p2.normal.z, p1.w, p2.w)
-        origin = new CSG.Vector3D(r[0], 0, r[1])
+        r = solve2Linear(p1.normal.x, p1.normal.z, p2.normal.x, p2.normal.z, p1.w, p2.w)
+        origin = new Vector3D(r[0], 0, r[1])
       else
         
         # find a point p for which z is zero:
-        r = CSG.solve2Linear(p1.normal.x, p1.normal.y, p2.normal.x, p2.normal.y, p1.w, p2.w)
-        origin = new CSG.Vector3D(r[0], r[1], 0)
-      new CSG.Line3D(origin, direction)
+        r = solve2Linear(p1.normal.x, p1.normal.y, p2.normal.x, p2.normal.y, p1.w, p2.w)
+        origin = new Vector3D(r[0], r[1], 0)
+      new Line3D(origin, direction)
   
     intersectWithPlane: (plane) ->
       # plane: plane.normal * p = plane.w
@@ -474,26 +473,26 @@ define (require)->
       point
   
     clone: (line) ->
-      new CSG.Line3D(@point.clone(), @direction.clone())
+      new Line3D(@point.clone(), @direction.clone())
   
     reverse: ->
-      new CSG.Line3D(@point.clone(), @direction.negated())
+      new Line3D(@point.clone(), @direction.negated())
   
     transform: (matrix4x4) ->
       newpoint = @point.multiply4x4(matrix4x4)
       pointPlusDirection = @point.plus(@direction)
       newPointPlusDirection = pointPlusDirection.multiply4x4(matrix4x4)
       newdirection = newPointPlusDirection.minus(newpoint)
-      new CSG.Line3D(newpoint, newdirection)
+      new Line3D(newpoint, newdirection)
   
     closestPointOnLine: (point) ->
-      point = new CSG.Vector3D(point)
+      point = new Vector3D(point)
       t = point.minus(@point).dot(@direction) / @direction.dot(@direction)
       closestpoint = @point.plus(@direction.times(t))
       closestpoint
   
     distanceToPoint: (point) ->
-      point = new CSG.Vector3D(point)
+      point = new Vector3D(point)
       closestpoint = @closestPointOnLine(point)
       distancevector = point.minus(closestpoint)
       distance = distancevector.length()
@@ -505,11 +504,11 @@ define (require)->
       return false  if distance > 1e-8
       true
   
-  class CSG.Plane
+  class Plane
     # # class Plane
     # Represents a plane in 3D space.
     @EPSILON : 1e-5
-    # `CSG.Plane.EPSILON` is the tolerance used by `splitPolygon()` to decide if a
+    # `Plane.EPSILON` is the tolerance used by `splitPolygon()` to decide if a
     # point is on the plane.
     constructor: (normal, w) ->
       @normal = normal
@@ -517,13 +516,13 @@ define (require)->
   
     # create from an untyped object with identical property names:
     @fromObject : (obj) ->
-      normal = new CSG.Vector3D(obj.normal)
+      normal = new Vector3D(obj.normal)
       w = parseFloat(obj.w)
-      new CSG.Plane(normal, w)
+      new Plane(normal, w)
   
     @fromVector3Ds : (a, b, c) ->
       n = b.minus(a).cross(c.minus(a)).unit()
-      new CSG.Plane(n, n.dot(a))
+      new Plane(n, n.dot(a))
   
     @anyPlaneFromVector3Ds : (a, b, c) ->
       # like fromVector3Ds, but allow the vectors to be on one point or one line
@@ -539,28 +538,28 @@ define (require)->
         v2 = v1.randomNonParallelVector()
         normal = v1.cross(v2)
       normal = normal.unit()
-      new CSG.Plane(normal, normal.dot(a))
+      new Plane(normal, normal.dot(a))
   
     @fromPoints : (a, b, c) ->
-      a = new CSG.Vector3D(a)
-      b = new CSG.Vector3D(b)
-      c = new CSG.Vector3D(c)
-      CSG.Plane.fromVector3Ds a, b, c
+      a = new Vector3D(a)
+      b = new Vector3D(b)
+      c = new Vector3D(c)
+      Plane.fromVector3Ds a, b, c
   
     @fromNormalAndPoint : (normal, point) ->
-      normal = new CSG.Vector3D(normal)
-      point = new CSG.Vector3D(point)
+      normal = new Vector3D(normal)
+      point = new Vector3D(point)
       normal = normal.unit()
       w = point.dot(normal)
-      new CSG.Plane(normal, w)
+      new Plane(normal, w)
   
     flipped: ->
-      new CSG.Plane(@normal.negated(), -@w)
+      new Plane(@normal.negated(), -@w)
   
     getTag: ->
       result = @tag
       unless result
-        result = CSG.getTag()
+        result = getTag()
         @tag = result
       result
   
@@ -586,7 +585,7 @@ define (require)->
       point3 = point3.multiply4x4(matrix4x4)
       
       # and create a new plane from the transformed points:
-      newplane = CSG.Plane.fromVector3Ds(point1, point2, point3)
+      newplane = Plane.fromVector3Ds(point1, point2, point3)
       
       # the transform is mirroring
       # We should mirror the plane:
@@ -602,8 +601,8 @@ define (require)->
       #   3: back
       #   4: spanning
       # In case the polygon is spanning, returns:
-      # .front: a CSG.Polygon of the front part 
-      # .back: a CSG.Polygon of the back part 
+      # .front: a Polygon of the front part 
+      # .back: a Polygon of the back part 
       result =
         type: null
         front: null
@@ -618,7 +617,7 @@ define (require)->
         result.type = 0
       else
         #FIXME: epsion not fetched
-        EPS = CSG.Plane.EPSILON
+        EPS = Plane.EPSILON
         thisw = @w
         hasfront = false
         hasback = false
@@ -669,7 +668,7 @@ define (require)->
               point = vertex.pos
               nextpoint = vertices[nextvertexindex].pos
               intersectionpoint = @splitLineBetweenPoints(point, nextpoint)
-              intersectionvertex = new CSG.Vertex(intersectionpoint)
+              intersectionvertex = new Vertex(intersectionpoint)
               if isback
                 backvertices.push vertex
                 backvertices.push intersectionvertex
@@ -683,7 +682,7 @@ define (require)->
           # for vertexindex
           
           # remove duplicate vertices:
-          EPS_SQUARED = CSG.Plane.EPSILON * CSG.Plane.EPSILON
+          EPS_SQUARED = Plane.EPSILON * Plane.EPSILON
           if backvertices.length >= 3
             prevvertex = backvertices[backvertices.length - 1]
             vertexindex = 0
@@ -706,8 +705,8 @@ define (require)->
                 vertexindex--
               prevvertex = vertex
               vertexindex++
-          result.front = new CSG.Polygon(frontvertices, polygon.shared, polygon.plane)  if frontvertices.length >= 3
-          result.back = new CSG.Polygon(backvertices, polygon.shared, polygon.plane)  if backvertices.length >= 3
+          result.front = new Polygon(frontvertices, polygon.shared, polygon.plane)  if frontvertices.length >= 3
+          result.back = new Polygon(backvertices, polygon.shared, polygon.plane)  if backvertices.length >= 3
       result
   
     splitLineBetweenPoints: (p1, p2) ->
@@ -722,12 +721,12 @@ define (require)->
       result
   
     intersectWithLine: (line3d) ->
-      # returns CSG.Vector3D
+      # returns Vector3D
       line3d.intersectWithPlane this
     
     intersectWithPlane: (plane) ->
       # intersection of two planes
-      CSG.Line3D.fromPlanes this, plane
+      Line3D.fromPlanes this, plane
   
     signedDistanceToPoint: (point) ->
       t = @normal.dot(point) - @w
@@ -741,10 +740,10 @@ define (require)->
       mirrored = point3d.minus(@normal.times(distance * 2.0))
       mirrored
   
-  class CSG.Polygon
+  class Polygon
     #class Polygon
     # Represents a convex polygon. The vertices used to initialize a polygon must
-    # be coplanar and form a convex loop. They do not have to be `CSG.Vertex`
+    # be coplanar and form a convex loop. They do not have to be `Vertex`
     # instances but they must behave similarly (duck typing can be used for
     # customization).
     # 
@@ -757,28 +756,28 @@ define (require)->
     # passed as the third argument 
     constructor : (vertices, shared, plane) ->
       @vertices = vertices
-      shared = CSG.Polygon.defaultShared  unless shared
+      shared = Polygon.defaultShared  unless shared
       @shared = shared
       numvertices = vertices.length
       if arguments.length >= 3
         @plane = plane
       else
-        @plane = CSG.Plane.fromVector3Ds(vertices[0].pos, vertices[1].pos, vertices[2].pos)
+        @plane = Plane.fromVector3Ds(vertices[0].pos, vertices[1].pos, vertices[2].pos)
       @checkIfConvex()  if _CSGDEBUG
   
     @fromObject : (obj) ->
       # create from an untyped object with identical property names:
       vertices = obj.vertices.map((v) ->
-        CSG.Vertex.fromObject v
+        Vertex.fromObject v
       )
-      shared = CSG.PolygonShared.fromObject(obj.shared)
-      plane = CSG.Plane.fromObject(obj.plane)
-      new CSG.Polygon(vertices, shared, plane)
+      shared = PolygonShared.fromObject(obj.shared)
+      plane = Plane.fromObject(obj.plane)
+      new Polygon(vertices, shared, plane)
   
     checkIfConvex: ->
       # check whether the polygon is convex (it should be, otherwise we will get unexpected results)
-      unless CSG.Polygon.verticesConvex(@vertices, @plane.normal)
-        CSG.Polygon.verticesConvex @vertices, @plane.normal
+      unless Polygon.verticesConvex(@vertices, @plane.normal)
+        Polygon.verticesConvex @vertices, @plane.normal
         throw new Error("Not convex!")
   
     extrude: (offsetvector) ->
@@ -801,19 +800,19 @@ define (require)->
         sidefacepoints.push polygon2.vertices[i].pos
         sidefacepoints.push polygon2.vertices[nexti].pos
         sidefacepoints.push polygon1.vertices[nexti].pos
-        sidefacepolygon = CSG.Polygon.createFromPoints(sidefacepoints, @shared)
+        sidefacepolygon = Polygon.createFromPoints(sidefacepoints, @shared)
         newpolygons.push sidefacepolygon
         i++
       polygon2 = polygon2.flipped()
       newpolygons.push polygon2
       newpolygons
-      #CSG.fromPolygons newpolygons
+      #fromPolygons newpolygons
   
     translate: (offset) ->
-      @transform CSG.Matrix4x4.translation(offset)
+      @transform Matrix4x4.translation(offset)
     
     boundingSphere: ->
-      # returns an array with a CSG.Vector3D (center point) and a radius
+      # returns an array with a Vector3D (center point) and a radius
       unless @cachedBoundingSphere
         box = @boundingBox()
         middle = box[0].plus(box[1]).times(0.5)
@@ -823,14 +822,14 @@ define (require)->
       @cachedBoundingSphere
   
     boundingBox: ->
-      # returns an array of two CSG.Vector3Ds (minimum coordinates and maximum coordinates)
+      # returns an array of two Vector3Ds (minimum coordinates and maximum coordinates)
       unless @cachedBoundingBox
         minpoint = undefined
         maxpoint = undefined
         vertices = @vertices
         numvertices = vertices.length
         if numvertices is 0
-          minpoint = new CSG.Vector3D(0, 0, 0)
+          minpoint = new Vector3D(0, 0, 0)
         else
           minpoint = vertices[0].pos
         maxpoint = minpoint
@@ -850,10 +849,10 @@ define (require)->
       )
       newvertices.reverse()
       newplane = @plane.flipped()
-      new CSG.Polygon(newvertices, @shared, newplane)
+      new Polygon(newvertices, @shared, newplane)
   
     transform: (matrix4x4) ->
-      # Affine transformation of polygon. Returns a new CSG.Polygon
+      # Affine transformation of polygon. Returns a new Polygon
       newvertices = @vertices.map((v) ->
         v.transform matrix4x4
       )
@@ -863,7 +862,7 @@ define (require)->
       # the transformation includes mirroring. We need to reverse the vertex order
       # in order to preserve the inside/outside orientation:
       newvertices.reverse()  if scalefactor < 0
-      new CSG.Polygon(newvertices, @shared, newplane)
+      new Polygon(newvertices, @shared, newplane)
   
     toStlString: ->
       result = ""
@@ -914,7 +913,7 @@ define (require)->
     
         while i < numvertices
           pos = vertices[i].pos
-          return false  unless CSG.Polygon.isConvexPoint(prevprevpos, prevpos, pos, planenormal)
+          return false  unless Polygon.isConvexPoint(prevprevpos, prevpos, pos, planenormal)
           prevprevpos = prevpos
           prevpos = pos
           i++
@@ -926,25 +925,25 @@ define (require)->
       if arguments.length < 3
         
         # initially set a dummy vertex normal:
-        normal = new CSG.Vector3D(0, 0, 0)
+        normal = new Vector3D(0, 0, 0)
       else
         normal = plane.normal
       vertices = []
       points.map (p) ->
-        vec = new CSG.Vector3D(p)
-        vertex = new CSG.Vertex(vec)
+        vec = new Vector3D(p)
+        vertex = new Vertex(vec)
         vertices.push vertex
     
       polygon = undefined
       if arguments.length < 3
-        polygon = new CSG.Polygon(vertices, shared)
+        polygon = new Polygon(vertices, shared)
       else
-        polygon = new CSG.Polygon(vertices, shared, plane)
+        polygon = new Polygon(vertices, shared, plane)
       polygon
   
     @isConvexPoint : (prevpoint, point, nextpoint, normal) ->
       # calculate whether three points form a convex corner 
-      #  prevpoint, point, nextpoint: the 3 coordinates (CSG.Vector3D instances)
+      #  prevpoint, point, nextpoint: the 3 coordinates (Vector3D instances)
       #  normal: the normal vector of the plane
       crossproduct = point.minus(prevpoint).cross(nextpoint.minus(point))
       crossdotnormal = crossproduct.dot(normal)
@@ -956,7 +955,7 @@ define (require)->
       crossdotnormal >= 1e-5
     
   
-  class CSG.PolygonShared
+  class PolygonShared
     # Holds the shared properties for each polygon (currently only color)
     constructor:(color, name) ->
       @color = color
@@ -964,12 +963,12 @@ define (require)->
       
   
     @fromObject : (obj) ->
-      new CSG.PolygonShared(obj.color, obj.name)
+      new PolygonShared(obj.color, obj.name)
   
     getTag: ->
       result = @tag
       unless result
-        result = CSG.getTag()
+        result = getTag()
         @tag = result
       result
     
@@ -983,21 +982,21 @@ define (require)->
       return "null"  unless @name
       @name
   
-  CSG.Polygon.defaultShared = new CSG.PolygonShared(null, null)
+  Polygon.defaultShared = new PolygonShared(null, null)
   #FIXME
-  #CSG.Polygon.defaultShared.tag = 64
+  #Polygon.defaultShared.tag = 64
   
-  class CSG.Path2D 
+  class Path2D 
     constructor: (points, closed) ->
       closed = !!closed
       points = points or []
-      # re-parse the points into CSG.Vector2D
+      # re-parse the points into Vector2D
       # and remove any duplicate points
       prevpoint = null
-      prevpoint = new CSG.Vector2D(points[points.length - 1])  if closed and (points.length > 0)
+      prevpoint = new Vector2D(points[points.length - 1])  if closed and (points.length > 0)
       newpoints = []
       points.map (point) ->
-        point = new CSG.Vector2D(point)
+        point = new Vector2D(point)
         skip = false
         if prevpoint isnt null
           distance = point.distanceTo(prevpoint)
@@ -1011,7 +1010,7 @@ define (require)->
     @arc : (options) ->
       #
       #Construct a (part of a) circle. Parameters:
-      #  options.center: the center point of the arc (CSG.Vector2D or array [x,y])
+      #  options.center: the center point of the arc (Vector2D or array [x,y])
       #  options.radius: the circle radius (float)
       #  options.startangle: the starting angle of the arc, in degrees
       #    0 degrees corresponds to [1,0]
@@ -1021,15 +1020,15 @@ define (require)->
       #  options.resolution: number of points per 360 degree of rotation
       #  options.maketangent: adds two extra tiny line segments at both ends of the circle
       #    this ensures that the gradients at the edges are tangent to the circle
-      #Returns a CSG.Path2D. The path is not closed (even if it is a 360 degree arc).
+      #Returns a Path2D. The path is not closed (even if it is a 360 degree arc).
       #close() the resultin path if you want to create a true circle.    
       #
-      center = CSG.parseOptionAs2DVector(options, "center", 0)
-      radius = CSG.parseOptionAsFloat(options, "radius", 1)
-      startangle = CSG.parseOptionAsFloat(options, "startangle", 0)
-      endangle = CSG.parseOptionAsFloat(options, "endangle", 360)
-      resolution = CSG.parseOptionAsFloat(options, "resolution", CSG.defaultResolution2D)
-      maketangent = CSG.parseOptionAsBool(options, "maketangent", false)
+      center = parseOptionAs2DVector(options, "center", 0)
+      radius = parseOptionAsFloat(options, "radius", 1)
+      startangle = parseOptionAsFloat(options, "startangle", 0)
+      endangle = parseOptionAsFloat(options, "endangle", 360)
+      resolution = parseOptionAsFloat(options, "resolution", defaultResolution2D)
+      maketangent = parseOptionAsBool(options, "maketangent", false)
       
       # no need to make multiple turns:
       endangle -= 360  while endangle - startangle >= 720
@@ -1037,7 +1036,7 @@ define (require)->
       points = []
       absangledif = Math.abs(endangle - startangle)
       if absangledif < 1e-5
-        point = CSG.Vector2D.fromAngle(startangle / 180.0 * Math.PI).times(radius)
+        point = Vector2D.fromAngle(startangle / 180.0 * Math.PI).times(radius)
         points.push point.plus(center)
       else
         numsteps = Math.floor(resolution * absangledif / 360) + 1
@@ -1053,23 +1052,23 @@ define (require)->
             step = 0  if step < 0
             step = numsteps  if step > numsteps
           angle = startangle + step * (endangle - startangle) / numsteps
-          point = CSG.Vector2D.fromAngle(angle / 180.0 * Math.PI).times(radius)
+          point = Vector2D.fromAngle(angle / 180.0 * Math.PI).times(radius)
           points.push point.plus(center)
           i++
-      new CSG.Path2D(points, false)
+      new Path2D(points, false)
   
     concat: (otherpath) ->
       throw new Error("Paths must not be closed")  if @closed or otherpath.closed
       newpoints = @points.concat(otherpath.points)
-      new CSG.Path2D(newpoints)
+      new Path2D(newpoints)
   
     appendPoint: (point) ->
       throw new Error("Paths must not be closed")  if @closed
       newpoints = @points.concat([point])
-      new CSG.Path2D(newpoints)
+      new Path2D(newpoints)
   
     close: ->
-      new CSG.Path2D(@points, true)
+      new Path2D(@points, true)
   
     rectangularExtrude: (width, height, resolution) ->
       # Extrude the path by following it with a rectangle (upright, perpendicular to the path direction)
@@ -1095,9 +1094,9 @@ define (require)->
         pointindex = i
         pointindex = numpoints - 1  if pointindex < 0
         point = @points[pointindex]
-        vertex = new CSG.Vertex2D(point)
+        vertex = new Vertex2D(point)
         if i > startindex
-          side = new CSG.Side(prevvertex, vertex)
+          side = new Side(prevvertex, vertex)
           sides.push side
         prevvertex = vertex
         i++
@@ -1113,9 +1112,9 @@ define (require)->
       newpoints = @points.map((point) ->
         point.multiply4x4 matrix4x4
       )
-      new CSG.Path2D(newpoints, @closed)
+      new Path2D(newpoints, @closed)
   
-  class CSG.Matrix4x4
+  class Matrix4x4
     # Represents a 4x4 matrix. Elements are specified in row order
     constructor: (elements) ->
       if arguments.length >= 1
@@ -1132,7 +1131,7 @@ define (require)->
       while i < 16
         r[i] = @elements[i] + m.elements[i]
         i++
-      new CSG.Matrix4x4(r)
+      new Matrix4x4(r)
   
     minus: (m) ->
       r = []
@@ -1141,7 +1140,7 @@ define (require)->
       while i < 16
         r[i] = @elements[i] - m.elements[i]
         i++
-      new CSG.Matrix4x4(r)
+      new Matrix4x4(r)
   
     multiply: (m) ->
       # right multiply by another 4x4 matrix:
@@ -1195,16 +1194,16 @@ define (require)->
       result[13] = this12 * m1 + this13 * m5 + this14 * m9 + this15 * m13
       result[14] = this12 * m2 + this13 * m6 + this14 * m10 + this15 * m14
       result[15] = this12 * m3 + this13 * m7 + this14 * m11 + this15 * m15
-      new CSG.Matrix4x4(result)
+      new Matrix4x4(result)
   
     clone: ->
       elements = @elements.map((p) ->
         p
       )
-      new CSG.Matrix4x4(elements)
+      new Matrix4x4(elements)
   
     rightMultiply1x3Vector: (v) ->
-      # Right multiply the matrix by a CSG.Vector3D (interpreted as 3 row, 1 column)
+      # Right multiply the matrix by a Vector3D (interpreted as 3 row, 1 column)
       # (result = M*v)
       # Fourth element is taken as 1
       v0 = v._x
@@ -1222,10 +1221,10 @@ define (require)->
         x *= invw
         y *= invw
         z *= invw
-      new CSG.Vector3D(x, y, z)
+      new Vector3D(x, y, z)
   
     leftMultiply1x3Vector: (v) ->
-      # Multiply a CSG.Vector3D (interpreted as 3 column, 1 row) by this matrix
+      # Multiply a Vector3D (interpreted as 3 column, 1 row) by this matrix
       # (result = v*M)
       # Fourth element is taken as 1
       v0 = v._x
@@ -1243,10 +1242,10 @@ define (require)->
         x *= invw
         y *= invw
         z *= invw
-      new CSG.Vector3D(x, y, z)
+      new Vector3D(x, y, z)
   
     rightMultiply1x2Vector: (v) ->
-      # Right multiply the matrix by a CSG.Vector2D (interpreted as 2 row, 1 column)
+      # Right multiply the matrix by a Vector2D (interpreted as 2 row, 1 column)
       # (result = M*v)
       # Fourth element is taken as 1
       v0 = v.x
@@ -1264,10 +1263,10 @@ define (require)->
         x *= invw
         y *= invw
         z *= invw
-      new CSG.Vector2D(x, y)
+      new Vector2D(x, y)
   
     leftMultiply1x2Vector: (v) ->
-      # Multiply a CSG.Vector2D (interpreted as 2 column, 1 row) by this matrix
+      # Multiply a Vector2D (interpreted as 2 column, 1 row) by this matrix
       # (result = v*M)
       # Fourth element is taken as 1
       v0 = v.x
@@ -1285,13 +1284,13 @@ define (require)->
         x *= invw
         y *= invw
         z *= invw
-      new CSG.Vector2D(x, y)
+      new Vector2D(x, y)
   
     isMirroring: ->
       # determine whether this matrix is a mirroring transformation
-      u = new CSG.Vector3D(@elements[0], @elements[4], @elements[8])
-      v = new CSG.Vector3D(@elements[1], @elements[5], @elements[9])
-      w = new CSG.Vector3D(@elements[2], @elements[6], @elements[10])
+      u = new Vector3D(@elements[0], @elements[4], @elements[8])
+      v = new Vector3D(@elements[1], @elements[5], @elements[9])
+      w = new Vector3D(@elements[2], @elements[6], @elements[10])
       
       # for a true orthogonal, non-mirrored base, u.cross(v) == w
       # If they have an opposite direction then we are mirroring
@@ -1301,7 +1300,7 @@ define (require)->
   
     @unity : ->
       # return the unity matrix
-      new CSG.Matrix4x4()
+      new Matrix4x4()
   
     @rotationX : (degrees) ->
       # Create a rotation matrix for rotating around the x axis
@@ -1309,7 +1308,7 @@ define (require)->
       cos = Math.cos(radians)
       sin = Math.sin(radians)
       els = [1, 0, 0, 0, 0, cos, sin, 0, 0, -sin, cos, 0, 0, 0, 0, 1]
-      new CSG.Matrix4x4(els)
+      new Matrix4x4(els)
   
   
     @rotationY : (degrees) ->
@@ -1318,7 +1317,7 @@ define (require)->
       cos = Math.cos(radians)
       sin = Math.sin(radians)
       els = [cos, 0, -sin, 0, 0, 1, 0, 0, sin, 0, cos, 0, 0, 0, 0, 1]
-      new CSG.Matrix4x4(els)
+      new Matrix4x4(els)
   
     @rotationZ : (degrees) ->
       # Create a rotation matrix for rotating around the z axis
@@ -1326,27 +1325,27 @@ define (require)->
       cos = Math.cos(radians)
       sin = Math.sin(radians)
       els = [cos, sin, 0, 0, -sin, cos, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]
-      new CSG.Matrix4x4(els)
+      new Matrix4x4(els)
   
     @rotation : (rotationCenter, rotationAxis, degrees) ->
       # Matrix for rotation about arbitrary point and axis
-      rotationCenter = new CSG.Vector3D(rotationCenter)
-      rotationAxis = new CSG.Vector3D(rotationAxis)
-      rotationPlane = CSG.Plane.fromNormalAndPoint(rotationAxis, rotationCenter)
-      orthobasis = new CSG.OrthoNormalBasis(rotationPlane)
-      transformation = CSG.Matrix4x4.translation(rotationCenter.negated())
+      rotationCenter = new Vector3D(rotationCenter)
+      rotationAxis = new Vector3D(rotationAxis)
+      rotationPlane = Plane.fromNormalAndPoint(rotationAxis, rotationCenter)
+      orthobasis = new OrthoNormalBasis(rotationPlane)
+      transformation = Matrix4x4.translation(rotationCenter.negated())
       transformation = transformation.multiply(orthobasis.getProjectionMatrix())
-      transformation = transformation.multiply(CSG.Matrix4x4.rotationZ(degrees))
+      transformation = transformation.multiply(Matrix4x4.rotationZ(degrees))
       transformation = transformation.multiply(orthobasis.getInverseProjectionMatrix())
-      transformation = transformation.multiply(CSG.Matrix4x4.translation(rotationCenter))
+      transformation = transformation.multiply(Matrix4x4.translation(rotationCenter))
       transformation
   
     @translation : (v) ->
       # Create an affine matrix for translation:
-      # parse as CSG.Vector3D, so we can pass an array or a CSG.Vector3D
-      vec = new CSG.Vector3D(v)
+      # parse as Vector3D, so we can pass an array or a Vector3D
+      vec = new Vector3D(v)
       els = [1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, vec.x, vec.y, vec.z, 1]
-      new CSG.Matrix4x4(els)
+      new Matrix4x4(els)
   
     @mirroring : (plane) ->
       # Create an affine matrix for mirroring into an arbitrary plane:
@@ -1355,18 +1354,18 @@ define (require)->
       nz = plane.normal.z
       w = plane.w
       els = [(1.0 - 2.0 * nx * nx), (-2.0 * ny * nx), (-2.0 * nz * nx), 0, (-2.0 * nx * ny), (1.0 - 2.0 * ny * ny), (-2.0 * nz * ny), 0, (-2.0 * nx * nz), (-2.0 * ny * nz), (1.0 - 2.0 * nz * nz), 0, (-2.0 * nx * w), (-2.0 * ny * w), (-2.0 * nz * w), 1]
-      new CSG.Matrix4x4(els)
+      new Matrix4x4(els)
   
     @scaling : (v) ->
       # Create an affine matrix for scaling:
       
-      # parse as CSG.Vector3D, so we can pass an array or a CSG.Vector3D
-      vec = new CSG.Vector3D(v)
+      # parse as Vector3D, so we can pass an array or a Vector3D
+      vec = new Vector3D(v)
       els = [vec.x, 0, 0, 0, 0, vec.y, 0, 0, 0, 0, vec.z, 0, 0, 0, 0, 1]
-      new CSG.Matrix4x4(els)
+      new Matrix4x4(els)
   
   
-  class CSG.OrthoNormalBasis 
+  class OrthoNormalBasis 
     # Reprojects points on a 3D plane onto a 2D plane
     # or from a 2D plane back onto the 3D plane
     constructor: (plane, rightvector) ->
@@ -1375,7 +1374,7 @@ define (require)->
         # choose an arbitrary right hand vector, making sure it is somewhat orthogonal to the plane normal:
         rightvector = plane.normal.randomNonParallelVector()
       else
-        rightvector = new CSG.Vector3D(rightvector)
+        rightvector = new Vector3D(rightvector)
       @v = plane.normal.cross(rightvector).unit()
       @u = @v.cross(plane.normal)
       @plane = plane
@@ -1383,18 +1382,18 @@ define (require)->
   
     @Z0Plane = ->
       # The z=0 plane, with the 3D x and y vectors mapped to the 2D x and y vector
-      plane = new CSG.Plane(new CSG.Vector3D([0, 0, 1]), 0)
-      new CSG.OrthoNormalBasis(plane, new CSG.Vector3D([1, 0, 0]))
+      plane = new Plane(new Vector3D([0, 0, 1]), 0)
+      new OrthoNormalBasis(plane, new Vector3D([1, 0, 0]))
   
     getProjectionMatrix: ->
-      new CSG.Matrix4x4([@u.x, @v.x, @plane.normal.x, 0, @u.y, @v.y, @plane.normal.y, 0, @u.z, @v.z, @plane.normal.z, 0, 0, 0, -@plane.w, 1])
+      new Matrix4x4([@u.x, @v.x, @plane.normal.x, 0, @u.y, @v.y, @plane.normal.y, 0, @u.z, @v.z, @plane.normal.z, 0, 0, 0, -@plane.w, 1])
   
     getInverseProjectionMatrix: ->
       p = @plane.normal.times(@plane.w)
-      new CSG.Matrix4x4([@u.x, @u.y, @u.z, 0, @v.x, @v.y, @v.z, 0, @plane.normal.x, @plane.normal.y, @plane.normal.z, 0, p.x, p.y, p.z, 1])
+      new Matrix4x4([@u.x, @u.y, @u.z, 0, @v.x, @v.y, @v.z, 0, @plane.normal.x, @plane.normal.y, @plane.normal.z, 0, p.x, p.y, p.z, 1])
   
     to2D: (vec3) ->
-      new CSG.Vector2D(vec3.dot(@u), vec3.dot(@v))
+      new Vector2D(vec3.dot(@u), vec3.dot(@v))
   
     to3D: (vec2) ->
       @planeorigin.plus(@u.times(vec2.x)).plus @v.times(vec2.y)
@@ -1404,40 +1403,40 @@ define (require)->
       b = line3d.direction.plus(a)
       a2d = @to2D(a)
       b2d = @to2D(b)
-      CSG.Line2D.fromPoints a2d, b2d
+      Line2D.fromPoints a2d, b2d
   
     line2Dto3D: (line2d) ->
       a = line2d.origin()
       b = line2d.direction().plus(a)
       a3d = @to3D(a)
       b3d = @to3D(b)
-      CSG.Line3D.fromPoints a3d, b3d
+      Line3D.fromPoints a3d, b3d
   
     transform: (matrix4x4) ->
       # todo: this may not work properly in case of mirroring
       newplane = @plane.transform(matrix4x4)
       rightpoint_transformed = @u.transform(matrix4x4)
-      origin_transformed = new CSG.Vector3D(0, 0, 0).transform(matrix4x4)
+      origin_transformed = new Vector3D(0, 0, 0).transform(matrix4x4)
       newrighthandvector = rightpoint_transformed.minus(origin_transformed)
-      newbasis = new CSG.OrthoNormalBasis(newplane, newrighthandvector)
+      newbasis = new OrthoNormalBasis(newplane, newrighthandvector)
       newbasis
       
-  class CSG.Vertex2D 
+  class Vertex2D 
     constructor : (pos) ->
       @pos = pos
   
     getTag: ->
       result = @tag
       unless result
-        result = CSG.getTag()
+        result = getTag()
         @tag = result
       result
   
-  class CSG.Side 
+  class Side 
     constructor : (vertex0, vertex1) ->
       #FIXME : why do these not work ?
-      #throw new Error("Assertion failed")  unless vertex0 instanceof CSG.Vertex2D
-      #throw new Error("Assertion failed")  unless vertex1 instanceof CSG.Vertex2D
+      #throw new Error("Assertion failed")  unless vertex0 instanceof Vertex2D
+      #throw new Error("Assertion failed")  unless vertex1 instanceof Vertex2D
       @vertex0 = vertex0
       @vertex1 = vertex1
   
@@ -1453,7 +1452,7 @@ define (require)->
     
         else throw new Error("Assertion failed")  unless (pos.z >= 0.999) and (pos.z < 1.001)
         if pos.z > 0
-          pointsZeroZ.push new CSG.Vector2D(pos.x, pos.y)
+          pointsZeroZ.push new Vector2D(pos.x, pos.y)
           indicesZeroZ.push i
         i++
       throw new Error("Assertion failed")  unless pointsZeroZ.length is 2
@@ -1468,7 +1467,7 @@ define (require)->
         p2 = pointsZeroZ[1]
       else
         throw new Error("Assertion failed")
-      result = new CSG.Side(new CSG.Vertex2D(p1), new CSG.Vertex2D(p2))
+      result = new Side(new Vertex2D(p1), new Vertex2D(p2))
       result
   
     toString: ->
@@ -1476,16 +1475,16 @@ define (require)->
     #    return "("+Math.round(this.vertex0.pos.x*10)/10+","+Math.round(this.vertex0.pos.y*10)/10+") -> ("+Math.round(this.vertex1.pos.x*10)/10+","+Math.round(this.vertex1.pos.y*10)/10+")";
     
     toPolygon3D: (z0, z1) ->
-      vertices = [new CSG.Vertex(@vertex0.pos.toVector3D(z0)), new CSG.Vertex(@vertex1.pos.toVector3D(z0)), new CSG.Vertex(@vertex1.pos.toVector3D(z1)), new CSG.Vertex(@vertex0.pos.toVector3D(z1))]
-      new CSG.Polygon(vertices)
+      vertices = [new Vertex(@vertex0.pos.toVector3D(z0)), new Vertex(@vertex1.pos.toVector3D(z0)), new Vertex(@vertex1.pos.toVector3D(z1)), new Vertex(@vertex0.pos.toVector3D(z1))]
+      new Polygon(vertices)
   
     transform: (matrix4x4) ->
       newp1 = @vertex0.pos.transform(matrix4x4)
       newp2 = @vertex1.pos.transform(matrix4x4)
-      new CSG.Side(new CSG.Vertex2D(newp1), new CSG.Vertex2D(newp2))
+      new Side(new Vertex2D(newp1), new Vertex2D(newp2))
   
     flipped: ->
-      new CSG.Side(@vertex1, @vertex0)
+      new Side(@vertex1, @vertex0)
   
     direction: ->
       @vertex1.pos.minus @vertex0.pos
@@ -1493,25 +1492,25 @@ define (require)->
     getTag: ->
       result = @tag
       unless result
-        result = CSG.getTag()
+        result = getTag()
         @tag = result
       result
   
   return {
-    "Vector3D": CSG.Vector3D
-    "Vector2D": CSG.Vector2D
-    "Plane": CSG.Plane
-    "Vertex": CSG.Vertex
-    "Line2D": CSG.Line2D
-    "Line3D": CSG.Line3D
-    "Polygon": CSG.Polygon
-    "PolygonShared": CSG.PolygonShared
-    "Shared": CSG.Shared
-    "Path2D": CSG.Path2D
-    "Matrix4x4": CSG.Matrix4x4
-    "OrthoNormalBasis": CSG.OrthoNormalBasis
-    "solve2Linear":CSG.solve2Linear
+    "Vector3D": Vector3D
+    "Vector2D": Vector2D
+    "Plane": Plane
+    "Vertex": Vertex
+    "Line2D": Line2D
+    "Line3D": Line3D
+    "Polygon": Polygon
+    "PolygonShared": PolygonShared
+    #"Shared": Shared
+    "Path2D": Path2D
+    "Matrix4x4": Matrix4x4
+    "OrthoNormalBasis": OrthoNormalBasis
+    "solve2Linear":solve2Linear
     #cag
-    "Vertex2D":CSG.Vertex2D
-    "Side":CSG.Side
+    "Vertex2D":Vertex2D
+    "Side":Side
   }

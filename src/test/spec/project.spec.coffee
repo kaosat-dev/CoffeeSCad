@@ -27,7 +27,7 @@ define (require)->
       
     it 'compiles the contents of its files into an assembly of parts', ->
       project.createFile
-        name:"testFileName"
+        name:"test_project"
         content:"""
         class TestPart extends Part
           constructor:(options) ->
@@ -42,7 +42,7 @@ define (require)->
    
     it 'generates bom data when compiling',->
       project.createFile
-        name:"testFileName"
+        name:"test_project"
         content:"""
         class TestPart extends Part
           constructor:(options) ->

@@ -10,7 +10,6 @@ define (require)->
     "_CSGDEBUG": _CSGDEBUG
     "defaultResolution2D":defaultResolution2D
     "defaultResolution3D":defaultResolution3D
-    "CSG":
-      "staticTag": staticTag
-      "getTag": getTag
+    "staticTag": staticTag
+    "getTag": getTag
   }

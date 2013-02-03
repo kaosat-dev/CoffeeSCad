@@ -1,5 +1,5 @@
 define (require)->
-  csgMaths = require './csg.maths'
+  csgMaths = require './maths'
   Matrix4x4 = csgMaths.Matrix4x4
   Vector3D = csgMaths.Vector3D
   Plane = csgMaths.Plane

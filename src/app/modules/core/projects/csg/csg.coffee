@@ -1,8 +1,7 @@
 define (require)->
-  CSG = {}
   TransformBase = require './transformBase'
   
-  maths = require './csg.maths'
+  maths = require './maths'
   Vertex = maths.Vertex
   Vertex2D = maths.Vertex2D
   Vector3D = maths.Vector3D
@@ -13,13 +12,13 @@ define (require)->
   solve2Linear = maths.solve2Linear
   OrthoNormalBasis = maths.OrthoNormalBasis
   
-  props = require './csg.props'
-  Properties = props.CSG.Properties
+  properties = require './properties'
+  Properties = properties.Properties
   
-  trees= require './csg.trees'
+  trees= require './trees'
   Tree = trees.Tree
   
-  utils= require './csg.utils'
+  utils= require './utils'
   reTesselateCoplanarPolygons = utils.reTesselateCoplanarPolygons
   parseOptionAs2DVector = utils.parseOptionAs2DVector
   parseOptionAs3DVector = utils.parseOptionAs3DVector
@@ -28,7 +27,7 @@ define (require)->
   FuzzyCSGFactory = utils.FuzzyCSGFactory
   FuzzyCAGFactory = utils.FuzzyCAGFactory
   
-  globals = require './csg.globals'
+  globals = require './globals'
   _CSGDEBUG = globals._CSGDEBUG
   
   #FIXME: ensure that all operations that MIGHT change the bounding box , invalidate or recompute the bounding box
@@ -281,7 +280,7 @@ define (require)->
   
       for vertextag of vertexmap
         pos = vertexmap[vertextag]
-        cube = CSG.cube(
+        cube = cube(
           center: pos
           radius: cuberadius
         )
@@ -450,7 +449,7 @@ define (require)->
     inverse: ->
       # Return a new CSG solid with solid and empty space switched. This solid is
       # not modified.
-      flippedpolygons = (polygon.flipped() for polygon in sourceCsg.polygons)
+      flippedpolygons = (polygon.flipped() for polygon in @polygons)
       @polygons = flippedpolygons
       # TODO: flip properties
       @cachedBoundingBox = null
@@ -819,9 +818,9 @@ define (require)->
       @
   
     connectTo: (myConnector, otherConnector, mirror, normalrotation) ->
-      # Connect a solid to another solid, such that two CSG.Connectors become connected
-      #   myConnector: a CSG.Connector of this solid
-      #   otherConnector: a CSG.Connector to which myConnector should be connected
+      # Connect a solid to another solid, such that two Connectors become connected
+      #   myConnector: a Connector of this solid
+      #   otherConnector: a Connector to which myConnector should be connected
       #   mirror: false: the 'axis' vectors of the connectors should point in the same direction
       #           true: the 'axis' vector[{"vertices":[{"pos":{"_x":0,"_y":17.320508075688767,"_z":0},"tag":109},{"pos":{"_x":0,"_y":17.320508075688764,"_z":50},"tag":110},{"pos":{"_x":0,"_y":100,"_z":50},"tag":111},{"pos":{"_x":0,"_y":100,"_z":0},"tag":112}],"shared":{"color":null,"name":null,"tag":102},"plane":{"normal":{"_x":-1,"_y":0,"_z":0},"w":0,"tag":101}},{"vertices":[{"pos":{"_x":50,"_y":0,"_z":0},"tag":113},{"pos":{"_x":50,"_y":100,"_z":0},"tag":114},{"pos":{"_x":50,"_y":100,"_z":50},"tag":115},{"pos":{"_x":50,"_y":0,"_z":50},"tag":116}],"shared":{"color":null,"name":null,"tag":102},"plane":{"normal":{"_x":1,"_y":0,"_z":0},"w":50,"tag":103}},{"vertices":[{"pos":{"_x":29.999999999999975,"_y":0,"_z":0},"tag":117},{"pos":{"_x":50,"_y":0,"_z":0},"tag":113},{"pos":{"_x":50,"_y":0,"_z":50},"tag":116},{"pos":{"_x":29.99999999999997,"_y":0,"_z":50},"tag":118}],"shared":{"color":null,"name":null,"tag":102},"plane":{"normal":{"_x":0,"_y":-1,"_z":0},"w":0,"tag":104}},{"vertices":[{"pos":{"_x":0,"_y":100,"_z":0},"tag":112},{"pos":{"_x":0,"_y":100,"_z":50},"tag":111},{"pos":{"_x":50,"_y":100,"_z":50},"tag":115},{"pos":{"_x":50,"_y":100,"_z":0},"tag":114}],"shared":{"color":null,"name":null,"tag":102},"plane":{"normal":{"_x":0,"_y":1,"_z":0},"w":100,"tag":105}},{"vertices":[{"pos":{"_x":50,"_y":100,"_z":0},"tag":114},{"pos":{"_x":50,"_y":0,"_z":0},"tag":113},{"pos":{"_x":29.999999999999975,"_y":0,"_z":0},"tag":117},{"pos":{"_x":0,"_y":17.320508075688767,"_z":0},"tag":109},{"pos":{"_x":0,"_y":100,"_z":0},"tag":112}],"shared":{"color":null,"name":null,"tag":102},"plane":{"normal":{"_x":0,"_y":0,"_z":-1},"w":0,"tag":106}},{"vertices":[{"pos":{"_x":50,"_y":0,"_z":50},"tag":116},{"pos":{"_x":50,"_y":100,"_z":50},"tag":115},{"pos":{"_x":0,"_y":100,"_z":50},"tag":111},{"pos":{"_x":0,"_y":17.320508075688764,"_z":50},"tag":110},{"pos":{"_x":29.99999999999997,"_y":0,"_z":50},"tag":118}],"shared":{"color":null,"name":null,"tag":102},"plane":{"normal":{"_x":0,"_y":0,"_z":1},"w":50,"tag":107}},{"vertices":[{"pos":{"_x":29.999999999999975,"_y":0,"_z":0},"tag":117},{"pos":{"_x":29.99999999999997,"_y":0,"_z":50},"tag":118},{"pos":{"_x":0,"_y":17.320508075688764,"_z":50},"tag":110},{"pos":{"_x":0,"_y":17.320508075688767,"_z":0},"tag":109}],"shared":{"color":null,"name":null,"tag":102},"plane":{"normal":{"_x":-0.4999999999999998,"_y":-0.8660254037844389,"_z":0},"w":-15,"tag":108}}] s of the connectors should point in opposite direction
       #   normalrotation: degrees of rotation between the 'normal' vectors of the two
@@ -852,7 +851,7 @@ define (require)->
       # as flat as possible (i.e. the least z-height).
       # So that it is in an orientation suitable for CNC milling    
       if @polygons.length is 0
-        new CSG.Matrix4x4() # unity
+        new Matrix4x4() # unity
       else
         
         # get a list of unique planes in the CSG:
@@ -869,8 +868,8 @@ define (require)->
         xvector = new Vector3D(1, 0, 0)
         yvector = new Vector3D(0, 1, 0)
         zvector = new Vector3D(0, 0, 1)
-        z0connectorx = new CSG.Connector([0, 0, 0], [0, 0, -1], xvector)
-        z0connectory = new CSG.Connector([0, 0, 0], [0, 0, -1], yvector)
+        z0connectorx = new Connector([0, 0, 0], [0, 0, -1], xvector)
+        z0connectory = new Connector([0, 0, 0], [0, 0, -1], yvector)
         isfirst = true
         minheight = 0
         maxdotz = 0
@@ -888,12 +887,12 @@ define (require)->
           if xorthogonality > yorthogonality
             
             # x is better:
-            planeconnector = new CSG.Connector(pointonplane, plane.normal, xvector)
+            planeconnector = new Connector(pointonplane, plane.normal, xvector)
             transformation = planeconnector.getTransformationTo(z0connectorx, false, 0)
           else
             
             # y is better:
-            planeconnector = new CSG.Connector(pointonplane, plane.normal, yvector)
+            planeconnector = new Connector(pointonplane, plane.normal, yvector)
             transformation = planeconnector.getTransformationTo(z0connectory, false, 0)
           transformedcsg = csg.transform(transformation)
           dotz = -plane.normal.dot(zvector)
@@ -908,7 +907,7 @@ define (require)->
             
             # translate the transformation around the z-axis and onto the z plane:
             translation = [-0.5 * (bounds[1].x + bounds[0].x), -0.5 * (bounds[1].y + bounds[0].y), -bounds[0].z]
-            transformation = transformation.multiply(CSG.Matrix4x4.translation(translation))
+            transformation = transformation.multiply(Matrix4x4.translation(translation))
             minheight = zheight
             maxdotz = dotz
             besttransformation = transformation
@@ -1724,7 +1723,7 @@ define (require)->
   
         throw new Error(ertxt)
   
-    canonicalized: ->
+    canonicalize: ->
       if @isCanonicalized
         return @
       else
@@ -1791,7 +1790,7 @@ define (require)->
           delete startVertexTagToSideTagMap[nextvertextag]  if nextpossiblesidetags.length is 0
           thisside = sideTagToSideMap[nextsidetag]
         # inner loop
-        path = new CSG.Path2D(connectedVertexPoints, true)
+        path = new Path2D(connectedVertexPoints, true)
         paths.push path
       # outer loop
       paths
