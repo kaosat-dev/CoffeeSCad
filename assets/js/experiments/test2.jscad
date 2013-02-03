@@ -1,5 +1,0 @@
-main: function() 
-{
-      var ping;
-    
-}
