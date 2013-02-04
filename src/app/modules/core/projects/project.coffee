@@ -3,6 +3,8 @@ define (require)->
   _ = require 'underscore'
   Backbone = require 'backbone'
   LocalStorage = require 'localstorage'
+  
+  PreProcessor = require "./preprocessor"
   CsgProcessor = require "./csg/processor"
   debug  = false
   
@@ -122,6 +124,10 @@ define (require)->
       
     compile:()=>
       #experimental
+      
+      @preProcessor = new PreProcessor()
+      @preProcessor.processIncludes()
+      
       @csgProcessor = new CsgProcessor()
       console.log "compiling project"
       
