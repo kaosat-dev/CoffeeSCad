@@ -14,7 +14,6 @@ define (require)->
   Settings = require './core/settings/settings'
   SettingsView = require './core/settings/settingsView'
    
-  
 
   class CoffeeScadApp extends Backbone.Marionette.Application
     ###
@@ -85,6 +84,11 @@ define (require)->
         name: @project.get("name")
         content:"""
         #just a comment
+        include ("config.coffee")
+        include ("someFile.coffee")
+        
+        console.log "testVariable:"+ testVariable
+        
         class Thinga extends Part
           constructor:(options) ->
             super options
@@ -103,7 +107,7 @@ define (require)->
         
         thinga1 = new Thinga()
         thinga2 = new Thinga()
-        assembly.add(thinga1.translate([100,0,0]))
+        assembly.add(thinga1.translate([testVariable,0,testVariable2]))
         #thinga1.getBounds()
         plane = Plane.fromNormalAndPoint([0, 0, 1], [0, 0, 25])
         thinga1.cutByPlane(plane)
@@ -122,22 +126,18 @@ define (require)->
         name:"config"
         content:"""
         #just a comment
-        console.log assembly
-        ###
-        console.log "options"
-        console.log options
-        console.log "toto"
-        console.log toto
-        try
-          console.log options.toto
-        catch error
-          console.log "options.toto does not work"
-        try
-          console.log toto
-        catch error
-          console.log "toto does not work"
-        ###
+        testVariable = 25
+        include ("someFile.coffee")
         """
+      @project.createFile
+        name:"someFile"
+        content:"""
+        testVariable2 = 12
+        """
+        
+        #include ("config.coffee")
+        #the above does not handle comments (inclusions processing)
+        #include ("Project.coffee")
       
     onStart:()=>
       console.log "app started"

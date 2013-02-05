@@ -1,5 +1,4 @@
 define (require) ->
-  CoffeeScript = require 'CoffeeScript'
   reqRes = require 'modules/core/reqRes'
   utils = require "modules/core/utils/utils"
   csgSugar = require "./sugar2"
@@ -20,6 +19,7 @@ define (require) ->
       
     processScript2:(script, sync=true, mergeAll=false)-> 
       #experimental process script V2
+      
       @sync = sync
       base = require './csg' 
       CSGBase = base.CSGBase
@@ -32,7 +32,7 @@ define (require) ->
       
       @assemblyRoot = new Assembly()
       
-      @script = @compileFormatCoffee(script)
+      @script = script
       csgTmp = @rebuildSolid()
       if mergeAll
         for part in @assemblyRoot.children
@@ -87,72 +87,7 @@ define (require) ->
       csg=@rebuildSolid()
       
       return csg
-        
-    processIncludes:(source)->
-      #TODO: move this to some more general code processing/ codeediting module ?
-      #TODO: cleanup regexp (ie in order not to have to use two)
-      #(?:\"([\w\//:'%~+#-.*]+)\")
-      #(?:\(\"([\w\//:'%~+#-.*]+)\"\))
-      pattern = new RegExp(/(?:\s??include\s??)(?:\"([\w\//:'%~+#-.*]+)\")/g)
-      #console.log "searching includes"
-      match = pattern.exec(source)
-      includes = []
-      
-      while match  
-        #console.log("Match: "  + match )
-        includes.push(match[1])
-        #for submatch in match
-        #  console.log("SubMatch:" + submatch)
-        match = pattern.exec(source)
-      
-      pattern = new RegExp(/(?:\s??include\s??)(?:\(\"([\w\//:'%~+#-.*]+)\"\))/g)
-      match = pattern.exec(source)
-      while match  
-        #console.log("Match2: "  + match )
-        includes.push(match[1])
-        #for submatch in match
-        #  console.log("SubMatch:" + submatch)
-        match = pattern.exec(source)
-        
-      return includes
-        
-    compileFormatCoffee:(source)->
-      #Compile coffeescript code to js, add formating , included libs etc
-      #console.log("Compiling & formating coffeescad code")
-      libsSource = ""
-      
-      ###
-      FIXME: refactor includes system
-      lib = app.lib
-      window.include= (options)=>
-        pp=pp
-      
-      extSource = reqRes.request("#{otherProjectName}/#{otherProjectFileName}")
-      includes = @processIncludes(source)
-      #console.log "includes"+ includes
-      for index, inc of includes
-        project = lib.fetch({id:inc})
-        if project?
-          mainPart = project.pfiles.at(0)
-          if mainPart?
-            includeSrc = mainPart.get("content")
-            libsSource+= includeSrc+ "\n" 
-      libsSource+="\n"   
-      ###
-         
-      fullSource = libsSource + source
-      textblock = CoffeeScript.compile(fullSource, {bare: true})
-
-      formated=""
-      #formated += "function main(options)"
-      #formated += "{ "
-      formated += ""
-      formated += textblock
-      #formated += "}\n"
-      if @debug_ing#TODO correct this
-        console.log("Formated scad #{formated}")
-      return formated
-      
+    
     rebuildSolid:() =>
       @debug = true
       @processing = true

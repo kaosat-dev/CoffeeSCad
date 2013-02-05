@@ -126,17 +126,10 @@ define (require)->
       #experimental
       
       @preProcessor = new PreProcessor()
-      @preProcessor.processIncludes()
-      
+      fullSource = @preProcessor.process(@,true)
       @csgProcessor = new CsgProcessor()
       console.log "compiling project"
-      
-      mainFileName = @get("name")
-      console.log "project name : #{mainFileName} @pfiles"
-      console.log @pfiles
-      script = @pfiles.get(mainFileName).get("content")
-      #console.log "current script : #{script}"
-      res = @csgProcessor.processScript2(script,true)
+      res = @csgProcessor.processScript2(fullSource,true)
       #@set({"partRegistry":window.classRegistry}, {silent: true})
       partRegistry = window.classRegistry
       console.log  partRegistry 

@@ -3,85 +3,150 @@ define (require) ->
   reqRes = require 'modules/core/reqRes'
   utils = require "modules/core/utils/utils"
   
+  #dependency resolving solved with the help of http://www.electricmonk.nl/docs/dependency_resolving_algorithm/dependency_resolving_algorithm.html
+  class Node
+    constructor:(name)->
+      @name = name
+      @edges = []
+    addEdge:(node)->
+      @edges.push(node)
+  
+  class DependencyResolver
+  
+  resolved = []
+  unresolved = []
+  
+  dep_resolve=(node, resolved, unresolved)->
+    console.log "resolving node #{node.name}"
+    unresolved.push(node)
+    for edge in node.edges
+      if edge not in resolved
+        if edge in unresolved
+          throw new Error("Circular dependency detected between #{node.name} and #{edge.name }")
+        dep_resolve(edge, resolved, unresolved)
+    resolved.push(node)
+    unresolved.splice(unresolved.indexOf(node), 1)
+    
+  
+  a = new Node('a')
+  b = new Node('b')
+  c = new Node('c')
+  d = new Node('d')
+  e = new Node('e')
+  
+  a.addEdge(b)    # a depends on b
+  a.addEdge(d)    # a depends on d
+  b.addEdge(c)    # b depends on c
+  b.addEdge(e)    # b depends on e
+  c.addEdge(d)    # c depends on d
+  c.addEdge(e)    # c depends on e
+  #d.addEdge(b)
+  #dep_resolve(a,resolved,unresolved)
+  #solution = (node.name for node in resolved)      
+  #console.log "solution : #{solution.join(' ')}"  
+  
   class PreProcessor
     
-    process:(source)->
-      #taken from csg.processor for now
+    constructor:()->
+      @project = null
+      @resolvedIncludes = []
+      @unresolvedIncludes = []
       
-      #Compile coffeescript code to js, add formating , included libs etc
-      #console.log("Compiling & formating coffeescad code")
-      libsSource = ""
+      reqRes.addHandler "getFileOrProjectCode",@_testSourceFetchHandler
+    
+    _testSourceFetchHandler:([store,project,path])=>
+      #console.log "handler recieved #{store}/#{project}/#{path}"
+      result = ""
+      if not project? and path?
+        #console.log "will fetch #{path} from local (current project) namespace"
+        shortName = path.split('.')[0]
+        #console.log shortName
+        #console.log "proj"
+        #console.log @project
+        result = @project.pfiles.get(shortName).get("content")
+        result = "\n#{result}\n"
+      #else if project? and path?
+        #console.log "will fetch #{path} from project #{project}'s namespace"
+      return result
       
-      ###
-      FIXME: refactor includes system
-      lib = app.lib
-      window.include= (options)=>
-        pp=pp
+    process:(project, coffeeToJs)->
+      coffeeToJs = coffeeToJs or false
+      @resolvedIncludes = []
+      @unresolvedIncludes = []
       
-      extSource = reqRes.request("#{otherProjectName}/#{otherProjectFileName}")
-      includes = @processIncludes(source)
-      #console.log "includes"+ includes
-      for index, inc of includes
-        project = lib.fetch({id:inc})
-        if project?
-          mainPart = project.pfiles.at(0)
-          if mainPart?
-            includeSrc = mainPart.get("content")
-            libsSource+= includeSrc+ "\n" 
-      libsSource+="\n"   
-      ###
-         
+      @project = project
+      mainFileName = @project.get("name")
+      mainFileCode = @project.pfiles.get(mainFileName).get("content")
+      mainFileNode = new Node(mainFileName)
+      result  = @processIncludes(mainFileNode,mainFileName, mainFileCode)
+    
+      console.log "@resolvedIncludes"
+      console.log @resolvedIncludes
+      console.log "@unresolvedIncludes"
+      console.log @unresolvedIncludes
+      
+      if coffeeToJs
+        result = CoffeeScript.compile(result, {bare: true})
+      return result
+    
+    process_old:(source)->  
       fullSource = libsSource + source
       textblock = CoffeeScript.compile(fullSource, {bare: true})
-    
-    
-    processIncludes:(source="")->
+      
+    processIncludes:(parentNode, filename, source)=>
       #finds all matches of "include xxx", and fetches the corresponding text 
-      #from coffeescript cookbook
-      source = 'include("blabla.coffee")'
-      #source = '  include "blabla"'
-      source = source.replace /\s*?include\s*?(?:\"([^\"]*)\")|(?:\(\"([^\"]*)\"\))/g, (match) ->
-        console.log "FOUND A MATCH: #{match}"
-        match.toUpperCase()
+      console.log "processing #{filename}"
+      console.log "@unresolvedIncludes : #{@unresolvedIncludes.join(' ')}"
+      @unresolvedIncludes.push(filename)
       
-      console.log "result"
-      console.log source
-      
-      source = 'include ("blabla.coffee")'
-      pattern = new RegExp(/(?:\s??include\s??)(?:\"([\w\//:'%~+#-.*]+)\")/g)
-      match = pattern.exec(source)
-      console.log match
-      
-      pattern = new RegExp(/(?:\s??include\s??)(?:\(\"([\w\//:'%~+#-.*]+)\"\))/g)
-      match = pattern.exec(source)
-      console.log match
-    
-    processIncludes_old:(source)->
-      #TODO: move this to some more general code processing/ codeediting module ?
-      #TODO: cleanup regexp (ie in order not to have to use two)
-      #(?:\"([\w\//:'%~+#-.*]+)\")
-      #(?:\(\"([\w\//:'%~+#-.*]+)\"\))
-      pattern = new RegExp(/(?:\s??include\s??)(?:\"([\w\//:'%~+#-.*]+)\")/g)
-      #console.log "searching includes"
-      match = pattern.exec(source)
-      includes = []
-      
-      while match  
-        #console.log("Match: "  + match )
-        includes.push(match[1])
-        #for submatch in match
-        #  console.log("SubMatch:" + submatch)
-        match = pattern.exec(source)
-      
-      pattern = new RegExp(/(?:\s??include\s??)(?:\(\"([\w\//:'%~+#-.*]+)\"\))/g)
-      match = pattern.exec(source)
-      while match  
-        #console.log("Match2: "  + match )
-        includes.push(match[1])
-        #for submatch in match
-        #  console.log("SubMatch:" + submatch)
-        match = pattern.exec(source)
+      source = source or ""
+      source = source.replace /(?!\s*?#)(?:\s*?include\s*?)(?:\(?\"([\w\//:'%~+#-.*]+)\"\)?)/g, (match,matchInner) =>
+        #console.log "Matched : #{matchInner}"
+        includeFull = matchInner.toString()
+        store = null
+        projectName = null
+        projectSubPath = null
+        fileInclude = false
         
-      return includes
+        if includeFull.indexOf(':') != -1
+          storeComponents = includeFull.split(':')
+          store = storeComponents[0]
+          includeFull = storeComponents[1]
+          
+        if includeFull.indexOf('/') != -1
+          fullPath = includeFull.split('/')
+          projectName = fullPath[0]
+          projectSubPath = fullPath[1..fullPath.length].join('/')
+          
+        else
+          if includeFull.indexOf('.') != -1 or includeFull.indexOf('.') == 0
+            projectSubPath = includeFull#we have a dot -> we have a file
+          else
+            projectName = includeFull
+        #console.log("store: #{store}, project: #{projectName}, subpath: #{projectSubPath}")
+        includeeFileName = projectSubPath.split(".")[0]
+        result = ""
+        if includeeFileName in @unresolvedIncludes
+          throw new Error("Circular dependency detected from #{filename} to #{includeeFileName}")
+        if not (includeeFileName in @resolvedIncludes)
+          result = @fetch_data(store,projectName,projectSubPath)
+          newNode = new Node(includeeFileName)
+          if parentNode?
+            parentNode.addEdge(includeeFileName)
+          result = @processIncludes(newNode, includeeFileName, result)
+          
+          @resolvedIncludes.push(includeeFileName)
+        return result
+        
+      @unresolvedIncludes.splice(@unresolvedIncludes.indexOf(filename), 1)  
+      return source
+    
+    fetch_data:(store,project,path)=>
+      #console.log "fetching data from Store: #{store}, project: #{project}, path: #{path}"
+      try
+        fileOrProjectRequest = "#{store}/#{project}/#{path}"
+        return reqRes.request("getFileOrProjectCode",[store, project, path])
+      catch error
+        console.log "error: #{error}"
 
   return PreProcessor
