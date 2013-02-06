@@ -143,6 +143,64 @@ define (require) ->
     
     parseScriptASync:(script, params, callback)->
       #Parse the given coffeescad script in a seperate thread (web worker)
+      console.log "document.location.href: #{document.location.href}"
+      workerScript = """
+      var rootUrl = "#{document.location.href}";
+      importScripts(rootUrl + '/assets/js/libs/require.min.js');
+      require(
+        {baseUrl: rootUrl +"/app"},["require","modules/reqDummyTester2","modules/core/projects/csg/csg"],
+        function(require,reqDummyTester2,csg){
+            postMessage('msg from worker: in require'); 
+            postMessage('dummy2'+reqDummyTester2);
+            postMessage('CSG'+csg.CSGBase.defaultResolution2D);
+            
+            csgTest = new csg.CSGBase();
+            var result_compact = csgTest.toCompactBinary()
+            
+            postMessage({cmd: 'rendered', result: result_compact});
+      });
+      
+      onmessage = function(e) { 
+        var data = e.data;
+        if(data == 'render')
+        {
+          postMessage('msg from worker: I WILL RENDER'); 
+        }
+        if(data == 'stop')
+        {
+          postMessage('msg from worker: I WILL STOP'); 
+        }
+        if (data.url) 
+        {
+          var url = data.url;
+          var index = url.indexOf('index.html');
+          if (index != -1) {
+            url = url.substring(0, index);
+          }
+          url = "http://127.0.0.1:8090"
+          
+          postMessage('msg from worker: I GOT URL'); 
+        }
+        }
+      """
+      blobURL = utils.textToBlobUrl(workerScript)
+      worker = new Worker(blobURL)
+      worker.onmessage = (e) ->
+        if e.data
+          console.log "got data"
+          console.log e.data
+          if e.data.cmd is 'rendered'
+            console.log "render result"
+            console.log e.data.result
+            base = require './csg' 
+            CSGBase = base.CSGBase
+            testConversion = CSGBase.fromCompactBinary(e.data.result)
+            console.log "converted"
+            console.log testConversion
+            
+      worker.postMessage({url: document.location.href})
+      worker.postMessage("stop")
+             
     
     _processScriptASync:(script, params, callback)->
       workerscript = ""

@@ -14,10 +14,8 @@ define (require) ->
     else throw new Error("Your browser doesn't support window.URL")
 
   textToBlobUrl = (txt)-> 
-    bb=getBlobBuilder()
     windowURL=getWindowURL()
-    bb.append(txt)
-    blob = bb.getBlob()
+    blob = new Blob([txt])
     blobURL = windowURL.createObjectURL(blob)
     if !blobURL 
       throw new Error("createObjectURL() failed") 

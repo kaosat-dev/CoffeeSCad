@@ -129,7 +129,7 @@ define (require)->
       fullSource = @preProcessor.process(@,true)
       @csgProcessor = new CsgProcessor()
       console.log "compiling project"
-      res = @csgProcessor.processScript2(fullSource,true)
+      res = @csgProcessor.processScript2(fullSource,false)
       #@set({"partRegistry":window.classRegistry}, {silent: true})
       partRegistry = window.classRegistry
       console.log  partRegistry 
