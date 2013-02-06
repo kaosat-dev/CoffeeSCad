@@ -3,50 +3,9 @@ define (require) ->
   reqRes = require 'modules/core/reqRes'
   utils = require "modules/core/utils/utils"
   
-  #dependency resolving solved with the help of http://www.electricmonk.nl/docs/dependency_resolving_algorithm/dependency_resolving_algorithm.html
-  class Node
-    constructor:(name)->
-      @name = name
-      @edges = []
-    addEdge:(node)->
-      @edges.push(node)
-  
-  class DependencyResolver
-  
-  resolved = []
-  unresolved = []
-  
-  dep_resolve=(node, resolved, unresolved)->
-    console.log "resolving node #{node.name}"
-    unresolved.push(node)
-    for edge in node.edges
-      if edge not in resolved
-        if edge in unresolved
-          throw new Error("Circular dependency detected between #{node.name} and #{edge.name }")
-        dep_resolve(edge, resolved, unresolved)
-    resolved.push(node)
-    unresolved.splice(unresolved.indexOf(node), 1)
-    
-  
-  a = new Node('a')
-  b = new Node('b')
-  c = new Node('c')
-  d = new Node('d')
-  e = new Node('e')
-  
-  a.addEdge(b)    # a depends on b
-  a.addEdge(d)    # a depends on d
-  b.addEdge(c)    # b depends on c
-  b.addEdge(e)    # b depends on e
-  c.addEdge(d)    # c depends on d
-  c.addEdge(e)    # c depends on e
-  #d.addEdge(b)
-  #dep_resolve(a,resolved,unresolved)
-  #solution = (node.name for node in resolved)      
-  #console.log "solution : #{solution.join(' ')}"  
   
   class PreProcessor
-    
+    #dependency resolving solved with the help of http://www.electricmonk.nl/docs/dependency_resolving_algorithm/dependency_resolving_algorithm.html
     constructor:()->
       @project = null
       @resolvedIncludes = []
@@ -77,23 +36,13 @@ define (require) ->
       @project = project
       mainFileName = @project.get("name")
       mainFileCode = @project.pfiles.get(mainFileName).get("content")
-      mainFileNode = new Node(mainFileName)
-      result  = @processIncludes(mainFileNode,mainFileName, mainFileCode)
-    
-      console.log "@resolvedIncludes"
-      console.log @resolvedIncludes
-      console.log "@unresolvedIncludes"
-      console.log @unresolvedIncludes
+      result  = @processIncludes(mainFileName, mainFileCode)
       
       if coffeeToJs
         result = CoffeeScript.compile(result, {bare: true})
       return result
-    
-    process_old:(source)->  
-      fullSource = libsSource + source
-      textblock = CoffeeScript.compile(fullSource, {bare: true})
       
-    processIncludes:(parentNode, filename, source)=>
+    processIncludes:(filename, source)=>
       #finds all matches of "include xxx", and fetches the corresponding text 
       console.log "processing #{filename}"
       console.log "@unresolvedIncludes : #{@unresolvedIncludes.join(' ')}"
@@ -130,10 +79,7 @@ define (require) ->
           throw new Error("Circular dependency detected from #{filename} to #{includeeFileName}")
         if not (includeeFileName in @resolvedIncludes)
           result = @fetch_data(store,projectName,projectSubPath)
-          newNode = new Node(includeeFileName)
-          if parentNode?
-            parentNode.addEdge(includeeFileName)
-          result = @processIncludes(newNode, includeeFileName, result)
+          result = @processIncludes(includeeFileName, result)
           
           @resolvedIncludes.push(includeeFileName)
         return result
