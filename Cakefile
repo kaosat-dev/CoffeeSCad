@@ -114,7 +114,7 @@ task 'docs', 'generate api documentation', (options) ->
   exec "coffeedoc --output ./doc/api --parser commonjs ./src/app"
   
 task 'watch', 'Watch src/ for changes',(options) ->
-  coffee = spawn 'coffee', ['-w', '-c', '-o', TGTDIR, SRCDIR]
+  coffee = spawn 'coffee', ['--bare','-w', '-c', '-o', TGTDIR, SRCDIR]
   #watchTree's match does not work correctly for newly created files hence the hacks below
   watcher = watcher.watchTree("src", {'sample-rate': 2})#,'match':'(.*)[.]tmpl'})
   
@@ -178,8 +178,22 @@ task 'build', 'build all the components', (options) ->
   build '.less', '.css', 'lessc $source $target', options
   
 task 'release', 'build, minify , prep for release' , (options) ->
+  buildConf = {
+    baseUrl: "app",
+    dir: "build",
+    #mainConfigFile: "app/main.js",
+    modules:[
+        {
+          name: "modules/core/projects/csg/csg"
+        }
+      ],
+    optimize: "none"
+  }
+  
+  ###
   c = {baseUrl: 'app'
       ,name:    'main.max'
       ,out:     'build/app/main.min.js'
-      ,optimize:'uglify'}
-  requirejs.optimize(c, console.log)
+      ,optimize:'uglify'}###
+      
+  requirejs.optimize(buildConf, console.log)
