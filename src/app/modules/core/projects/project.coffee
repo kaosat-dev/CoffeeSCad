@@ -72,6 +72,12 @@ define (require)->
     
     constructor:(options)->
       super options
+      
+      console.log options
+      #temporary hack
+      if options.settings?
+        @settings = options.settings.getByName("General")
+      
       @dirty    = false #based on propagation from project files : if a project file is changed, the project is tagged as "dirty" aswell
       @new      = true
       @bind("reset", @onReset)
@@ -124,12 +130,17 @@ define (require)->
       
     compile:()=>
       #experimental
+      backgroundProcessing = false
+      if @settings?
+        backgroundProcessing =  not @settings.get("csgBackgroundProcessing")
+        
+      console.log "backgroundProcessing: #{backgroundProcessing}"
       
       @preProcessor = new PreProcessor()
       fullSource = @preProcessor.process(@,true)
       @csgProcessor = new CsgProcessor()
       console.log "compiling project"
-      res = @csgProcessor.processScript2(fullSource,false)
+      res = @csgProcessor.processScript2(fullSource,backgroundProcessing)
       #@set({"partRegistry":window.classRegistry}, {silent: true})
       partRegistry = window.classRegistry
       console.log  partRegistry 

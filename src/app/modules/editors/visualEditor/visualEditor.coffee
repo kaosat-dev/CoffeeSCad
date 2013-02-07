@@ -21,7 +21,6 @@ define (require)->
     
     constructor:(options)->
       super options
-      
       @appSettings = options.appSettings ? null
       @settings = options.settings ? new VisualEditorSettings()
       @project= options.project ? new Project()

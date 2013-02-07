@@ -60,6 +60,11 @@ define (require)->
     defaults:
       name: "General"
       title: "General"
+      
+      csgCompileMode: "onCodeChange" 
+      csgCompileDelay: 1.0
+      csgBackgroundProcessing: false
+      
       maxRecentFilesDisplay:  5
       theme: "slate"
       

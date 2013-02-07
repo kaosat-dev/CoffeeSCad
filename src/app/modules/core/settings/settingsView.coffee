@@ -118,13 +118,28 @@ define (require)->
     constructor:(options)->
       if not options.schema
         options.schema=
+          csgCompileMode: 
+            title: "Compile trigger mode"
+            type: 'Select'
+            options : ["onDemand", "onCodeChange", "onCodeChangeDelayed", "onSave"]
+          csgCompileDelay:
+            type: 'Number'
+          csgBackgroundProcessing:
+            type: 'Checkbox'
           maxRecentFilesDisplay: 
             type:'Number'
             title: 'Max recent files to display'
           theme:
             type:'Select'
             options : ["slate", "spacelab"]
-            
+        options.fieldsets=[
+          "legend": "CSG compiling settings"
+          "fields": ["csgCompileMode","csgCompileDelay","csgBackgroundProcessing"]
+        , 
+          "legend":"Other settings"
+          "fields": ["maxRecentFilesDisplay","theme"]
+          
+        ]
       super options
       
   class GeneralSettingsWrapper extends Backbone.Marionette.ItemView

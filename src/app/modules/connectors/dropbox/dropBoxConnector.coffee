@@ -11,7 +11,7 @@ define (require)->
     """
     a library contains multiple projects, stored on dropbox
     """  
-    model: Project
+    #model: Project
     #sync: backbone_dropbox.sync
     path: ""
     defaults:

@@ -79,7 +79,7 @@ define (require)->
       @bindTo(@settings.get("General"), "change", @settingsChanged)
     
     initData:->
-      @project = new Project()
+      @project = new Project({"settings": @settings}) #settings : temporary hack
       @project.createFile
         name: @project.get("name")
         content:"""
@@ -199,6 +199,7 @@ define (require)->
       modReg.show projectBrowserView
     
     onProjectLoaded:(newProject)=>
+      console.log "project loaded"
       @project = newProject
       
     onInitializeBefore:()->
@@ -218,6 +219,9 @@ define (require)->
         appSettings: @settings
       
       @settings.fetch()
+      
+      #TODO: clean this hack
+      @project.settings = @settings.getByName("General")
       
     onInitializeAfter:()=>
       """For exampel here close and 'please wait while app loads' display"""
