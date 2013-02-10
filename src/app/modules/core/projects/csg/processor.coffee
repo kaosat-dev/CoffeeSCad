@@ -1,7 +1,7 @@
 define (require) ->
   reqRes = require 'modules/core/reqRes'
   utils = require "modules/core/utils/utils"
-  csgSugar = require "./sugar2"
+  CoffeeScript = require 'CoffeeScript'
   
   
   ##Inner workflow
@@ -14,14 +14,16 @@ define (require) ->
   class CsgProcessor
     #minimal version of csg processor, for future cleanup of the rest
     construtor:()->
-      @sync = true
-      @debug = true
+      @async = false
+      @debug = false
       
-    processScript2:(script, sync=true, mergeAll=false)-> 
+    processScript2:(script, async=false, mergeAll=false, callback)-> 
       #experimental process script V2
       
-      @sync = sync
-      base = require './csg' 
+      @callback = callback
+      
+      @async = async
+      base = require './csgBase' 
       CSGBase = base.CSGBase
       
       #main project alias ?
@@ -40,200 +42,135 @@ define (require) ->
 
       return @assemblyRoot
       
-    processScript:(script, filename) ->
-      #experimental process script
-      base = require './csg' 
-      CSGBase = base.CSGBase
-      #main project alias ?
-      class Assembly extends CSGBase
-        constructor:()->
-          super
-          @parts = []
-          @params = []
-          
-        add:(objects...)->
-          for obj in objects
-            @parts.push(obj)
-          console.log @parts
-      @assemblyRoot = new Assembly()
+
+    doStuff:()=>
+      @script = """
+      {CAGBase,CSGBase,Circle,Cube,Cylinder,Line2D,Line3D,Matrix4x4,
+      OrthoNormalBasis,Part,Path2D,Plane,Polygon,PolygonShared,Rectangle,
+      RoundedCube,RoundedCylinder,RoundedRectangle,Side,Sphere,Vector2D,Vector3D,
+      Vertex,Vertex2D,classRegistry,otherRegistry,property,quickHull2d,quickHull2dVar2,register,solve2Linear}=csg
+      #{@script}
+      """
+      @script = CoffeeScript.compile(@script, {bare: true})
+      #console.log "JSIFIED script"
+      #console.log @script
       
-      @script = @compileFormatCoffee(script)
-      csgTmp = @rebuildSolid()
-      
-      console.log "rootProject object"
-      console.log @assemblyRoot
-      
-      for part in @assemblyRoot.parts
-        console.log("part")
-        console.log part
-        @assemblyRoot.union(part)
-      
-      return @assemblyRoot
-      
-    processScript_old:(script, filename) ->
-      #original process script
-      csg=null
-      # script: coffeescript code
-      # filename: optional, the name of the .coscad file
-      filename = if !filename then "coffeescad.coscad"
-      filename = filename.replace(/\.coscad$/i, "")
-      @paramDefinitions = []
-      @paramControls = []
-      @script = null
-      
-      # @createParamControls() : TODO work on this parametrization
-      @script = @compileFormatCoffee(script)
-      @filename = filename
-      csg=@rebuildSolid()
-      
-      return csg
-    
     rebuildSolid:() =>
       @debug = true
       @processing = true
       paramValues = null
-      console.log "Using sync rebuild:#{@sync}"
+      console.log "Using background rebuild:#{@async}"
+      
+      @doStuff()
+      
       try
-        if @sync
-          obj = @parseScriptSync(@script, paramValues, @debugging)
-          #@worker = @parseJsCadScriptASync(@script, paramValues, (err, obj)-> 
-          #@setCurrentObject(obj)
+        if @async
+          @parseScriptASync(@script, paramValues,@callback)
         else
-          obj = @parseScriptASync(@script, paramValues, @debugging)
-        obj = @convertToSolid(obj)
+          @parseScriptSync(@script, paramValues, @debugging)
+          @callback(@assemblyRoot)
         @processing = false
-        return obj
       catch error
         @processing = false
         throw error
     
     parseScriptSync: (script, mainParameters, debugging) -> 
       #Parse the given coffeescad script in the UI thread (blocking but simple)
-      
       #jsonifiedParams = JSON.stringify(mainParameters)
-      base = require './csg' 
-      CSGBase = base.CSGBase
-      CAGBase = base.CAGBase
-  
-      shapes3d = require './geometry3d'
-      shapes2d = require './geometry2d' 
-      
-      Cube = shapes3d.Cube
-      Sphere = shapes3d.Sphere
-      Cylinder= shapes3d.Cylinder
-      Rectangle = shapes2d.Rectangle
-      Circle = shapes2d.Circle
-      
-      extras = require './extras'
-      quickHull2d = extras.quickHull2d
-      #dependencyNames = "CSGBase", "CAGBase", "shapes3d", "shapes2d", "Cube", "Sphere","Cylinder","Rectangle","Circle","quickHull2d"
-      dependencies = [CSGBase, CAGBase, shapes3d, shapes2d, Cube, Sphere,Cylinder,Rectangle,Circle,quickHull2d]
+      csgFull = require "./csg"
       
       workerscript = ""
-      workerscript += script;
+      workerscript += script
       if @debuging
         workerscript += "//Debugging;\n"
         workerscript += "debugger;\n"
     
       options={}
-      f = new Function("assembly",workerscript)
-      #OpenCoffeeScad.log.prevLogTime = Date.now()
-      result = f(@assemblyRoot)
+      
+      f = new Function("assembly","csg",workerscript)
+      result = f(@assemblyRoot,csgFull)
       return result
     
     parseScriptASync:(script, params, callback)->
       #Parse the given coffeescad script in a seperate thread (web worker)
-      console.log "document.location.href: #{document.location.href}"
+      rootUrl = (document.location.href).replace('#','')
       workerScript = """
-      var rootUrl = "#{document.location.href}";
+      var rootUrl = "#{rootUrl}";
       importScripts(rootUrl + '/assets/js/libs/require.min.js');
       require(
-        {baseUrl: rootUrl +"/app"},["require","modules/reqDummyTester2","modules/core/projects/csg/csg"],
-        function(require,reqDummyTester2,csg){
-            postMessage('msg from worker: in require'); 
-            postMessage('dummy2'+reqDummyTester2);
-            postMessage('CSG'+csg.CSGBase.defaultResolution2D);
+        {baseUrl: rootUrl +"/app"},["require","modules/core/projects/csg/csg"],
+        function(require,csg){
+          
             
-            csgTest = new csg.CSGBase();
-            var result_compact = csgTest.toCompactBinary()
+            var Cube = csg.Cube;
+            var Sphere = csg.Sphere;
+            var Cylinder = csg.Cylinder;
+            var CSGBase = csg.CSGBase;
             
+            assembly = new CSGBase();
+            #{script}
+            //postMessage("before compacting data");
+            var result_compact = assembly.toCompactBinary()
+            //postMessage("After compacting data");
             postMessage({cmd: 'rendered', result: result_compact});
+            
+           
+            
+            
+            /*
+            onmessage = function(e) { 
+            postMessage("Got",e.data);
+            var data = e.data;
+            if(data == 'render')
+            {
+              postMessage({cmd: 'rendered', result: result_compact});
+            }
+            if(data == 'stop')
+            {
+              postMessage('msg from worker: I WILL STOP'); 
+            }
+            
+            }*/
+      });
+      """
+      
+      workerScript2 = """
+      var rootUrl = "#{rootUrl}";
+      var truc = self;
+      importScripts(rootUrl + '/assets/js/libs/require.min.js');
+      require([], function() {
+          postMessage("in require");
+          
+          
+          self.addEventListener('message', function(e) {
+            self.postMessage(e.data);
+          }, false);
+      
+          truc.onmessage = function(event) {
+              postMessage("received something");
+          }
       });
       
-      onmessage = function(e) { 
-        var data = e.data;
-        if(data == 'render')
-        {
-          postMessage('msg from worker: I WILL RENDER'); 
-        }
-        if(data == 'stop')
-        {
-          postMessage('msg from worker: I WILL STOP'); 
-        }
-        if (data.url) 
-        {
-          var url = data.url;
-          var index = url.indexOf('index.html');
-          if (index != -1) {
-            url = url.substring(0, index);
-          }
-          url = "http://127.0.0.1:8090"
-          
-          postMessage('msg from worker: I GOT URL'); 
-        }
-        }
       """
+      
+      
       blobURL = utils.textToBlobUrl(workerScript)
       worker = new Worker(blobURL)
       worker.onmessage = (e) ->
         if e.data
-          console.log "got data"
-          console.log e.data
+          #console.log "got data"
+          #console.log e.data
           if e.data.cmd is 'rendered'
-            console.log "render result"
-            console.log e.data.result
-            base = require './csg' 
-            CSGBase = base.CSGBase
-            testConversion = CSGBase.fromCompactBinary(e.data.result)
-            console.log "converted"
-            console.log testConversion
             
-      worker.postMessage({url: document.location.href})
-      worker.postMessage("stop")
-             
-    
-    _processScriptASync:(script, params, callback)->
-      workerscript = ""
-      workerscript += script
-      
-      testMethod=()->
-        self.postMessage({cmd: 'rendered', result: result_compact})
-      
-      blobURL = utils.textToBlobUrl(workerscript)
-      worker = new Worker(blobURL)
-      worker.onmessage = (e) ->
-        if e.data
-          if e.data.cmd is "rendered"
-            resulttype = e.data.result.class
-            result = undefined
-            if resulttype is "CSG"
-              result = fromCompactBinary(e.data.result)
-            else if resulttype is "CAG"
-              result = fromCompactBinary(e.data.result)
-            else
-              throw new Error("Cannot parse result")
-            callback null, result
-          else if e.data.cmd is "error"
-            callback e.data.err, null
-          else console.log e.data.txt  if e.data.cmd is "log"
-    
-      worker.onerror = (e) ->
-        errtxt = "Error in line " + e.lineno + ": " + e.message
-        callback errtxt, null
-    
-      worker.postMessage cmd: "render"
-      # Start the worker.
-      worker
+            #console.log "render result"
+            #console.log e.data.result
+            converters = require './converters' 
+            testConversion = converters.fromCompactBinary(e.data.result)
+            #console.log "converted"
+            #console.log testConversion
+            @assemblyRoot=testConversion
+            callback(testConversion)
+      worker.postMessage("render")
     
     parseCoffeeSCadScriptASync_old = (script, mainParameters, callback) ->
       # callback: should be function(error, csg)
@@ -292,7 +229,7 @@ define (require) ->
       return obj
 
   #######################
-  ###
+  ### 
     createParamControls: ->
       #@parameterstable.innerHTML = ""
       @paramControls = []
@@ -409,82 +346,7 @@ define (require) ->
        if @debug
          console.log("Finished getting param values")
        return paramValues
-       
-     rebuildSolid:() =>
-       
-       if @debug
-        #console.log("Starting solid rebuild")
-        #@abort()
-        #@setError("")
-        #@clearViewer()
-        @processing = true
-        
-        #TODO: clean way to handle these type of messages
-        #@statusspan.text = "Processing, please wait..."
-      
-        #@enableItems()
-    
-        paramValues = null#@getParamValues()
-        useSync = @debug
-        if !useSync
-          try
-            @worker = @parseJsCadScriptASync(@script, paramValues, (err, obj)-> 
-              @processing = false
-              @worker = null
-              if err
-                @setError(err)
-                #@statusspan.innerHTML = "Error."
-              else
-                @setCurrentObject(obj)
-                #@statusspan.innerHTML = "Ready."
-              )
-            @enableItems()
-            #if(that.onchange) that.onchange()
-  
-          catch e
-            useSync = true
-          #TODO : refactor this
-        if useSync
-          try
-            obj = @parseJsCadScriptSync(@script, paramValues, @debugging)
-            @setCurrentObject(obj)
-            @processing = false
-            #@statusspan.innerHTML = "Ready."
-          catch e 
-            @processing = false
-            errtxt = e.stack
-            if(!errtxt)
-              errtxt = e.toString()
-            @setError(errtxt)
-            #TODO: clean way to handle these type of messages
-            #@statusspan.innerHTML = "Error."
-        #@enableItems()
-    preprocessCode:(code)->
-      #just some experimental js code for fetching all CSG and CAG methods, to add them as no-namespace methods
-      #into the project code : ie , "CSG.cube()" should become simply "cube()"
-  
-      function getMethods(obj)
-      {
-          var res = [];
-          for(var m in obj) {
-              if(typeof obj(m) == "function") {
-                  res.push(m)
-              }
-          }
-          return res;
-      }
-      
-      for (prop in CSG)
-      {
-          //console.log("CSG has property " + prop);
-      }
-    
-        console.log(getMethods(CSG));
-        
-        var objs = Object.getOwnPropertyNames(CSG);
-      for(var i in objs ){
-        console.log(objs[i]);
-      }###
+###
 
       
   return CsgProcessor

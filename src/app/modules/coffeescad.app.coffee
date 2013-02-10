@@ -84,6 +84,19 @@ define (require)->
         name: @project.get("name")
         content:"""
         #just a comment
+        cube = new Cube({size:[50,100,100]})
+        sphere = new Sphere({r:50,$fn:300})
+        cylinder = new Cylinder({r:50,$fn:300,h:150})
+        cylinder.color([0.8,0.4,5])
+        sphere.color([0.9,0.3,0.1])
+        cube.color([0.1,0.8,0.5])
+        assembly.add(cube)
+        assembly.add(sphere)
+        assembly.add(cylinder)
+
+        """
+        content_:"""
+        #just a comment
         include ("config.coffee")
         include ("someFile.coffee")
         
@@ -122,6 +135,7 @@ define (require)->
         assembly.add(wobble2)
         assembly.add(wobble3)
         """
+      ###
       @project.createFile
         name:"config"
         content:"""
@@ -138,7 +152,7 @@ define (require)->
         #include ("config.coffee")
         #the above does not handle comments (inclusions processing)
         #include ("Project.coffee")
-      
+      ###
     onStart:()=>
       console.log "app started"
       @codeEditor.start()

@@ -6,6 +6,7 @@ define (require)->
   
   PreProcessor = require "./preprocessor"
   CsgProcessor = require "./csg/processor"
+  
   debug  = false
   
   class ProjectFile extends Backbone.Model
@@ -129,32 +130,50 @@ define (require)->
           @pfiles.localStorage= new Backbone.LocalStorage(locStorName)
       
     compile:()=>
-      #experimental
-      backgroundProcessing = false
-      if @settings?
-        backgroundProcessing =  not @settings.get("csgBackgroundProcessing")
+      doCompile=()=>
+        start = new Date().getTime()
         
-      console.log "backgroundProcessing: #{backgroundProcessing}"
-      
-      @preProcessor = new PreProcessor()
-      fullSource = @preProcessor.process(@,true)
-      @csgProcessor = new CsgProcessor()
-      console.log "compiling project"
-      res = @csgProcessor.processScript2(fullSource,backgroundProcessing)
-      #@set({"partRegistry":window.classRegistry}, {silent: true})
-      partRegistry = window.classRegistry
-      console.log  partRegistry 
-      @bom = new Backbone.Collection()
-      for name,params of partRegistry
-        for param, quantity of params
-          variantName = "Default"
-          if param != ""
-            variantName=""
+        backgroundProcessing = false
+        if @settings?
+          backgroundProcessing = @settings.get("csgBackgroundProcessing")
+        
+        @preProcessor = new PreProcessor()
+        fullSource = @preProcessor.process(@,false)
+        @csgProcessor = new CsgProcessor()
+        @csgProcessor.processScript2 fullSource,backgroundProcessing,false, (res)=>
+          #@set({"partRegistry":window.classRegistry}, {silent: true})
+          partRegistry = window.classRegistry
+          console.log  partRegistry 
+          @bom = new Backbone.Collection()
+          for name,params of partRegistry
+            for param, quantity of params
+              variantName = "Default"
+              if param != ""
+                variantName=""
+              
+              @bom.add { name: name,variant:variantName, params: param,quantity: quantity, manufactured:true, included:true } 
           
-          @bom.add { name: name,variant:variantName, params: param,quantity: quantity, manufactured:true, included:true } 
+          @rootAssembly = res
+          console.log "triggering compiled event"
+          end = new Date().getTime()
+          console.log "Csg computation time: #{end-start}"
+          @trigger("compiled",res)
       
-      @rootAssembly = res
-      res
+      
+      switch @settings.get("csgCompileMode")
+        when "onCodeChange"
+          doCompile()
+        when "onCodeChangeDelayed"
+          if @CodeChangeTimer
+            clearTimeout @CodeChangeTimer
+            @CodeChangeTimer = null
+          callback=()=>
+            doCompile()
+          @CodeChangeTimer = setTimeout callback, @settings.get("csgCompileDelay")*1000
+      
+      
+    
+    
     
     ###
     save:(key, val, options)->
@@ -178,7 +197,10 @@ define (require)->
         console.log @
         console.log "_____________"
       
-    onChanged:(settings, value)->
+    onChanged:(settings, value)=>
+      @compile()      
+
+
       @dirty=true
       for key, val of @changedAttributes()
         switch key
@@ -233,11 +255,5 @@ define (require)->
         content: options.content ? " \n\n"  
         ext:  options.ext ? "coffee"
       @add file      
-    ###
-    parse: (response)=>
-      console.log("in proj parse")
-      console.log response
-      return response
-    ###
       
   return Project

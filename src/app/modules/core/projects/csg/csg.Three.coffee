@@ -103,8 +103,6 @@ define (require) ->
       CSG.fromPolygons polygons
   
     fromCSG: (csg_model) ->
-      
-      #TODO: attempt to output multiple models based on name ? (or some other unique id?)
       #TODO: fix normals?
       i = undefined
       j = undefined
@@ -114,7 +112,7 @@ define (require) ->
       polygons = csg_model.toPolygons()
       properties = csg_model.properties    
       #console.log(csg_model);
-      throw "CSG library not loaded. Please get a copy from https://github.com/evanw/csg.js"  unless CSG
+      #throw "CSG library not loaded. Please get a copy from https://github.com/evanw/csg.js"  unless CSG
       i = 0
       while i < polygons.length
         color = new THREE.Color(0xaaaaaa)
@@ -190,17 +188,9 @@ define (require) ->
             searchForConnectors(prop)
       
       searchForConnectors(properties)
-      ###   
-      for index, prop of properties
-        if (typeof prop) != "function"
-          console.log "property"
-          console.log prop
-          if "axisvector" of prop
-            console.log "blaaaah"
-          #for i,p of prop
-          #  console.log typeof prop
-      ###
+     
       three_geometry.connectors  = connectors
+      
       three_geometry.computeBoundingBox()
       three_geometry
   

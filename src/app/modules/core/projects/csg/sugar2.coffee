@@ -3,7 +3,7 @@ define (require)->
   _ = require 'underscore'
   Backbone = require 'backbone'
   
-  base = require './csg' 
+  base = require './csgBase' 
   CSGBase = base.CSGBase
   CAGBase = base.CAGBase
   

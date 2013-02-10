@@ -1,3 +1,34 @@
+csg compile mode settings as they were in visualeditorview
+###   
+          when "csgRenderMode"
+            switch val
+              when "onCodeChange"
+                console.log "onCodeChange"
+                if @modelSaveBinding?
+                  @unbindFrom @modelSaveBinding
+                #@modelChangeBinding=@bindTo(@model, "change", @modelChanged)
+                @fromCsg @model
+              when "onCodeChangeDelayed"
+                console.log "onCodeChangeDelayed"
+                #TODO: add delay handling (any "change" events must invalidate the timer)
+                if @modelSaveBinding?
+                  @unbindFrom @modelSaveBinding
+                @modelChangeBinding=@bindTo(@model, "change", @modelChanged)
+                @fromCsg @model
+              when "onDemand"
+                if @modelChangeBinding?
+                  @unbindFrom @modelChangeBinding
+                if @modelSaveBinding?
+                  @unbindFrom @modelSaveBinding
+                @vent.bind "parseCsgRequest", =>
+                  @fromCsg @model
+              when "onSave"
+                if @modelChangeBinding?
+                  @unbindFrom @modelChangeBinding
+                @modelSaveBinding=@bindTo(@model, "saved", @modelSaved)
+          ###
+
+
 #TOTALLY useless, and slow, mirror effect 
         resultCSG = new CsgProcessor().processScript(@model.get("content")+".mirroredZ()")
         geom = THREE.CSG.fromCSG(resultCSG)

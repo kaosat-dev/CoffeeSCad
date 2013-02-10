@@ -75,7 +75,7 @@ define (require) ->
       @stats.domElement.style.zIndex = 100
         
       @bindTo(@settings, "change", @settingsChanged)
-      #@bindTo(@model, "change", @modelChanged)
+      @bindTo(@model, "compiled", @projectCompiled)
       
       #screenshoting
       reqRes.addHandler "project:getScreenshot", ()=>
@@ -292,22 +292,9 @@ define (require) ->
       @bindTo(@model, "change", @modelChanged)
       @fromCsg @model
       
-    
-    modelChanged:(model, value)=>
-      switch @settings.get("csgRenderMode")
-        when "onCodeChange"
-          @fromCsg @model
-        when "onCodeChangeDelayed"
-          if @CodeChangeTimer
-            clearTimeout @CodeChangeTimer
-            @CodeChangeTimer = null
-          callback=()=>
-            @fromCsg @model
-          @CodeChangeTimer = setTimeout callback, @settings.get("csgRenderDelay")*1000
-      
-    modelSaved:(model)=>
-      @fromCsg @model
-        
+    projectCompiled:(res)=>
+      @fromCsg res
+              
     settingsChanged:(settings, value)=> 
       for key, val of @settings.changedAttributes()
         switch key
@@ -320,34 +307,6 @@ define (require) ->
             @init()
             @fromCsg @model
             @render()
-            
-          when "csgRenderMode"
-            switch val
-              when "onCodeChange"
-                console.log "onCodeChange"
-                if @modelSaveBinding?
-                  @unbindFrom @modelSaveBinding
-                @modelChangeBinding=@bindTo(@model, "change", @modelChanged)
-                @fromCsg @model
-              when "onCodeChangeDelayed"
-                console.log "onCodeChangeDelayed"
-                #TODO: add delay handling (any "change" events must invalidate the timer)
-                if @modelSaveBinding?
-                  @unbindFrom @modelSaveBinding
-                @modelChangeBinding=@bindTo(@model, "change", @modelChanged)
-                @fromCsg @model
-              when "onDemand"
-                if @modelChangeBinding?
-                  @unbindFrom @modelChangeBinding
-                if @modelSaveBinding?
-                  @unbindFrom @modelSaveBinding
-                @vent.bind "parseCsgRequest", =>
-                  @fromCsg @model
-              when "onSave"
-                if @modelChangeBinding?
-                  @unbindFrom @modelChangeBinding
-                @modelSaveBinding=@bindTo(@model, "saved", @modelSaved)
-
           when "showGrid"
             if val
               @addGrid()
@@ -1174,8 +1133,9 @@ define (require) ->
       
     fromCsg:(csg)=>
       #try
-      #console.log "model(project) changed, updating view"
-      res = @model.compile()
+      start = new Date().getTime()
+      res = csg
+      #console.log "project compiled, updating view"
       if @assembly?
         @scene.remove @assembly
         @current=null
@@ -1191,6 +1151,8 @@ define (require) ->
       #  console.log "Csg Generation error: #{error} "
       #  @vent.trigger("csgParseError", error)
       #finally
+      end = new Date().getTime()
+      console.log "Csg visualization time: #{end-start}"
       @_render()
       
     _importGeom:(csgObj,rootObj)=>

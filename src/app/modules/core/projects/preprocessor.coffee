@@ -44,8 +44,8 @@ define (require) ->
       
     processIncludes:(filename, source)=>
       #finds all matches of "include xxx", and fetches the corresponding text 
-      console.log "processing #{filename}"
-      console.log "@unresolvedIncludes : #{@unresolvedIncludes.join(' ')}"
+      #console.log "processing #{filename}"
+      #console.log "@unresolvedIncludes : #{@unresolvedIncludes.join(' ')}"
       @unresolvedIncludes.push(filename)
       
       source = source or ""

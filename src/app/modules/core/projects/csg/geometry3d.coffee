@@ -1,5 +1,5 @@
 define (require)->
-  base = require './csg'
+  base = require './csgBase'
   CSGBase = base.CSGBase
   
   maths = require './maths'
