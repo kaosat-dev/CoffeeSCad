@@ -84,15 +84,16 @@ define (require)->
         name: @project.get("name")
         content:"""
         #just a comment
-        cube = new Cube({size:[50,100,100]})
-        sphere = new Sphere({r:50,$fn:300})
-        cylinder = new Cylinder({r:50,$fn:300,h:150})
-        cylinder.color([0.8,0.4,5])
-        sphere.color([0.9,0.3,0.1])
-        cube.color([0.1,0.8,0.5])
-        assembly.add(cube)
+        #cube = new Cube({size:[50,100,100]})
+        sphere = new Sphere({r:50,$fn:5})
+        #cylinder = new Cylinder({r:50,$fn:10,h:150})
+        #cylinder.color([0.8,0.4,5])
+        #sphere.color([0.9,0.3,0.1])
+        #cube.color([0.1,0.8,0.5])
+        
+        #assembly.add(cube)
         assembly.add(sphere)
-        assembly.add(cylinder)
+        #assembly.add(cylinder)
 
         """
         content_:"""

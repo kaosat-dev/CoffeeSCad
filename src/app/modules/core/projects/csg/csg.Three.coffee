@@ -102,6 +102,52 @@ define (require) ->
       console.log "THREE.CSG toCSG done"
       CSG.fromPolygons polygons
   
+  
+    fromCSG_: (csg_model) ->
+      start = new Date().getTime()
+      #need to remove duplicate vertices, keeping the right index
+      csg_model = csg_model.fixTJunctions()
+      csg_model.canonicalize()
+      
+      three_geometry = new THREE.Geometry()
+      polygons = csg_model.toPolygons()
+      
+      verticesIndex= {}
+      
+      
+      vertexIndex = 0
+      for polygon, polygonIndex in polygons
+        console.log "polygon #{polygon}"
+        color = new THREE.Color(0xaaaaaa)
+        
+        for vertex,vindex in polygon.vertices
+          #console.log "vertex #{vertex}"
+          #TODO: lookup vertices in verticesIndex
+            
+          v = new THREE.Vector3(vertex.pos._x,vertex.pos._y,vertex.pos._z)
+          three_geometry.vertices.push(v)
+          vertexIndex += 1
+        console.log "vertex index #{vertexIndex}"
+        
+        if polygon.vertices.length == 4
+          face = new THREE.Face4(vertexIndex-3,vertexIndex-2,vertexIndex-1,vertexIndex)
+        else
+          faceNormal = new THREE.Vector3().copy(polygon.plane.normal)
+          b = tmp[2]
+          tmp[2] = tmp[1]
+          tmp[1] = b
+        
+          face = new THREE.Face3(vertexIndex-2,vertexIndex-1,vertexIndex)
+          
+        three_geometry.faces.push face
+        three_geometry.faceVertexUvs[0].push new THREE.UV()
+      
+      console.log "resulting three.geometry"
+      console.log three_geometry
+      end = new Date().getTime()
+      console.log "Conversion to three.geometry time: #{end-start}"
+      three_geometry
+  
     fromCSG: (csg_model) ->
       #TODO: fix normals?
       i = undefined
@@ -109,28 +155,21 @@ define (require) ->
       vertices = undefined
       face = undefined
       three_geometry = new THREE.Geometry()
+      start = new Date().getTime()
       polygons = csg_model.toPolygons()
+      end = new Date().getTime()
+      console.log "Csg polygon fetch time: #{end-start}"
+      
       properties = csg_model.properties    
-      #console.log(csg_model);
-      #throw "CSG library not loaded. Please get a copy from https://github.com/evanw/csg.js"  unless CSG
+      start = new Date().getTime()
       i = 0
       while i < polygons.length
         color = new THREE.Color(0xaaaaaa)
         try
           poly = polygons[i]
-          
-          #console.log("poly");
-          #         console.log(poly);
-          #         console.log("shared");
-          #         console.log(poly.shared.name);
-          
-          # console.log("color check");
-          #                console.log(poly.shared.color[0]);
           color.r = poly.shared.color[0]
           color.g = poly.shared.color[1]
           color.b = poly.shared.color[2]
-        
-        #console.log("Error: "+e);
         
         # Vertices
         vertices = []
@@ -154,7 +193,9 @@ define (require) ->
           three_geometry.faceVertexUvs[0].push new THREE.UV()
           j++
         i++
-        
+      
+      end = new Date().getTime()
+      console.log "Conversion to three.geometry time: #{end-start}"
       
       connectors = []
       searchForConnectors = (obj)->
@@ -187,18 +228,15 @@ define (require) ->
             ###
             searchForConnectors(prop)
       
-      searchForConnectors(properties)
-     
-      three_geometry.connectors  = connectors
-      
-      three_geometry.computeBoundingBox()
+      #searchForConnectors(properties)
+      #three_geometry.connectors  = connectors      
+      #three_geometry.computeBoundingBox()
       three_geometry
   
     getGeometryVertice: (geometry, vertice_position) ->
       i = undefined
       i = 0
       while i < geometry.vertices.length
-        
         # Vertice already exists
         return i  if geometry.vertices[i].x is vertice_position.x and geometry.vertices[i].y is vertice_position.y and geometry.vertices[i].z is vertice_position.z
         i++

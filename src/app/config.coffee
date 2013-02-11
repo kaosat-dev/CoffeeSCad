@@ -15,7 +15,7 @@ require.config
     CodeMirror:       "../assets/js/libs/codemirror"
     #csg:              "../assets/js/libs/csg"
     lightgl:          "../assets/js/libs/lightgl"
-    three:            "../assets/js/libs/three.min"
+    three:            "../assets/js/libs/three"
     detector:         "../assets/js/libs/detector"
     stats:            "../assets/js/libs/Stats"
     utils:            "../assets/js/libs/utils"
