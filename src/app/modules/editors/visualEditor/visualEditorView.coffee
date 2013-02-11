@@ -1169,7 +1169,6 @@ define (require) ->
       mesh.receiveShadow = @settings.get("selfShadows") and @settings.get("shadows")
       mesh.material.wireframe = @settings.get("wireframe")
       mesh.name = csgObj.constructor.name
-      #mesh.geometry.computeCentroids()
       
       if @renderer instanceof THREE.CanvasRenderer
         mesh.doubleSided = true

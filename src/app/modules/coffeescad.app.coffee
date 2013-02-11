@@ -84,17 +84,33 @@ define (require)->
         name: @project.get("name")
         content:"""
         #just a comment
-        #cube = new Cube({size:[50,100,100]})
-        sphere = new Sphere({r:50,$fn:5})
-        #cylinder = new Cylinder({r:50,$fn:10,h:150})
+        c = new Cylinder({r:50,$fn:95,h:200})
+        s = new Sphere({r:50,$fn:85})
+        
+        c.union(s)
+        assembly.add(c)
+        #assembly.add(s)
+"""
+        content__:"""
+        #just a comment
+        #cube = new Cube({size:[50,100,100],center:[-25,-50,-50]})
+        
+        #cylinder = new Cylinder({r:50,$fn:300,h:150})
         #cylinder.color([0.8,0.4,5])
-        #sphere.color([0.9,0.3,0.1])
+        
         #cube.color([0.1,0.8,0.5])
         
+        sphere = new Sphere({r:50,$fn:50})
+        sphere.color([0.9,0.3,0.1])
+        minSphere = new Sphere({r:25,$fn:30}).translate([0,-45,0])
+        
+        minCube = new Cube({size:[25,25,25]}).translate([0,-50,0])
+        
+        sphere.subtract(minSphere)
+        #cube.subtract(minCube)
         #assembly.add(cube)
         assembly.add(sphere)
         #assembly.add(cylinder)
-
         """
         content_:"""
         #just a comment

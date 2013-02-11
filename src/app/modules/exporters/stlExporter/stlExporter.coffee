@@ -42,6 +42,7 @@ define (require) ->
       console.log "closing stl exporter"
       
     export:(csgObject,mergeAll=true)=>
+      console.log "exporting to stl"
       try
         try
           if mergeAll

@@ -3,7 +3,9 @@ define (require) ->
   #
   #    THREE.CSG
   # @author Chandler Prall <chandler.prall@gmail.com> http://chandler.prallfamily.com
+  
   # @modified by Mark Moissette 
+  
   # Wrapper for Evan Wallace's CSG library (https://github.com/evanw/csg.js/)
   # Provides CSG capabilities for Three.js models.
   # 
@@ -103,44 +105,76 @@ define (require) ->
       CSG.fromPolygons polygons
   
   
-    fromCSG_: (csg_model) ->
+    fromCSG: (csg_model) ->
       start = new Date().getTime()
       #need to remove duplicate vertices, keeping the right index
-      csg_model = csg_model.fixTJunctions()
       csg_model.canonicalize()
+      csg_model.reTesselate()
+      #csg_model = csg_model.fixTJunctions()
       
       three_geometry = new THREE.Geometry()
       polygons = csg_model.toPolygons()
       
       verticesIndex= {}
       
-      
+      fetchVertexIndex = (vertex, index)=>
+        x = vertex.pos.x 
+        y = vertex.pos.y 
+        z = vertex.pos.z
+        key = "#{x},#{y},#{z}"
+        if not (key of verticesIndex)
+          threeVertex = new THREE.Vector3(vertex.pos._x,vertex.pos._y,vertex.pos._z)
+          result = [index,threeVertex]
+          verticesIndex[key]= result
+          result = [index,threeVertex,false]
+          return result
+        else
+          [index,v] = verticesIndex[key]
+          return [index,v,true]
+        
       vertexIndex = 0
       for polygon, polygonIndex in polygons
-        console.log "polygon #{polygon}"
         color = new THREE.Color(0xaaaaaa)
+        try
+          color.r = polygon.shared.color[0]
+          color.g = polygon.shared.color[1]
+          color.b = polygon.shared.color[2]
         
+        polyVertices = []
         for vertex,vindex in polygon.vertices
-          #console.log "vertex #{vertex}"
-          #TODO: lookup vertices in verticesIndex
-            
-          v = new THREE.Vector3(vertex.pos._x,vertex.pos._y,vertex.pos._z)
-          three_geometry.vertices.push(v)
-          vertexIndex += 1
-        console.log "vertex index #{vertexIndex}"
+          [index,v,found] = fetchVertexIndex(vertex,vertexIndex)
+          polyVertices.push(index)
+          if not found
+            three_geometry.vertices.push(v)
+            vertexIndex+=1
         
+        srcNormal = polygon.plane.normal
+        faceNormal = new THREE.Vector3(srcNormal.x,srcNormal.z,srcNormal.y)
         if polygon.vertices.length == 4
-          face = new THREE.Face4(vertexIndex-3,vertexIndex-2,vertexIndex-1,vertexIndex)
-        else
-          faceNormal = new THREE.Vector3().copy(polygon.plane.normal)
-          b = tmp[2]
-          tmp[2] = tmp[1]
-          tmp[1] = b
+          i1 = polyVertices[0]
+          i2 = polyVertices[1]
+          i3 = polyVertices[2]
+          i4 = polyVertices[3]
+          face = new THREE.Face4(i1,i2,i3,i4,faceNormal)
+          face.vertexColors[i] = color for i in [0..3]
+         
+        else if polygon.vertices.length ==3
+          i1 = polyVertices[0]
+          i2 = polyVertices[1]
+          i3 = polyVertices[2]
+          face = new THREE.Face3(i1,i2,i3,faceNormal)
         
-          face = new THREE.Face3(vertexIndex-2,vertexIndex-1,vertexIndex)
-          
+          face.vertexColors[i] = color for i in [0..2]
+        else 
+          #FIXME: add triangulation (polygons with more than 4 vertices)
+          #for i in [0...polyVertices.length]
+         # console.log "aie: #{polyVertices.length}"
+        
         three_geometry.faces.push face
         three_geometry.faceVertexUvs[0].push new THREE.UV()
+      
+      three_geometry.computeBoundingBox()
+      three_geometry.computeCentroids()
       
       console.log "resulting three.geometry"
       console.log three_geometry
@@ -148,7 +182,7 @@ define (require) ->
       console.log "Conversion to three.geometry time: #{end-start}"
       three_geometry
   
-    fromCSG: (csg_model) ->
+    fromCSG_: (csg_model) ->
       #TODO: fix normals?
       i = undefined
       j = undefined
