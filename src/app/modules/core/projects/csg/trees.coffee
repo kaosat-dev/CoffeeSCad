@@ -26,9 +26,7 @@ define (require)->
       # fill the tree with polygons. Should be called on the root node only; child nodes must
       # always be a derivate (split) of the parent node.
       throw new Error("Assertion failed")  unless @isRootNode() # new polygons can only be added to root node; children can only be splitted polygons
-      _this = this
-      polygons.map (polygon) ->
-        _this.addChild polygon
+      @addChild(polygon) for polygon in polygons
     
     remove: ->
       # remove a node
@@ -70,14 +68,11 @@ define (require)->
         # the polygon hasn't been broken yet. We can ignore the children and return our polygon:
         result.push @polygon
       else
-        
         # our polygon has been split up and broken, so gather all subpolygons from the children:
         childpolygons = []
-        @children.map (child) ->
-          child.getPolygons childpolygons
-  
-        childpolygons.map (p) ->
-          result.push p
+        child.getPolygons (childpolygons) for child in @children 
+        result.push(polygon) for polygon in childpolygons
+        
   
     splitByPlane: (plane, coplanarfrontnodes, coplanarbacknodes, frontnodes, backnodes) ->
       # split the node by a plane; add the resulting nodes to the frontnodes and backnodes array  
@@ -87,11 +82,9 @@ define (require)->
       children = @children
       numchildren = children.length
       if numchildren > 0
+        console.log "in split by plane children: #{numchildren}"
         # if we have children, split the children
-        i = 0
-        while i < numchildren
-          children[i].splitByPlane plane, coplanarfrontnodes, coplanarbacknodes, frontnodes, backnodes
-          i++
+        child.splitByPlane(plane, coplanarfrontnodes, coplanarbacknodes, frontnodes, backnodes) for child in children
       else
         # no children. Split the polygon:
         polygon = @polygon
@@ -138,8 +131,11 @@ define (require)->
   
     invertSub: ->
       @polygon = @polygon.flipped()  if @polygon
+      child.invertSub() for child in @children 
+      ###
       @children.map (child) ->
         child.invertSub()
+      ###
   
     recursivelyInvalidatePolygon: ->
       if @polygon
@@ -213,11 +209,9 @@ define (require)->
         coplanarfrontnodes = (if alsoRemovecoplanarFront then backnodes else frontnodes)
         plane = @plane
         numpolygontreenodes = polygontreenodes.length
-        i = 0
-        while i < numpolygontreenodes
-          node = polygontreenodes[i]
-          node.splitByPlane plane, coplanarfrontnodes, backnodes, frontnodes, backnodes  unless node.isRemoved()
-          i++
+        
+        node.splitByPlane(plane, coplanarfrontnodes, backnodes, frontnodes, backnodes) for node in polygontreenodes when not(node.isRemoved())
+
         @front.clipPolygons frontnodes, alsoRemovecoplanarFront  if @front and (frontnodes.length > 0)
         numbacknodes = backnodes.length
         if @back and (numbacknodes > 0)

@@ -135,10 +135,10 @@ define (require) ->
       vertexIndex = 0
       for polygon, polygonIndex in polygons
         color = new THREE.Color(0xaaaaaa)
-        try
-          color.r = polygon.shared.color[0]
-          color.g = polygon.shared.color[1]
-          color.b = polygon.shared.color[2]
+        #try
+        #  color.r = polygon.shared.color[0]
+        #  color.g = polygon.shared.color[1]
+        #  color.b = polygon.shared.color[2]
         
         polyVertices = []
         for vertex,vindex in polygon.vertices
@@ -156,29 +156,17 @@ define (require) ->
           i3 = polyVertices[2]
           i4 = polyVertices[3]
           face = new THREE.Face4(i1,i2,i3,i4,faceNormal)
-          face.vertexColors[i] = color for i in [0..3]
-          
-          three_geometry.faces.push face
-          three_geometry.faceVertexUvs[0].push new THREE.UV()
-         
-        else if polygon.vertices.length ==3
-          i1 = polyVertices[0]
-          i2 = polyVertices[1]
-          i3 = polyVertices[2]
-          face = new THREE.Face3(i1,i2,i3,faceNormal)
-        
-          face.vertexColors[i] = color for i in [0..2]
+          #face.vertexColors[i] = color for i in [0..3]
           
           three_geometry.faces.push face
           three_geometry.faceVertexUvs[0].push new THREE.UV()
         else 
-          #FIXME: add triangulation (polygons with more than 4 vertices)
           for i in [2...polyVertices.length]
             i1 = polyVertices[0]
             i2 = polyVertices[i-1]
             i3 = polyVertices[i]
             face = new THREE.Face3(i1,i2,i3,faceNormal)
-            face.vertexColors[j] = color for j in [0...3]
+            #face.vertexColors[j] = color for j in [0...3]
             three_geometry.faces.push face
             three_geometry.faceVertexUvs[0].push new THREE.UV()
             

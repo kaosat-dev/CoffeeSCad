@@ -102,7 +102,7 @@ define (require)->
         
         sphere = new Sphere({r:50,$fn:90})
         sphere.color([0.9,0.5,0.1])
-        minSphere = new Sphere({r:15,$fn:60}).translate([0,-55,0])
+        minSphere = new Sphere({r:15,$fn:50}).translate([0,-55,0])
         
         #minCube = new Cube({size:[25,25,25]}).translate([0,-50,0])
         

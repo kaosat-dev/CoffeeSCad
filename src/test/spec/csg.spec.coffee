@@ -1,16 +1,14 @@
 define (require)->
-  base = require "modules/core/projects/csg/csg"
-  CSGBase = base.CSGBase
-  CAGBase = base.CAGBase
-  shapes3d = require 'modules/core/projects/csg/geometry3d'
-  Cube = shapes3d.Cube
-  Sphere = shapes3d.Sphere
-  Cylinder= shapes3d.Cylinder
-  maths = require 'modules/core/projects/csg/maths'
-  Plane = maths.Plane
-  
-  extras = require 'modules/core/projects/csg/extras'
-  quickHull2d = extras.quickHull2d
+  csg = require "modules/core/projects/csg/csg"
+  CSGBase = csg.CSGBase
+  CAGBase = csg.CAGBase
+  Cube = csg.Cube
+  Sphere = csg.Sphere
+  Cylinder= csg.Cylinder
+  Plane = csg.Plane
+  quickHull2d = csg.quickHull2d
+  Rectangle = csg.Rectangle
+  Circle = csg.Circle
   
   
   describe "CSG transforms", ->

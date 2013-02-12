@@ -625,15 +625,14 @@ define (require)->
         MINEPS = -EPS
         i = 0
   
-        while i < numvertices
-          t = planenormal.dot(vertices[i].pos) - thisw
+        for vertex in vertices
+          t = planenormal.dot(vertex.pos) - thisw
           isback = (t < 0)
           vertexIsBack.push isback
           hasfront = true  if t > EPS
           hasback = true  if t < MINEPS
-          i++
-        if (not hasfront) and (not hasback)
           
+        if (not hasfront) and (not hasback)
           # all points coplanar
           t = planenormal.dot(polygon.plane.normal)
           result.type = (if (t >= 0) then 0 else 1)
