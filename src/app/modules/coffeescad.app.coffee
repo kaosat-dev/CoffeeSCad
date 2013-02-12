@@ -82,17 +82,17 @@ define (require)->
       @project = new Project({"settings": @settings}) #settings : temporary hack
       @project.createFile
         name: @project.get("name")
-        content:"""
+        contentu:"""
         #just a comment
-        c = new Cylinder({r:50,$fn:95,h:200})
-        s = new Sphere({r:50,$fn:85})
+        c = new Cylinder({r:50,$fn:25,h:200})
+        s = new Sphere({r:50,$fn:25})
         
         c.union(s)
         assembly.add(c)
         #assembly.add(s)
 """
-        content__:"""
-        #just a comment
+        content:"""
+        #just a commen
         #cube = new Cube({size:[50,100,100],center:[-25,-50,-50]})
         
         #cylinder = new Cylinder({r:50,$fn:300,h:150})
@@ -100,11 +100,11 @@ define (require)->
         
         #cube.color([0.1,0.8,0.5])
         
-        sphere = new Sphere({r:50,$fn:50})
-        sphere.color([0.9,0.3,0.1])
-        minSphere = new Sphere({r:25,$fn:30}).translate([0,-45,0])
+        sphere = new Sphere({r:50,$fn:90})
+        sphere.color([0.9,0.5,0.1])
+        minSphere = new Sphere({r:15,$fn:60}).translate([0,-55,0])
         
-        minCube = new Cube({size:[25,25,25]}).translate([0,-50,0])
+        #minCube = new Cube({size:[25,25,25]}).translate([0,-50,0])
         
         sphere.subtract(minSphere)
         #cube.subtract(minCube)

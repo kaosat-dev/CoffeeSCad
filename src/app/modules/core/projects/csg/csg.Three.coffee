@@ -157,6 +157,9 @@ define (require) ->
           i4 = polyVertices[3]
           face = new THREE.Face4(i1,i2,i3,i4,faceNormal)
           face.vertexColors[i] = color for i in [0..3]
+          
+          three_geometry.faces.push face
+          three_geometry.faceVertexUvs[0].push new THREE.UV()
          
         else if polygon.vertices.length ==3
           i1 = polyVertices[0]
@@ -165,13 +168,23 @@ define (require) ->
           face = new THREE.Face3(i1,i2,i3,faceNormal)
         
           face.vertexColors[i] = color for i in [0..2]
+          
+          three_geometry.faces.push face
+          three_geometry.faceVertexUvs[0].push new THREE.UV()
         else 
           #FIXME: add triangulation (polygons with more than 4 vertices)
-          #for i in [0...polyVertices.length]
+          for i in [2...polyVertices.length]
+            i1 = polyVertices[0]
+            i2 = polyVertices[i-1]
+            i3 = polyVertices[i]
+            face = new THREE.Face3(i1,i2,i3,faceNormal)
+            face.vertexColors[j] = color for j in [0...3]
+            three_geometry.faces.push face
+            three_geometry.faceVertexUvs[0].push new THREE.UV()
+            
          # console.log "aie: #{polyVertices.length}"
         
-        three_geometry.faces.push face
-        three_geometry.faceVertexUvs[0].push new THREE.UV()
+        
       
       three_geometry.computeBoundingBox()
       three_geometry.computeCentroids()
