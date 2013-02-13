@@ -99,10 +99,12 @@ define (require)->
             @subtract innerSphere
             
             c = new Circle({r:25,center:[10,50,20]})
-            r = new Rectangle({size:30})
-            hulled = quickHull2d(c,r).extrude({offset:[0,0,75],steps:50,twist:180}).color([0.8,0.3,0.1])
-            @union hulled.clone().rotate([0,90,90]).translate([35,-12,0])
-            @union hulled.rotate([0,-90,90]).translate([35,-12,0])
+            r = new Rectangle({size:10})
+            hulled = quickHull2d(c,r).extrude({offset:[0,0,100],steps:150,twist:180}).color([0.8,0.3,0.1])
+            hulled.rotate([0,90,90]).translate([35,-12,0])
+            #
+            @union hulled.clone()
+            @union hulled.mirroredY()
         
         body = new Body()
         

@@ -29,8 +29,8 @@ define (require)->
   
   globals = require './globals'
   _CSGDEBUG = globals._CSGDEBUG
-  
   #FIXME: ensure that all operations that MIGHT change the bounding box , invalidate or recompute the bounding box
+  
   
   class CSGBase extends TransformBase
     @defaultResolution2D : 32
@@ -1272,7 +1272,32 @@ define (require)->
       @isCanonicalized=false
   
     clone:->
-      newInstance = $.extend(true, {}, @)
+      _clone=(obj)->
+        if not obj? or typeof obj isnt 'object'
+          return obj
+        if obj instanceof Date
+          return new Date(obj.getTime()) 
+        if obj instanceof RegExp
+          flags = ''
+          flags += 'g' if obj.global?
+          flags += 'i' if obj.ignoreCase?
+          flags += 'm' if obj.multiline?
+          flags += 'y' if obj.sticky?
+          return new RegExp(obj.source, flags) 
+        newInstance = new obj.constructor()
+        for key of obj
+          newInstance[key] = _clone obj[key]
+        return newInstance
+
+      newInstance = new @constructor()
+      tmp = CAGBase.fromSides(@sides)
+      newInstance.sides = tmp.sides
+      #newInstance.properties = Properties.cloneObj()
+      newInstance.isCanonicalized = @isCanonicalized
+      for key of @
+        if key != "polygons" and key!= "isCanonicalized"
+          if @.hasOwnProperty(key)
+              newInstance[key] = _clone @[key]
       return newInstance
   
     @fromSides : (sides) ->
@@ -1304,8 +1329,6 @@ define (require)->
       result = result.flipped()  if area < 0
       result = result.canonicalize()
       result
-    
-    
   
     @fromPointsNoCheck : (points) ->
       # Like CAGBase.fromPoints but does not check if it's a valid polygon.

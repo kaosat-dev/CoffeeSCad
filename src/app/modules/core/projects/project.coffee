@@ -142,8 +142,9 @@ define (require)->
         @csgProcessor = new CsgProcessor()
         @csgProcessor.processScript fullSource,backgroundProcessing, (rootAssembly, partRegistry, error)=>
           if error?
-            console.log "CSG processing failed : #{error}"
-            throw error
+            console.log "CSG processing failed : #{error.msg} on line #{error.lineNumber} stack:"
+            console.log error.stack
+            throw error.msg
           #@set({"partRegistry":window.classRegistry}, {silent: true})
           console.log  partRegistry 
           @bom = new Backbone.Collection()

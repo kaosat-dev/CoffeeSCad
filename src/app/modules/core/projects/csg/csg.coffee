@@ -18,10 +18,7 @@ define (require)->
   extras = require './extras'
   quickHull2d = extras.quickHull2d
   
-  
-  
   ##Additional helpers
-  
   classRegistry = {}
   otherRegistry = {}
   

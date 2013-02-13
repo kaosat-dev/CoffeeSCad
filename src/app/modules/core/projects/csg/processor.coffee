@@ -17,7 +17,6 @@ define (require) ->
       @debug = false
       
     processScript:(script, async=false, callback)-> 
-      #experimental process script V2
       @script = script
       @async = async
       @callback = callback
@@ -28,7 +27,6 @@ define (require) ->
       console.log "Using background rebuild:#{@async}"
       @processing = true
       paramValues = null
-      
       try
         if @async
           @_prepareScriptASync()
@@ -108,7 +106,7 @@ define (require) ->
             }
             catch(error)
             {
-              postMessage({cmd: 'error', err: error.message});
+              postMessage({cmd: 'error', err: {msg:error.message, lineNumber:error.lineNumber,stack:error.stack} });
             }
             
             /*
