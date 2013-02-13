@@ -32,7 +32,10 @@ define (require)->
         @_y = parseFloat(y)
       else
         ok = true
-        if arguments.length is 1
+        if arguments.length is 0
+          @_x = 0
+          @_y = 0
+        else if arguments.length is 1
           if typeof (x) is "object"
             if x instanceof Vector2D
               @_x = x._x
@@ -175,7 +178,11 @@ define (require)->
         @_z = 0
       else
         ok = true
-        if arguments.length is 1
+        if arguments.length is 0
+          @_x = 0
+          @_y = 0
+          @_z = 0
+        else if arguments.length is 1
           if typeof (x) is "object"
             if x instanceof Vector3D
               @_x = x._x

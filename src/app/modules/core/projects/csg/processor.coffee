@@ -3,7 +3,6 @@ define (require) ->
   utils = require "modules/core/utils/utils"
   CoffeeScript = require 'CoffeeScript'
   
-  
   ##Inner workflow
   #- linting ?
   #- Compile
@@ -12,86 +11,87 @@ define (require) ->
   #- rebuildSolid (convert data to geometry) : can be in sync mode (ui thread, simple) or async (web workers)
    
   class CsgProcessor
-    #minimal version of csg processor, for future cleanup of the rest
+    #processes a csg script
     construtor:()->
       @async = false
       @debug = false
       
-    processScript2:(script, async=false, mergeAll=false, callback)-> 
+    processScript:(script, async=false, callback)-> 
       #experimental process script V2
-      
+      @script = script
+      @async = async
       @callback = callback
       
-      @async = async
-      base = require './csgBase' 
-      CSGBase = base.CSGBase
-      
-      #main project alias ?
-      class Assembly extends CSGBase
-        constructor:()->
-          super
-          @params = []
-      
-      @assemblyRoot = new Assembly()
-      
-      @script = script
-      csgTmp = @rebuildSolid()
-      if mergeAll
-        for part in @assemblyRoot.children
-          @assemblyRoot.union(part)
-
-      return @assemblyRoot
-      
-
-    doStuff:()=>
-      @script = """
-      {CAGBase,CSGBase,Circle,Cube,Cylinder,Line2D,Line3D,Matrix4x4,
-      OrthoNormalBasis,Part,Path2D,Plane,Polygon,PolygonShared,Rectangle,
-      RoundedCube,RoundedCylinder,RoundedRectangle,Side,Sphere,Vector2D,Vector3D,
-      Vertex,Vertex2D,classRegistry,otherRegistry,property,quickHull2d,quickHull2dVar2,register,solve2Linear}=csg
-      #{@script}
-      """
-      @script = CoffeeScript.compile(@script, {bare: true})
-      #console.log "JSIFIED script"
-      #console.log @script
+      @rebuildSolid()
       
     rebuildSolid:() =>
-      @debug = true
+      console.log "Using background rebuild:#{@async}"
       @processing = true
       paramValues = null
-      console.log "Using background rebuild:#{@async}"
-      
-      @doStuff()
       
       try
         if @async
-          @parseScriptASync(@script, paramValues,@callback)
+          @_prepareScriptASync()
+          @parseScriptASync(@script, paramValues)
         else
-          @parseScriptSync(@script, paramValues, @debugging)
-          @callback(@assemblyRoot)
+          @_prepareScriptSync()
+          @parseScriptSync(@script, paramValues)
         @processing = false
       catch error
         @processing = false
         throw error
     
-    parseScriptSync: (script, mainParameters, debugging) -> 
-      #Parse the given coffeescad script in the UI thread (blocking but simple)
-      #jsonifiedParams = JSON.stringify(mainParameters)
-      csgFull = require "./csg"
+    _prepareScriptASync:()=>
+      @script = """
+      {CAGBase,CSGBase,Circle,Cube,Cylinder,Line2D,Line3D,Matrix4x4,
+      OrthoNormalBasis,Part,Path2D,Plane,Polygon,PolygonShared,Rectangle,
+      RoundedCube,RoundedCylinder,RoundedRectangle,Side,Sphere,Vector2D,Vector3D,
+      Vertex,Vertex2D,classRegistry,otherRegistry,property,quickHull2d,quickHull2dVar2,register,solve2Linear}=csg
+        
+      assembly = new CSGBase();
+        
+      #{@script}
+      """
+      @script = CoffeeScript.compile(@script, {bare: true})
+      #console.log "JSIFIED script"
+      #console.log @script
+    
+    _prepareScriptSync:()=>
+      @script = """
+      {CAGBase,CSGBase,Circle,Cube,Cylinder,Line2D,Line3D,Matrix4x4,
+      OrthoNormalBasis,Part,Path2D,Plane,Polygon,PolygonShared,Rectangle,
+      RoundedCube,RoundedCylinder,RoundedRectangle,Side,Sphere,Vector2D,Vector3D,
+      Vertex,Vertex2D,classRegistry,otherRegistry,property,quickHull2d,quickHull2dVar2,register,solve2Linear}=csg
+        
+      #{@script}
       
-      workerscript = ""
-      workerscript += script
-      if @debuging
+      for klass of classRegistry
+        partRegistry[klass] = classRegistry[klass]
+      """
+      @script = CoffeeScript.compile(@script, {bare: true})
+      #console.log "JSIFIED script"
+      #console.log @script
+    
+    parseScriptSync: (script, mainParameters) -> 
+      #Parse the given coffeescad script in the UI thread (blocking but simple)
+      workerscript = script
+      if @debug
         workerscript += "//Debugging;\n"
         workerscript += "debugger;\n"
-    
-      options={}
+
+      csg = require './csg'      
+      class Assembly extends csg.CSGBase
+        constructor:()->
+          super
+      rootAssembly = new Assembly()
+      partRegistry = {}
       
-      f = new Function("assembly","csg",workerscript)
-      result = f(@assemblyRoot,csgFull)
-      return result
+      f = new Function("assembly","partRegistry", "csg",workerscript)
+      result = f(rootAssembly,partRegistry, csg)
+      
+      @callback(rootAssembly,partRegistry)
     
-    parseScriptASync:(script, params, callback)->
+    parseScriptASync:(script, params)->
       #Parse the given coffeescad script in a seperate thread (web worker)
       rootUrl = (document.location.href).replace('#','')
       workerScript = """
@@ -100,22 +100,16 @@ define (require) ->
       require(
         {baseUrl: rootUrl +"/app"},["require","modules/core/projects/csg/csg"],
         function(require,csg){
-          
-            
-            var Cube = csg.Cube;
-            var Sphere = csg.Sphere;
-            var Cylinder = csg.Cylinder;
-            var CSGBase = csg.CSGBase;
-            
-            assembly = new CSGBase();
-            #{script}
-            //postMessage("before compacting data");
-            var result_compact = assembly.toCompactBinary()
-            //postMessage("After compacting data");
-            postMessage({cmd: 'rendered', result: result_compact});
-            
-           
-            
+            try
+            {
+              #{script}
+              var result_compact = assembly.toCompactBinary()
+              postMessage({cmd: 'rendered', rootAssembly: result_compact, partRegistry:classRegistry});
+            }
+            catch(error)
+            {
+              postMessage({cmd: 'error', err: error.message});
+            }
             
             /*
             onmessage = function(e) { 
@@ -123,99 +117,34 @@ define (require) ->
             var data = e.data;
             if(data == 'render')
             {
-              postMessage({cmd: 'rendered', result: result_compact});
+              postMessage({cmd: 'rendered', rootAssembly: result_compact, partRegistry:});
             }
             if(data == 'stop')
             {
               postMessage('msg from worker: I WILL STOP'); 
             }
-            
             }*/
       });
       """
-      
-      workerScript2 = """
-      var rootUrl = "#{rootUrl}";
-      var truc = self;
-      importScripts(rootUrl + '/assets/js/libs/require.min.js');
-      require([], function() {
-          postMessage("in require");
-          
-          
-          self.addEventListener('message', function(e) {
-            self.postMessage(e.data);
-          }, false);
-      
-          truc.onmessage = function(event) {
-              postMessage("received something");
-          }
-      });
-      
-      """
-      
-      
+
       blobURL = utils.textToBlobUrl(workerScript)
       worker = new Worker(blobURL)
-      worker.onmessage = (e) ->
+      worker.onmessage = (e) =>
         if e.data
-          #console.log "got data"
-          #console.log e.data
           if e.data.cmd is 'rendered'
-            
-            #console.log "render result"
-            #console.log e.data.result
             converters = require './converters' 
-            testConversion = converters.fromCompactBinary(e.data.result)
-            #console.log "converted"
-            #console.log testConversion
-            @assemblyRoot=testConversion
-            callback(testConversion)
+            rootAssembly = converters.fromCompactBinary(e.data.rootAssembly)
+            partRegistry = e.data.partRegistry
+            @callback(rootAssembly,partRegistry)
+          else if e.data.cmd is "error"
+            @callback(null, null, e.data.err)
+          else console.log e.data.txt  if e.data.cmd is "log"
+      worker.onerror = (e) =>
+        errtxt = "Error in line " + e.lineno + ": " + e.message
+        @callback errtxt, null      
       worker.postMessage("render")
     
-    parseCoffeeSCadScriptASync_old = (script, mainParameters, callback) ->
-      # callback: should be function(error, csg)
-      baselibraries = ["./js/csg.js", "./js/openjscad.js"]
-      baseurl = document.location + ""
-      workerscript = ""
-      workerscript += script
-      workerscript += "\n\n\n\n//// The following code is added by OpenJsCad:\n"
-      workerscript += "var _csg_libraries=" + JSON.stringify(baselibraries) + ";\n"
-      workerscript += "var _csg_baseurl=" + JSON.stringify(baseurl) + ";\n"
-      workerscript += "var _csg_makeAbsoluteURL=" + OpenJsCad.makeAbsoluteUrl.toString() + ";\n"
-      
-      workerscript += "_csg_libraries = _csg_libraries.map(function(l){return _csg_makeAbsoluteURL(l,_csg_baseurl);});\n"
-      workerscript += "_csg_libraries.map(function(l){importScripts(l)});\n"
-      workerscript += "self.addEventListener('message', function(e) {if(e.data && e.data.cmd == 'render'){"
-      workerscript += "  OpenJsCad.runMainInWorker(" + JSON.stringify(mainParameters) + ");"
-      
-      workerscript += "}},false);\n"
-      blobURL = OpenJsCad.textToBlobUrl(workerscript)
-      throw new Error("Your browser doesn't support Web Workers. Please update to Chrome, Firefox or Opera")  unless window.Worker
-      worker = new Worker(blobURL)
-      worker.onmessage = (e) ->
-        if e.data
-          if e.data.cmd is "rendered"
-            resulttype = e.data.result.class
-            result = undefined
-            if resulttype is "CSG"
-              result = fromCompactBinary(e.data.result)
-            else if resulttype is "CAG"
-              result = fromCompactBinary(e.data.result)
-            else
-              throw new Error("Cannot parse result")
-            callback null, result
-          else if e.data.cmd is "error"
-            callback e.data.err, null
-          else console.log e.data.txt  if e.data.cmd is "log"
-    
-      worker.onerror = (e) ->
-        errtxt = "Error in line " + e.lineno + ": " + e.message
-        callback errtxt, null
-    
-      worker.postMessage cmd: "render"
-      # Start the worker.
-      worker
-      
+            
     convertToSolid : (obj) ->
       ###
       if( (typeof(obj) == "object") and ((obj instanceof CAG)) )
@@ -347,6 +276,4 @@ define (require) ->
          console.log("Finished getting param values")
        return paramValues
 ###
-
-      
   return CsgProcessor

@@ -82,7 +82,6 @@ define (require)->
       children = @children
       numchildren = children.length
       if numchildren > 0
-        console.log "in split by plane children: #{numchildren}"
         # if we have children, split the children
         child.splitByPlane(plane, coplanarfrontnodes, coplanarbacknodes, frontnodes, backnodes) for child in children
       else

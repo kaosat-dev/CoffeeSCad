@@ -52,10 +52,8 @@ define (require)->
       _clone=(obj)->
         if not obj? or typeof obj isnt 'object'
           return obj
-      
         if obj instanceof Date
           return new Date(obj.getTime()) 
-      
         if obj instanceof RegExp
           flags = ''
           flags += 'g' if obj.global?
@@ -63,36 +61,29 @@ define (require)->
           flags += 'm' if obj.multiline?
           flags += 'y' if obj.sticky?
           return new RegExp(obj.source, flags) 
-      
         newInstance = new obj.constructor()
-        console.log "newInstsub"
-        console.log obj
-              
         for key of obj
-          console.log "   key"
-          console.log key
           newInstance[key] = _clone obj[key]
-      
         return newInstance
-      
-      ###
+
       newInstance = new @constructor()
-      #newInstance = CSGBase.fromPolygons(@polygons)
-      newInstance.properties = Properties.cloneObj()
+      tmp = CSGBase.fromPolygons(@polygons)
+      newInstance.polygons = tmp.polygons
+      #newInstance.properties = Properties.cloneObj()
       newInstance.isCanonicalized = @isCanonicalized
       newInstance.isRetesselated = @isRetesselated
-      
-      console.log "building new obj"
       for key of @
-        if key != "polygons" and key != "properties" and key!= "isCanonicalized" and key != "isRetesselated"
-          newInstance[key] = _clone @[key]
-      console.log "new instance"
+        if key != "polygons" and key!= "isCanonicalized" and key != "isRetesselated"
+          if @.hasOwnProperty(key)
+              newInstance[key] = _clone @[key]
+      ###
+      console.log "original:"
+      console.log @
+      console.log "cloned:"
       console.log newInstance
       ###
-      #FIXME: concise, works, but depends on jquery
-      newInstance = $.extend(true, {}, @)
+      #newInstance = $.extend(true, {}, @)#OLD, jquery version, not web worker compatible
       return newInstance
-      
       
     @fromPolygons : (polygons) ->
       #Construct a CSG solid from a list of `Polygon` instances.

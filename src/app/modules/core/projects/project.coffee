@@ -140,9 +140,11 @@ define (require)->
         @preProcessor = new PreProcessor()
         fullSource = @preProcessor.process(@,false)
         @csgProcessor = new CsgProcessor()
-        @csgProcessor.processScript2 fullSource,backgroundProcessing,false, (res)=>
+        @csgProcessor.processScript fullSource,backgroundProcessing, (rootAssembly, partRegistry, error)=>
+          if error?
+            console.log "CSG processing failed : #{error}"
+            throw error
           #@set({"partRegistry":window.classRegistry}, {silent: true})
-          partRegistry = window.classRegistry
           console.log  partRegistry 
           @bom = new Backbone.Collection()
           for name,params of partRegistry
@@ -153,11 +155,11 @@ define (require)->
               
               @bom.add { name: name,variant:variantName, params: param,quantity: quantity, manufactured:true, included:true } 
           
-          @rootAssembly = res
+          @rootAssembly = rootAssembly
           console.log "triggering compiled event"
           end = new Date().getTime()
           console.log "Csg computation time: #{end-start}"
-          @trigger("compiled",res)
+          @trigger("compiled",rootAssembly)
       
       
       switch @settings.get("csgCompileMode")

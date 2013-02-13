@@ -82,6 +82,35 @@ define (require)->
       @project = new Project({"settings": @settings}) #settings : temporary hack
       @project.createFile
         name: @project.get("name")
+        content:"""
+        #just a comment
+        class Body extends Part
+          constructor:(options)->
+            super options
+            
+            outShellRes = 20
+            @union new Sphere({r:50,$fn:outShellRes}).color([0.9,0.5,0.1]).rotate([90,0,0])
+            
+            sideIndent = new Sphere({r:30,$fn:15}).rotate([90,0,0])
+            @subtract sideIndent.clone().translate([0,65,0])
+            @subtract sideIndent.translate([0,-65,0])
+            
+            innerSphere = new Sphere({r:45,$fn:outShellRes}).color([0.3,0.5,0.8]).rotate([90,0,0])
+            @subtract innerSphere
+            
+            c = new Circle({r:25,center:[10,50,20]})
+            r = new Rectangle({size:30})
+            hulled = quickHull2d(c,r).extrude({offset:[0,0,75],steps:50,twist:180}).color([0.8,0.3,0.1])
+            @union hulled.clone().rotate([0,90,90]).translate([35,-12,0])
+            @union hulled.rotate([0,-90,90]).translate([35,-12,0])
+        
+        body = new Body()
+        
+        plane = Plane.fromNormalAndPoint([0, 1, 0], [0, 0, 0])
+        body.cutByPlane(plane)
+        
+        assembly.add(body)
+        """
         contentu:"""
         #just a comment
         c = new Cylinder({r:50,$fn:25,h:200})
@@ -91,26 +120,34 @@ define (require)->
         assembly.add(c)
         #assembly.add(s)
 """
-        content:"""
-        #just a commen
+        contentt:"""
+        #just a comment
         #cube = new Cube({size:[50,100,100],center:[-25,-50,-50]})
+        #cube.color([0.1,0.8,0.5])
+        #minCube = new Cube({size:[25,25,25]}).translate([0,-50,0])
+        #cube.subtract(minCube)
+        #assembly.add(cube)
         
         #cylinder = new Cylinder({r:50,$fn:300,h:150})
         #cylinder.color([0.8,0.4,5])
+        #assembly.add(cylinder)
         
-        #cube.color([0.1,0.8,0.5])
-        
-        sphere = new Sphere({r:50,$fn:90})
+        sphere = new Sphere({r:50,$fn:95})
         sphere.color([0.9,0.5,0.1])
         minSphere = new Sphere({r:15,$fn:50}).translate([0,-55,0])
-        
-        #minCube = new Cube({size:[25,25,25]}).translate([0,-50,0])
-        
         sphere.subtract(minSphere)
-        #cube.subtract(minCube)
-        #assembly.add(cube)
+        
+        class Toto extends Part
+          constructor:(options)->
+            super options
+            @union new Sphere({r:50,$fn:15}).color([0.8,0.4,5])
+            @subtract new Sphere({r:15,$fn:15}).translate([0,-55,0])
+        
+        tut = new Toto()
+        
+        assembly.add(tut)
         assembly.add(sphere)
-        #assembly.add(cylinder)
+        
         """
         content_:"""
         #just a comment
