@@ -67,7 +67,7 @@ define (require)->
     it 'is marked as "dirty" when one of its files gets modified', ->
       expect(project.dirty).toBe(false)
       project.createFile
-        name:"testFileName"
+        name:"test_project"
         content:"""
         class TestPart extends Part
           constructor:(options) ->
@@ -79,7 +79,8 @@ define (require)->
         """
       expect(project.dirty).toBe(true)
       project.dirty = false
-      project.pfiles.at(0).set("content","")
+      mainFile = project.pfiles.get("test_project")
+      mainFile.set("content","")
       expect(project.dirty).toBe(true)
      
    

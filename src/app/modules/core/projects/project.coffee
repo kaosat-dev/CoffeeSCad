@@ -164,6 +164,10 @@ define (require)->
       
       
       switch @settings.get("csgCompileMode")
+        when "onRequest"
+          console.log ""
+        when "onSaved"
+          console.log ""
         when "onCodeChange"
           doCompile()
         when "onCodeChangeDelayed"
