@@ -41,10 +41,11 @@ define (require) ->
     
     _prepareScriptASync:()=>
       @script = """
-      {CAGBase,CSGBase,Circle,Cube,Cylinder,Line2D,Line3D,Matrix4x4,
-      OrthoNormalBasis,Part,Path2D,Plane,Polygon,PolygonShared,Rectangle,
+      {CAGBase,CSGBase,Circle,Connector,Cube,Cylinder,Line2D,Line3D,Matrix4x4,
+      OrthoNormalBasis,Part,Path2D,Plane,Polygon,PolygonShared,Properties, Rectangle,
       RoundedCube,RoundedCylinder,RoundedRectangle,Side,Sphere,Vector2D,Vector3D,
-      Vertex,Vertex2D,classRegistry,otherRegistry,property,quickHull2d,quickHull2dVar2,register,solve2Linear}=csg
+      Vertex,Vertex2D,classRegistry,hull,intersect, otherRegistry,register,rotate,
+         scale, solve2Linear,subtract,translate,union}=csg
         
       assembly = new CSGBase();
         
@@ -56,16 +57,18 @@ define (require) ->
     
     _prepareScriptSync:()=>
       @script = """
-      {CAGBase,CSGBase,Circle,Cube,Cylinder,Line2D,Line3D,Matrix4x4,
-      OrthoNormalBasis,Part,Path2D,Plane,Polygon,PolygonShared,Rectangle,
+      {CAGBase,CSGBase,Circle,Connector,Cube,Cylinder,Line2D,Line3D,Matrix4x4,
+      OrthoNormalBasis,Part,Path2D,Plane,Polygon,PolygonShared,Properties, Rectangle,
       RoundedCube,RoundedCylinder,RoundedRectangle,Side,Sphere,Vector2D,Vector3D,
-      Vertex,Vertex2D,classRegistry,otherRegistry,property,quickHull2d,quickHull2dVar2,register,solve2Linear}=csg
+      Vertex,Vertex2D,classRegistry,hull,intersect, otherRegistry,register,rotate,
+         scale, solve2Linear,subtract,translate,union}=csg
         
       #{@script}
       
       for klass of classRegistry
         partRegistry[klass] = classRegistry[klass]
       """
+      
       @script = CoffeeScript.compile(@script, {bare: true})
       #console.log "JSIFIED script"
       #console.log @script
@@ -84,6 +87,8 @@ define (require) ->
       rootAssembly = new Assembly()
       partRegistry = {}
       
+      console.log "csg" 
+      console.log csg
       f = new Function("assembly","partRegistry", "csg",workerscript)
       result = f(rootAssembly,partRegistry, csg)
       

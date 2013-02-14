@@ -17,19 +17,59 @@ define (require)->
   parseOptionAsInt = utils.parseOptionAsInt
   
   #set of "global methods"
-  ###
+  
   union = (csg)->
+    csgs = undefined
+    if csg instanceof Array
+      csgs = csg
+      result = csgs[0]
+      for i in [1...csgs.length]
+        result.union(csgs[i])
+      result
+    else
+      csg
+  
+  subtract = (csg)->
+    csgs = undefined
+    if csg instanceof Array
+      csgs = csg
+      result = csgs[0]
+      for i in [1...csgs.length]
+        result.subtract(csgs[i])
+      result
+    else
+      csg
+  
+  intersect = (csg)->
+    csgs = undefined
+    if csg instanceof Array
+      csgs = csg
+      result = csgs[0]
+      for i in [1...csgs.length]
+        result.intersect(csgs[i])
+      result
+    else
+      csg
+  
+  translate = (v, csg) ->
     csgs = undefined
     if csg instanceof Array
       csgs = csg
     else
       csgs = [csg]
-    result = @
-    i = 0
-    while i < csgs.length
-      islast = (i is (csgs.length - 1))
-      result = result.unionSub(csgs[i], islast, islast)
-      i++
+    for csg in csgs
+      csg.translate(v)
+    csgs  
+  
+  rotate = (degrees, rotationCenter, csg) ->
+    csgs = undefined
+    if csg instanceof Array
+      csgs = csg
+    else
+      csgs = [csg]
+    for csg in csgs
+      csg.rotate(degrees, rotationCenter)
+    csgs
       
   scale = (f, csg) ->
     csgs = undefined
@@ -38,8 +78,10 @@ define (require)->
     else
       csgs = [csg]
     for csg in csgs
-      csg.transform Matrix4x4.scaling(f)
-      
+      csg.scale(f)
+    csgs
+    
+  ###    
   isLeft=(a, b, c)->
      return ((b.x - a.x)*(c.y - a.y) - (b.y - a.y)*(c.x - a.x)) > 0
   
@@ -256,6 +298,12 @@ define (require)->
     result
   
   return {
-    "quickHull2d" : quickHull2d
+    "hull" : quickHull2d,
+    "union": union,
+    "subtract":subtract,
+    "intersect":intersect,
+    "translate":translate,
+    "rotate":rotate,
+    "scale":scale
   }
 

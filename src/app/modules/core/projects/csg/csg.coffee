@@ -16,7 +16,7 @@ define (require)->
   Plane = maths.Plane
   
   extras = require './extras'
-  quickHull2d = extras.quickHull2d
+  properties = require './properties'
   
   ##Additional helpers
   classRegistry = {}
@@ -73,12 +73,11 @@ define (require)->
     "otherRegistry":otherRegistry
   }
   
-  #
   exports = merge(shapes2d,shapes3d)
   exports = merge(exports,base)
   exports = merge(exports,maths)
   exports = merge(exports,extras)
-  exports = merge(exports,quickHull2d)
+  exports = merge(exports,properties)
   exports = merge(exports,additional)
   
   return exports

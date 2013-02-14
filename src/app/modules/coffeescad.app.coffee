@@ -83,6 +83,17 @@ define (require)->
       @project.createFile
         name: @project.get("name")
         content:"""
+        #some comment
+        class Body extends Part
+          constructor:(options)->
+            super options
+            outShellRes = 20
+            @union new Sphere({r:50,$fn:outShellRes}).color([0.9,0.5,0.1]).rotate([90,0,0])
+        
+        body = new Body()
+        assembly.add(body)
+        """
+        content_cool:"""
         #just a comment
         class Body extends Part
           constructor:(options)->
@@ -100,7 +111,7 @@ define (require)->
             
             c = new Circle({r:25,center:[10,50,20]})
             r = new Rectangle({size:10})
-            hulled = quickHull2d(c,r).extrude({offset:[0,0,100],steps:150,twist:180}).color([0.8,0.3,0.1])
+            hulled = hull(c,r).extrude({offset:[0,0,100],steps:150,twist:180}).color([0.8,0.3,0.1])
             hulled.rotate([0,90,90]).translate([35,-12,0])
             #
             @union hulled.clone()
@@ -112,6 +123,26 @@ define (require)->
         body.cutByPlane(plane)
         
         assembly.add(body)
+        """
+        contentf:"""
+        #just a comment
+        
+        #console.log intersect
+        
+        c = new Cylinder({r:50,$fn:15,h:200})
+        s = new Sphere({r:50,$fn:15})
+        
+        #rotate([90,0,0],[c,s])
+        rotate([25,0,0],[0,0,0],c)
+        translate([25,-50,20],s)
+        scale([1,1,1.5],[c,s])
+        
+        #union([c,s])
+        #subtract([c,s])
+        #intersect([c,s])
+        
+        assembly.add(c)
+        assembly.add(s)
         """
         contentu:"""
         #just a comment

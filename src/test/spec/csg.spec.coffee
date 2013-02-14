@@ -6,7 +6,7 @@ define (require)->
   Sphere = csg.Sphere
   Cylinder= csg.Cylinder
   Plane = csg.Plane
-  quickHull2d = csg.quickHull2d
+  hull = csg.hull
   Rectangle = csg.Rectangle
   Circle = csg.Circle
   
@@ -97,6 +97,6 @@ define (require)->
     it 'can generate a convex hull around 2d shapes', ->
       circle = new Circle(r:25,center:[0,0],$fn:10).translate([0,-25,0])
       rectangle = new Rectangle(size:20).translate([100,0,0])
-      hulled = quickHull2d(circle,rectangle)
+      hulled = hull(circle,rectangle)
       expect(hulled.sides.length).toBe(9)
 

@@ -82,7 +82,7 @@ define (require) ->
       
     export:(project)=>
       try
-        jsonResult = @partsCollection.toJSON()
+        jsonResult = project.bom.toJSON()
         jsonResult = encodeURIComponent(JSON.stringify(jsonResult))
       catch error
         console.log "Failed to generate bom data url: #{error}"
