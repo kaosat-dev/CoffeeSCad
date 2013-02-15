@@ -59,6 +59,7 @@ define (require)->
         file.sync = @store.sync 
         file.pathRoot= project.get("name")
    
+   
   class Project extends Backbone.Model
     """Main aspect of coffeescad : contains all the files
     * project is a top level element ("folder"+metadata)
@@ -178,10 +179,6 @@ define (require)->
             doCompile()
           @CodeChangeTimer = setTimeout callback, @settings.get("csgCompileDelay")*1000
       
-      
-    
-    
-    
     ###
     save:(key, val, options)->
       super key, val, options

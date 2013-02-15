@@ -11,6 +11,8 @@ define (require)->
   Project = require './core/projects/project'
   ProjectBrowserView = require './core/projects/projectBrowseView'
   
+  ProjectManager = require './core/projects/projectManager'
+  
   Settings = require './core/settings/settings'
   SettingsView = require './core/settings/settingsView'
    
@@ -28,6 +30,7 @@ define (require)->
       super options
       @vent = vent
       @settings = new Settings()
+      @projectManager = new ProjectManager()
       
       @editors = {}
       @exporters = {}
@@ -57,13 +60,6 @@ define (require)->
       @vent.on("bomExporter:start", ()=> @exporters["bom"].start({project:@project}))
       @vent.on("stlExporter:start", ()=> @exporters["stl"].start({project:@project}))
       
-      #just temporary
-      @vent.on("project:new", @onNewProject)
-      @vent.on("project:saveAs", @onSaveAsProject)
-      @vent.on("project:save", @onSaveProject)
-      @vent.on("project:load", @onLoadProject)
-      @vent.on("project:loaded",@onProjectLoaded)
-      
       @addRegions @regions
       @initLayout()
       @initData()
@@ -79,6 +75,9 @@ define (require)->
       @bindTo(@settings.get("General"), "change", @settingsChanged)
     
     initData:->
+      @projectManager.connectors = @connectors
+      @project = @projectManager.createProject()
+      ###
       @project = new Project({"settings": @settings}) #settings : temporary hack
       @project.createFile
         name: @project.get("name")
@@ -223,6 +222,8 @@ define (require)->
         assembly.add(wobble3)
         """
       ###
+       
+      ###
       @project.createFile
         name:"config"
         content:"""
@@ -252,7 +253,6 @@ define (require)->
       console.log "I see app: #{appName} has started"
     
     onAppClosing:()=>
-      console.log "app closing, bye"
       #if @project.dirty
       #  return 'You have unsaved changes!'
     
@@ -262,42 +262,6 @@ define (require)->
       
       modReg = new ModalRegion({elName:"settings",large:true})
       modReg.show settingsView
-      
-    onNewProject:()=>
-      projectBrowserView = new ProjectBrowserView
-        model: @project
-        operation: "new"
-        connectors: @connectors
-      
-      modReg = new ModalRegion({elName:"library",large:true})
-      modReg.show projectBrowserView
-    
-    onSaveProject:=>
-      #if project.pfiles.sync != null
-      
-      ###  
-      projectBrowserView = new ProjectBrowserView
-        model: @project
-        operation: "save"
-        connectors: @connectors
-      ###
-    onSaveAsProject:=>
-      projectBrowserView = new ProjectBrowserView
-        model: @project
-        operation: "save"
-        connectors: @connectors
-      
-      modReg = new ModalRegion({elName:"library",large:true})
-      modReg.show projectBrowserView
-    
-    onLoadProject:=>
-      projectBrowserView = new ProjectBrowserView
-        model: @project
-        operation: "load"
-        connectors: @connectors
-      
-      modReg = new ModalRegion({elName:"library",large:true})
-      modReg.show projectBrowserView
     
     onProjectLoaded:(newProject)=>
       console.log "project loaded"
