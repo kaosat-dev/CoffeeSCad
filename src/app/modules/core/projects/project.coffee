@@ -4,9 +4,6 @@ define (require)->
   Backbone = require 'backbone'
   LocalStorage = require 'localstorage'
   
-  PreProcessor = require "./preprocessor"
-  CsgProcessor = require "./csg/processor"
-  
   debug  = false
   
   class ProjectFile extends Backbone.Model
@@ -74,12 +71,6 @@ define (require)->
     
     constructor:(options)->
       super options
-      
-      console.log options
-      #temporary hack
-      if options.settings?
-        @settings = options.settings.getByName("General")
-      
       @dirty    = false #based on propagation from project files : if a project file is changed, the project is tagged as "dirty" aswell
       @new      = true
       @bind("reset", @onReset)
@@ -130,55 +121,6 @@ define (require)->
           @pfiles.sync = ""
           @pfiles.localStorage= new Backbone.LocalStorage(locStorName)
       
-    compile:()=>
-      doCompile=()=>
-        start = new Date().getTime()
-        
-        backgroundProcessing = false
-        if @settings?
-          backgroundProcessing = @settings.get("csgBackgroundProcessing")
-        
-        @preProcessor = new PreProcessor()
-        fullSource = @preProcessor.process(@,false)
-        @csgProcessor = new CsgProcessor()
-        @csgProcessor.processScript fullSource,backgroundProcessing, (rootAssembly, partRegistry, error)=>
-          if error?
-            console.log "CSG processing failed : #{error.msg} on line #{error.lineNumber} stack:"
-            console.log error.stack
-            throw error.msg
-          #@set({"partRegistry":window.classRegistry}, {silent: true})
-          console.log  partRegistry 
-          @bom = new Backbone.Collection()
-          for name,params of partRegistry
-            for param, quantity of params
-              variantName = "Default"
-              if param != ""
-                variantName=""
-              
-              @bom.add { name: name,variant:variantName, params: param,quantity: quantity, manufactured:true, included:true } 
-          
-          @rootAssembly = rootAssembly
-          console.log "triggering compiled event"
-          end = new Date().getTime()
-          console.log "Csg computation time: #{end-start}"
-          @trigger("compiled",rootAssembly)
-      
-      
-      switch @settings.get("csgCompileMode")
-        when "onRequest"
-          console.log ""
-        when "onSaved"
-          console.log ""
-        when "onCodeChange"
-          doCompile()
-        when "onCodeChangeDelayed"
-          if @CodeChangeTimer
-            clearTimeout @CodeChangeTimer
-            @CodeChangeTimer = null
-          callback=()=>
-            doCompile()
-          @CodeChangeTimer = setTimeout callback, @settings.get("csgCompileDelay")*1000
-      
     ###
     save:(key, val, options)->
       super key, val, options
@@ -202,9 +144,7 @@ define (require)->
         console.log "_____________"
       
     onChanged:(settings, value)=>
-      @compile()      
-
-
+      #@compile()      
       @dirty=true
       for key, val of @changedAttributes()
         switch key
