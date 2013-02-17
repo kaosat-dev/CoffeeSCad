@@ -42,7 +42,7 @@ define (require)->
       @properties = new Properties()
       @isCanonicalized = true
       @isRetesselated = true
-      @children= [] 
+      @children = [] 
       
     add:(objects...)->
       for obj in objects
@@ -73,9 +73,14 @@ define (require)->
       newInstance.isCanonicalized = @isCanonicalized
       newInstance.isRetesselated = @isRetesselated
       for key of @
-        if key != "polygons" and key!= "isCanonicalized" and key != "isRetesselated"
+        if key != "polygons" and key!= "isCanonicalized" and key != "isRetesselated" and key != "constructor" and key != "children"
+          #console.log "key #{key}"
           if @.hasOwnProperty(key)
               newInstance[key] = _clone @[key]
+      for child in @children
+        childClone = child.clone()
+        newInstance.children.push childClone
+        
       ###
       console.log "original:"
       console.log @
@@ -1327,7 +1332,7 @@ define (require)->
       area = result.area()
       throw new Error("Degenerate polygon!")  if Math.abs(area) < 1e-5
       result = result.flipped()  if area < 0
-      result = result.canonicalize()
+      result.canonicalize()
       result
   
     @fromPointsNoCheck : (points) ->

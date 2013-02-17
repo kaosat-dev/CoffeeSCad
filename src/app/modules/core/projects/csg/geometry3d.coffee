@@ -29,8 +29,8 @@ define (require)->
     #       radius: 1
     #     });
     constructor : (options) ->
-      super options
       options = options or {}
+      super options
       #if options.c?
       #  if options.c == true #
       center= true
@@ -229,6 +229,7 @@ define (require)->
     #     });
     constructor : (options) ->
       options = options or {}
+      super options
       ###
       if options.center
         if options.center == true
@@ -322,6 +323,7 @@ define (require)->
     #     });
     constructor : (options) ->
       options = options or {}
+      super options
       #, isY = (Math.abs(axisZ.y) > 0.5);
       #  var axisX = new Vector3D(isY, !isY, 0).cross(axisZ).unit();
       point = (stack, slice, radius) ->

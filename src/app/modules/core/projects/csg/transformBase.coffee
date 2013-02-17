@@ -35,15 +35,7 @@ define (require)->
   
     rotateZ : (deg) ->
       @transform Matrix4x4.rotationZ(deg)
-  
-    rotate_alt : (degrees, rotationCenter, rotationAxis) ->
-      @transform Matrix4x4.rotation(rotationCenter, rotationAxis, degrees)
-  
-    rotate_alt2 : (degrees, rotationCenter, rotationAxis) ->
-      tmp1 = Matrix4x4.rotation(rotationCenter, rotationAxis, degrees)
-      tmp = @transform(tmp1)
-      tmp
-  
+   
     rotate : (degrees, rotationCenter) ->
       rotationCenter = [0, 0, 0]  unless rotationCenter?
       @translate(rotationCenter)

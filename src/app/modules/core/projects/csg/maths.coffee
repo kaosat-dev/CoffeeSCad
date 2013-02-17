@@ -175,14 +175,13 @@ define (require)->
       else if arguments.length is 2
         @_x = parseFloat(x)
         @_y = parseFloat(y)
+      else if arguments.length is 0
+        @_x = 0
+        @_y = 0
         @_z = 0
       else
         ok = true
-        if arguments.length is 0
-          @_x = 0
-          @_y = 0
-          @_z = 0
-        else if arguments.length is 1
+        if arguments.length is 1
           if typeof (x) is "object"
             if x instanceof Vector3D
               @_x = x._x
@@ -212,10 +211,15 @@ define (require)->
             else
               ok = false
           else
-            v = parseFloat(x)
-            @_x = v
-            @_y = v
-            @_z = v
+            if not x?
+              @_x = 0
+              @_y = 0
+              @_z = 0
+            else
+              v = parseFloat(x)
+              @_x = v
+              @_y = v
+              @_z = v
         else
           ok = false
         ok = false  if (not IsFloat(@_x)) or (not IsFloat(@_y)) or (not IsFloat(@_z))  if ok

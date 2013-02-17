@@ -42,7 +42,6 @@ define (require) ->
       console.log "closing stl exporter"
       
     export:(csgObject,mergeAll=true)=>
-      console.log "exporting to stl"
       try
         try
           if mergeAll
@@ -66,6 +65,7 @@ define (require) ->
         catch error
           errorMsg = "Failed to generate stl blob data: #{error}"
           console.log errorMsg
+          console.log error.stack
           throw new Error(errorMsg) 
           
         windowURL=utils.getWindowURL()

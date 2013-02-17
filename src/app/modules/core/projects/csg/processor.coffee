@@ -87,8 +87,6 @@ define (require) ->
       rootAssembly = new Assembly()
       partRegistry = {}
       
-      console.log "csg" 
-      console.log csg
       f = new Function("assembly","partRegistry", "csg",workerscript)
       result = f(rootAssembly,partRegistry, csg)
       

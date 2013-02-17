@@ -99,4 +99,39 @@ define (require)->
       rectangle = new Rectangle(size:20).translate([100,0,0])
       hulled = hull(circle,rectangle)
       expect(hulled.sides.length).toBe(9)
+  
+  describe "Base CSG class utilities", ->
+    
+    it 'clone csg objects' , ->
+      cube = new Cube(size:100)
+      cube2 = cube.clone()
+      expect(cube2.polygons.length).toBe(cube.polygons.length)
+  
+   
+  describe "Advances 2d & 3d shapes manipulation", ->
+    
+    it 'can generate valid (stl compatible) data out of 3d geometry' , ->
+      cube = new Cube(size:100)
+      cube2 = new Cube(size:100,center:[90,90,0])
+      cube.subtract(cube2)
+      stlCube = cube.fixTJunctions()
+      expect(cube.polygons.length).toBe(10)
+    
+    
+    it 'can generate valid (stl compatible) data out of tranformed 3d geometry' , -> 
+      cube = new Cube(size:100)
+      cube.rotate([25,10,15])
+      stlCube = cube.fixTJunctions()
+      expect(stlCube.polygons.length).toBe(6)
+    
+    it 'can generate valid (stl compatible) data out of "hulled", and extruded 2d geometry' , ->
+      circle = new Circle({r:25,center:[10,50,20], $fn:6})
+      circle2 = new Circle({r:25,center:[10,100,20], $fn:6})
+      #rectangle = new Rectangle({size:10})
+      hulled = hull(circle,circle2)
+      hulledExtruded = hulled.extrude({offset:[0,0,1],steps:1,twist:0})
+      hulledExtruded.fixTJunctions()
+      expect(hulledExtruded.polygons.length).toBe(182)
+    
+    
 
