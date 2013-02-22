@@ -4,12 +4,23 @@
     "license": "MIT",
     "author": "Mark 'kaosat-dev' Moissette",
     "private" : "true",
-    "dependencies" : {
+    "main": "index.html",
+    "devDependencies" : {
         "findit" : "*",
         "glob" : "*",
         "mkdirp" : "*",
         "watch-tree-maintained" : "*",
         "requirejs" : "*",
-        "connect" : "*"
+        "connect" : "*",
+        "node-zip": "*"
+    },
+    
+    "window": {
+    "title": "CoffeeSCad",
+    "icon": "favicon.ico",
+    "toolbar": false,
+    "width":1280,
+    "height":1024
     }
+    
 }

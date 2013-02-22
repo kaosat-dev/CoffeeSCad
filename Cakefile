@@ -197,3 +197,31 @@ task 'release', 'build, minify , prep for release' , (options) ->
       ,optimize:'uglify'}###
       
   requirejs.optimize(buildConf, console.log)
+
+task 'package_alt', 'package project for node-webkit', (options) ->
+  zip = new require('node-zip')()
+  
+  finder = findit.find("app")
+  finder.on 'file', (source, stats) =>
+    console.log "file: "+ source
+    if path.extname(source) == ".js"
+      fs.readFile source, null, (err,data)->
+        if (err) 
+          return console.log(err)
+        console.log(data)
+        zip.file(source,data)  
+    
+  finder.on 'end', ()=>
+    console.log "done"  
+    data = zip.generate({base64:false,compression:'DEFLATE'})
+    fs.writeFile('coffeescad.nw', data, 'binary');
+  
+task 'package' , 'package project for node-webkit', (options) ->
+  pkgFile = 'CoffeeSCad.nw'
+  zip = spawn('zip', ['-9', '-r', pkgFile, './app', './assets', 'index.html','package.json','favicon.ico','readme.md'])
+  ### 
+  zip.on 'exit',  (code, signal)->
+    zip2 = spawn('zip', ['-9', '-r', '-g',  'toto.zip', './assets', 'index.html'])
+    zip2.on 'exit', (code, signal)->
+       zip3 = spawn('zip', ['-9', '-r', '-g',  'toto.zip', 'package.json'])
+  ### 
