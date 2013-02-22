@@ -12,7 +12,7 @@ define (require)->
   CodeEditorSettingsView = require './codeEditorSettingsView'
   CodeEditorRouter = require "./codeEditorRouter"
   CodeEditorView = require './multiFileView'
-  
+
  
   class CodeEditor extends Backbone.Marionette.Application
     title: "CodeEditor"

@@ -4,7 +4,6 @@ define (require) ->
   CoffeeScript = require 'CoffeeScript'
   
   ##Inner workflow
-  #- linting ?
   #- Compile
   #   - Preprocess (resolve includes, parameters (defines))
   #   - Compile Coffeescript to js
@@ -94,7 +93,7 @@ define (require) ->
     
     parseScriptASync:(script, params)->
       #Parse the given coffeescad script in a seperate thread (web worker)
-      rootUrl = (document.location.href).replace('#','')
+      rootUrl = (document.location.href).replace('#','').replace('index.html','')
       workerScript = """
       var rootUrl = "#{rootUrl}";
       importScripts(rootUrl + '/assets/js/libs/require.min.js');

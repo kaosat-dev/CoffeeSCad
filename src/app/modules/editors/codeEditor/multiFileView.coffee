@@ -3,65 +3,43 @@ define (require)->
   _ = require 'underscore'
   require 'bootstrap'
   marionette = require 'marionette'
+  jquery_layout = require 'jquery_layout'
+  jquery_ui = require 'jquery_ui'
   
   vent = require 'modules/core/vent'
   
   filesCodeTemplate =  require "text!./multiFile.tmpl"
-  fileTabTemplate = require "text!./fileTab.tmpl"
-  filesTabTemplate = require "text!./filesTab.tmpl"
   
-  FileCodeView = require "./fileCodeView"
+  FilesTreeView = require "./filesTreeView"
+  FilesListView = require "./filesListView"
   ConsoleView =  require "./consoleView"
 
-  class FileTabView extends Backbone.Marionette.ItemView
-    template: fileTabTemplate
-    tagName: "li"
-    events:
-      "click a[data-toggle=\"tab\"]" : "selectFile" 
-      "click em.close":    "closeTab"
-
+  
+  class CodeViewsLayoutContainer extends Backbone.Marionette.Layout
     constructor:(options)->
-      super options
-      #model binding
-      @model.on("change:name", @render)
-
-    selectFile:->
-      vent.trigger("file:selected",@model)
-      
-    closeTab:->
-      @close()
-      vent.trigger("file:closed",@model.get("name"))
-    
-  
-  class FilesTabView extends Backbone.Marionette.CompositeView
-    itemView: FileTabView
-    tagName: "ul"
-    template: filesTabTemplate
-    className: "nav nav-tabs"
-    
-    constructor:(options) ->
-      super options
-      
-  
-  class FilesCodeView extends Backbone.Marionette.CompositeView
-    itemView: FileCodeView
-    tagName: "div"
-    template: filesTabTemplate
-    className:"tab-content"
-    
-    constructor:(options) ->
       super options
       @settings = options.settings
       
-    itemViewOptions:()->
-        settings:@settings
-      
+      $ '<div/>',
+          id: "codeViewsContainer",
+        .appendTo('body')
+        
+      @wrappedStuff= new MultiFileView
+        model:    @model
+        settings: @settings
+       
+    render:()=>
+      tmp = @wrappedStuff.render()
+      @$el.append(tmp.el)
+      return @el  
+    
   
   class MultiFileView extends Backbone.Marionette.Layout
+    el: "#codeViewsContainer"
     template: filesCodeTemplate
     regions: 
-      tabHeaders: "#tabHeaders"
-      tabContent: "#tabContent"
+      filesList:  "#filesList"
+      filesTree:  "#filesTree"
       console:    "#console"
     
     constructor:(options)->
@@ -69,31 +47,30 @@ define (require)->
       @settings = options.settings
 
     onRender:=>
+      @$el.css('height':'700px')
+      @$el.css('color': '#FF8900')
+      
+      #show files tree
+      filesTreeView = new FilesTreeView
+        collection: @model.pfiles
+      @filesTree.show filesTreeView
+      $(@filesTree.el).addClass("ui-layout-west")
+      
+      #show files list (tabs)
+      filesListView = new FilesListView
+        model: @model
+        settings: @settings
+      @filesList.show(filesListView)
+      $(@filesList.el).addClass("ui-layout-center")
+      
       #show console
       consoleView = new ConsoleView()
       @console.show consoleView
-      #show tab nav
-      headerView = new FilesTabView
-        collection: @model.pfiles
-      @tabHeaders.show headerView
+      #$(@console.el).addClass("ui-layout-south")
       
-      #show content
-      codeView = new FilesCodeView
-        collection: @model.pfiles
-        settings:   @settings
-      @tabContent.show codeView
-
-      #activate first tab      
-      #firstFile = @tabHeaders.$el.find('a:first')
-      @tabHeaders.$el.find('a:first').tab('show')
-      defaultItem = @tabContent.$el.find('div .tab-pane:first')
-      defaultItem.addClass('active')
-      defaultItem.removeClass('fade')
-      vent.trigger("file:selected",@model.pfiles.first)
-      #FIXME not working
-      $("a[data-toggle=\"tab\"]").on "shown", (e) ->
-        e.target # activated tab
-        e.relatedTarget # previous tab
-
+        
+      @myLayout = @$el.layout({ applyDefaultStyles: true })
+      #innerLayout = $(outerLayout.options.center.paneSelector ).layout()
       
-  return MultiFileView
+      
+  return CodeViewsLayoutContainer

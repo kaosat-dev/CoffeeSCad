@@ -40,7 +40,7 @@ define (require)->
       @settings = @appSettings.getByName("General")
 
     createProject:()->
-      @project = new Project() #settings : temporary hack
+      @project = new Project()
       @project.createFile
         name: @project.get("name")
         content:"""
@@ -74,6 +74,9 @@ define (require)->
       
       assembly.add(body)
         """
+      @project.createFile
+        name: "config"
+        content:""" """
       @project.on("change",@onProjectChanged)
     
     onProjectChanged:()=>
@@ -124,7 +127,7 @@ define (require)->
         @project.trigger("compiled",rootAssembly)
 
     onNewProject:()=>
-      @project = new Project()
+      @createProject()
       
       projectBrowserView = new ProjectBrowserView
         model: @project

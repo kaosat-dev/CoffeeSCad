@@ -1,5 +1,8 @@
 require.config
   deps: ["main"]
+  config: 
+    text:
+      env: 'xhr'
   paths:
     #JavaScript folders.
     libs:             "../assets/js/libs"
