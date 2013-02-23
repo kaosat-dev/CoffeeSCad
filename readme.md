@@ -11,14 +11,6 @@ live demo here : http://kaosat-dev.github.com/CoffeeSCad/
 Feedback, bug reports, ideas and contributions are welcome !
 
 
-CoffeeSCad was originally built on the great OpenJsCad project but is *not* compatible with it anymore at this point, although a good portion
-of the cgs codebase is still the same.
-
-IMPORTANT!!
-===========
-This does not impact the master version or the demo but, As of the Dec 11, 2012 commit, the dev branch is "unusable",
-and will be in a **semi broken state** until I finish the current (huge) refactoring pass.
-
 Features
 =============
 - **parametric editing** in your browser
@@ -31,32 +23,25 @@ it is not necessarly the best option.
 
 Future Features
 ===============
-- store projects online in Dropbox
-- multi file edition : a project is typically made up of various files: this should help with clarity and modularity of
-larger projects
-- share projects via github (gist)
-- library system (I consider this absolutely essential: using other people's creations as "parts libraries" is a key
-element
+- faster visualization and processing 
+- desktop version
 - better ui 
-- better, simpler syntax
-- bill of materials perhaps even "interactive" assembly guides
 
 Dependencies 
 =============
 	These are all included , no need to re-add them
-	- cgs.js (the modified version from openjscad)
-	- require.js
-	- jquery
-	- underscore.js
-	- backbone.js
-	- three.js
-	- coffeescript.js 
-	- twitter bootstrap
-	- codemirror
-	- various backbone & jquery plugins:
-		- backbone.marionette
-	 	- ThreeCSG.js
-		etc
+	- [require.js](http://requirejs.org/)
+	- [jquery](http://jquery.com/)
+	- [underscore.js](http://underscorejs.org/)
+	- [backbone.js](http://backbonejs.org/)
+	- [backbone.marionette](http://marionettejs.com/)
+	- [three.js](https://github.com/mrdoob/three.js/)
+	- [coffeescript.js](http://coffeescript.org/)
+	- [twitter bootstrap](http://twitter.github.com/bootstrap/)
+	- [codemirror](http://codemirror.net/)
+	- [jquery-ui](http://jqueryui.com/)
+	- [dropbox-js](https://github.com/dropbox/dropbox-js)
+	
 
 Q&A
 =============
@@ -76,7 +61,7 @@ can get rid of a lot of curly braces etc is a good fit
  
 - **Q** : I am a developper, where is the "meat" of the code ?
 
- **A** In the dev branch it is in the src folder
+ **A** In the *dev branch* , in the src folder
  
 - **Q** : Can I try CoffeeScad locally ?
 
