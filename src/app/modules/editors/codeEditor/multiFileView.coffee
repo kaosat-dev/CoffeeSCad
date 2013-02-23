@@ -22,18 +22,37 @@ define (require)->
       filesTree:  "#filesTree"
       console:    "#console"
     
+    events:
+      "resize:start": "onResizeStart"
+      "resize:stop": "onResizeStop"
+      "resize":"onResizeStop"
+      
     constructor:(options)->
       super options
       @settings = options.settings
     
     onDomRefresh:()=>
-      elHeight = @$el.height()
-      @$el.css('height':"#{elHeight}px")
-      @$el.css('color': '#FF8900')
-      
+      console.log "dom refresh"
+      elHeight = @$el.parent().height()
+      #@$el.css('height':"#{elHeight}px")
+      #@$el.css('color': '#FF8900')
+      @$el.height(elHeight)
       $(@filesTree.el).addClass("ui-layout-west")
       $(@filesList.el).addClass("ui-layout-center")
-      @myLayout = @$el.layout({ applyDefaultStyles: true })
+      @myLayout = @$el.layout( {applyDefaultStyles: true })
+
+    onResizeStart:=>
+      console.log "resized start"
+      console.log "old size: #{@$el.parent().height()}"
+      console.log @$el.parent()
+      
+    onResizeStop:=>
+      #console.log "resized stop"
+      elHeight = @$el.parent().height()
+      #console.log "new size: #{elHeight}"
+      @$el.height(elHeight)
+      #@$el.css('height':"#{elHeight}")
+      @myLayout.resizeAll()
 
     onRender:=>
       #show files tree
@@ -52,6 +71,5 @@ define (require)->
       @console.show consoleView
       #$(@console.el).addClass("ui-layout-south")
       
-      #innerLayout = $(outerLayout.options.center.paneSelector ).layout()
       
   return MultiFileView

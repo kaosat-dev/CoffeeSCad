@@ -98,8 +98,9 @@ define (require)->
         collection: @openFiles
         settings:   @settings
       @tabContent.show codeView
-      $(@tabContent.el).addClass("ui-layout-center")
-
+      #$(@tabContent.el).addClass("ui-layout-center")
+      $(@tabContent.el).css("overflow-y": "hidden")#overflow: hidden;
+      $(@tabHeaders.el).css("overflow-y": "hidden")
       #activate first tab      
       #firstFile = @tabHeaders.$el.find('a:first')
       try
@@ -107,6 +108,7 @@ define (require)->
         defaultItem = @tabContent.$el.find('div .tab-pane:first')
         defaultItem.addClass('active')
         defaultItem.removeClass('fade')
+        #@$el.css("overflow-y": "hidden")
         #vent.trigger("file:selected", @activeFile)
         #FIXME not working
         ### 

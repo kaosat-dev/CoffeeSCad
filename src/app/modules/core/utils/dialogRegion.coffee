@@ -35,6 +35,9 @@ define (require)->
     showDialog: (view)=>
       view.on("close", @hideDialog, @)
       
+      onResizeDone:()->
+        console.log "resized stop"
+      
       #workaround for twitter bootstrap multi modal bug
       oldFocus = @$el.modal.Constructor.prototype.enforceFocus
       @$el.modal.Constructor.prototype.enforceFocus = ()->{}
@@ -48,7 +51,21 @@ define (require)->
       @$el.css("z-index",200)
       #cleanup for workaround
       @$el.modal.Constructor.prototype.enforceFocus = oldFocus
+      @$el.css("overflow-y": "hidden")
       
+      #@$el.on 'resize' , (event,ui)=>
+      #  view.$el.trigger("resize")
+      @$el.on 'resizestart' , (event,ui)=>
+        view.$el.trigger("resize:start")
+      @$el.on 'resizestop' , (event,ui)=>
+        view.$el.trigger("resize:stop")
+      ###
+      <div class="modal-header">
+        <h3 id="myModalLabel"><i class="icon-cogs icon-large"></i>Blabla</h3>
+      </div>
+      <div class="modal-body">
+      </div>
+      ###
       ###
       @$el.css("margin-left", @$el.size.width/2)
       @$el.css("margin-left", @$el.size.width/2)
