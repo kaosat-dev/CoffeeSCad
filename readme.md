@@ -32,19 +32,21 @@ Future Features
 
 Dependencies 
 =============
+
 	These are all included , no need to re-add them
 	
-	[require.js](http://requirejs.org/)
-	[jquery](http://jquery.com/)
-	[underscore.js](http://underscorejs.org/)
-	[backbone.js](http://backbonejs.org/)
-	[backbone.marionette](http://marionettejs.com/)
-	[three.js](https://github.com/mrdoob/three.js/)
-	[coffeescript.js](http://coffeescript.org/)
-	[twitter bootstrap](http://twitter.github.com/bootstrap/)
-	[codemirror](http://codemirror.net/)
-	[jquery-ui](http://jqueryui.com/)
-	[dropbox-js](https://github.com/dropbox/dropbox-js)
+	
+[require.js](http://requirejs.org/)
+[jquery](http://jquery.com/)
+[underscore.js](http://underscorejs.org/)
+[backbone.js](http://backbonejs.org/)
+[backbone.marionette](http://marionettejs.com/)
+[three.js](https://github.com/mrdoob/three.js/)
+[coffeescript.js](http://coffeescript.org/)
+[twitter bootstrap](http://twitter.github.com/bootstrap/)
+[codemirror](http://codemirror.net/)
+[jquery-ui](http://jqueryui.com/)
+[dropbox-js](https://github.com/dropbox/dropbox-js)
 	
 
 Q&A
