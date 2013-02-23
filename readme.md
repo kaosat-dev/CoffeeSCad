@@ -19,6 +19,9 @@ Features
 - a limited possibility of **"real time" visualisation** of the coffeescad code: type your code, watch the shapes changes!
 this is mainly limited by the speed of your machine and the complexity of the csg objects your are working on: beyond a certain complexity
 it is not necessarly the best option.
+- **automatic bill of materials** generation with json export
+- **stl export**
+- **optional online storage** using Dropbox
 
 
 Future Features
@@ -30,17 +33,18 @@ Future Features
 Dependencies 
 =============
 	These are all included , no need to re-add them
-	- [require.js](http://requirejs.org/)
-	- [jquery](http://jquery.com/)
-	- [underscore.js](http://underscorejs.org/)
-	- [backbone.js](http://backbonejs.org/)
-	- [backbone.marionette](http://marionettejs.com/)
-	- [three.js](https://github.com/mrdoob/three.js/)
-	- [coffeescript.js](http://coffeescript.org/)
-	- [twitter bootstrap](http://twitter.github.com/bootstrap/)
-	- [codemirror](http://codemirror.net/)
-	- [jquery-ui](http://jqueryui.com/)
-	- [dropbox-js](https://github.com/dropbox/dropbox-js)
+	
+	[require.js](http://requirejs.org/)
+	[jquery](http://jquery.com/)
+	[underscore.js](http://underscorejs.org/)
+	[backbone.js](http://backbonejs.org/)
+	[backbone.marionette](http://marionettejs.com/)
+	[three.js](https://github.com/mrdoob/three.js/)
+	[coffeescript.js](http://coffeescript.org/)
+	[twitter bootstrap](http://twitter.github.com/bootstrap/)
+	[codemirror](http://codemirror.net/)
+	[jquery-ui](http://jqueryui.com/)
+	[dropbox-js](https://github.com/dropbox/dropbox-js)
 	
 
 Q&A
