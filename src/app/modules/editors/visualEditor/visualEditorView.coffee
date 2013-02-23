@@ -73,9 +73,9 @@ define (require) ->
       @stats.domElement.style.position = 'absolute'
       @stats.domElement.style.top = '30px'
       @stats.domElement.style.zIndex = 100
-        
-      @bindTo(@settings, "change", @settingsChanged)
-      @bindTo(@model, "compiled", @projectCompiled)
+      
+      @settings.on( "change", @settingsChanged)
+      @model.on("compiled", @projectCompiled)
       
       #screenshoting
       reqRes.addHandler "project:getScreenshot", ()=>
@@ -289,7 +289,7 @@ define (require) ->
         @current=null
       
       @model = newModel
-      @bindTo(@model, "change", @modelChanged)
+      @model.on("compiled", @projectCompiled)
       @fromCsg @model
       
     projectCompiled:(res)=>
@@ -414,13 +414,15 @@ define (require) ->
       
       @setBgColor()
       
+      ###
       csgRenderMode = @settings.get "csgRenderMode"
       switch csgRenderMode
         when "onCodeChange"
           console.log "onCodeChange"
-          if @modelSaveBinding?
-            unbindFrom @modelSaveBinding
-          @modelChangeBinding=@bindTo(@model, "change", @modelChanged)
+          #if @modelSaveBinding?
+          #  unbindFrom @modelSaveBinding
+          @model.on("change", @modelChanged)
+         # @modelChangeBinding=@bindTo(@model, "change", @modelChanged)
         when "onCodeChangeDelayed"
           console.log "onCodeChangeDelayed"
           #TODO: add delay handling (any "change" events must invalidate the timer)
@@ -438,7 +440,7 @@ define (require) ->
           if @modelChangeBinding?
             unbindFrom @modelChangeBinding
           @modelSaveBinding=@bindTo(@model, "saved", @modelSaved)
-      
+      ###
       if @settings.get("shadows")
         @renderer.shadowMapAutoUpdate = @settings.get("shadows")
       if @settings.get("showGrid")
@@ -1043,7 +1045,7 @@ define (require) ->
     
     onRender:()=>
       selectors = @ui.overlayDiv.children(" .uicons")
-      selectors.tooltip()
+      #selectors.tooltip()
       
       if @settings.get("showStats")
         @ui.overlayDiv.append(@stats.domElement)

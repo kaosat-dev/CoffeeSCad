@@ -30,10 +30,9 @@ define (require)->
       @editor = null
       @_markers = []
      
-      
-      @bindTo(@model, "change", @modelChanged)
-      @bindTo(@model, "saved", @modelSaved)
-      @bindTo(@settings, "change", @settingsChanged)
+      @model.on("change", @modelChanged)
+      @model.on("saved", @modelSaved)
+      @settings.on("change", @settingsChanged)
       
       #@vent.bind("csgParseError", @showError)
       @vent.on("file:closed", @onFileClosed)
@@ -46,6 +45,8 @@ define (require)->
     
     onFileSelected:(model)=>
       if model == @model
+        @$el.addClass('active')
+        @$el.removeClass('fade')
         #temporarhack, needed because of rendering issues forcing to re-render, but thus loosing undo history
         history = @editor.getHistory()
         @render()
@@ -54,12 +55,20 @@ define (require)->
         @updateUndoRedo()
         @updateHints()
         @editor.focus()
+      else
+        @$el.removeClass('active')
+        @$el.addClass('fade')
     
     onFileClosed:(fileName)=>
       if fileName == @model.get("name")
         @close()
+    
+    onShow:()=>
+      @$el.addClass('active')
+      @$el.removeClass('fade')
         
     onClose:()=>
+      console.log "closing code view"
       #cleanup all vent event
       @vent.off("file:closed", @onFileClosed)
       @vent.off("file:selected", @onFileSelected)
@@ -79,9 +88,7 @@ define (require)->
       @bindTo(@model, "saved", @modelSaved)
       
     modelChanged: (model, value)=>
-      @vent.trigger("modelChanged", @)
-      $("[rel=tooltip]").tooltip
-            placement:'right' 
+      @$el.find('[rel=tooltip]').tooltip({'placement': 'right'})
             
     modelSaved: (model)=>
       
@@ -178,8 +185,6 @@ define (require)->
         extraKeys: 
             "Ctrl-Q": (cm) ->
               foldFunc(cm, cm.getCursor().line)
-            #"Ctrl-P" : newProject
-            #"Ctrl-S" : saveProject
             Tab:(cm)->
               cm.replaceSelection("  ", "end")
       

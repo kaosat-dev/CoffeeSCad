@@ -1,8 +1,10 @@
 require.config
   deps: ["main"]
+  
   config: 
     text:
       env: 'xhr'
+
   paths:
     #JavaScript folders.
     libs:             "../assets/js/libs"
@@ -51,6 +53,8 @@ require.config
     marionette:       "../assets/js/plugins/backbone.marionette.min"
     eventbinder:      "../assets/js/plugins/backbone.eventbinder.min"
     wreqr:            "../assets/js/plugins/backbone.wreqr.min"
+    babysitter:       "../assets/js/plugins/backbone.babysitter.min"
+    
     localstorage:     "../assets/js/plugins/backbone.localstorage"
     modelbinder :     "../assets/js/plugins/backbone.ModelBinder.min"
     collectionbinder :"../assets/js/plugins/backbone.CollectionBinder.min"
@@ -59,6 +63,7 @@ require.config
     forms_list      : "../assets/js/plugins/backbone.forms.list.min"  
     backbone_nested:  "../assets/js/plugins/backbone.nested.min"
     
+    knockback:        "../assets/js/plugins/knockback"
     
     three_csg:        "../assets/js/plugins/ThreeCSG"
     combo_cam:        "../assets/js/plugins/CombinedCamera"
@@ -164,5 +169,3 @@ require.config
 
     #base64:
     #  exports : "base64"
-
-

@@ -18,8 +18,6 @@ define (require)->
   class ProjectManager
     
     constructor:(options)->
-      console.log "project manager options"
-      console.log options
       @appSettings = options.appSettings ? null
       @settings = @appSettings.getByName("General")
       @connectors = options.connectors ? null
@@ -40,7 +38,7 @@ define (require)->
       @settings = @appSettings.getByName("General")
 
     createProject:()->
-      @project = new Project()
+      @project = new Project() #settings : temporary hack
       @project.createFile
         name: @project.get("name")
         content:"""

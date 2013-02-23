@@ -9,16 +9,18 @@ define (require)->
     el: "#none"
 
     constructor:(options) ->
-      @large = options.large
-      elName = options.elName
+      options = options or {}
+      @large = options.large ? false
+      elName = options.elName ? "dummyDiv"
       @makeEl(elName)
       options.el = "##{elName}"
       
       super options
       _.bindAll(this)
-      
-      @on("view:show", @showDialog, @)
-      
+    
+    onShow:(view)=>
+      @showDialog(view)
+    
     makeEl:(elName)->
       if ($("#" + elName).length == 0)
         $ '<div/>',
@@ -29,14 +31,50 @@ define (require)->
       $el = $(selector)
       $el.on("hidden", @close)
       return $el
-
+    
     showDialog: (view)=>
       view.on("close", @hideDialog, @)
-      #FIXME: weird bug: modal() does not add a modal class, but an "in" class to the div ??
-      @$el.modal({'show':true,'backdrop':'data-static'}).addClass('modal fade')
-      @$el.removeClass('fade')#to increase drag responsiveness
-      @$el.draggable({grid: [ 1, 1 ]}).resizable({handles : "se"})
       
+      #workaround for twitter bootstrap multi modal bug
+      oldFocus = @$el.modal.Constructor.prototype.enforceFocus
+      @$el.modal.Constructor.prototype.enforceFocus = ()->{}
+
+      @$el.modal({'show':true,'backdrop':false}).addClass('modal fade')
+      
+      @$el.removeClass('fade')#to increase drag responsiveness
+      @$el.draggable({ snap: ".mainContent", snapMode: "outer",containment: ".mainContent" })
+      @$el.resizable({minWidth:200, minHeight:200})#{handles : "se"})
+      
+      @$el.css("z-index",200)
+      #cleanup for workaround
+      @$el.modal.Constructor.prototype.enforceFocus = oldFocus
+      
+      ###
+      @$el.css("margin-left", @$el.size.width/2)
+      @$el.css("margin-left", @$el.size.width/2)
+      @$el.css("margin-top",  @$el.size.height/2)
+      @$el.css("top", "50%")
+      @$el.css("top", "50%")
+      $(ui.element).find(".modal-body").each(()=>
+        @$el.css("max-height", 400 + @$el.size.height - @$el.size.originalSize.height)
+    )###
+      
+      ###
+      $(".modal").on "resize", (event, ui) ->
+        ui.element.css "margin-left", -ui.size.width / 2
+        ui.element.css "margin-top", -ui.size.height / 2
+        ui.element.css "top", "50%"
+        ui.element.css "left", "50%"
+        $(ui.element).find(".modal-body").each ->
+          $(this).css "max-height", 400 + ui.size.height - ui.originalSize.height
+      ###
+      
+      
+      #@$el.append('<div class="ui-resizable-handle ui-resizable-e" style="z-index: 90; "></div>')
+      #@$el.append('<div class="ui-resizable-handle ui-resizable-s" style="z-index: 90; "></div>')
+      #@$el.append('<div class="ui-resizable-handle ui-resizable-se ui-icon ui-icon-gripsmall-diagonal-se" style="z-index: 90; "></div>')
+        
+        
       ###
       $el = @getEl()
       view.isVisible=true
@@ -51,7 +89,6 @@ define (require)->
         beforeClose: =>
           view.isVisible=false
           view.close()
-          
       ###
        
     hideDialog: ->

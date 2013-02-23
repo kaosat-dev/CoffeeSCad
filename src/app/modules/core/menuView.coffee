@@ -65,9 +65,6 @@ define (require)->
     
   class ExportersView extends Backbone.Marionette.CollectionView
    
-   
-  class AboutView 
-  
   
   class MainMenuView extends Backbone.Marionette.Layout
     template: mainMenu_template
@@ -91,7 +88,7 @@ define (require)->
       "click .undo":          "onUndoClicked"
       "click .redo":          "onRedoClicked"
 
-      "click .settings":      ()->vent.trigger("settings:show")
+      "click .settings":      ()=>vent.trigger("settings:show")
       "click .showEditor":    ()->vent.trigger("codeEditor:show")
       
       #"click .dropBoxLogin":   ()->vent.trigger("dropbox:LoginRequest")#should be a command 
@@ -144,14 +141,19 @@ define (require)->
       if not  $('#redoBtn').hasClass "disabled"
         @vent.trigger("file:redoRequest")
     
+    onDomRefresh:=>
+      @$el.find('[rel=tooltip]').tooltip({'placement': 'bottom'})
+    
     onRender:=>
        $('#undoBtn').addClass("disabled")
        $('#redoBtn').addClass("disabled")
        
-       for index,exporterName of @exporters
+       for index, exporterName of @exporters
          className = "start#{index[0].toUpperCase() + index[1..-1]}Exporter"
          event = "#{index}Exporter:start"
          @events["click .#{className}"] = do(event)-> ->@vent.trigger(event)
+         console.log "events"
+         console.log @events
          #TODO: move this in constructor
          #see http://www.mennovanslooten.nl/blog/post/62 and http://rzrsharp.net/2011/06/27/what-does-coffeescripts-do-do.html
          #for more explanation (or lookup "anonymous functions inside loops")
@@ -193,7 +195,8 @@ define (require)->
          
        @delegateEvents()
   
-  class MainMenuView_old extends marionette.CompositeView
+  
+  class MainMenuView_old extends Backbone.Marionette.CompositeView
     template: mainMenu_template
     tagName:  "ul"
     itemView: RecentFilesView

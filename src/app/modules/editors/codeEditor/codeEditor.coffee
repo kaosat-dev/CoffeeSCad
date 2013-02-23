@@ -13,6 +13,7 @@ define (require)->
   CodeEditorRouter = require "./codeEditorRouter"
   CodeEditorView = require './multiFileView'
 
+  DummyView = require 'modules/core/utils/dummyView'
  
   class CodeEditor extends Backbone.Marionette.Application
     title: "CodeEditor"
@@ -28,7 +29,6 @@ define (require)->
       @router = new CodeEditorRouter
         controller: @
         
-      @on("start", @onStart)
       @vent.on("project:loaded",@resetEditor)
       @init()
 
@@ -48,11 +48,20 @@ define (require)->
     onStart:()=>
       @settings = @appSettings.getByName("CodeEditor")
       
+      DialogRegion = require 'modules/core/utils/dialogRegion'
+      diaReg = new DialogRegion({elName:"codeEdit"})
+      diaReg.show new CodeEditorView 
+        model:    @project
+        settings: @settings
+      
+      ###   
       @mainRegion.show new CodeEditorView 
         model:    @project
         settings: @settings
+      ###
         
     resetEditor:(newProject)=>
+      console.log "resetting code editor"
       @project = newProject
       @mainRegion.close()
       @mainRegion.show new CodeEditorView 

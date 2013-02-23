@@ -27,7 +27,7 @@ define (require)->
       @vent = vent
       @router = new VisualEditorRouter
         controller: @
-      @on("start", @onStart)
+        
       @vent.on("project:loaded",@resetEditor)
       @init()
 

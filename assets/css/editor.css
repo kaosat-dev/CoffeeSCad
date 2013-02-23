@@ -45,6 +45,94 @@ text-shadow: 0 1px 0 white;
 /*Project manager */
 
 
+/*JQUERY UI*/
+
+.ui-resizable-s {
+  bottom: 0;
+}
+.ui-resizable-e {
+  right: 0;
+}
+/*
+.ui-resizable { position: relative;}
+.ui-resizable-handle { position: absolute;font-size: 0.1px; display: block; }
+.ui-resizable-disabled .ui-resizable-handle, .ui-resizable-autohide .ui-resizable-handle { display: none; }
+.ui-resizable-n { cursor: n-resize; height: 7px; width: 100%; top: -5px; left: 0; }
+.ui-resizable-s { cursor: s-resize; height: 7px; width: 100%; bottom: -5px; left: 0; }
+.ui-resizable-e { cursor: e-resize; width: 7px; right: -5px; top: 0; height: 100%; }
+.ui-resizable-w { cursor: w-resize; width: 7px; left: -5px; top: 0; height: 100%; }
+.ui-resizable-se { cursor: se-resize; width: 12px; height: 12px; right: 1px; bottom: 1px; }
+.ui-resizable-sw { cursor: sw-resize; width: 9px; height: 9px; left: -5px; bottom: -5px; }
+.ui-resizable-nw { cursor: nw-resize; width: 9px; height: 9px; left: -5px; top: -5px; }
+.ui-resizable-ne { cursor: ne-resize; width: 9px; height: 9px; right: -5px; top: -5px;}
+*/
+
+.ui-dialog
+{
+	background-color: #3a3f44; /*same as slate theme bg*/
+	/*border-color: transparent !important;
+	border-width: 1px;*/
+	border: 1px solid rgba(0, 0, 0, 0.3);
+	color: #FFFFFF !important;
+	
+	
+}
+.ui-dialog-title
+{
+	color: #C8C8C8 !important;
+	border-color: #000000 !important;
+}
+.ui-dialog-titlebar
+{
+	border-color: #000000 !important;
+
+}
+.ui-dialog .ui-dialog-titlebar
+{
+	border-color: transparent !important;
+}
+
+.ui-dialog-content
+{
+	background-color: #3a3f44;/*same as slate theme bg*/
+}
+
+.ui-resizable-handle
+{
+	/*background-color: #3a3f44;*//*same as slate theme bg*/
+	color:#3a3f44;
+}
+
+.ui-widget-content
+{
+	background: #3a3f44;
+	color: #C8C8C8 !important;
+}
+
+.ui-widget-content a
+{
+	color:inherit;
+}
+
+#dialogRegion
+{
+	background-color:  #262626;/*same as code editor black theme bg*/
+	padding: 0px;
+}
+
+.ui-dialog .ui-dialog-titlebar-close .ui-state-hover
+{
+	color:#FF0000 !important;
+}
+
+ui-icon ui-icon-closethick .ui-state-hover
+{
+	color:#FF0000 !important;
+	background-color: #FF0000 !important;
+}
+
+
+
 
 /*-------------------------------------*/		
 /*Code Editor*/
@@ -154,70 +242,6 @@ span.CodeMirror-matchhighlight { background: #00438A }
 }
 
 /*-------------------*/
-.ui-dialog
-{
-	background-color: #3a3f44; /*same as slate theme bg*/
-	/*border-color: transparent !important;
-	border-width: 1px;*/
-	border: 1px solid rgba(0, 0, 0, 0.3);
-	color: #FFFFFF !important;
-	
-	
-}
-.ui-dialog-title
-{
-	color: #C8C8C8 !important;
-	border-color: #000000 !important;
-}
-.ui-dialog-titlebar
-{
-	border-color: #000000 !important;
-
-}
-.ui-dialog .ui-dialog-titlebar
-{
-	border-color: transparent !important;
-}
-
-.ui-dialog-content
-{
-	background-color: #3a3f44;/*same as slate theme bg*/
-}
-
-.ui-resizable-handle
-{
-	background-color: #3a3f44;/*same as slate theme bg*/
-	color:#3a3f44;
-}
-
-.ui-widget-content
-{
-	background: #3a3f44;
-	color: #C8C8C8 !important;
-}
-
-.ui-widget-content a
-{
-	color:inherit;
-}
-
-#dialogRegion
-{
-	background-color:  #262626;/*same as code editor black theme bg*/
-	padding: 0px;
-}
-
-.ui-dialog .ui-dialog-titlebar-close .ui-state-hover
-{
-	color:#FF0000 !important;
-}
-
-ui-icon ui-icon-closethick .ui-state-hover
-{
-	color:#FF0000 !important;
-	background-color: #FF0000 !important;
-}
-
 
 /*for file browser*/
 .ui-state-default

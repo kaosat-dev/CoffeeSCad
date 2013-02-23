@@ -3,6 +3,7 @@ define (require)->
   bootstrap = require 'bootstrap'
   marionette = require 'marionette'
   
+  
   class ModalRegion extends Backbone.Marionette.Region
     el: "#none"
 
@@ -15,8 +16,9 @@ define (require)->
       
       super options
       _.bindAll(this)
-      
-      @on("view:show", @showModal, @)
+     
+    onShow:(view)=>
+      @showModal(view)
       
     makeEl:(elName)->
       if ($("#" + elName).length == 0)
@@ -31,11 +33,19 @@ define (require)->
       
     showModal: (view)=>
       view.on("close", @hideModal, @)
+      
+      #workaround for twitter bootstrap multi modal bug
+      oldFocus = @$el.modal.Constructor.prototype.enforceFocus
+      @$el.modal.Constructor.prototype.enforceFocus = ()->{}
+      
+      
       @$el.addClass('fade modal')
-      #FIXME: weird bug: modal() does not add a modal class, but an "in" class to the div ??
       @$el.modal({'show':true,'backdrop':true})
       if @large
         @$el.addClass('modal-reallyBig')
+     
+      #cleanup for workaround
+      @$el.modal.Constructor.prototype.enforceFocus = oldFocus
         
     hideModal: ->
       @$el.modal 'hide'

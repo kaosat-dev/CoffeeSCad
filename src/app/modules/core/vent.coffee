@@ -3,5 +3,6 @@ define (require)->
   _ = require 'underscore'
   Backbone = require 'backbone'
   marionette = require 'marionette'
+  wreqr = require 'wreqr'
   
-  return new Backbone.Marionette.EventAggregator()
+  return new Backbone.Wreqr.EventAggregator()

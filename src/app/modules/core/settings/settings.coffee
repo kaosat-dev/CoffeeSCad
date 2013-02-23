@@ -28,9 +28,11 @@ define (require)->
       @            
     
     parse: (response)=>
-      #TODO yuck, do we really need custom classes for each piece of settings?
       for i, v of response
-        response[i]= new  @settingNames[v.name](v)
+        try
+          response[i] = new  @settingNames[v.name](v)
+        catch error
+          console.log "failed to parse setting: #{error}"
       return response
       
     clear:()=>
@@ -42,7 +44,6 @@ define (require)->
         for index, settingClass of @settingNames
           subSetting = new settingClass()
           @add subSetting
-          
       ###
       console.log "collection reset" 
       console.log @

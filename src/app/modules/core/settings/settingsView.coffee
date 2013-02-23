@@ -29,7 +29,7 @@ define (require)->
       
     applySettings:(ev)=>
       for index, form of @tabContent.currentView.forms
-        form.commit()
+        form.commit({ validate: true })
       @model.save()
     
     constructor:(options) ->
@@ -47,7 +47,7 @@ define (require)->
       @tabContent.show sContentView
 
       $(@ui.tabHeaders).find('li:first').addClass('active')
-      defaultItem = $(@ui.tabContent).find('div .tab-pane:first')#:eq(1)
+      defaultItem = $(@ui.tabContent).find('div .tab-pane:first')
       defaultItem.addClass('active')
       defaultItem.removeClass('fade')
  
@@ -108,7 +108,7 @@ define (require)->
       return view
         
     onRender:()=>
-      for index, childView of @children
+      for index, childView of @children._views
         if childView.wrappedForm?
           @forms.push(childView.wrappedForm)
  
@@ -147,14 +147,24 @@ define (require)->
       super options
       @wrappedForm = new GeneralSettingsForm
         model: @model
-       
-    render:()=>
-      tmp = @wrappedForm.render()
-      @$el.append(tmp.el)
+    
+    onDomRefresh:=>
       @$el.addClass("tab-pane")
       @$el.addClass("fade")
+    
+    render:()=>
+      @isClosed = false
+      @triggerMethod("before:render", @)
+      @triggerMethod("item:before:render", @)
+  
+      tmp = @wrappedForm.render()
+      @$el.html(tmp.el)
       @$el.attr('id',@model.get("name"))
-      return @el    
+      
+      @bindUIElements()
+      @triggerMethod("render", @)
+      @triggerMethod("item:rendered", @)
+      return @
       
       
   class KeybindingsForm extends Backbone.Form

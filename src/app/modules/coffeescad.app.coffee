@@ -53,9 +53,6 @@ define (require)->
       
       #events
       $(window).bind('beforeunload',@onAppClosing)
-      @on("initialize:before",@onInitializeBefore)
-      @on("initialize:after",@onInitializeAfter)
-      @on("start", @onStart)
       @vent.on("app:started", @onAppStarted)
       @vent.on("settings:show", @onSettingsShow)
       @vent.on("bomExporter:start", ()=> @exporters["bom"].start({project:@project}))
@@ -122,9 +119,6 @@ define (require)->
         appSettings: @settings
       
       @settings.fetch()
-      
-      #TODO: clean this hack
-      #@project.settings = @settings.getByName("General")
       
     onInitializeAfter:()=>
       """For exampel here close and 'please wait while app loads' display"""
