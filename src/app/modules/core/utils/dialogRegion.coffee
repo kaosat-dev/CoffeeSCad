@@ -35,18 +35,20 @@ define (require)->
     showDialog: (view)=>
       view.on("close", @hideDialog, @)
       
-      onResizeDone:()->
-        console.log "resized stop"
       
       #workaround for twitter bootstrap multi modal bug
       oldFocus = @$el.modal.Constructor.prototype.enforceFocus
       @$el.modal.Constructor.prototype.enforceFocus = ()->{}
 
-      @$el.modal({'show':true,'backdrop':false}).addClass('modal fade')
-      
+      #@$el.modal({'show':true,'backdrop':false})
+      @$el.addClass('modal fade')
       @$el.removeClass('fade')#to increase drag responsiveness
       @$el.draggable({ snap: ".mainContent", snapMode: "outer",containment: ".mainContent" })
       @$el.resizable({minWidth:200, minHeight:200})#{handles : "se"})
+      
+      @$el.css("width",800)
+      @$el.css("margin",0)
+      
       
       @$el.css("z-index",200)
       #cleanup for workaround
@@ -59,6 +61,12 @@ define (require)->
         view.$el.trigger("resize:start")
       @$el.on 'resizestop' , (event,ui)=>
         view.$el.trigger("resize:stop")
+        
+        
+      #console.log @$el.parent().size()
+      @$el.offset({ top: -500, left: 30 })
+      #@$el.position({collision:"none"})
+      #@$el.position({my:"right bottom",at:"center bottom", of: "#toto"})
       ###
       <div class="modal-header">
         <h3 id="myModalLabel"><i class="icon-cogs icon-large"></i>Blabla</h3>

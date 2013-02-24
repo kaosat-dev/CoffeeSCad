@@ -25,5 +25,15 @@ define (require) ->
     if(window.URL) then window.URL.revokeObjectURL(url)
     else if(window.webkitURL)  then window.webkitURL.revokeObjectURL(url)
     else throw new Error("Your browser doesn't support window.URL")
+    
+  
+  #FROM COFFEESCRIPT HELPERS
+  merge = (options, overrides) ->
+    extend (extend {}, options), overrides
 
-  return {"getBlobBuilder":getBlobBuilder ,"getWindowURL":getWindowURL,"textToBlobUrl":textToBlobUrl,"revokeBlobUrl":revokeBlobUrl}
+  extend = (object, properties) ->
+    for key, val of properties
+      object[key] = val
+    object
+
+  return {"getBlobBuilder":getBlobBuilder ,"getWindowURL":getWindowURL,"textToBlobUrl":textToBlobUrl,"revokeBlobUrl":revokeBlobUrl, "merge":merge, "extend":extend}
