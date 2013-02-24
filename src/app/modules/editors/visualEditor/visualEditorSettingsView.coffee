@@ -56,6 +56,8 @@ define (require)->
             title: "background color2 (gradient)" 
             type: 'Text'
             #options: ['solid', 'gradient']
+          textColor:
+            type: 'Text'
             
         options.fieldsets=[
           "legend": "CsgRender settings"
@@ -71,7 +73,7 @@ define (require)->
           "fields": ["showAxes","helpersColor","showConnectors", "showGrid","gridSize","gridStep","gridColor","gridOpacity"]
         , 
           "legend":"Extra settings"
-          "fields": ["bgColor","bgColor2", "showStats"]
+          "fields": ["bgColor","bgColor2", "textColor", "showStats"]
           
         ]
       super options

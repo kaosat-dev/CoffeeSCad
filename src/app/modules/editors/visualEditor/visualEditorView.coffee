@@ -2,9 +2,7 @@ define (require) ->
   $ = require 'jquery'
   marionette = require 'marionette'
   require 'bootstrap'
-  #csg = require 'csg'
   THREE = require 'three'
-  #THREE.CSG = require 'three_csg'
   combo_cam = require 'combo_cam'
   detector = require 'detector'
   stats = require  'stats'
@@ -16,34 +14,11 @@ define (require) ->
   threedView_template = require "text!./visualEditorView.tmpl"
   requestAnimationFrame = require 'modules/core/utils/anim'
   orbit_ctrl = require 'orbit_ctrl'
-  
   THREE.CSG = require 'modules/core/projects/csg/csg.Three'
   
-  #FIXME: memory leaks: When removing objects from scene do we really need: renderer.deallocateObject(Object); ?
+  helpers = require './helpers'
   
-  class MyAxisHelper
-    constructor:(size, xcolor, ycolor, zcolor)->
-      geometry = new THREE.Geometry()
-      
-      geometry.vertices.push(
-        new THREE.Vector3(-size or -1, 0, 0 ), new THREE.Vector3( size or 1, 0, 0 ),
-        new THREE.Vector3(0, -size or -1, 0), new THREE.Vector3( 0, size or 1, 0 ),
-        new THREE.Vector3(0, 0, -size or -1 ), new THREE.Vector3( 0, 0, size or 1 )
-        )
-        
-      geometry.colors.push(
-        xcolor or new THREE.Color(0xffaa00), xcolor or new THREE.Color(0xffaa00),
-        ycolor or new THREE.Color(0xaaff00), ycolor or new THREE.Color(0xaaff00),
-        zcolor or new THREE.Color(0x00aaff), zcolor or new THREE.Color(0x00aaff)
-        )
-        
-      material = new THREE.LineBasicMaterial
-        vertexColors: THREE.VertexColors
-        #depthTest:false
-        linewidth:1
-      
-      return new THREE.Line(geometry, material, THREE.LinePieces)
-  
+
   class VisualEditorView extends Backbone.Marionette.ItemView
     template: threedView_template
     ui:
@@ -52,17 +27,7 @@ define (require) ->
       overlayDiv:     "#overlay" 
       
     events:
-      #'mousemove'   : 'mousemove'
-      'mouseup'     : 'mouseup'
-      #'mousewheel'  : 'mousewheel'
-      #'mousedown'   : 'mousedown'
       'contextmenu' : 'rightclick'
-      #'DOMMouseScroll' : 'mousewheel'
-      "mousedown .toggleGrid":          "toggleGrid"
-      "mousedown .toggleAxes":          "toggleAxes"
-      "mousedown .toggleShadows":       "toggleShadows"
-      "mousedown .toggleAA":            "toggleAA"
-      "mousedown .toggleAutoUpdate":    "toggleAutoUpdate"
       
     constructor:(options, settings)->
       super options
@@ -81,8 +46,6 @@ define (require) ->
       reqRes.addHandler "project:getScreenshot", ()=>
         return @makeScreeshot()
       
-      #Controls:
-      @dragging = false
       ##########
       @width = 800
       @height = 600
@@ -106,70 +69,14 @@ define (require) ->
         imgAsDataURL = canvas.toDataURL("image/png")
         d.resolve(imgAsDataURL)
       img.src = srcImg
-      #imgAsDataURL=canvas.toDataURL("image/png")
-      #imgAsDataURL = @renderer.domElement.toDataURL("image/png")
-      #console.log imgAsDataURL
-      # ,300, 300
       return d
     
-    toggleGrid: (ev)=>
-        toggled = @settings.get("showGrid")
-        if toggled
-          @settings.set("showGrid",false)
-          $(ev.target).addClass("uicon-off")
-        else
-          @settings.set("showGrid",true)
-          $(ev.target).removeClass("uicon-off")
-        return false
-        
-    toggleAxes:(ev)=>
-        toggled = @settings.get("showAxes")
-        if toggled
-          @settings.set("showAxes",false)
-          $(ev.target).addClass("uicon-off")
-        else
-          @settings.set("showAxes",true)
-          $(ev.target).removeClass("uicon-off")
-        return false
-     
-    toggleShadows:(ev)=>
-        #FIXME: to deactivate shadows on the plane, regenerate its texture (amongst other things)
-        toggled = @settings.get("shadows")
-        if toggled
-          @settings.set("shadows",false)
-          $(ev.target).addClass("uicon-off")
-        else
-          @settings.set("shadows",true)
-          $(ev.target).removeClass("uicon-off")
-        return false
-            
-    toggleAA:(ev)=>
-        toggled = @settings.get("antialiasing")
-        if toggled
-          @settings.set("antialiasing",false)
-          $(ev.target).addClass("uicon-off")
-        else
-          @settings.set("antialiasing",true)
-          $(ev.target).removeClass("uicon-off")
-        return false
-        
-    toggleAutoUpdate:(ev)=>
-        toggled = @settings.get("autoUpdate")
-        if toggled
-          @settings.set("autoUpdate",false)
-          $(ev.target).addClass("uicon-off")
-        else
-          @settings.set("autoUpdate",true)
-          $(ev.target).removeClass("uicon-off")
-        return false
-      
     rightclick:(ev)=>
       """used either for selection or context menu"""
       normalizeEvent(ev)
       x = ev.offsetX
       y = ev.offsetY
       @selectObj(x,y)
-      
       #context-menu
       # = require "modules/core/utils/contextMenu"
       #@contextMenu = new ContextMenu()
@@ -181,75 +88,8 @@ define (require) ->
       @contextMenu = new ContextMenu()
       @contextMenuRegion.show @contextMenu
       ###
-       
-      
       ev.preventDefault()
       return false
-      
-    mousewheel:(ev)=>
-      #fix for firefox scroll
-      ev = window.event or ev
-      wheelDelta = null
-      if ev.originalEvent?
-        wheelDelta = if ev.originalEvent.detail? then ev.originalEvent.detail*(-120)
-      else
-        wheelDelta = ev.wheelDelta
-      console.log "tet"+wheelDelta
-      ###
-      if wheelDelta > 0
-        @controls.zoomOut()
-      else 
-        @controls.zoomIn()
-      ev.preventDefault()
-      ev.stopPropagation()
-      return false
-      ###
-      
-      
-      ###ev = window.event or ev; # old IE support  
-      #@controls.onMouseWheel(ev)
-      delta = Math.max(-1, Math.min(1, (ev.wheelDelta or -ev.detail)))
-      delta*=75
-      if delta - @camera.position.z <= 100
-        @camera.position.z-=delta
-      return false
-      ###
-
-    mousemove:(ev)->
-      #return false
-      ###if @dragStart?
-        moveMinMax = 10
-        
-        @dragAmount=[@dragStart.x-ev.offsetX, @dragStart.y-ev.offsetY]
-        #@dragAmount[1]=@height-@dragAmount[1]
-        #console.log "bleh #{@dragAmount[0]/500}"
-        x_move = Math.max(-moveMinMax, Math.min(moveMinMax, @dragAmount[0]/10))
-        y_move = Math.max(-moveMinMax, Math.min(moveMinMax, @dragAmount[1]/10))
-        #x_move = (x_move/x_move+0.0001)*moveMinMax
-        #y_move = (y_move/y_move+0.0001)*moveMinMax
-        #console.log("moving by #{y_move}")
-        @camera.position.x+=  x_move #@dragAmount.x/10000
-        @camera.position.y-=  y_move#@dragAmount.y/100
-        return false
-      ###  
-    dragstart:(ev)=>
-      @dragStart={'x':ev.offsetX, 'y':ev.offsetY}
-      
-    mouseup:(ev)=>
-      
-      #if @contextMenuRegion?
-      #  @contextMenuRegion.close()
-      #if @dragStart?
-      #  @dragAmount=[@dragStart.x-ev.offsetX, @dragStart.y-ev.offsetY]
-      #  @dragStart=null
-     
-      #x = ev.offsetX
-      #y = ev.offsetY
-      #v = new THREE.Vector3((x/@width)*2-1, -(y/@height)*2+1, 0.5)
-      
-    mousedown:(ev)=>
-      #ev.preventDefault()
-      #return false
              
     selectObj:(mouseX,mouseY)=>
       v = new THREE.Vector3((mouseX/@width)*2-1, -(mouseY/@height)*2+1, 0.5)
@@ -322,12 +162,10 @@ define (require) ->
               @addGrid()
           when "gridColor"
             if @grid?
-              @grid.material.color.setHex(val)
-              @subGrid.material.color.setHex(val)
+              @grid.setColor(val)
           when "gridOpacity"
             if @grid?
-              @grid.material.opacity=val
-              @subGrid.material.opacity=val
+              @grid.setOpacity(val)
           when "showAxes"
             if val
               @addAxes()
@@ -349,17 +187,14 @@ define (require) ->
               if @settings.get("showGrid")
                 @removeGrid()
                 @addGrid()
-            
           when "selfShadows"
             @fromCsg @model
             @render()
-            
           when "showStats"
             if val
               @ui.overlayDiv.append(@stats.domElement)
             else
               $(@stats.domElement).remove()
-              
           when  "projection"
             if val == "orthographic"
               @camera.toOrthographic()
@@ -367,15 +202,12 @@ define (require) ->
             else
               @camera.toPerspective()
               @camera.setZoom(1)
-              
           when "position"
             @setupView(val)
-            
           when "wireframe"
             #TODO: should not be global , but object specific?
             if @mesh?
               @mesh.material.wireframe = val
-          
           when 'center'
             try
               tgt = @controls.target
@@ -387,7 +219,12 @@ define (require) ->
             @camera.lookAt(@scene.position)
           when 'helpersColor'
             if @axes?
-              @axes.material.color.setHex(val)
+              @removeAxes()
+              @addAxes()
+          when 'textColor'
+            if @axes?
+              @removeAxes()
+              @addAxes()
           when 'showConnectors'
             if val
               THREE.SceneUtils.traverseHierarchy @assembly, (object)-> 
@@ -397,7 +234,6 @@ define (require) ->
               THREE.SceneUtils.traverseHierarchy @assembly, (object)-> 
                 if object.name is "connectors"
                   object.visible = false 
-            
       @_render()  
        
     init:()=>
@@ -407,40 +243,11 @@ define (require) ->
       @renderer.shadowMapEnabled = true
       @renderer.shadowMapAutoUpdate = true
       
-      
       @projector = new THREE.Projector()
       @setupScene()
       @setupOverlayScene()
-      
       @setBgColor()
       
-      ###
-      csgRenderMode = @settings.get "csgRenderMode"
-      switch csgRenderMode
-        when "onCodeChange"
-          console.log "onCodeChange"
-          #if @modelSaveBinding?
-          #  unbindFrom @modelSaveBinding
-          @model.on("change", @modelChanged)
-         # @modelChangeBinding=@bindTo(@model, "change", @modelChanged)
-        when "onCodeChangeDelayed"
-          console.log "onCodeChangeDelayed"
-          #TODO: add delay handling (any "change" events must invalidate the timer)
-          if @modelSaveBinding?
-            unbindFrom @modelSaveBinding
-          @modelChangeBinding=@bindTo(@model, "change", @modelChanged)
-        when "onDemand"
-          if @modelChangeBinding?
-            unbindFrom @modelChangeBinding
-          if @modelSaveBinding?
-            unbindFrom @modelSaveBinding
-          @vent.bind "parseCsgRequest", =>
-            @fromCsg @model
-        when "onSave"
-          if @modelChangeBinding?
-            unbindFrom @modelChangeBinding
-          @modelSaveBinding=@bindTo(@model, "saved", @modelSaved)
-      ###
       if @settings.get("shadows")
         @renderer.shadowMapAutoUpdate = @settings.get("shadows")
       if @settings.get("showGrid")
@@ -536,7 +343,6 @@ define (require) ->
           NEAR,
           FAR)
       #function ( width, height, fov, near, far, orthoNear, orthoFar )
-      #function ( @width, @height, @viewAngle, NEAR, FAR, NEAR, FAR ) 
       
       @camera.up = new THREE.Vector3( 0, 0, 1 )
       
@@ -549,17 +355,7 @@ define (require) ->
       @scene.add(@camera)
       @setupLights()
       
-      
       @cameraHelper = new THREE.CameraHelper(@camera)
-      #@camera.add(@cameraHelper)
-      ###
-      xArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(100,0,0),50, 0xFF7700)
-      yArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(100,0,0),50, 0x77FF00)
-      zArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(100,0,0),50, 0x0077FF)
-      @scene.add xArrow
-      @scene.add yArrow
-      @scene.add zArrow
-      ###
       
     setupOverlayScene:()->
       #Experimental overlay
@@ -584,8 +380,8 @@ define (require) ->
       
       #@overlayCamera.toOrthographic()
       #@overlayCamera.setZoom(0.05)
-      @overlayscene = new THREE.Scene()
-      @overlayscene.add(@overlayCamera)
+      @overlayScene = new THREE.Scene()
+      @overlayScene.add(@overlayCamera)
 
     setupLights:()=>
       pointLight =
@@ -636,7 +432,7 @@ define (require) ->
           @overlayCamera.position.z = 250
           
           @camera.lookAt(@scene.position)
-          @overlayCamera.lookAt(@overlayscene.position)
+          @overlayCamera.lookAt(@overlayScene.position)
           
         when 'top'
           #@camera.toTopView()
@@ -653,10 +449,9 @@ define (require) ->
             
           @overlayCamera.position = new THREE.Vector3(0,0,250)
           @camera.lookAt(@scene.position)
-          @overlayCamera.lookAt(@overlayscene.position)
+          @overlayCamera.lookAt(@overlayScene.position)
           #@camera.rotationAutoUpdate = true
           #@overlayCamera.rotationAutoUpdate = true
-          
           
         when 'bottom'
           #@camera.toBottomView()
@@ -671,7 +466,7 @@ define (require) ->
             
           @overlayCamera.position = new THREE.Vector3(0,0,-250)
           @camera.lookAt(@scene.position)
-          @overlayCamera.lookAt(@overlayscene.position)
+          @overlayCamera.lookAt(@overlayScene.position)
           #@camera.rotationAutoUpdate = true
           
         when 'front'
@@ -687,7 +482,7 @@ define (require) ->
             
           @overlayCamera.position = new THREE.Vector3(0,-250,0)
           @camera.lookAt(@scene.position)
-          @overlayCamera.lookAt(@overlayscene.position)
+          @overlayCamera.lookAt(@overlayScene.position)
           #@camera.rotationAutoUpdate = true
           
           
@@ -704,7 +499,7 @@ define (require) ->
           #@camera.rotationAutoUpdate = true
           @overlayCamera.position = new THREE.Vector3(0,250,0)
           @camera.lookAt(@scene.position)
-          @overlayCamera.lookAt(@overlayscene.position)
+          @overlayCamera.lookAt(@overlayScene.position)
           
         when 'left'
           #@camera.toLeftView()
@@ -718,7 +513,7 @@ define (require) ->
           #@camera.rotationAutoUpdate = true
           @overlayCamera.position = new THREE.Vector3(250,0,0)
           @camera.lookAt(@scene.position)
-          @overlayCamera.lookAt(@overlayscene.position)
+          @overlayCamera.lookAt(@overlayScene.position)
           
         when 'right'
           #@camera.toRightView()
@@ -732,9 +527,8 @@ define (require) ->
           #@camera.rotationAutoUpdate = true
           @overlayCamera.position = new THREE.Vector3(-250,0,0)
           @camera.lookAt(@scene.position)
-          @overlayCamera.lookAt(@overlayscene.position)
+          @overlayCamera.lookAt(@overlayScene.position)
          
-          
       @_render()
      
     setBgColor:()=>
@@ -768,244 +562,31 @@ define (require) ->
         gridColor = @settings.get("gridColor")
         gridOpacity = @settings.get("gridOpacity")
         
-        gridGeometry = new THREE.Geometry()
-        gridMaterial = new THREE.LineBasicMaterial
-          color: new THREE.Color().setHex(gridColor)
-          opacity: gridOpacity
-          linewidth:2
-          transparent:true
-        
-        for i in [-gridSize/2..gridSize/2] by gridStep
-          gridGeometry.vertices.push(new THREE.Vector3(-gridSize/2, i, 0))
-          gridGeometry.vertices.push(new THREE.Vector3(gridSize/2, i, 0))
-          
-          gridGeometry.vertices.push(new THREE.Vector3(i, -gridSize/2, 0))
-          gridGeometry.vertices.push(new THREE.Vector3(i, gridSize/2, 0))
-        @grid = new THREE.Line(gridGeometry, gridMaterial, THREE.LinePieces)
+        @grid = new helpers.Grid({size:gridSize,step:gridStep,color:gridColor,opacity:gridOpacity})
         @scene.add @grid
-        
-        gridGeometry = new THREE.Geometry()
-        gridMaterial = new THREE.LineBasicMaterial({ color: new THREE.Color().setHex(gridColor), opacity: gridOpacity/2 ,transparent:true})
-        
-        for i in [-gridSize/2..gridSize/2] by gridStep/10
-          gridGeometry.vertices.push(new THREE.Vector3(-gridSize/2, i, 0))
-          gridGeometry.vertices.push(new THREE.Vector3(gridSize/2, i, 0))
-          
-          gridGeometry.vertices.push(new THREE.Vector3(i, -gridSize/2, 0))
-          gridGeometry.vertices.push(new THREE.Vector3(i, gridSize/2, 0))
-        @subGrid = new THREE.Line(gridGeometry, gridMaterial, THREE.LinePieces)
-        @scene.add @subGrid
-        
-        #######
-        planeGeometry = new THREE.PlaneGeometry(-gridSize, gridSize, 5, 5)
-        #taken from http://stackoverflow.com/questions/12876854/three-js-casting-a-shadow-onto-a-webpage
-        planeFragmentShader = [
-            "uniform vec3 diffuse;",
-            "uniform float opacity;",
-
-            THREE.ShaderChunk[ "color_pars_fragment" ],
-            THREE.ShaderChunk[ "map_pars_fragment" ],
-            THREE.ShaderChunk[ "lightmap_pars_fragment" ],
-            THREE.ShaderChunk[ "envmap_pars_fragment" ],
-            THREE.ShaderChunk[ "fog_pars_fragment" ],
-            THREE.ShaderChunk[ "shadowmap_pars_fragment" ],
-            THREE.ShaderChunk[ "specularmap_pars_fragment" ],
-
-            "void main() {",
-
-                "gl_FragColor = vec4( 1.0, 1.0, 1.0, 1.0 );",
-
-                THREE.ShaderChunk[ "map_fragment" ],
-                THREE.ShaderChunk[ "alphatest_fragment" ],
-                THREE.ShaderChunk[ "specularmap_fragment" ],
-                THREE.ShaderChunk[ "lightmap_fragment" ],
-                THREE.ShaderChunk[ "color_fragment" ],
-                THREE.ShaderChunk[ "envmap_fragment" ],
-                THREE.ShaderChunk[ "shadowmap_fragment" ],
-                THREE.ShaderChunk[ "linear_to_gamma_fragment" ],
-                THREE.ShaderChunk[ "fog_fragment" ],
-
-                "gl_FragColor = vec4( 0.0, 0.0, 0.0, 1.0 - shadowColor.x );",
-
-            "}"
-
-        ].join("\n")
-
-        planeMaterial = new THREE.ShaderMaterial
-            uniforms: THREE.ShaderLib['basic'].uniforms,
-            vertexShader: THREE.ShaderLib['basic'].vertexShader,
-            fragmentShader: planeFragmentShader,
-            color: 0x0000FF
-            transparent:true
-        
-        @plane = new THREE.Mesh(planeGeometry, planeMaterial)
-        @plane.rotation.x = Math.PI
-        @plane.position.z = -2
-        @plane.name = "workplane"
-        @plane.receiveShadow = true
-        
-        @scene.add(@plane)
        
     removeGrid:()=>
       if @grid
-        @scene.remove @plane
         @scene.remove @grid
-        @scene.remove @subGrid
         delete @grid
-        delete @subGrid
-        delete @plane
       
     addAxes:()->
       helpersColor = @settings.get("helpersColor")
-      helpersColor = new THREE.Color().setHex(helpersColor)
-      @axes = new MyAxisHelper(200,helpersColor,helpersColor, helpersColor)
+      @axes = new helpers.LabeledAxes({xColor:helpersColor, yColor:helpersColor, zColor:helpersColor, size:200, addLabels:false, addArrows:false})
       @scene.add(@axes)
       
-      @xArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,0),50, 0xFF7700)
-      @yArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,0),50, 0x77FF00)
-      @zArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(0,0,0),50, 0x0077FF)
-      @overlayscene.add @xArrow
-      @overlayscene.add @yArrow
-      @overlayscene.add @zArrow
-      
-      @xLabel=@drawText("X")
-      @xLabel.position.set(55,0,0)
-      @overlayscene.add(@xLabel)
-      
-      @yLabel=@drawText("Y")
-      @yLabel.position.set(0,55,0)
-      @overlayscene.add(@yLabel)
-      
-      @zLabel=@drawText("Z")
-      @zLabel.position.set(0,0,55)
-      @overlayscene.add(@zLabel)
+      @overlayAxes = new helpers.LabeledAxes({textColor:@settings.get("textColor")})
+      @overlayScene.add @overlayAxes
       
     removeAxes:()->
       @scene.remove @axes
-      
-      @overlayscene.remove @xArrow
-      @overlayscene.remove @yArrow
-      @overlayscene.remove @zArrow
-      
-      @overlayscene.remove @xLabel
-      @overlayscene.remove @yLabel
-      @overlayscene.remove @zLabel
+      @overlayScene.remove @overlayAxes
+      delete @axes
+      delete @overlayAxes
       
     addCage:(mesh)=>
-      helpersColor = @settings.get("helpersColor")
-      helpersColor = new THREE.Color().setHex(helpersColor)
-      #attempt to draw bounding box
-      try
-        bbox = mesh.geometry.boundingBox
-        length = bbox.max.x-bbox.min.x
-        width  = bbox.max.y-bbox.min.y
-        height = bbox.max.z-bbox.min.z
-        
-        cageGeo= new THREE.CubeGeometry(length,width,height)
-        v=(x,y,z)->
-           return new THREE.Vector3(x,y,z)
-       
-        ###lineMat = new THREE.LineBasicMaterial
-          color: helpersColor
-          lineWidth: 2
-        ###
-        lineMat = new THREE.MeshBasicMaterial
-          color: helpersColor
-          wireframe: true
-          shading:THREE.FlatShading
-        
-        cage = new THREE.Mesh(cageGeo, lineMat)
-        #cage = new THREE.Line(cageGeo, lineMat, THREE.Lines)
-        middlePoint=(geometry)->
-          middle  = new THREE.Vector3()
-          middle.x  = ( geometry.boundingBox.max.x + geometry.boundingBox.min.x ) / 2
-          middle.y  = ( geometry.boundingBox.max.y + geometry.boundingBox.min.y ) / 2
-          middle.z  = ( geometry.boundingBox.max.z + geometry.boundingBox.min.z ) / 2
-          return middle
-        
-        delta = middlePoint(mesh.geometry)
-        cage.position = delta
-           
-        ###
-        texture = @drawText2(height.toFixed(2))
-        testLabel = new THREE.Sprite
-          map: texture
-          useScreenCoordinates: false
-          #alignment: THREE.SpriteAlignment.bottom
-        testLabel.position.set(-length/2,-width/2,0)
-        cage.add testLabel
-        ###
-        widthLabel=@drawText("w: #{width.toFixed(2)}")
-        widthLabel.position.set(-length/2-10,0,height/2)
-        
-        lengthLabel=@drawText("l: #{length.toFixed(2)}")
-        lengthLabel.position.set(0,-width/2-10,height/2)
-  
-        heightLabel=@drawText("h: #{height.toFixed(2)}")
-        heightLabel.position.set(-length/2-10,-width/2-10,height/2)
-        
-        cage.add widthLabel
-        cage.add lengthLabel
-        cage.add heightLabel
-      
-        #TODO: solve z fighting issue
-        widthArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,0),50, 0xFF7700)
-        lengthArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,0),50, 0x77FF00)
-        heightArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(-length/2,-width/2,-height/2),height, 0x0077FF)
-        
-        cage.add widthArrow
-        cage.add lengthArrow
-        cage.add heightArrow
-        
-        mesh.cage = cage
-        mesh.add cage
-      catch error
-      
-    drawText:(text)=>
-      helpersColor = @settings.get("helpersColor")
-      if helpersColor.indexOf "0x" == 0
-        helpersColor= "#"+helpersColor[2..]
-      
-      canvas = document.createElement('canvas')
-      
-      canvas.width = 640
-      canvas.height = 640
-      context = canvas.getContext('2d')
-      context.font = "17px sans-serif"
-      context.fillStyle = helpersColor
-      context.fillText(text, canvas.width/2, canvas.height/2)
-     
-      context.strokeStyle = '#FFFFFF'
-      context.strokeText(text, canvas.width/2, canvas.height/2)
-      
-
-      texture = new THREE.Texture(canvas)
-      texture.needsUpdate = true
-      sprite = new THREE.Sprite
-        map: texture
-        transparent: true
-        useScreenCoordinates: false
-        scaleByViewport:false
-      return sprite
-      
-    drawText2:(text)=>
-      helpersColor = @settings.get("helpersColor")
-      if helpersColor.indexOf "0x" == 0
-        helpersColor= "#"+helpersColor[2..]
-      
-      canvas = document.createElement('canvas')
-      
-      context = canvas.getContext('2d')
-      context.font = "17px sans-serif"
-      context.fillStyle = helpersColor
-      context.fillText(text, 0, 17);
-      context.strokeStyle = '#FFFFFF'
-      context.strokeText(text, 0, 17)
-      
-      texture = new THREE.Texture(canvas)
-      texture.needsUpdate = true
-      return texture
-    
+      new helpers.BoundingCage({mesh:mesh, color:@settings.get("helpersColor"),textColor:@settings.get("textColor")})
+            
     setupPickerHelper:()->
       canvas = document.createElement('canvas')
       canvas.width = 100
@@ -1026,7 +607,6 @@ define (require) ->
       @particleMaterial = new THREE.MeshBasicMaterial( { map: texture, transparent: true ,color: 0x000000} );
     
     onResize:()=>
-      
       @width =  $("#glArea").width()
       @height = window.innerHeight-10
       #@camera.aspect = @width / @height
@@ -1085,8 +665,6 @@ define (require) ->
       #OrbitControls
       ###TrackballControls
       @controls.autoRotate = false
-      
-
       @controls.noZoom = false
       @controls.noPan = false
 
@@ -1116,7 +694,7 @@ define (require) ->
     
     _render:()=>
       @renderer.render(@scene, @camera)
-      @overlayRenderer.render(@overlayscene, @overlayCamera)
+      @overlayRenderer.render(@overlayScene, @overlayCamera)
       
       if @settings.get("showStats")
         @stats.update()

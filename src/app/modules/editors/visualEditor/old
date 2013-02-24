@@ -1,0 +1,121 @@
+events:
+	  "mousedown .toggleGrid":          "toggleGrid"
+	  "mousedown .toggleAxes":          "toggleAxes"
+	  "mousedown .toggleShadows":       "toggleShadows"
+	  "mousedown .toggleAA":            "toggleAA"
+	  "mousedown .toggleAutoUpdate":    "toggleAutoUpdate"
+	  
+   toggleGrid: (ev)=>
+        toggled = @settings.get("showGrid")
+        if toggled
+          @settings.set("showGrid",false)
+          $(ev.target).addClass("uicon-off")
+        else
+          @settings.set("showGrid",true)
+          $(ev.target).removeClass("uicon-off")
+        return false
+        
+    toggleAxes:(ev)=>
+        toggled = @settings.get("showAxes")
+        if toggled
+          @settings.set("showAxes",false)
+          $(ev.target).addClass("uicon-off")
+        else
+          @settings.set("showAxes",true)
+          $(ev.target).removeClass("uicon-off")
+        return false
+     
+    toggleShadows:(ev)=>
+        #FIXME: to deactivate shadows on the plane, regenerate its texture (amongst other things)
+        toggled = @settings.get("shadows")
+        if toggled
+          @settings.set("shadows",false)
+          $(ev.target).addClass("uicon-off")
+        else
+          @settings.set("shadows",true)
+          $(ev.target).removeClass("uicon-off")
+        return false
+            
+    toggleAA:(ev)=>
+        toggled = @settings.get("antialiasing")
+        if toggled
+          @settings.set("antialiasing",false)
+          $(ev.target).addClass("uicon-off")
+        else
+          @settings.set("antialiasing",true)
+          $(ev.target).removeClass("uicon-off")
+        return false
+        
+    toggleAutoUpdate:(ev)=>
+        toggled = @settings.get("autoUpdate")
+        if toggled
+          @settings.set("autoUpdate",false)
+          $(ev.target).addClass("uicon-off")
+        else
+          @settings.set("autoUpdate",true)
+          $(ev.target).removeClass("uicon-off")
+        return false
+       
+    mousewheel:(ev)=>
+      #fix for firefox scroll
+      ev = window.event or ev
+      wheelDelta = null
+      if ev.originalEvent?
+        wheelDelta = if ev.originalEvent.detail? then ev.originalEvent.detail*(-120)
+      else
+        wheelDelta = ev.wheelDelta
+      console.log "tet"+wheelDelta
+      ###
+      if wheelDelta > 0
+        @controls.zoomOut()
+      else 
+        @controls.zoomIn()
+      ev.preventDefault()
+      ev.stopPropagation()
+      return false
+      ###
+      
+      
+      ###ev = window.event or ev; # old IE support  
+      #@controls.onMouseWheel(ev)
+      delta = Math.max(-1, Math.min(1, (ev.wheelDelta or -ev.detail)))
+      delta*=75
+      if delta - @camera.position.z <= 100
+        @camera.position.z-=delta
+      return false
+      ###
+       
+    mousemove:(ev)->
+      #return false
+      ###if @dragStart?
+        moveMinMax = 10
+        
+        @dragAmount=[@dragStart.x-ev.offsetX, @dragStart.y-ev.offsetY]
+        #@dragAmount[1]=@height-@dragAmount[1]
+        #console.log "bleh #{@dragAmount[0]/500}"
+        x_move = Math.max(-moveMinMax, Math.min(moveMinMax, @dragAmount[0]/10))
+        y_move = Math.max(-moveMinMax, Math.min(moveMinMax, @dragAmount[1]/10))
+        #x_move = (x_move/x_move+0.0001)*moveMinMax
+        #y_move = (y_move/y_move+0.0001)*moveMinMax
+        #console.log("moving by #{y_move}")
+        @camera.position.x+=  x_move #@dragAmount.x/10000
+        @camera.position.y-=  y_move#@dragAmount.y/100
+        return false
+      ###  
+    dragstart:(ev)=>
+      @dragStart={'x':ev.offsetX, 'y':ev.offsetY}
+      
+    mouseup:(ev)=>
+      #if @contextMenuRegion?
+      #  @contextMenuRegion.close()
+      #if @dragStart?
+      #  @dragAmount=[@dragStart.x-ev.offsetX, @dragStart.y-ev.offsetY]
+      #  @dragStart=null
+     
+      #x = ev.offsetX
+      #y = ev.offsetY
+      #v = new THREE.Vector3((x/@width)*2-1, -(y/@height)*2+1, 0.5)
+      
+    mousedown:(ev)=>
+      #ev.preventDefault()
+      #return false

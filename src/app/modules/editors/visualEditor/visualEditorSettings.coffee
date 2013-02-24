@@ -35,6 +35,7 @@ define (require)->
         wireframe    : false
         
         helpersColor : "0xFFFFFF"
+        textColor    : "#FFFFFF"     
         
         
         bgColor      : "#363335"
