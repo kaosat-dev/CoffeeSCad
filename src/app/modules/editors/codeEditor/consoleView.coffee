@@ -10,11 +10,12 @@ define (require)->
   
   class ConsoleView extends Backbone.Marionette.ItemView
     template: consoleTemplate
+    className: "console"
     
     constructor:(options)->
       super options
       @vent = vent
-      @vent.on("file:error",   @onError)
+      @vent.on("file:errors",   @onErrors)
       @vent.on("file:noError", @clearConsole)
       @vent.on("file:selected", @onFileSelected)
       
@@ -29,14 +30,16 @@ define (require)->
     onRender:=>
       @clearConsole()
 
-    onError:(error)=>
+    onErrors:(errors)=>
       try
         @$el.removeClass("well")
+        @$el.html("")
         @$el.addClass("alert alert-error")
-        @$el.html("<div><h4>#{error.name}:</h4>  #{error.message}</div>")
-        errLine = error.message.split("line ")
-        errLine = errLine[errLine.length - 1]
-        errMsg = error.message
+        for error in errors
+          errLine = error.message.split("line ")
+          errLine = errLine[errLine.length - 1]
+          errMsg = error.message
+          @$el.append("<div><h6>#{errLine}:</h5>  #{errMsg}<br/>===============================================<br/><br/></div>")
       catch err
         console.log("Inner err: "+ err)
         @$el.text("Yikes! Error displaying error:#{err}")

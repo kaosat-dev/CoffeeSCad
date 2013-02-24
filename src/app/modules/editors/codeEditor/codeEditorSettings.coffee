@@ -21,12 +21,17 @@ define (require)->
       linting:
         indentation:
           value: 2
-          level: "ignore"
+          level: "error"
         max_line_length:
           value: 80
-          level: "warning"
+          level: "warn"
         no_tabs:
-            level: "warning"
+          level: "warn"
+        no_trailing_whitespace:
+          level: "warn"
+        no_trailing_semicolons:
+          level: "warn"         
+          
       
     constructor:(options)->
       super options

@@ -88,7 +88,11 @@ define (require)->
       @bindTo(@model, "saved", @modelSaved)
       
     modelChanged: (model, value)=>
+      @applyStyles()
+      
+    applyStyles:=>  
       @$el.find('[rel=tooltip]').tooltip({'placement': 'right'})
+    
             
     modelSaved: (model)=>
       
@@ -98,6 +102,8 @@ define (require)->
           when "startLine"
             @editor.setOption("firstLineNumber",val)
             @render()
+          when "linting"
+            @updateHints()
     
     updateHints: ()=>
       #console.log "updating hints: errors "+@_markers.length
@@ -108,12 +114,18 @@ define (require)->
         #TODO: fetch errors from csg compiler?
         try
           errors = coffeelint.lint(@editor.getValue(), @settings.get("linting"))
+          @vent.trigger("file:errors",errors)
+          console.log "errors:"
+          console.log errors
           if errors.length == 0
             @vent.trigger("file:noError")
           for i, error of errors
-            @vent.trigger("file:error",error)
             errMsg = error.message
-            markerDiv= "<span class='CodeErrorMarker'> <a href='#' rel='tooltip' title=\" #{errMsg}\" > <i class='icon-remove-sign'></i></a></span> %N%"
+            if error.level == "warn"
+              markerDiv= "<span class='CodeWarningMarker'> <a href='#' rel='tooltip' title=\" #{errMsg}\" > <i class='icon-remove-sign'></i></a></span> %N%"
+            else if error.level == "error"
+              markerDiv= "<span class='CodeErrorMarker'> <a href='#' rel='tooltip' title=\" #{errMsg}\" > <i class='icon-remove-sign'></i></a></span> %N%"
+              
             marker = @editor.setMarker(error.lineNumber - 1, markerDiv)
             @_markers.push(marker)
         catch error
@@ -128,7 +140,7 @@ define (require)->
             catch error
               console.log "ERROR #{error} in adding error marker"
       )
-      
+      @applyStyles()
      # info = @editor.getScrollInfo()
      # after = @editor.charCoords({line: @editor.getCursor().line + 1, ch: 0}, "local").top
      # if (info.top + info.clientHeight < after)

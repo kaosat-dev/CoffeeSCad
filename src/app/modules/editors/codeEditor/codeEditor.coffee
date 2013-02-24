@@ -11,7 +11,7 @@ define (require)->
   CodeEditorSettings = require './codeEditorSettings'
   CodeEditorSettingsView = require './codeEditorSettingsView'
   CodeEditorRouter = require "./codeEditorRouter"
-  CodeEditorView = require './multiFileView'
+  CodeEditorView = require './codeEditorView'
 
   DummyView = require 'modules/core/utils/dummyView'
  

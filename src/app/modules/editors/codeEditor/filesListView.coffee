@@ -12,6 +12,10 @@ define (require)->
   filesTabTemplate = require "text!./filesTab.tmpl"
   filesListTemplate = require "text!./filesList.tmpl"
   FileCodeView = require "./fileCodeView"
+  ConsoleView =  require "./consoleView"
+
+  DummyView = require 'modules/core/utils/dummyView'
+  
   
   class FileTabView extends Backbone.Marionette.ItemView
     template: fileTabTemplate
@@ -74,6 +78,10 @@ define (require)->
       tabHeaders: "#tabHeaders"
       tabHeadersList: "#tabList"
       tabContent: "#tabContent"
+      console: "#console"
+    ui: 
+      console: "#console"
+      tabContent: "#tabContent"
     
     constructor:(options)->
       super options
@@ -87,6 +95,23 @@ define (require)->
       vent.on("file:OpenRequest", @showFile)
       vent.on("file:closed", @hideFile)
     
+    onDomRefresh:=>
+      console.log "pouet"
+      @console.el=  @ui.console
+      @tabContent.el = @ui.tabContent
+      
+      elHeight = 500#@$el.parent().height()-200
+      @$el.css('height':"#{elHeight}px")
+      
+      $(@console.el).addClass("ui-layout-south")
+      $(@tabContent.el).addClass("ui-layout-center")
+      innerLayoutOptions = {
+        defaults: {
+            applyDefaultStyles: true
+        },
+      }
+      #@myLayout = @$el.layout({applyDefaultStyles: true})
+    
     onRender:=>
       #show tab nav
       headerView = new FilesTabView
@@ -98,9 +123,15 @@ define (require)->
         collection: @openFiles
         settings:   @settings
       @tabContent.show codeView
-      #$(@tabContent.el).addClass("ui-layout-center")
-      $(@tabContent.el).css("overflow-y": "hidden")#overflow: hidden;
-      $(@tabHeaders.el).css("overflow-y": "hidden")
+      
+      #show console
+      consoleView = new ConsoleView()
+      @console.show consoleView
+      
+      #$(@tabContent.el).css("overflow-y": "hidden")
+      #$(@tabHeaders.el).css("overflow-y": "hidden")
+      
+      ### 
       #activate first tab      
       #firstFile = @tabHeaders.$el.find('a:first')
       try
@@ -108,16 +139,11 @@ define (require)->
         defaultItem = @tabContent.$el.find('div .tab-pane:first')
         defaultItem.addClass('active')
         defaultItem.removeClass('fade')
-        #@$el.css("overflow-y": "hidden")
         #vent.trigger("file:selected", @activeFile)
-        #FIXME not working
-        ### 
-        $("a[data-toggle=\"tab\"]").on "shown", (e) ->
-          e.target # activated tab
-          e.relatedTarget # previous tab
-        ###
       catch error
-    
+      ###
+      
+      
     showFile:(file)=>
       found = @openFiles.find (item)=>
         return (item.get('name') == file.get('name') and item.get('ext') == file.get('ext'))
@@ -132,6 +158,5 @@ define (require)->
       if found
         @openFiles.remove(file)
         console.log "removed File #{file.get('name')}"
-
 
   return FilesListView

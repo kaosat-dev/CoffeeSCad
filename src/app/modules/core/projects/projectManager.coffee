@@ -42,6 +42,18 @@ define (require)->
       @project.createFile
         name: @project.get("name")
         content:"""
+        #just a comment
+        class Body extends Part
+          constructor:(options)->
+            super options
+            
+            outShellRes = 15
+            @union new Sphere({r:50,$fn:outShellRes}).color([0.9,0.5,0.1]).rotate([90,0,0])
+        body = new Body()  
+        assembly.add(body)
+        """
+        
+        content_:"""
       #just a comment
       class Body extends Part
         constructor:(options)->

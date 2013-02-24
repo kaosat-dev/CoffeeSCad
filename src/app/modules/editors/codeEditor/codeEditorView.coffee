@@ -8,19 +8,17 @@ define (require)->
   
   vent = require 'modules/core/vent'
   
-  filesCodeTemplate =  require "text!./multiFile.tmpl"
+  filesCodeTemplate =  require "text!./codeEditorView.tmpl"
   
   FilesTreeView = require "./filesTreeView"
   FilesListView = require "./filesListView"
-  ConsoleView =  require "./consoleView"
+  
 
-
-  class MultiFileView extends Backbone.Marionette.Layout
+  class CodeEditorView extends Backbone.Marionette.Layout
     template: filesCodeTemplate
     regions: 
       filesList:  "#filesList"
       filesTree:  "#filesTree"
-      console:    "#console"
     
     events:
       "resize:start": "onResizeStart"
@@ -39,7 +37,20 @@ define (require)->
       @$el.height(elHeight)
       $(@filesTree.el).addClass("ui-layout-west")
       $(@filesList.el).addClass("ui-layout-center")
-      @myLayout = @$el.layout( {applyDefaultStyles: true })
+      @myLayout = @$el.layout( {
+        applyDefaultStyles: true,
+        center__childOptions: {
+          center__paneSelector: "#tabContent"
+          south__paneSelector: "#console"
+          applyDefaultStyles: true
+          size:"auto"
+        }
+      
+      
+      }
+      )
+      
+
 
     onResizeStart:=>
       console.log "resized start"
@@ -47,12 +58,9 @@ define (require)->
       console.log @$el.parent()
       
     onResizeStop:=>
-      #console.log "resized stop"
       elHeight = @$el.parent().height()
-      #console.log "new size: #{elHeight}"
       @$el.height(elHeight)
-      #@$el.css('height':"#{elHeight}")
-      @myLayout.resizeAll()
+      #@myLayout.resizeAll()
 
     onRender:=>
       #show files tree
@@ -66,10 +74,5 @@ define (require)->
         settings: @settings
       @filesList.show(filesListView)
       
-      #show console
-      consoleView = new ConsoleView()
-      @console.show consoleView
-      #$(@console.el).addClass("ui-layout-south")
       
-      
-  return MultiFileView
+  return CodeEditorView

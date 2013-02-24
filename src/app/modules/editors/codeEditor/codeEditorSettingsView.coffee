@@ -27,14 +27,14 @@ define (require)->
                   level: 
                     title: 'Max line length Error Level'
                     type: 'Select'
-                    options : ["ignore","warning", "error"]
+                    options : ["ignore","warn", "error"]
               no_tabs:
                 title: 'No tabs'
                 type: 'Object'
                 subSchema:
                   level: 
                     type: 'Select'
-                    options : ["ignore","warning", "error"]
+                    options : ["ignore","warn", "error"]
               indentation:
                 title: "Indentation"
                 type: "Object"
@@ -42,13 +42,29 @@ define (require)->
                   value:{type:'Number'}
                   level: 
                     type: 'Select'
-                    options : ["ignore","warning", "error"]
+                    options : ["ignore","warn", "error"]
+              no_trailing_whitespace:
+                title: "Trailing whitespaces"
+                type: "Object"
+                subSchema:
+                  level: 
+                    type: 'Select'
+                    options : ["ignore","warn", "error"]
+              no_trailing_semicolons:
+                title: "Trailing semicolons"
+                type: "Object"
+                subSchema:
+                  level: 
+                    type: 'Select'
+                    options : ["ignore","warn", "error"]
+                
+                
         options.fieldsets=[
           "legend": "General settings"
           "fields": ["startLine","undoDepth"]
         ,
           "legend":"Linting"
-          "fields": ["linting.indentation","linting.max_line_length","linting.no_tabs"]
+          "fields": ["linting.indentation","linting.max_line_length","linting.no_tabs","linting.no_trailing_whitespace","linting.no_trailing_semicolons"]
         ]
       super options
       
