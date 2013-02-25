@@ -47,25 +47,27 @@ define (require)->
         
     onStart:()=>
       @settings = @appSettings.getByName("CodeEditor")
+      @showRegions()
       
-      DialogRegion = require 'modules/core/utils/dialogRegion'
-      diaReg = new DialogRegion({elName:"codeEdit"})
-      diaReg.show new CodeEditorView 
-        model:    @project
-        settings: @settings
-      
+    showRegions:=>
       ###   
       @mainRegion.show new CodeEditorView 
         model:    @project
         settings: @settings
       ###
-        
+      DialogRegion = require 'modules/core/utils/dialogRegion'
+      @diaReg = new DialogRegion({elName:"codeEdit"})
+      @diaReg.show new CodeEditorView 
+        model:    @project
+        settings: @settings
+    
     resetEditor:(newProject)=>
       console.log "resetting code editor"
       @project = newProject
-      @mainRegion.close()
-      @mainRegion.show new CodeEditorView 
-        model:    @project
-        settings: @settings
+      if @diaReg?
+        console.log "closing current code editor"
+        @diaReg.close()
+      @showRegions()
+      #@mainRegion.close()
   
   return CodeEditor

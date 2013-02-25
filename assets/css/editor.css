@@ -1,3 +1,66 @@
+/*Nice colors:#c54c4f, #da3610*, #fea60b/
+/*ToolBar*/
+.toolBar a {text-decoration:none;color:black;line-height:38px; }
+.toolBar a div{background-color: #fea60b; height:34px}
+.toolBar a:hover div{background-color: #2db2ea;}
+
+.filesTreeContainer
+{
+	color:#2db2ea;
+	left:34px !important;/*34 px is the width of a span6 fluid in our context*/
+	border:none !important;
+}
+.filesTree 
+{
+	list-style: none;
+	
+}
+.filesTree li
+{
+	cursor: hand; cursor: pointer;
+	padding: 0.2em 0 0 0;
+}
+
+.codeEditor
+{
+	color:#2db2ea;
+}
+.codeEditorContainer
+{
+	border-radius:0px;
+	box-shadow: 0 2px 2px rgba(0, 0, 0, 0.3);
+}
+
+.partDots{}
+.partDots a{text-decoration:none}
+.partDots a:hover i:before{color:#fea60b}
+.partDots i:before
+{
+	vertical-align: top;
+  	font-size: 3.3333333333333333em;
+}
+
+
+/*BOOTSTRAP CHANGES*/
+.navbar-inner
+{
+	background-image:none;
+	background-color:#FFFFFF;
+	
+}
+
+.navbar-fixed-top .navbar-inner, .navbar-static-top .navbar-inner
+{
+	box-shadow: 0 0px 0px rgba(0, 0, 0, 0);
+	webkit-box-shadow: 0 0px 0px rgba(0, 0, 0, 0);
+	border:0;
+}
+
+.icon-extraLarge:before {
+  vertical-align: top;
+  font-size: 2.3333333333333333em;
+}
+
 /*Things worth considering adding to the overall style: (cleaner, more minimal look)
   
 #header 
@@ -162,11 +225,6 @@ ui-icon ui-icon-closethick .ui-state-hover
 /*-------------------------------------*/		
 /*Code Editor*/
 
-.fileTab 
-{
-	
-}
-
 .nav
 {
 	margin-bottom: 2px;
@@ -182,15 +240,7 @@ ui-icon ui-icon-closethick .ui-state-hover
 .CodeMirror {
 	position:absolute;top:0; bottom:0;/*to force fill container*/
 	height: auto;
-	width:	100%;
-	/*top: 0;
-	left: 0;
-	right: 0;
-	bottom: 0;
-	*/
-	/*
-	
-	overflow: auto;*/
+	width:	98%;
 }
 
 .CodeMirror-scroll 
@@ -199,7 +249,6 @@ ui-icon ui-icon-closethick .ui-state-hover
         min-height:300px;
         overflow-y: auto;
         overflow-x: auto;
-        
 }
 
 /*for current full line selection*/
@@ -386,7 +435,6 @@ legend + .control-group
 body {
         /*padding-top: 60px;*/
         height:100%;
-	
 	/*background-color:#222222;#39464e;*/
 	/*
 	 * background-color:#c0d1b8;
@@ -415,6 +463,7 @@ body {
     width: 1024px;
     margin-left: -502px;
 }
+
 /*
 .bbf-field .bbf-editor {
     margin-left: 40%;

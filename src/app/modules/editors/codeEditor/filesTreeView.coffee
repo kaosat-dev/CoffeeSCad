@@ -8,11 +8,15 @@ define (require)->
   jquery_ui = require 'jquery_ui'
   
   vent = require 'modules/core/vent'
-  filesTreeTemplate =  require "text!./filesTree.tmpl"
-  #testTemplate = require "text!./testTmpl.tmpl"
+  
+  filesTreeTemplate =  require "text!./filesTreeView.tmpl"
+  
+  fileTemplate = _.template($(filesTreeTemplate).filter('#fileTmpl').html())
+  rootTemplate = _.template($(filesTreeTemplate).filter('#rootTmpl').html())
+  
   
   class TreeView extends Backbone.Marionette.CompositeView
-    template: filesTreeTemplate
+    template: fileTemplate
     tagName: "li"
     itemViewContainer: "ul",
     
@@ -26,10 +30,13 @@ define (require)->
     onFileOpenClicked:(ev)=>
       console.log @model.get("name")
       vent.trigger("file:OpenRequest",@model)
+      
     
-  class TreeRoot_ extends Backbone.Marionette.CollectionView
-    tagName: "ul"
+  class TreeRoot extends Backbone.Marionette.CompositeView
+    template: rootTemplate
     itemView: TreeView
+    tagName: "ul"
+    className: "filesTree"
     
     constructor:(options)->
       super options
@@ -37,35 +44,4 @@ define (require)->
     onRender:->
       @$el.addClass("align-left")
   
-  class TreeRoot extends Backbone.Marionette.ItemView
-    #template : testTemplate
-    el: "#bloodyFuch"
-      
-    onRender:->
-      @$el.addClass('blaze')
-      @$el.css('height':'400px')
-      @$el.css('color': '#FF8900')
-      @myLayout = @$el.layout({ applyDefaultStyles: true })
-      @myLayout.close("west")
-  
-  class WrapperTest extends Backbone.Marionette.ItemView
-    constructor:(options)->
-      super options
-      $ '<div/>',
-          id: "bloodyFuch",
-          "class": 'test',
-        .appendTo('body')
-        
-      @wrappedStuff= new TreeRoot
-        model: @model    
-        collection: @collection
-       
-    render:()=>
-      tmp = @wrappedStuff.render()
-      
-      console.log tmp.el
-      @$el.append(tmp.el)
-      console.log tmp.el
-      return @el  
-    
-  return TreeRoot_
+  return TreeRoot

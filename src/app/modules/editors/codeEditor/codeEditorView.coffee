@@ -12,13 +12,15 @@ define (require)->
   
   FilesTreeView = require "./filesTreeView"
   FilesListView = require "./filesListView"
-  
+  ToolBarView   = require "./toolBarView"
 
   class CodeEditorView extends Backbone.Marionette.Layout
     template: filesCodeTemplate
+    className: "codeEditor"
     regions: 
       filesList:  "#filesList"
       filesTree:  "#filesTree"
+      toolBar  :  "#toolBar"
     
     events:
       "resize:start": "onResizeStart"
@@ -30,13 +32,13 @@ define (require)->
       @settings = options.settings
     
     onDomRefresh:()=>
-      console.log "dom refresh"
-      elHeight = @$el.parent().height()
-      #@$el.css('height':"#{elHeight}px")
-      #@$el.css('color': '#FF8900')
-      @$el.height(elHeight)
-      $(@filesTree.el).addClass("ui-layout-west")
+      @$el.parent().addClass("codeEditorContainer")
+      
+      $(@filesTree.el).addClass("ui-layout-west filesTreeContainer")
       $(@filesList.el).addClass("ui-layout-center")
+      
+      elHeight = @$el.parent().height()
+      @$el.height(elHeight)
       @myLayout = @$el.layout( {
         applyDefaultStyles: true,
         center__childOptions: {
@@ -59,9 +61,14 @@ define (require)->
       #@myLayout.resizeAll()
 
     onRender:=>
+      #show toolBar 
+      toolBarView = new ToolBarView
+      @toolBar.show(toolBarView)
+      
       #show files tree
       filesTreeView = new FilesTreeView
         collection: @model.pfiles
+        model: @model
       @filesTree.show filesTreeView
       
       #show files list (tabs)
@@ -69,6 +76,5 @@ define (require)->
         collection: @model.pfiles
         settings: @settings
       @filesList.show(filesListView)
-      
       
   return CodeEditorView

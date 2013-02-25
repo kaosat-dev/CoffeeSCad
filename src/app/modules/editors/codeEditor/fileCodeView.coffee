@@ -41,7 +41,6 @@ define (require)->
       #TODO: these are commands, not events
       @vent.on("file:undoRequest", @undo)
       @vent.on("file:redoRequest", @redo)
-      
     
     onFileSelected:(model)=>
       if model == @model
@@ -105,18 +104,21 @@ define (require)->
           when "linting"
             @updateHints()
     
-    updateHints: ()=>
-      #console.log "updating hints: errors "+@_markers.length
+    _clearMarkers:=>
       for i, marker of @_markers
         @editor.clearMarker(marker)
+    
+    updateHints: ()=>
+      #console.log "updating hints: errors "+@_markers.length
+      @_clearMarkers()
       @_markers = []
       @editor.operation( ()=>
         #TODO: fetch errors from csg compiler?
         try
           errors = coffeelint.lint(@editor.getValue(), @settings.get("linting"))
           @vent.trigger("file:errors",errors)
-          console.log "errors:"
-          console.log errors
+          #console.log "errors:"
+          #console.log errors
           if errors.length == 0
             @vent.trigger("file:noError")
           for i, error of errors
@@ -175,7 +177,6 @@ define (require)->
     setHeight:(height)=>
       @editor.getWrapperElement().style.height = height+ 'px';
       @editor.refresh()
-      
       
     onRender: =>
       foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder)
