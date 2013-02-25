@@ -130,6 +130,7 @@ define (require)->
               variantName=""
             @project.bom.add { name: name,variant:variantName, params: param,quantity: quantity, manufactured:true, included:true } 
         
+        
         @project.rootAssembly = rootAssembly
         console.log "triggering compiled event"
         end = new Date().getTime()

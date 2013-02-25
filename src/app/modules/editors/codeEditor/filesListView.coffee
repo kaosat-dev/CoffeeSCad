@@ -100,8 +100,8 @@ define (require)->
       @console.el=  @ui.console
       @tabContent.el = @ui.tabContent
       
-      elHeight = 500#@$el.parent().height()-200
-      @$el.css('height':"#{elHeight}px")
+      #elHeight = 500#@$el.parent().height()-200
+      #@$el.css('height':"#{elHeight}px")
       
       $(@console.el).addClass("ui-layout-south")
       $(@tabContent.el).addClass("ui-layout-center")
@@ -111,6 +111,8 @@ define (require)->
         },
       }
       #@myLayout = @$el.layout({applyDefaultStyles: true})
+      #@codeView.setHeight(@$el.parent().height())
+      
     
     onRender:=>
       #show tab nav
@@ -119,10 +121,10 @@ define (require)->
       @tabHeaders.show headerView
       
       #show content
-      codeView = new FilesCodeView
+      @codeView = new FilesCodeView
         collection: @openFiles
         settings:   @settings
-      @tabContent.show codeView
+      @tabContent.show @codeView
       
       #show console
       consoleView = new ConsoleView()

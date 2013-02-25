@@ -36,10 +36,12 @@ define (require)->
         @$el.html("")
         @$el.addClass("alert alert-error")
         for error in errors
+          console.log error
           errLine = error.message.split("line ")
           errLine = errLine[errLine.length - 1]
+          errLine = error.lineNumber
           errMsg = error.message
-          @$el.append("<div><h6>#{errLine}:</h5>  #{errMsg}<br/>===============================================<br/><br/></div>")
+          @$el.append("<div><b>File: line #{errLine}:</b>  #{errMsg}<br/>===============================================<br/><br/></div>")
       catch err
         console.log("Inner err: "+ err)
         @$el.text("Yikes! Error displaying error:#{err}")

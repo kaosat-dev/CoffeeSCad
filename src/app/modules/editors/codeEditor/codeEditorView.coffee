@@ -45,12 +45,8 @@ define (require)->
           applyDefaultStyles: true
           size:"auto"
         }
-      
-      
       }
       )
-      
-
 
     onResizeStart:=>
       console.log "resized start"

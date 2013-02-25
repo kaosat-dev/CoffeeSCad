@@ -180,22 +180,26 @@ ui-icon ui-icon-closethick .ui-state-hover
 
 
 .CodeMirror {
+	position:absolute;top:0; bottom:0;/*to force fill container*/
+	height: auto;
+	width:	100%;
 	/*top: 0;
 	left: 0;
 	right: 0;
 	bottom: 0;
 	*/
-	/*width:	auto;
-	height: auto;
+	/*
+	
 	overflow: auto;*/
 }
 
 .CodeMirror-scroll 
 {
         height: 100%;
-        min-height:500px;
+        min-height:300px;
         overflow-y: auto;
         overflow-x: auto;
+        
 }
 
 /*for current full line selection*/
@@ -263,13 +267,17 @@ span.CodeMirror-matchhighlight { background: #00438A }
 	color:inherit;
 	text-decoration:  none;
 }
+.console
+{
+	overflow:auto;
+	height:100%;
+}
 
 #errorConsole
 {
 	position:absolute;
    	bottom:0;
    	width:90%;
-   	height:60px; 
 }
 #codeView
 {
@@ -281,6 +289,13 @@ span.CodeMirror-matchhighlight { background: #00438A }
 {
 	padding:10px;
 	padding-bottom:100px;
+}
+
+#tabContent
+{
+	top:30px !important;
+	min-height:300px;
+	border: none !important;
 }
 
 /*-------------------*/

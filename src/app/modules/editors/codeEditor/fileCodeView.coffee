@@ -169,6 +169,14 @@ define (require)->
       if redoes >0
         @editor.redo()
     
+    onDomRefresh:=>
+      @editor.refresh()
+      
+    setHeight:(height)=>
+      @editor.getWrapperElement().style.height = height+ 'px';
+      @editor.refresh()
+      
+      
     onRender: =>
       foldFunc = CodeMirror.newFoldFunction(CodeMirror.indentRangeFinder)
       
