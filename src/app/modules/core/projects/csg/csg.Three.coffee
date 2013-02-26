@@ -159,7 +159,7 @@ define (require) ->
           face.vertexColors[i] = color for i in [0..3]
           
           three_geometry.faces.push face
-          three_geometry.faceVertexUvs[0].push new THREE.UV()
+          three_geometry.faceVertexUvs[0].push new THREE.Vector2()
         else 
           for i in [2...polyVertices.length]
             i1 = polyVertices[0]
@@ -168,7 +168,7 @@ define (require) ->
             face = new THREE.Face3(i1,i2,i3,faceNormal)
             face.vertexColors[j] = color for j in [0...3]
             three_geometry.faces.push face
-            three_geometry.faceVertexUvs[0].push new THREE.UV()
+            three_geometry.faceVertexUvs[0].push new THREE.Vector2()
       
       three_geometry.computeBoundingBox()
       three_geometry.computeCentroids()

@@ -10,10 +10,12 @@ define (require) ->
       
     drawText:(text)=>
       canvas = document.createElement('canvas')
-      canvas.width = 640
-      canvas.height = 640
+      size = 256
+      canvas.width = size
+      canvas.height = size
       context = canvas.getContext('2d')
       context.font = "17px sans-serif"
+      context.textAlign = 'center'
       context.fillStyle = @textColor
       context.fillText(text, canvas.width/2, canvas.height/2)
      
@@ -22,11 +24,17 @@ define (require) ->
       
       texture = new THREE.Texture(canvas)
       texture.needsUpdate = true
-      sprite = new THREE.Sprite
-        map: texture
-        transparent: true
-        useScreenCoordinates: false
-        scaleByViewport:false
+      
+      spriteMaterial = new THREE.SpriteMaterial
+         map: texture
+         transparent:true
+         #alphaTest: 0.5
+         #alignment: THREE.SpriteAlignment.topLeft,
+         useScreenCoordinates: false
+         scaleByViewport:false
+         color: 0xffffff
+      sprite = new THREE.Sprite(spriteMaterial)
+      sprite.scale.set( size, size, 1 )
       return sprite
       
     drawText2:(text)=>
@@ -205,9 +213,9 @@ define (require) ->
     #Draws a bounding box (wireframe) around a mesh, and shows its dimentions
     constructor:(options)->
       super options
-      defaults = {mesh:null,color:0xFFFFFF,textColor:"#FFFFFF"}
+      defaults = {mesh:null,color:0xFFFFFF,textColor:"#FFFFFF",addLabels:true}
       options = merge defaults, options
-      {mesh, @color, @textColor} = options
+      {mesh, @color, @textColor,@addLabels} = options
       console.log @size, @step, @color, @opacity
       
       color = new THREE.Color().setHex(@color)
@@ -242,19 +250,20 @@ define (require) ->
         
         delta = middlePoint(mesh.geometry)
         cage.position = delta
-           
-        widthLabel=@drawText("w: #{width.toFixed(2)}")
-        widthLabel.position.set(-length/2-10,0,height/2)
         
-        lengthLabel=@drawText("l: #{length.toFixed(2)}")
-        lengthLabel.position.set(0,-width/2-10,height/2)
-  
-        heightLabel=@drawText("h: #{height.toFixed(2)}")
-        heightLabel.position.set(-length/2-10,-width/2-10,height/2)
-        
-        cage.add widthLabel
-        cage.add lengthLabel
-        cage.add heightLabel
+        if @addLabels
+          widthLabel=@drawText("w: #{width.toFixed(2)}")
+          widthLabel.position.set(-length/2-10,0,height/2)
+          
+          lengthLabel=@drawText("l: #{length.toFixed(2)}")
+          lengthLabel.position.set(0,-width/2-10,height/2)
+    
+          heightLabel=@drawText("h: #{height.toFixed(2)}")
+          heightLabel.position.set(-length/2-10,-width/2-10,height/2)
+          
+          cage.add widthLabel
+          cage.add lengthLabel
+          cage.add heightLabel
       
         #TODO: solve z fighting issue
         widthArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,0),50, 0xFF7700)

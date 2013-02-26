@@ -7,6 +7,8 @@ define (require) ->
   detector = require 'detector'
   stats = require  'stats'
   utils = require 'utils'
+  OrbitControls = require './orbitControls'
+  TrackballControls = require './trackballControls'
   
   reqRes = require 'modules/core/reqRes'
   vent = require 'modules/core/vent'
@@ -47,8 +49,8 @@ define (require) ->
         return @makeScreeshot()
       
       ##########
-      @width = 800
-      @height = 600
+      @width = window.innerWidth# 800
+      @height = window.innerHeight# 600
       @init()
       
     makeScreeshot:(width=300, height=300)=>
@@ -94,8 +96,8 @@ define (require) ->
     selectObj:(mouseX,mouseY)=>
       v = new THREE.Vector3((mouseX/@width)*2-1, -(mouseY/@height)*2+1, 0.5)
       @projector.unprojectVector(v, @camera)
-      ray = new THREE.Ray(@camera.position, v.subSelf(@camera.position).normalize())
-      intersects=ray.intersectObjects(@scene.children, true )
+      raycaster = new THREE.Raycaster(@camera.position, v.sub(@camera.position).normalize())
+      intersects = raycaster.intersectObjects(@scene.children, true )
       
       unselect=()=>
         if @current?
@@ -211,7 +213,7 @@ define (require) ->
           when 'center'
             try
               tgt = @controls.target
-              offset = new THREE.Vector3().subSelf(@controls.target.clone())
+              offset = new THREE.Vector3().sub(@controls.target.clone())
               @controls.target.addSelf(offset)
               @camera.position.addSelf(offset)
             catch error
@@ -258,11 +260,9 @@ define (require) ->
         @camera.toOrthographic()
         @camera.setZoom(6)
       else
-        @camera.toPerspective()
-      
+        #@camera.toPerspective()
       if @mesh?
         @mesh.material.wireframe = @settings.get("wireframe")
-      
       
       val = @settings.get("position")
       @setupView(val)
@@ -325,7 +325,7 @@ define (require) ->
       ASPECT = @width / @height
       NEAR = 0.1
       FAR = 10000
-      ### 
+       
       @camera =
       new THREE.PerspectiveCamera(
           @viewAngle,
@@ -342,6 +342,7 @@ define (require) ->
           FAR,
           NEAR,
           FAR)
+      ###
       #function ( width, height, fov, near, far, orthoNear, orthoFar )
       
       @camera.up = new THREE.Vector3( 0, 0, 1 )
@@ -439,7 +440,7 @@ define (require) ->
           #@overlayCamera.toTopView()
           
           try
-            offset = @camera.position.clone().subSelf(@controls.target)
+            offset = @camera.position.clone().sub(@controls.target)
             nPost = new THREE.Vector3()
             nPost.z = offset.length()
             @camera.position = nPost
@@ -457,7 +458,7 @@ define (require) ->
           #@camera.toBottomView()
           #@overlayCamera.toBottomView()
           try
-            offset = @camera.position.clone().subSelf(@controls.target)
+            offset = @camera.position.clone().sub(@controls.target)
             nPost = new  THREE.Vector3()
             nPost.z = -offset.length()
             @camera.position = nPost
@@ -473,7 +474,7 @@ define (require) ->
           #@camera.toFrontView()
           #@overlayCamera.toFrontView()
           try
-            offset = @camera.position.clone().subSelf(@controls.target)
+            offset = @camera.position.clone().sub(@controls.target)
             nPost = new  THREE.Vector3()
             nPost.y = -offset.length()
             @camera.position = nPost
@@ -490,7 +491,7 @@ define (require) ->
           #@camera.toBackView()
           #@overlayCamera.toBackView()
           try
-            offset = @camera.position.clone().subSelf(@controls.target)
+            offset = @camera.position.clone().sub(@controls.target)
             nPost = new  THREE.Vector3()
             nPost.y = offset.length()
             @camera.position = nPost
@@ -504,7 +505,7 @@ define (require) ->
         when 'left'
           #@camera.toLeftView()
           try
-            offset = @camera.position.clone().subSelf(@controls.target)
+            offset = @camera.position.clone().sub(@controls.target)
             nPost = new  THREE.Vector3()
             nPost.x = offset.length()
             @camera.position = nPost
@@ -518,7 +519,7 @@ define (require) ->
         when 'right'
           #@camera.toRightView()
           try
-            offset = @camera.position.clone().subSelf(@controls.target)
+            offset = @camera.position.clone().sub(@controls.target)
             nPost = new  THREE.Vector3()
             nPost.x = -offset.length()
             @camera.position = nPost
@@ -532,6 +533,7 @@ define (require) ->
       @_render()
      
     setBgColor:()=>
+      ###
       console.log "setting bg color"
       bgColor1 = @settings.get("bgColor")
       bgColor2 = @settings.get("bgColor2")
@@ -551,7 +553,7 @@ define (require) ->
         $("body").css("background-attachment", "")
         
         #$("body").css('background-color', @settings.get("bkGndColor"))
-        
+       ### 
     addGrid:()=>
       ###
       Adds both grid & plane (for shadow casting), based on the parameters from the settings object
@@ -578,6 +580,9 @@ define (require) ->
       @overlayAxes = new helpers.LabeledAxes({textColor:@settings.get("textColor")})
       @overlayScene.add @overlayAxes
       
+      #TODO:remove this, this is just for testing
+      #@drawText2("text")
+      
     removeAxes:()->
       @scene.remove @axes
       @overlayScene.remove @overlayAxes
@@ -586,6 +591,32 @@ define (require) ->
       
     addCage:(mesh)=>
       new helpers.BoundingCage({mesh:mesh, color:@settings.get("helpersColor"),textColor:@settings.get("textColor")})
+          
+    
+    drawText2:(text)=>
+      canvas = document.createElement('canvas')
+      size = 256 
+      canvas.width = size
+      canvas.height = size
+      context = canvas.getContext('2d')
+      context.fillStyle = '#ff0000' 
+      context.textAlign = 'center'
+      context.font = '24px Arial'
+      context.fillText("some text", size / 2, size / 2)
+  
+      amap = new THREE.Texture(canvas)
+      amap.needsUpdate = true
+  
+      mat = new THREE.SpriteMaterial({
+          map: amap,
+          transparent: false,
+          useScreenCoordinates: false,
+          color: 0xffffff 
+      })
+  
+      sp = new THREE.Sprite(mat)
+      sp.scale.set( 200, 200, 1 ) 
+      @scene.add(sp)    
             
     setupPickerHelper:()->
       canvas = document.createElement('canvas')
@@ -604,7 +635,7 @@ define (require) ->
       texture.needsUpdate = true
       @particleTexture = new THREE.Texture(canvas)
       @particleTexture.needsUpdate = true
-      @particleMaterial = new THREE.MeshBasicMaterial( { map: texture, transparent: true ,color: 0x000000} );
+      @particleMaterial = new THREE.MeshBasicMaterial( { map: texture, transparent: true ,color: 0x000000} )
     
     onResize:()=>
       @width =  $("#glArea").width()
@@ -612,7 +643,7 @@ define (require) ->
       #@camera.aspect = @width / @height
       #@camera.updateProjectionMatrix()
       
-      @camera.setSize(@width,@height)
+      #@camera.setSize(@width,@height)
       @camera.updateProjectionMatrix()
       
       @renderer.setSize(@width, @height)
@@ -635,7 +666,10 @@ define (require) ->
      
       #@camera.aspect = @width / @height
       #@camera.updateProjectionMatrix()
-      @camera.setSize(@width,@height)
+      
+      #@camera.setSize(@width,@height)
+      
+      
       @camera.updateProjectionMatrix()
       @renderer.setSize(@width, @height)
       
@@ -656,39 +690,39 @@ define (require) ->
       
       container = $(@ui.renderBlock)
       container.append(@renderer.domElement)
-      @controls = new THREE.CustomOrbitControls(@camera, @el)
+      
+      
+      @controls = new THREE.OrbitControls(@camera, @el)
       @controls.rotateSpeed = 1.8
       @controls.zoomSpeed = 4.2
       @controls.panSpeed = 1.8
+      @controls.addEventListener( 'change', @_render )
       
-      #CustomOrbitControls
-      #OrbitControls
-      ###TrackballControls
-      @controls.autoRotate = false
-      @controls.noZoom = false
-      @controls.noPan = false
-
+      ### 
+      @controls = new TrackballControls(@camera, @el)
+      @controls.rotateSpeed = 1.8
+      @controls.zoomSpeed = 4.2
+      @controls.panSpeed = 1.8
+      @controls.addEventListener('change', @_render)
+      ###
       @controls.staticMoving = true
       @controls.dynamicDampingFactor = 0.3
       ###
-      @controls.addEventListener( 'change', @_render )
+      
       
       ########
+      
       container2 = $(@ui.glOverlayBlock)
       container2.append(@overlayRenderer.domElement)
       
-      @overlayControls = new THREE.CustomOrbitControls(@overlayCamera, @el)
+      @overlayControls = new THREE.OrbitControls(@overlayCamera, @el)#Custom
       @overlayControls.noPan = true
       #@overlayControls.noZoom = true
       @overlayControls.rotateSpeed = 1.8
       @overlayControls.zoomSpeed = 0
       @overlayControls.panSpeed = 0
       @overlayControls.userZoomSpeed=0
-      ### 
-      @overlayControls.autoRotate = false
-      @overlayControls.staticMoving = true
-      @overlayControls.dynamicDampingFactor = 0.3
-      ###
+      
       @animate()
       
     
@@ -702,8 +736,7 @@ define (require) ->
       
     animate:()=>
       @controls.update()
-      @overlayControls.update()
-
+      #@overlayControls.update()
       requestAnimationFrame(@animate)
     
     toCsgTest:(mesh)->
@@ -769,10 +802,27 @@ define (require) ->
         mesh.add connectorMesh   
        
       rootObj.add mesh
+      @_addIndicator(mesh)
+      
       #recursive, for sub objects
       if csgObj.children?
         for index, child of csgObj.children
-          @_importGeom(child, mesh)
+          @_importGeom(child, mesh) 
+     
+    _addIndicator:(mesh)->
+      #experimental ui elements
       
+      #material = new THREE.LineBasicMaterial({color: 0x000000})#
+      #material = new THREE.LineDashedMaterial({color: 0x0000CC, dashSize: 5, gapSize: 2.5 })
+      #object = new THREE.Line( geometrySpline, new THREE.LineDashedMaterial( { color: 0xffffff, dashSize: 1, gapSize: 0.5 } ), THREE.LineStrip );
+      material = new THREE.LineDashedMaterial( {color: 0xffaa00, dashSize: 3, gapSize: 1, linewidth: 2 } )
+      geometry = new THREE.Geometry()
+      geometry.vertices.push(new THREE.Vector3(mesh.position.x, mesh.position.y, mesh.position.z))
+      geometry.vertices.push(new THREE.Vector3(150, 0, 150))
+      geometry.vertices.push(new THREE.Vector3(150, 0, 157))
+      geometry.vertices.push(new THREE.Vector3(150, 0, 160))
+      
+      line = new THREE.Line(geometry, material, THREE.LineStrip)
+      mesh.add(line)
 
   return VisualEditorView

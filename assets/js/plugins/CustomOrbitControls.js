@@ -7,7 +7,7 @@
 
 THREE.CustomOrbitControls = function ( object, domElement ) {
 
-    THREE.EventTarget.call( this );
+    //THREE.EventTarget.call( this );
 
     this.object = object;
     this.domElement = ( domElement !== undefined ) ? domElement : document;
