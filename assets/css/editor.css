@@ -31,6 +31,32 @@
 	box-shadow: 0 2px 2px rgba(0, 0, 0, 0.3);
 }
 
+
+/*popovers*/
+.popover
+{
+	border-radius:0px;
+	background-color: #2db2ea;
+}
+.popover.right .arrow 
+{
+	border-right-color: #2db2ea;
+}
+input[type=text]
+{
+	outline: none !important;
+	border: 2px solid #2db2ea !important;
+	background-color: #2db2ea;
+	text-align:center !important;
+	box-shadow: inset 0 0 0 rgba(0, 0, 0, 0.075) !important;
+}
+textarea:focus, input:focus{
+    outline: none !important;
+}
+
+
+
+/*Experimental, for 3d ui*/
 .partDots{}
 .partDots a{text-decoration:none}
 .partDots a:hover i:before{color:#fea60b}
@@ -39,6 +65,7 @@
 	vertical-align: top;
   	font-size: 3.3333333333333333em;
 }
+
 
 
 /*BOOTSTRAP CHANGES*/

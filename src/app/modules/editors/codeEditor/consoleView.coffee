@@ -8,6 +8,7 @@ define (require)->
   
   consoleTemplate =  require "text!./console.tmpl"
   
+  
   class ConsoleView extends Backbone.Marionette.ItemView
     template: consoleTemplate
     className: "console"
@@ -15,6 +16,7 @@ define (require)->
     constructor:(options)->
       super options
       @vent = vent
+      @model.on("compile:error", @onErrors)
       @vent.on("file:errors",   @onErrors)
       @vent.on("file:noError", @clearConsole)
       @vent.on("file:selected", @onFileSelected)
@@ -36,12 +38,12 @@ define (require)->
         @$el.html("")
         @$el.addClass("alert alert-error")
         for error in errors
-          console.log error
           errLine = error.message.split("line ")
           errLine = errLine[errLine.length - 1]
           errLine = error.lineNumber
           errMsg = error.message
-          @$el.append("<div><b>File: line #{errLine}:</b>  #{errMsg}<br/>===============================================<br/><br/></div>")
+          errStack= error.stack
+          @$el.append("<div><b>File: line #{errLine}:</b>  #{errMsg}<br/>#{errStack}<br/>===============================================<br/><br/></div>")
       catch err
         console.log("Inner err: "+ err)
         @$el.text("Yikes! Error displaying error:#{err}")

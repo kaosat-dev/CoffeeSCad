@@ -34,7 +34,6 @@ define (require)->
       @model.on("saved", @modelSaved)
       @settings.on("change", @settingsChanged)
       
-      #@vent.bind("csgParseError", @showError)
       @vent.on("file:closed", @onFileClosed)
       @vent.on("file:selected", @onFileSelected)
       
@@ -55,6 +54,7 @@ define (require)->
         @updateHints()
         @editor.focus()
       else
+        @_clearMarkers()
         @$el.removeClass('active')
         @$el.addClass('fade')
     
@@ -89,11 +89,10 @@ define (require)->
     modelChanged: (model, value)=>
       @applyStyles()
       
+    modelSaved: (model)=>  
+      
     applyStyles:=>  
       @$el.find('[rel=tooltip]').tooltip({'placement': 'right'})
-    
-            
-    modelSaved: (model)=>
       
     settingsChanged:(settings, value)=> 
       for key, val of @settings.changedAttributes()
@@ -171,8 +170,8 @@ define (require)->
       if redoes >0
         @editor.redo()
     
-    onDomRefresh:=>
-      @editor.refresh()
+    #onDomRefresh:=>
+    #  @editor.refresh()
       
     setHeight:(height)=>
       @editor.getWrapperElement().style.height = height+ 'px';

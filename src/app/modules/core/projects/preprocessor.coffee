@@ -20,7 +20,6 @@ define (require) ->
       if not project? and path?
         #console.log "will fetch #{path} from local (current project) namespace"
         shortName = path.split('.')[0]
-        #console.log shortName
         #console.log "proj"
         #console.log @project
         result = @project.pfiles.get(shortName).get("content")
@@ -35,8 +34,8 @@ define (require) ->
       @resolvedIncludes = []
       @unresolvedIncludes = []
       
-      if lint
-        @lintProject(project)
+      #if lint
+      #  @lintProject(project)
         
       @project = project
       mainFileName = @project.get("name")

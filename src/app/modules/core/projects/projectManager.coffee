@@ -33,12 +33,14 @@ define (require)->
       
       @appSettings.on("reset", @onAppSettingsChanged)
       @appSettings.on("change",@onAppSettingsChanged)
+      
+      @project = null
     
     onAppSettingsChanged:(model, attributes)=>
       @settings = @appSettings.getByName("General")
 
     createProject:()->
-      @project = new Project() #settings : temporary hack
+      @project = new Project()
       @project.createFile
         name: @project.get("name")
         content:"""
@@ -118,9 +120,11 @@ define (require)->
       
       @csgProcessor.processScript fullSource,backgroundProcessing, (rootAssembly, partRegistry, error)=>
         if error?
-          console.log "CSG processing failed : #{error.msg} on line #{error.lineNumber} stack:"
-          console.log error.stack
-          throw error.msg
+          #console.log "CSG processing failed : #{error.msg} on line #{error.lineNumber} stack:"
+          #console.log error.stack
+          @project.trigger("compile:error",[error])
+          return
+          
         #@set({"partRegistry":window.classRegistry}, {silent: true})
         @project.bom = new Backbone.Collection()
         for name,params of partRegistry
@@ -130,9 +134,7 @@ define (require)->
               variantName=""
             @project.bom.add { name: name,variant:variantName, params: param,quantity: quantity, manufactured:true, included:true } 
         
-        
         @project.rootAssembly = rootAssembly
-        console.log "triggering compiled event"
         end = new Date().getTime()
         console.log "Csg computation time: #{end-start}"
         @project.trigger("compiled",rootAssembly)

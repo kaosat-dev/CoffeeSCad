@@ -47,8 +47,7 @@ define (require)->
           applyDefaultStyles: true
           size:"auto"
         }
-      }
-      )
+      })
 
     onResizeStart:=>
       console.log "resized start"
@@ -74,6 +73,7 @@ define (require)->
       #show files list (tabs)
       filesListView = new FilesListView
         collection: @model.pfiles
+        model: @model
         settings: @settings
       @filesList.show(filesListView)
       

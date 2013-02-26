@@ -17,8 +17,19 @@ define (require)->
     serializeData: ()->
       null
     
+    events:
+      "click .newFile": "onNewFile"
+    
     constructor:(options)->
       super options
-
     
+    onNewFile:->
+      console.log "adding new file"
+      $('.newFile').popover
+        content:'<div><div><input type="text" value="file.coffee"></input></div></div> '
+        template: '<div class="popover" style="height:45px"><div class="arrow"></div><div class="popover-inner"><h3 class="popover-title" style="display: none"></h3><div class="popover-content"><p></p></div></div></div>'
+
+        #<div class="row toolBar pull-left"></div>   
+        #<div class="row toolBar pull-left"><a href="#"> <div class="span6 pagination-centered"><i class="icon-plus icon-large"></i></div></a></div>       
+          #<div class="row toolBar"><a href="#"> <div class="span6 pagination-centered"><i class="icon-plus icon-large"></i></div></a></div>
   return ToolBarView

@@ -112,7 +112,6 @@ define (require)->
       }
       #@myLayout = @$el.layout({applyDefaultStyles: true})
       #@codeView.setHeight(@$el.parent().height())
-      
     
     onRender:=>
       #show tab nav
@@ -127,7 +126,8 @@ define (require)->
       @tabContent.show @codeView
       
       #show console
-      consoleView = new ConsoleView()
+      consoleView = new ConsoleView
+        model:@model
       @console.show consoleView
       
       #$(@tabContent.el).css("overflow-y": "hidden")

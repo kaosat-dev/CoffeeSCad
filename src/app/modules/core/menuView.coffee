@@ -91,8 +91,6 @@ define (require)->
       "click .settings":      ()=>vent.trigger("settings:show")
       "click .showEditor":    ()->vent.trigger("codeEditor:show")
       
-      #"click .dropBoxLogin":   ()->vent.trigger("dropbox:LoginRequest")#should be a command 
-      
     constructor:(options)->
       super options
       @vent = vent
@@ -152,8 +150,8 @@ define (require)->
          className = "start#{index[0].toUpperCase() + index[1..-1]}Exporter"
          event = "#{index}Exporter:start"
          @events["click .#{className}"] = do(event)-> ->@vent.trigger(event)
-         console.log "events"
-         console.log @events
+         #console.log "events"
+         #console.log @events
          #TODO: move this in constructor
          #see http://www.mennovanslooten.nl/blog/post/62 and http://rzrsharp.net/2011/06/27/what-does-coffeescripts-do-do.html
          #for more explanation (or lookup "anonymous functions inside loops")
