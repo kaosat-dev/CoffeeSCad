@@ -8,6 +8,7 @@ define (require) ->
   stats = require  'stats'
   utils = require 'utils'
   OrbitControls = require './orbitControls'
+  CustomOrbitControls = require './customOrbitControls'
   TrackballControls = require './trackballControls'
   
   reqRes = require 'modules/core/reqRes'
@@ -43,6 +44,7 @@ define (require) ->
       
       @settings.on( "change", @settingsChanged)
       @model.on("compiled", @projectCompiled)
+      @model.on("compile:error", @projectCompileFailed)
       
       #screenshoting
       reqRes.addHandler "project:getScreenshot", ()=>
@@ -135,7 +137,15 @@ define (require) ->
       @fromCsg @model
       
     projectCompiled:(res)=>
+      #compile succeeded, generate geometry from csg
       @fromCsg res
+    
+    projectCompileFailed:()=>
+      #in case project compilation failed, remove previously generated geometry
+      if @assembly?
+        @scene.remove @assembly
+        @assembly = null
+      @_render()
               
     settingsChanged:(settings, value)=> 
       for key, val of @settings.changedAttributes()
@@ -325,7 +335,7 @@ define (require) ->
       ASPECT = @width / @height
       NEAR = 0.1
       FAR = 10000
-       
+      ### 
       @camera =
       new THREE.PerspectiveCamera(
           @viewAngle,
@@ -342,7 +352,7 @@ define (require) ->
           FAR,
           NEAR,
           FAR)
-      ###
+
       #function ( width, height, fov, near, far, orthoNear, orthoFar )
       
       @camera.up = new THREE.Vector3( 0, 0, 1 )
@@ -580,9 +590,6 @@ define (require) ->
       @overlayAxes = new helpers.LabeledAxes({textColor:@settings.get("textColor")})
       @overlayScene.add @overlayAxes
       
-      #TODO:remove this, this is just for testing
-      #@drawText2("text")
-      
     removeAxes:()->
       @scene.remove @axes
       @overlayScene.remove @overlayAxes
@@ -591,32 +598,6 @@ define (require) ->
       
     addCage:(mesh)=>
       new helpers.BoundingCage({mesh:mesh, color:@settings.get("helpersColor"),textColor:@settings.get("textColor")})
-          
-    
-    drawText2:(text)=>
-      canvas = document.createElement('canvas')
-      size = 256 
-      canvas.width = size
-      canvas.height = size
-      context = canvas.getContext('2d')
-      context.fillStyle = '#ff0000' 
-      context.textAlign = 'center'
-      context.font = '24px Arial'
-      context.fillText("some text", size / 2, size / 2)
-  
-      amap = new THREE.Texture(canvas)
-      amap.needsUpdate = true
-  
-      mat = new THREE.SpriteMaterial({
-          map: amap,
-          transparent: false,
-          useScreenCoordinates: false,
-          color: 0xffffff 
-      })
-  
-      sp = new THREE.Sprite(mat)
-      sp.scale.set( 200, 200, 1 ) 
-      @scene.add(sp)    
             
     setupPickerHelper:()->
       canvas = document.createElement('canvas')
@@ -638,14 +619,13 @@ define (require) ->
       @particleMaterial = new THREE.MeshBasicMaterial( { map: texture, transparent: true ,color: 0x000000} )
     
     onResize:()=>
-      @width =  $("#glArea").width()
-      @height = window.innerHeight-10
+      @width =  window.innerWidth# $("#glArea").width()
+      @height = window.innerHeight#-10
       #@camera.aspect = @width / @height
       #@camera.updateProjectionMatrix()
       
       #@camera.setSize(@width,@height)
       @camera.updateProjectionMatrix()
-      
       @renderer.setSize(@width, @height)
       
       #@overlayCamera.position.z = @camera.position.z/3
@@ -692,7 +672,7 @@ define (require) ->
       container.append(@renderer.domElement)
       
       
-      @controls = new THREE.OrbitControls(@camera, @el)
+      @controls = new CustomOrbitControls(@camera, @el)
       @controls.rotateSpeed = 1.8
       @controls.zoomSpeed = 4.2
       @controls.panSpeed = 1.8
@@ -715,7 +695,7 @@ define (require) ->
       container2 = $(@ui.glOverlayBlock)
       container2.append(@overlayRenderer.domElement)
       
-      @overlayControls = new THREE.OrbitControls(@overlayCamera, @el)#Custom
+      @overlayControls = new CustomOrbitControls(@overlayCamera, @el)#Custom
       @overlayControls.noPan = true
       #@overlayControls.noZoom = true
       @overlayControls.rotateSpeed = 1.8
@@ -724,7 +704,6 @@ define (require) ->
       @overlayControls.userZoomSpeed=0
       
       @animate()
-      
     
     _render:()=>
       @renderer.render(@scene, @camera)
@@ -736,7 +715,7 @@ define (require) ->
       
     animate:()=>
       @controls.update()
-      #@overlayControls.update()
+      @overlayControls.update()
       requestAnimationFrame(@animate)
     
     toCsgTest:(mesh)->
@@ -802,7 +781,7 @@ define (require) ->
         mesh.add connectorMesh   
        
       rootObj.add mesh
-      @_addIndicator(mesh)
+      #@_addIndicator2(mesh)
       
       #recursive, for sub objects
       if csgObj.children?
@@ -824,5 +803,76 @@ define (require) ->
       
       line = new THREE.Line(geometry, material, THREE.LineStrip)
       mesh.add(line)
+   
+    _addIndicator2:(mesh)->
+      hilbert3D = (center, side, iterations, v0, v1, v2, v3, v4, v5, v6, v7) ->
+        half = side / 2
+        vec_s = [new THREE.Vector3(center.x - half, center.y + half, center.z - half), new THREE.Vector3(center.x - half, center.y + half, center.z + half), new THREE.Vector3(center.x - half, center.y - half, center.z + half), new THREE.Vector3(center.x - half, center.y - half, center.z - half), new THREE.Vector3(center.x + half, center.y - half, center.z - half), new THREE.Vector3(center.x + half, center.y - half, center.z + half), new THREE.Vector3(center.x + half, center.y + half, center.z + half), new THREE.Vector3(center.x + half, center.y + half, center.z - half)]
+        vec = [vec_s[v0], vec_s[v1], vec_s[v2], vec_s[v3], vec_s[v4], vec_s[v5], vec_s[v6], vec_s[v7]]
+        if --iterations >= 0
+          tmp = []
+          Array::push.apply tmp, hilbert3D(vec[0], half, iterations, v0, v3, v4, v7, v6, v5, v2, v1)
+          Array::push.apply tmp, hilbert3D(vec[1], half, iterations, v0, v7, v6, v1, v2, v5, v4, v3)
+          Array::push.apply tmp, hilbert3D(vec[2], half, iterations, v0, v7, v6, v1, v2, v5, v4, v3)
+          Array::push.apply tmp, hilbert3D(vec[3], half, iterations, v2, v3, v0, v1, v6, v7, v4, v5)
+          Array::push.apply tmp, hilbert3D(vec[4], half, iterations, v2, v3, v0, v1, v6, v7, v4, v5)
+          Array::push.apply tmp, hilbert3D(vec[5], half, iterations, v4, v3, v2, v5, v6, v1, v0, v7)
+          Array::push.apply tmp, hilbert3D(vec[6], half, iterations, v4, v3, v2, v5, v6, v1, v0, v7)
+          Array::push.apply tmp, hilbert3D(vec[7], half, iterations, v6, v5, v2, v1, v0, v3, v4, v7)
+          return tmp
+        vec
+      cube = (size) ->
+        h = size * 0.5
+        geometry = new THREE.Geometry()
+        geometry.vertices.push new THREE.Vector3(-h, -h, -h)
+        geometry.vertices.push new THREE.Vector3(-h, h, -h)
+        geometry.vertices.push new THREE.Vector3(-h, h, -h)
+        geometry.vertices.push new THREE.Vector3(h, h, -h)
+        geometry.vertices.push new THREE.Vector3(h, h, -h)
+        geometry.vertices.push new THREE.Vector3(h, -h, -h)
+        geometry.vertices.push new THREE.Vector3(h, -h, -h)
+        geometry.vertices.push new THREE.Vector3(-h, -h, -h)
+        geometry.vertices.push new THREE.Vector3(-h, -h, h)
+        geometry.vertices.push new THREE.Vector3(-h, h, h)
+        geometry.vertices.push new THREE.Vector3(-h, h, h)
+        geometry.vertices.push new THREE.Vector3(h, h, h)
+        geometry.vertices.push new THREE.Vector3(h, h, h)
+        geometry.vertices.push new THREE.Vector3(h, -h, h)
+        geometry.vertices.push new THREE.Vector3(h, -h, h)
+        geometry.vertices.push new THREE.Vector3(-h, -h, h)
+        geometry.vertices.push new THREE.Vector3(-h, -h, -h)
+        geometry.vertices.push new THREE.Vector3(-h, -h, h)
+        geometry.vertices.push new THREE.Vector3(-h, h, -h)
+        geometry.vertices.push new THREE.Vector3(-h, h, h)
+        geometry.vertices.push new THREE.Vector3(h, h, -h)
+        geometry.vertices.push new THREE.Vector3(h, h, h)
+        geometry.vertices.push new THREE.Vector3(h, -h, -h)
+        geometry.vertices.push new THREE.Vector3(h, -h, h)
+        geometry
+
+      subdivisions = 6
+      recursion = 1
+      
+      points = hilbert3D( new THREE.Vector3( 0,0,0 ), 25.0, recursion, 0, 1, 2, 3, 4, 5, 6, 7 )
+  
+      spline = new THREE.Spline( points )
+      geometrySpline = new THREE.Geometry()
+  
+      for i in [0..points.length * subdivisions]
+        index = i / ( points.length * subdivisions )
+        position = spline.getPoint( index )
+        geometrySpline.vertices[i] = new THREE.Vector3( position.x, position.y, position.z )
+      
+      geometryCube = cube( 350 )
+      geometryCube.computeLineDistances()
+      geometrySpline.computeLineDistances()
+      
+      #material = new THREE.LineBasicMaterial( { color: 0xffaa00,linewidth: 10 })
+      material = new THREE.LineDashedMaterial( { color: 0xffaa00, dashSize: 3, gapSize: 1, linewidth: 2 } )
+      cube = new THREE.Line( geometryCube, material, THREE.LinePieces)
+      spline = new THREE.Line( geometrySpline, material, THREE.LinePieces)
+      
+      mesh.add(cube)
+      mesh.add(spline)
 
   return VisualEditorView

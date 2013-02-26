@@ -11,6 +11,12 @@ define (require) ->
     @object = object
     @domElement = (if (domElement isnt `undefined`) then domElement else document)
     
+    #API additions
+    @target = new THREE.Vector3()
+    @eye = new THREE.Vector3()
+    _panStart = new THREE.Vector2()
+    _panEnd = new THREE.Vector2()
+    
     # API
     @center = new THREE.Vector3()
     @userZoom = true
@@ -72,7 +78,110 @@ define (require) ->
       zoomScale = getZoomScale()  if zoomScale is `undefined`
       scale *= zoomScale
       
-    @update = ->
+    @zoomCamera = ->
+      position = @object.position
+      offset = position.clone().sub(@target)
+      radius = offset.length() * scale
+      
+      # restrict radius to be between desired limits
+      radius = Math.max(@minDistance, Math.min(@maxDistance, radius))
+      @eye.multiplyScalar radius
+      scale = 1.0
+    
+    #
+    #       var factor = 1.0 + ( zoomEnd.y - zoomStart.y ) * this.userZoomSpeed;
+    #        if ( factor !== 1.0 && factor > 0.0 ) {
+    #            this.eye.multiplyScalar( factor*2000);
+    #        }
+    
+    @rotateCamera = ->
+      position = @object.position
+      offset = position.clone().sub(@target)
+      
+      # angle from z-axis around y-axis
+      theta = Math.atan2(offset.x, offset.y)
+      
+      # angle from y-axis
+      phi = Math.atan2(Math.sqrt(offset.x * offset.x + offset.y * offset.y), offset.z)
+      
+      #
+      #        if ( this.autoRotate ) {
+      #
+      #            this.rotateLeft( getAutoRotationAngle() );
+      #
+      #        }
+      theta += thetaDelta
+      phi += phiDelta
+      
+      # restrict phi to be between desired limits
+      phi = Math.max(@minPolarAngle, Math.min(@maxPolarAngle, phi))
+      
+      # restrict phi to be betwee EPS and PI-EPS
+      phi = Math.max(EPS, Math.min(Math.PI - EPS, phi))
+      offset.x = Math.sin(phi) * Math.sin(theta)
+      offset.z = Math.cos(phi)
+      offset.y = Math.sin(phi) * Math.cos(theta)
+      @eye = offset
+      thetaDelta = 0
+      phiDelta = 0
+      #scale = 1;
+    
+    @panCamera = ->
+      mouseChange = _panEnd.clone().sub(_panStart)
+      if mouseChange.lengthSq()
+        
+        #mouseChange.multiplyScalar( this.target.length() * this.panSpeed );
+        mouseChange.multiplyScalar @panSpeed
+        
+        #mouseChange.multiplyScalar( this.eye.length() * this.panSpeed );
+        pan = @target.clone().cross(@object.up).setLength(mouseChange.x)
+        pan.add @object.up.clone().setLength(mouseChange.y)
+        pan2 = @object.up.clone()
+        
+        #console.log("up vector: ("+pan2.x+", "+pan2.y+", ",+pan2.z+")")
+        @object.matrixWorld.scale(pan2)
+        #@object.matrixWorld.multiplyVector3 pan2
+        #Matrix4's .multiplyVector3() has been removed. Use vector.applyMatrix4( matrix ) or vector.applyProjection( matrix )
+        
+        #console.log("up vector 2: ("+pan2.x+", "+pan2.y+", ",+pan2.z+")")
+        
+        #we need two vectors relative to the camera: up and left 
+        #             *  for this we need the "eye vector (see below) and either cam.up or cam.left to get the other"
+        #             * and scale these two by mousechange values
+        #             * 
+        
+        #get "eye vector" (ray from cam to target)
+        eyeVector = @object.position.clone().sub(@target)
+        
+        #get cam up vector 
+        upVector = @object.up.clone()
+        
+        #left/right vector
+        #var sideVector = new THREE.Vector3(1,0,0);
+        #var panVector = new THREE.Vector3(mouseChange.x,0,mouseChange.y).cross(eyeVector);
+        panVector = eyeVector.cross(upVector).setLength(mouseChange.x)
+        panVector.add upVector.setLength(mouseChange.y)
+        
+        #console.log("eyeVector: ("+eyeVector.x+", "+eyeVector.y+", ",+eyeVector.z+")");
+        #console.log("pan vector: ("+panVector.x+", "+panVector.y+", ",+panVector.z+")");
+        pan = panVector
+        @object.position.add pan
+        @target.add pan
+        
+        #console.log("mouse: ("+mouseChange.x+ ", "+ mouseChange.y +") Pan:("+pan.x+ ", " + pan.y + ", "+pan.z+")");
+        _panStart = _panEnd
+        #
+        #            if ( _this.staticMoving ) {
+        #
+        #                _panStart = _panEnd;
+        #
+        #            } else {
+        #
+        #                _panStart.add( mouseChange.sub( _panEnd, _panStart ).multiplyScalar( _this.dynamicDampingFactor ) );
+        #
+        #            }
+        
+    @update_old = ->
       position = @object.position
       offset = position.clone().sub(@center)
       #angle from z-axis around y-axis
@@ -100,6 +209,20 @@ define (require) ->
       if lastPosition.distanceTo(@object.position) > 0
         @dispatchEvent changeEvent
         lastPosition.copy @object.position
+     
+    @update = =>
+      if not @noRotate
+        @rotateCamera()
+      if not @noZoom
+        @zoomCamera()
+      if not @noPan 
+        @panCamera()
+      @object.position.addVectors( @target, @eye)
+      @object.lookAt(@target)
+      
+      if ( lastPosition.distanceToSquared( @object.position ) >0)
+        @dispatchEvent(changeEvent)
+        lastPosition.copy(@object.position)
     
     getAutoRotationAngle = ->
       2 * Math.PI / 60 / 60 * scope.autoRotateSpeed
@@ -108,20 +231,23 @@ define (require) ->
       Math.pow 0.95, scope.userZoomSpeed
       
     onMouseDown = (event) ->
-      console.log "mousedown"
       return  unless scope.userRotate
       event.preventDefault()
-      if event.button is 0 or event.button is 2
+      if event.button is 0
         state = STATE.ROTATE
         rotateStart.set event.clientX, event.clientY
-      else if event.button is 1
+      else if event.button is 2
+        state = STATE.PAN
+        _panStart = _panEnd = new THREE.Vector2(event.clientX, event.clientY)
+      else if event.button is 1 
         state = STATE.ZOOM
-        zoomStart.set event.clientX, event.clientY
+        zoomStart.set(event.clientX, event.clientY)
+        
+
       document.addEventListener "mousemove", onMouseMove, false
       document.addEventListener "mouseup", onMouseUp, false
       
     onMouseMove = (event) ->
-      console.log "moving"
       event.preventDefault()
       if state is STATE.ROTATE
         rotateEnd.set event.clientX, event.clientY
@@ -137,6 +263,8 @@ define (require) ->
         else
           scope.zoomOut()
         zoomStart.copy zoomEnd
+      else if state is STATE.PAN
+        _panEnd = new THREE.Vector2(event.clientX, event.clientY)
         
     onMouseUp = (event) ->
       return  unless scope.userRotate
