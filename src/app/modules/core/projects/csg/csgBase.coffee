@@ -29,7 +29,17 @@ define (require)->
   
   globals = require './globals'
   _CSGDEBUG = globals._CSGDEBUG
-  #FIXME: ensure that all operations that MIGHT change the bounding box , invalidate or recompute the bounding box
+  
+  materials = require './materials'
+  
+  
+  Function::getter = (prop, get) ->
+    Object.defineProperty @prototype, prop, {get, configurable: yes}
+  
+  Function::setter = (prop, set) ->
+    Object.defineProperty @prototype, prop, {set, configurable: yes}
+  
+  #ALWAYS ensure that all operations that MIGHT change the bounding box , invalidate or recompute the bounding box
   
   
   class CSGBase extends TransformBase
@@ -42,7 +52,15 @@ define (require)->
       @properties = new Properties()
       @isCanonicalized = true
       @isRetesselated = true
+      
       @children = [] 
+      @_material = new materials.BaseMaterial()
+      @color(@_material.color)
+          
+    @getter 'material', -> @_material
+    @setter 'material', (material)->
+      @_material = material
+      @color(material.color)
       
     add:(objects...)->
       for obj in objects

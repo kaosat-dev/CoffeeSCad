@@ -3,7 +3,6 @@ define (require) ->
   #
   #    THREE.CSG
   # @author Chandler Prall <chandler.prall@gmail.com> http://chandler.prallfamily.com
-  
   # @modified by Mark Moissette 
   
   # Wrapper for Evan Wallace's CSG library (https://github.com/evanw/csg.js/)
@@ -110,7 +109,6 @@ define (require) ->
       #need to remove duplicate vertices, keeping the right index
       csg_model.canonicalize()
       csg_model.reTesselate()
-      #csg_model = csg_model.fixTJunctions()
       
       three_geometry = new THREE.Geometry()
       polygons = csg_model.toPolygons()
@@ -173,8 +171,8 @@ define (require) ->
       three_geometry.computeBoundingBox()
       three_geometry.computeCentroids()
       
-      console.log "resulting three.geometry"
-      console.log three_geometry
+      #console.log "resulting three.geometry"
+      #console.log three_geometry
       end = new Date().getTime()
       console.log "Conversion to three.geometry time: #{end-start}"
       three_geometry

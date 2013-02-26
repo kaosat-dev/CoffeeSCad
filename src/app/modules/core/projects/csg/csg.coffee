@@ -18,6 +18,8 @@ define (require)->
   extras = require './extras'
   properties = require './properties'
   
+  materials = require './materials'
+  
   ##Additional helpers
   classRegistry = {}
   otherRegistry = {}
@@ -26,7 +28,6 @@ define (require)->
     ###Registers a class (instance) based on its name,  
     and params (different params need to show up as different object in the bom for examples)
     ### 
-    
     #console.log arg for arg in arguments
     #console.log "registering " + classname
     #TODO: generate hash
@@ -79,5 +80,6 @@ define (require)->
   exports = merge(exports,extras)
   exports = merge(exports,properties)
   exports = merge(exports,additional)
+  exports = merge(exports,materials)
   
   return exports

@@ -1,3 +1,17 @@
+#just a comment 
+class Body extends Part
+  constructor:(options)->
+    super options
+    
+    outShellRes = 15
+    @union new Sphere({r:50,$fn:outShellRes}).color([0.5,0.5,0.1]).rotate([90,0,0])
+
+body = new Body()  
+body.material = new BaseMaterial()
+console.log body.material
+assembly.add(body)
+
+
     content:"""
       #just a comment
       class Body extends Part

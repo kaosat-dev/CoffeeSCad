@@ -35,12 +35,14 @@ define (require) ->
           @parseScriptSync(@script, paramValues)
         @processing = false
       catch error
+        console.log "here"
+        @callback(null, null, error)
         @processing = false
-        throw error
     
     _prepareScriptASync:()=>
+      #prepare the source for compiling : convert to coffeescript, inject dependencies etc
       @script = """
-      {CAGBase,CSGBase,Circle,Connector,Cube,Cylinder,Line2D,Line3D,Matrix4x4,
+      {BaseMaterial,CAGBase,CSGBase,Circle,Connector,Cube,Cylinder,Line2D,Line3D,Material,Matrix4x4,
       OrthoNormalBasis,Part,Path2D,Plane,Polygon,PolygonShared,Properties, Rectangle,
       RoundedCube,RoundedCylinder,RoundedRectangle,Side,Sphere,Vector2D,Vector3D,
       Vertex,Vertex2D,classRegistry,hull,intersect, otherRegistry,register,rotate,
@@ -55,8 +57,9 @@ define (require) ->
       #console.log @script
     
     _prepareScriptSync:()=>
+      #prepare the source for compiling : convert to coffeescript, inject dependencies etc
       @script = """
-      {CAGBase,CSGBase,Circle,Connector,Cube,Cylinder,Line2D,Line3D,Matrix4x4,
+      {BaseMaterial,CAGBase,CSGBase,Circle,Connector,Cube,Cylinder,Line2D,Line3D,Material,Matrix4x4,
       OrthoNormalBasis,Part,Path2D,Plane,Polygon,PolygonShared,Properties, Rectangle,
       RoundedCube,RoundedCylinder,RoundedRectangle,Side,Sphere,Vector2D,Vector3D,
       Vertex,Vertex2D,classRegistry,hull,intersect, otherRegistry,register,rotate,
@@ -137,11 +140,16 @@ define (require) ->
             partRegistry = e.data.partRegistry
             @callback(rootAssembly,partRegistry)
           else if e.data.cmd is "error"
-            @callback(null, null, e.data.err)
+            err = e.data.err
+            error = new Error(err.msg)#{"message":err.msg,"lineNumber":err.lineNumber, "stack":err.stack})
+            error.lineNumber=err.lineNumber
+            error.stack = err.stack
+            #throw  error
+            @callback(null, null, error)
           else console.log e.data.txt  if e.data.cmd is "log"
-      worker.onerror = (e) =>
+      worker.onerror = (error) =>
         errtxt = "Error in line " + e.lineno + ": " + e.message
-        @callback errtxt, null      
+        @callback null, null, errtxt      
       worker.postMessage("render")
     
             
