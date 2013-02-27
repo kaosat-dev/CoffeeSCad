@@ -11,6 +11,7 @@ define (require)->
   reqRes = require 'modules/core/reqRes'
   ModalRegion = require 'modules/core/utils/modalRegion'
   
+  Settings = require 'modules/core/settings/settings'
   Project = require 'modules/core/projects/project'
   ProjectBrowserView = require './projectBrowseView'
   
@@ -18,7 +19,8 @@ define (require)->
   class ProjectManager
     
     constructor:(options)->
-      @appSettings = options.appSettings ? null
+      options = options or {appSettings:null}
+      @appSettings = options.appSettings ? new Settings()
       @settings = @appSettings.getByName("General")
       @connectors = options.connectors ? null
       @preProcessor = new PreProcessor()
@@ -108,7 +110,6 @@ define (require)->
             @compileProject()
           @CodeChangeTimer = setTimeout callback, @settings.get("csgCompileDelay")*1000
       
-     
     compileProject:()=> 
       start = new Date().getTime()
       

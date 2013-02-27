@@ -8,9 +8,6 @@ define (require)->
         name: "VisualEditor"
         title: "Visual Editor"
         
-        csgRenderMode: "onCodeChange" #can be either "onCodeChange", "onCodeChangeDelayed", "onDemand", "onSave"
-        csgRenderDelay: 1.0
-             
         renderer     : 'webgl'
         antialiasing : true
         
@@ -36,7 +33,6 @@ define (require)->
         
         helpersColor : "0xFFFFFF"
         textColor    : "#FFFFFF"     
-        
         
         bgColor      : "#363335"
         bgColor2     : "#363335"

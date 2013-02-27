@@ -3,9 +3,11 @@ define (require)->
   _ = require 'underscore'
   bootstrap    = require 'bootstrap'
   marionette  = require 'marionette'
-  forms       = require 'forms'
+  forms       = require 'backbone-forms'
   forms_bstrap= require 'forms_bootstrap'
-  #forms_list  = require 'forms_list'
+  forms_list  = require 'forms_list'
+  forms_custom  = require 'forms_custom'
+  
   
   s_template  = require "text!./settings.tmpl"
   sh_template = require "text!./settingsHeader.tmpl"
@@ -168,9 +170,20 @@ define (require)->
       
       
   class KeybindingsForm extends Backbone.Form
+    
     constructor:(options)->
+      bla=(obj)->
+        console.log obj
+        return #{obj}
       if not options.schema
         options.schema = 
+          #toto: 'CustomEditor'
+          notes:
+            type: "List"
+            listType: 'Text'
+            #itemType: 'Select', options:["toto","tata"]
+            itemToString: (object)-> console.log(object)
+            #listTemplate: 
           general:
             type: "Object"
             title:''
@@ -181,7 +194,6 @@ define (require)->
               redo:
                 title:"redo"
                 type:"Text"
-        
       super options
       
   class KeyBindingsWrapper extends Backbone.Marionette.ItemView

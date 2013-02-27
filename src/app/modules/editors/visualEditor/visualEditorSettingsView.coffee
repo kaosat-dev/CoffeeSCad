@@ -3,21 +3,13 @@ define (require)->
   _ = require 'underscore'
   boostrap    = require 'bootstrap'
   marionette  = require 'marionette'
-  forms       = require 'forms'
-  forms_bstrap= require 'forms_bootstrap'
+  forms       = require 'backbone-forms'
   
   class GlViewSettingsForm extends Backbone.Form
     
     constructor:(options)->
       if not options.schema
-        options.schema=
-          csgRenderMode: 
-            title: "Render trigger mode"
-            type: 'Select'
-            options : ["onDemand", "onCodeChange", "onCodeChangeDelayed", "onSave"]
-          csgRenderDelay:
-            type: 'Number'
-          
+        options.schema=  
           renderer     :
             type: 'Select'
             options : ["webgl", "canvas"]
@@ -60,9 +52,6 @@ define (require)->
             type: 'Text'
             
         options.fieldsets=[
-          "legend": "CsgRender settings"
-          "fields": ["csgRenderMode","csgRenderDelay"]
-        ,
           "legend":"Render settings"
           "fields": ["renderer","antialiasing","shadows","selfShadows"]
         , 
@@ -79,18 +68,12 @@ define (require)->
       super options
       
   
-  class VisEditorSettingsView extends Backbone.Marionette.ItemView
-    
-    events:
-      'change #c6_csgRenderMode': "tutu"
+  class VisualEditorSettingsView extends Backbone.Marionette.ItemView
     
     constructor:(options)->
       super options
       @wrappedForm = new GlViewSettingsForm
         model: @model
-      
-    ui:
-      csgRenderMode:    "#c6_csgRenderMode"    
       
     render:()=>
       if @beforeRender then @beforeRender()
@@ -109,8 +92,4 @@ define (require)->
       @trigger("item:rendered", @)
       return @
       
-    tutu:(bla)=>
-      console.log bla
-      console.log "gne INDEED"
-      
-  return VisEditorSettingsView
+  return VisualEditorSettingsView

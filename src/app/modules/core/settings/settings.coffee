@@ -23,7 +23,7 @@ define (require)->
     registerSettingClass:(settingName, settingClass)->
       #register a new setting class by name (a setting object containing params for a specific sub app)
       @settingNames[settingName] = settingClass
-      #yuck
+      #TODO: some cleaner alternative to this ?
       @add new settingClass()
       @            
     
@@ -77,9 +77,11 @@ define (require)->
     defaults:
       name: "KeyBindings"
       title: "Key Bindings"
+      notes: [{"Undo","CTRL+Z"},{"tata":"pouet"}]
       general:
         undo:   "CTRL+Z"
         redo:   "CTRL+Y"
+      toto: "sdgsdf"
       
     constructor:(options)->
       super options

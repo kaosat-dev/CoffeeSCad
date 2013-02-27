@@ -3,9 +3,7 @@ define (require)->
   _ = require 'underscore'
   boostrap    = require 'bootstrap'
   marionette  = require 'marionette'
-  forms       = require 'forms'
-  forms_bstrap= require 'forms_bootstrap'
-  
+  forms       = require 'backbone-forms'
   
   class CodeEditorSettingsForm extends Backbone.Form
     constructor:(options)->
@@ -67,6 +65,7 @@ define (require)->
           "fields": ["linting.indentation","linting.max_line_length","linting.no_tabs","linting.no_trailing_whitespace","linting.no_trailing_semicolons"]
         ]
       super options
+      
       
   class CodeEditorSettingsView extends Backbone.Marionette.ItemView
     constructor:(options)->

@@ -4,6 +4,7 @@ require.config
   config: 
     text:
       env: 'xhr'
+  waitSeconds:200
 
   paths:
     #JavaScript folders.
@@ -29,6 +30,7 @@ require.config
     github:           "../assets/js/libs/github"
     
     #base64:           "../assets/js/libs/base64"
+    XMLWriter:        "../assets/js/libs/XMLWriter-1.0.0"
     
     #plugins
     jquery_hotkeys:   "../assets/js/plugins/jquery.hotkeys"
@@ -58,19 +60,20 @@ require.config
     localstorage:     "../assets/js/plugins/backbone.localstorage"
     modelbinder :     "../assets/js/plugins/backbone.ModelBinder.min"
     collectionbinder :"../assets/js/plugins/backbone.CollectionBinder.min"
-    forms :           "../assets/js/plugins/backbone.forms"
+    "backbone-forms" :           "../assets/js/plugins/backbone.forms"
     forms_bootstrap : "../assets/js/plugins/backbone.forms.bootstrap"
-    forms_list      : "../assets/js/plugins/backbone.forms.list.min"  
+    forms_list      : "../assets/js/plugins/backbone.forms.list"  
+    forms_custom    : "../assets/js/plugins/backbone.forms.custom"  
     backbone_nested:  "../assets/js/plugins/backbone.nested.min"
     
     knockback:        "../assets/js/plugins/knockback"
     
     three_csg:        "../assets/js/plugins/ThreeCSG"
     combo_cam:        "../assets/js/plugins/CombinedCamera"
-    
     orbit_ctrl:       "../assets/js/plugins/OrbitControls"#"../assets/js/plugins/CustomOrbitControls"
     
   shim:
+    #any AMD compliant lib should NOT need shims
     underscore:
       deps: []
       exports: '_'
@@ -92,13 +95,16 @@ require.config
     localstorage:
       deps:    ["backbone","underscore"]
       exports:  "localstorage"
-    forms:  
-      deps:    ["backbone","underscore"]
-      exports:  "forms"
-    forms_bootstrap:
-      deps: ["forms"]
-    forms_list:
-      deps: ["forms"]
+    #forms:  
+    #  deps:    ["backbone","underscore"]
+    #  exports:  "backbone-forms"
+    #forms_bootstrap:
+    #  deps: ["backbone-forms"]
+    #forms_list:
+    #  deps: ["forms"]
+    #forms_custom:
+    #  deps: ["forms"]
+    #  exports:  "forms"
     
     backbone_nested:
       deps:["backbone"]
@@ -170,3 +176,6 @@ require.config
 
     #base64:
     #  exports : "base64"
+    
+    XMLWriter:
+       exports: "XMLWriter"
