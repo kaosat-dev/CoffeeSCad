@@ -40,8 +40,10 @@ define (require)->
       #Exporters
       BomExporter = require './exporters/bomExporter/bomExporter'
       StlExporter = require './exporters/stlExporter/stlExporter'
+      AmfExporter = require './exporters/amfExporter/amfExporter'
       @exporters["stl"] = new StlExporter()
       @exporters["bom"] = new BomExporter()
+      @exporters["amf"] = new AmfExporter()
       
       #Connectors
       DropBoxConnector = require './connectors/dropbox/dropBoxConnector'
@@ -55,8 +57,11 @@ define (require)->
       $(window).bind('beforeunload',@onAppClosing)
       @vent.on("app:started", @onAppStarted)
       @vent.on("settings:show", @onSettingsShow)
-      @vent.on("bomExporter:start", ()=> @exporters["bom"].start({project:@project}))
-      @vent.on("stlExporter:start", ()=> @exporters["stl"].start({project:@project}))
+      
+      #handle exporters initialization
+      for name, exporter of @exporters
+        @vent.on("#{name}Exporter:start", do(name)=> =>@exporters[name].start({project:@project}))
+        
       
       @addRegions @regions
       @initLayout()

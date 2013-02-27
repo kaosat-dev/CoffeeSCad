@@ -4,6 +4,7 @@ define (require)->
   Project = require "modules/core/projects/project"
   PreProcessor = require "modules/core/projects/preprocessor"
   
+  
   describe "PreProcessor", ->
     project = null
     preprocessor= null
@@ -14,7 +15,7 @@ define (require)->
       
       preprocessor = new PreProcessor()
     
-    it 'can emulate coffeescript function syntax (with or without parens) (as it is a "pseudo method")',->
+    it 'can emulate coffeescript function syntax (with or without parens) (as it is a "pseudo method") for includes',->
       project.createFile
         name:"TestProject"
         content:"""include ("config.coffee")"""

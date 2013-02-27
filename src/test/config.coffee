@@ -26,18 +26,32 @@ require.config
     
     jasmine:          "../test/vendor/jasmine"
     'jasmine-html':     "../test/vendor/jasmine-html"
+    
+    XMLWriter:        "../assets/js/libs/XMLWriter-1.0.0"
 
     #plugins
+    jquery_hotkeys:   "../assets/js/plugins/jquery.hotkeys"
+    jquery_ui:        "../assets/js/plugins/jquery-ui-1.10.0.custom"
+    jquery_layout:    "../assets/js/plugins/jquery.layout-latest"
+    jquery_jstree:    "../assets/js/plugins/jquery.jstree"
+    jquery_sscroll:   "../assets/js/plugins/jquery.slimscroll"
+    
+    bootbox:          "../assets/js/plugins/bootbox.min"
+    contextMenu:      "../assets/js/plugins/bootstrap-contextmenu"
+    notify:           "../assets/js/plugins/bootstrap-notify"
+    
     marionette:       "../assets/js/plugins/backbone.marionette.min"
     eventbinder:      "../assets/js/plugins/backbone.eventbinder.min"
     wreqr:            "../assets/js/plugins/backbone.wreqr.min"
     localstorage:     "../assets/js/plugins/backbone.localstorage"
     modelbinder :     "../assets/js/plugins/backbone.ModelBinder.min"
     collectionbinder :"../assets/js/plugins/backbone.CollectionBinder.min"
-    forms :           "../assets/js/plugins/backbone.forms"
+    "backbone-forms" :           "../assets/js/plugins/backbone.forms"
     forms_bootstrap : "../assets/js/plugins/backbone.forms.bootstrap"
     forms_list      : "../assets/js/plugins/backbone.forms.list.min"  
     backbone_nested:  "../assets/js/plugins/backbone.nested.min"
+    
+    coffeelint:       "../assets/js/plugins/coffeelint"
     
   shim:
     jasmine:
@@ -62,12 +76,14 @@ require.config
     localstorage:
       deps:    ["backbone","underscore"]
       exports:  "localstorage"
-    forms:  
-      deps:    ["backbone","underscore"]
-      exports:  "forms"
-    forms_bootstrap:
-      deps: ["forms"]
-    forms_list:
-      deps: ["forms"]
     backbone_nested:
       deps:["backbone"]
+      
+    CoffeeScript:
+      exports:  "CoffeeScript"
+    coffeelint:
+      deps:    ["CoffeeScript"]
+      exports:  "coffeelint"
+    
+    XMLWriter:
+       exports: "XMLWriter"

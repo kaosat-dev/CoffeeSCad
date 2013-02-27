@@ -34,24 +34,6 @@ define (require) ->
       @trigger("start", options)
     
     onStart:()=>
-      ### 
-      #hack
-      @partsCollection = null
-      if @project.get("partRegistry")?
-        @partsCollection = new Backbone.Collection()
-        for name,params of @project.get("partRegistry")
-          for param, quantity of params
-            #console.log "name #{name}, number:#{number} "
-            #console.log param
-            variantName = "Default"
-            if param != ""
-              variantName=""
-             
-            @partsCollection.add { name: name,variant:variantName, params: param,quantity: quantity, included:true } 
-      
-      @project.set("partsCollection", @partsCollection)
-      ###   
-          
       bomExporterView = new BomExporterView
         model: @project  
       modReg = new ModalRegion({elName:"exporter",large:true})
@@ -60,7 +42,6 @@ define (require) ->
     
     stop:->
       console.log "closing bom exporter"
-      
       #taken from marionette module
       # if we are not initialized, don't bother finalizing
       return  unless @_isInitialized

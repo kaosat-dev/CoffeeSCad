@@ -15,8 +15,9 @@ define (require)->
   #editors
   
   #exporters
-  specs.push("./spec/exporters/stlExporter/stlExporter.spec")
   specs.push("./spec/exporters/bomExporter/bomExporter.spec")
+  specs.push("./spec/exporters/stlExporter/stlExporter.spec")
+  specs.push("./spec/exporters/amfExporter/amfExporter.spec")
   
   
   jasmineEnv = jasmine.getEnv()
