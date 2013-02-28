@@ -1,4 +1,5 @@
 define (require)->
+  ### 
   $ = require 'jquery'
   _ = require 'underscore'
   Backbone = require 'backbone'
@@ -42,10 +43,9 @@ define (require)->
     window.otherRegistry={}
     
     register=(classname, klass, params)=>
-      ###Registers a class (instance) based on its name,  
-      and params (different params need to show up as different object in the bom for examples)
-      ### 
-      
+      #Registers a class (instance) based on its name,  
+      #and params (different params need to show up as different object in the bom for examples)
+     
       #console.log arg for arg in arguments
       #console.log "registering " + classname
       #TODO: generate hash
@@ -111,3 +111,4 @@ define (require)->
   csgSugar = """
   """
   return csgSugar
+  ###

@@ -36,8 +36,10 @@ build = (src_extension, targ_extension, command, options) ->
             target      = path.join(target_path, source_file)
             target_file = path.basename(target)
             fs.mkdir target_path, '0755', (err) ->
-                if err and err.code != 'EEXIST'
-                    throw err
+                #if err and err.code != 'EEXIST'
+                  
+                  #console.log err
+                  #throw err
             cmd = command.replace(/\$source/, source)
                 .replace(/\$target_path/, target_path)
                 .replace(/\$source_path/, source_path)
@@ -139,6 +141,7 @@ task 'serve', 'minimal web server for testing', (options) ->
   connect = require('connect')
   servePath = path.resolve('.')
   server = connect.createServer connect.static(servePath)
+  console.log "Sever starting: at http://127.0.0.1:8090/"
   server.listen(8090)
 
 task 'serveWatch', 'serve the files and run the watch task', (options) ->
@@ -146,38 +149,19 @@ task 'serveWatch', 'serve the files and run the watch task', (options) ->
   invoke('watch')
 
 task 'cpTemplates', 'Copy all templates into the correct folders', ->
-  glob "**/*.tmpl", null, (er, files) ->
+  glob "src/**/*.tmpl", null, (er, files) ->
     for file in files
       copyTemplate(file)
-      ### 
-      rootdir = file.split(path.sep)[0]
-      if rootdir == "src"
-        fileName = path.basename(file)
-        splitPath = file.split(path.sep)
-        outPath = splitPath[1..splitPath.length-2].join(path.sep)
-        
-        splitBase = __filename.split(path.sep)
-        basePath = splitBase[0..splitBase.length-2].join(path.sep)
-        
-        inPath = basePath+path.sep+file
-        outPath = basePath+path.sep+ outPath+"/"
-        print "Copying #{inPath} to #{outPath}\n\n"
-        
-        mkdirp outPath, '0755', (err) ->
-          if err and err.code != 'EEXIST'
-              throw err
-        outPath=outPath+ fileName
-        cp = spawn 'cp', [inPath, outPath]
-        cp.stderr.on 'data', (data) ->
-          process.stderr.write data.toString()
-        cp.stdout.on 'data', (data) ->
-          util.log data.toString()
-      ###  
+      
 task 'build', 'build all the components', (options) ->
-  build '.coffee', '.js', 'coffee --compile --lint -o $target_path $source', options
-  build '.less', '.css', 'lessc $source $target', options
+  #--lint
+  invoke('cpTemplates')
+  build '.coffee', '.js', 'coffee --compile  -o $target_path $source', options
+  #build '.less', '.css', 'lessc $source $target', options
   
 task 'release', 'build, minify , prep for release' , (options) ->
+  
+  #test buildconf for csg sub package
   buildConf = {
     baseUrl: "app",
     dir: "build",
@@ -190,6 +174,16 @@ task 'release', 'build, minify , prep for release' , (options) ->
     optimize: "none"
   }
   
+  #full build conf
+  buildConf = {
+    baseUrl: "app",
+    #dir: "build",
+    mainConfigFile: "app/main.js",
+    out:     'build/main.min.js'
+    name:".",
+    optimize: "uglify",
+    #removeCombined:true
+  }
   ###
   c = {baseUrl: 'app'
       ,name:    'main.max'
