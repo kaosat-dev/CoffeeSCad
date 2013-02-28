@@ -26,19 +26,19 @@ define (require) ->
       console.log "Using background rebuild:#{@async}"
       @processing = true
       paramValues = null
-      try
-        if @async
-          @_prepareScriptASync()
-          @parseScriptASync(@script, paramValues)
-        else
-          @_prepareScriptSync()
-          @parseScriptSync(@script, paramValues)
-        @processing = false
+      #try
+      if @async
+        @_prepareScriptASync()
+        @parseScriptASync(@script, paramValues)
+      else
+        @_prepareScriptSync()
+        @parseScriptSync(@script, paramValues)
+      @processing = false
       catch error
-        console.log "here"
+        console.log error.stack
         @callback(null, null, error)
         @processing = false
-    
+      
     _prepareScriptASync:()=>
       #prepare the source for compiling : convert to coffeescript, inject dependencies etc
       @script = """

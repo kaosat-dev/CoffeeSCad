@@ -47,6 +47,15 @@ define (require)->
         name: @project.get("name")
         content:"""
         #just a comment
+        sphere = new Sphere({r:100,$fn:95}) 
+        sphere2 = new Sphere({r:100,$fn:95}).translate([50,0,0])
+        
+        sphere.subtract(sphere2)
+        assembly.add(sphere)
+        """
+        
+        content_2:"""
+        #just a comment
         class Body extends Part
           constructor:(options)->
             super options

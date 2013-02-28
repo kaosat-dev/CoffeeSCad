@@ -132,6 +132,16 @@ define (require)->
       hulledExtruded = hulled.extrude({offset:[0,0,1],steps:1,twist:0})
       hulledExtruded.fixTJunctions()
       expect(hulledExtruded.polygons.length).toBe(182)
+   
+   describe "Speed and limitations", ->
+     it 'does not cause recursion/stack overflow error with more detailed geometry' , ->
+       sphere = new Sphere({r:100,$fn:100})
+       sphere2 = new Sphere({r:100,$fn:100})
+       
+       expect(sphere.union(sphere2)).not.toThrow(new RangeError())
+        
+     
+    
     
     
 

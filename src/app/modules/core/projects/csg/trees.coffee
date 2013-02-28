@@ -199,7 +199,7 @@ define (require)->
       @front = @back
       @back = temp
   
-    clipPolygons: (polygontreenodes, alsoRemovecoplanarFront) ->
+    clipPolygons_recursive: (polygontreenodes, alsoRemovecoplanarFront) ->
       # clip polygontreenodes to our plane
       # calls remove() for all clipped PolygonTreeNodes
       if @plane
@@ -207,27 +207,66 @@ define (require)->
         frontnodes = []
         coplanarfrontnodes = (if alsoRemovecoplanarFront then backnodes else frontnodes)
         plane = @plane
-        numpolygontreenodes = polygontreenodes.length
         
         node.splitByPlane(plane, coplanarfrontnodes, backnodes, frontnodes, backnodes) for node in polygontreenodes when not(node.isRemoved())
+        console.log "backnodes #{backnodes.length}"
+        console.log "frontnodes #{frontnodes.length}"
 
-        @front.clipPolygons frontnodes, alsoRemovecoplanarFront  if @front and (frontnodes.length > 0)
+        @front.clipPolygons_recursive frontnodes, alsoRemovecoplanarFront  if @front and (frontnodes.length > 0)
         numbacknodes = backnodes.length
         if @back and (numbacknodes > 0)
-          @back.clipPolygons backnodes, alsoRemovecoplanarFront
+          @back.clipPolygons_recursive backnodes, alsoRemovecoplanarFront
         else
-          
           # there's nothing behind this plane. Delete the nodes behind this plane:
-          i = 0
-          while i < numbacknodes
+          console.log "remvoving #{numbacknodes} elements"
+          for i in [0...numbacknodes]
+            #console.log "removing at #{i}"
+            #console.log backnodes[i]
             backnodes[i].remove()
-            i++
-  
+    
+    @clipPolygons=(currentNode,polygontreenodes, alsoRemovecoplanarFront)->
+      # clip polygontreenodes to our plane
+      # calls remove() for all clipped PolygonTreeNodes
+      # iterative approach to avoid too much recursion errors
+      stack = []
+      stack.push([currentNode,polygontreenodes])
+      while stack.length > 0
+        [currentNode,treeNodes] = stack.pop()
+        
+        if currentNode.plane
+          backnodes = []
+          frontnodes = []
+          coplanarfrontnodes = (if alsoRemovecoplanarFront then backnodes else frontnodes)
+          plane = currentNode.plane
+          node.splitByPlane(plane, coplanarfrontnodes, backnodes, frontnodes, backnodes) for node in treeNodes when not(node.isRemoved())
+          
+          front = currentNode.front
+          numFrontNodes = frontnodes.length
+          if front and (numFrontNodes > 0)
+            stack.push([front,frontnodes]) 
+          
+          back = currentNode.back
+          numBackNodes = backnodes.length
+          if back and (numBackNodes > 0)
+            stack.push([back,backnodes])
+          else
+            # there's nothing behind this plane. Delete the nodes behind this plane:
+            for i in [0...numBackNodes]
+              backnodes[i].remove()
+    
     clipTo: (tree, alsoRemovecoplanarFront) ->
-      #FIXME: issue potentially here
       # Remove all polygons in this BSP tree that are inside the other BSP tree
       # `tree`.
-      tree.rootnode.clipPolygons @polygontreenodes, alsoRemovecoplanarFront  if @polygontreenodes.length > 0
+      Node.clipPolygons(tree.rootnode, @polygontreenodes, alsoRemovecoplanarFront) if @polygontreenodes.length > 0
+      
+      @front.clipTo tree, alsoRemovecoplanarFront  if @front
+      @back.clipTo tree, alsoRemovecoplanarFront  if @back
+  
+    clipTo_recursive: (tree, alsoRemovecoplanarFront) ->
+      #WARNING: issue with too much recursion here, see above method for iterative implementation
+      # Remove all polygons in this BSP tree that are inside the other BSP tree
+      # `tree`.
+      tree.rootnode.clipPolygons_recursive @polygontreenodes, alsoRemovecoplanarFront  if @polygontreenodes.length > 0
       @front.clipTo tree, alsoRemovecoplanarFront  if @front
       @back.clipTo tree, alsoRemovecoplanarFront  if @back
   
@@ -260,9 +299,8 @@ define (require)->
         @plane = bestplane
       frontnodes = []
       backnodes = []
-      polygontreenodes.map (polygontreenode) ->
-        polygontreenode.splitByPlane _this.plane, _this.polygontreenodes, backnodes, frontnodes, backnodes
-  
+      polygonTreeNode.splitByPlane _this.plane, _this.polygontreenodes, backnodes, frontnodes, backnodes for polygonTreeNode in polygontreenodes
+        
       if frontnodes.length > 0
         @front = new Node(this)  unless @front
         @front.addPolygonTreeNodes frontnodes
