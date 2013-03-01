@@ -34,7 +34,7 @@ require.config
     
     #plugins
     jquery_hotkeys:   "../assets/js/plugins/jquery.hotkeys"
-    jquery_ui:        "../assets/js/plugins/jquery-ui-1.10.0.custom"
+    jquery_ui:        "../assets/js/plugins/jquery-ui-1.10.1.custom"
     jquery_layout:    "../assets/js/plugins/jquery.layout-latest"
     jquery_jstree:    "../assets/js/plugins/jquery.jstree"
     jquery_sscroll:   "../assets/js/plugins/jquery.slimscroll"

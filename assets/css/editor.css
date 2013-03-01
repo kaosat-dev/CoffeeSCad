@@ -1,3 +1,8 @@
+
+body
+{
+	border-radius:0px !important;
+}
 /*Nice colors:#c54c4f, #da3610*, #fea60b/
 /*ToolBar*/
 .toolBar a {text-decoration:none;color:black;line-height:38px; }
@@ -21,6 +26,11 @@
 	padding: 0.2em 0 0 0;
 }
 
+.filesListContainer
+{
+	border:none!important;
+}
+
 .codeEditor
 {
 	color:#2db2ea;
@@ -28,7 +38,10 @@
 .codeEditorContainer
 {
 	border-radius:0px;
-	box-shadow: 0 2px 2px rgba(0, 0, 0, 0.3);
+	/*box-shadow: 0 2px 2px rgba(0, 0, 0, 0.3);*/
+	border:none;
+	height:100%;
+	width:100%;
 }
 
 
@@ -42,6 +55,8 @@
 {
 	border-right-color: #2db2ea;
 }
+
+/*
 input[type=text]
 {
 	outline: none !important;
@@ -53,7 +68,7 @@ input[type=text]
 textarea:focus, input:focus{
     outline: none !important;
 }
-
+*/
 
 
 /*Experimental, for 3d ui*/
@@ -178,11 +193,12 @@ text-shadow: 0 1px 0 white;
 
 .ui-dialog
 {
-	background-color: #3a3f44; /*same as slate theme bg*/
+	/*background-color: #3a3f44; same as slate theme bg*/
 	/*border-color: transparent !important;
 	border-width: 1px;*/
 	border: 1px solid rgba(0, 0, 0, 0.3);
 	color: #FFFFFF !important;
+	border-radius: 0px;
 	
 	
 }
@@ -194,16 +210,21 @@ text-shadow: 0 1px 0 white;
 .ui-dialog-titlebar
 {
 	border-color: #000000 !important;
+	height:1em;
 
 }
 .ui-dialog .ui-dialog-titlebar
 {
 	border-color: transparent !important;
+	/*padding:4em 0em;*/
+	
 }
-
+.ui-dialog-titlebar-close {
+  visibility: hidden;
+}
 .ui-dialog-content
 {
-	background-color: #3a3f44;/*same as slate theme bg*/
+	/*background-color: #3a3f44;same as slate theme bg*/
 }
 
 .ui-resizable-handle
@@ -214,8 +235,13 @@ text-shadow: 0 1px 0 white;
 
 .ui-widget-content
 {
-	background: #3a3f44;
-	color: #C8C8C8 !important;
+	background: #ffffff;
+	/*background: #3a3f44;
+	color: #C8C8C8 !important;*/
+}
+.ui-widget-header
+{
+	background:none;
 }
 
 .ui-widget-content a
@@ -267,7 +293,7 @@ ui-icon ui-icon-closethick .ui-state-hover
 .CodeMirror {
 	position:absolute;top:0; bottom:0;/*to force fill container*/
 	height: auto;
-	width:	98%;
+	width:	100%;
 }
 
 .CodeMirror-scroll 
@@ -452,7 +478,6 @@ legend + .control-group
 /*-------------------------------------*/	
 /*misc*/
 
-.ui-dialog-titlebar { height: 2em; }
 
 .fill { 
     min-height: 100%;

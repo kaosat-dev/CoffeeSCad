@@ -186,22 +186,22 @@ define (require) ->
           when "shadows"
             if not val
               @renderer.clearTarget(@light.shadowMap)
-              @fromCsg @model
-              @render()
+              @_updateAssemblyVisualAttrs()
+              @_render()
               @renderer.shadowMapAutoUpdate = false
               if @settings.get("showGrid")
                 @removeGrid()
                 @addGrid()
             else
               @renderer.shadowMapAutoUpdate = true
-              @fromCsg @model
-              @render()
+              @_updateAssemblyVisualAttrs()
+              @_render()
               if @settings.get("showGrid")
                 @removeGrid()
                 @addGrid()
           when "selfShadows"
-            @fromCsg @model
-            @render()
+            @_updateAssemblyVisualAttrs()
+            @_render()
           when "showStats"
             if val
               @ui.overlayDiv.append(@stats.domElement)
@@ -218,8 +218,8 @@ define (require) ->
             @setupView(val)
           when "wireframe"
             #TODO: should not be global , but object specific?
-            if @mesh?
-              @mesh.material.wireframe = val
+            @_updateAssemblyVisualAttrs()
+            @_render()
           when 'center'
             try
               tgt = @controls.target
@@ -635,9 +635,6 @@ define (require) ->
       @_render()
     
     onRender:()=>
-      selectors = @ui.overlayDiv.children(" .uicons")
-      #selectors.tooltip()
-      
       if @settings.get("showStats")
         @ui.overlayDiv.append(@stats.domElement)
         
@@ -648,7 +645,6 @@ define (require) ->
       #@camera.updateProjectionMatrix()
       
       #@camera.setSize(@width,@height)
-      
       
       @camera.updateProjectionMatrix()
       @renderer.setSize(@width, @height)
@@ -662,7 +658,6 @@ define (require) ->
       #@overlayCamera.position.x = 150
             
       @_render()
-      
       
       @$el.resize @onResize
       window.addEventListener('resize', @onResize, false)
@@ -787,6 +782,12 @@ define (require) ->
       if csgObj.children?
         for index, child of csgObj.children
           @_importGeom(child, mesh) 
+     
+    _updateAssemblyVisualAttrs:=>
+      for child in @assembly.children
+        child.castShadow =  @settings.get("shadows")
+        child.receiveShadow = @settings.get("selfShadows") and @settings.get("shadows")
+        child.material.wireframe = @settings.get("wireframe")
      
     _addIndicator:(mesh)->
       #experimental ui elements

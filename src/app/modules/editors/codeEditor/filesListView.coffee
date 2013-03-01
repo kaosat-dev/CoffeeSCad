@@ -102,7 +102,7 @@ define (require)->
       
       #elHeight = 500#@$el.parent().height()-200
       #@$el.css('height':"#{elHeight}px")
-      
+      @$el.parent().addClass("filesListContainer")
       $(@console.el).addClass("ui-layout-south")
       $(@tabContent.el).addClass("ui-layout-center")
       innerLayoutOptions = {
