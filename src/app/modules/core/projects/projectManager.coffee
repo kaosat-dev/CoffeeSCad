@@ -32,6 +32,7 @@ define (require)->
       @vent.on("project:save", @onSaveProject)
       @vent.on("project:load", @onLoadProject)
       @vent.on("project:loaded",@onProjectLoaded)
+      @vent.on("project:compile",@compileProject)
       
       @appSettings.on("reset", @onAppSettingsChanged)
       @appSettings.on("change",@onAppSettingsChanged)
@@ -47,8 +48,13 @@ define (require)->
         name: @project.get("name")
         content:"""
         #just a comment
-        sphere = new Sphere({r:100,$fn:95}) 
-        sphere2 = new Sphere({r:100,$fn:95}).translate([50,0,0])
+        cube = new Cube({size:100}).color([0.9,0.5,0.1])
+        assembly.add(cube)
+        """
+        content_3:"""
+        #just a comment
+        sphere = new Sphere({r:100,$fn:15}) 
+        sphere2 = new Sphere({r:100,$fn:15}).translate([50,0,0])
         
         sphere.subtract(sphere2)
         assembly.add(sphere)

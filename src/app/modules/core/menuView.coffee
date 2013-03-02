@@ -91,6 +91,8 @@ define (require)->
       "click .settings":      ()=>vent.trigger("settings:show")
       "click .showEditor":    ()->vent.trigger("codeEditor:show")
       
+      "click .compileProject"  : ()->vent.trigger("project:compile")
+      
     constructor:(options)->
       super options
       @vent = vent
