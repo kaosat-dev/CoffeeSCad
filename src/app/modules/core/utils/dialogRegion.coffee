@@ -10,6 +10,8 @@ define (require)->
 
     constructor:(options) ->
       options = options or {}
+      @width = options.width ? 640
+      @height = options.height ? 480
       @large = options.large ? false
       elName = options.elName ? "dummyDiv"
       @makeEl(elName)
@@ -34,9 +36,7 @@ define (require)->
     
     showDialog: (view)=>
       view.on("close", @hideDialog, @)
-      
       ###
-      
       #workaround for twitter bootstrap multi modal bug
       oldFocus = @$el.modal.Constructor.prototype.enforceFocus
       @$el.modal.Constructor.prototype.enforceFocus = ()->{}
@@ -72,7 +72,7 @@ define (require)->
       @$el.dialog
         title : "CodeEditor"#view.model.get("name")
         width: 800
-        height: 700
+        height: 350
         closeOnEscape: false
         position: 
           my: "top center"

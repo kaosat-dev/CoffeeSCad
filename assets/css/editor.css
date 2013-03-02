@@ -1,9 +1,16 @@
+/*Nice colors:#c54c4f, #da3610*, #fea60b
+ *Nice grid color #00DDDD
+ * 
+ * #253565
+ */
 
-body
+.colorsTest
 {
-	border-radius:0px !important;
+	background-color:#565595; #253565;
+	
 }
-/*Nice colors:#c54c4f, #da3610*, #fea60b/
+
+
 /*ToolBar*/
 .toolBar a {text-decoration:none;color:black;line-height:38px; }
 .toolBar a div{background-color: #fea60b; height:34px}
@@ -29,6 +36,7 @@ body
 .filesListContainer
 {
 	border:none!important;
+	overflow:auto;
 }
 
 .codeEditor
@@ -42,19 +50,9 @@ body
 	border:none;
 	height:100%;
 	width:100%;
+	overflow-y: hidden !important;
 }
 
-
-/*popovers*/
-.popover
-{
-	border-radius:0px;
-	background-color: #2db2ea;
-}
-.popover.right .arrow 
-{
-	border-right-color: #2db2ea;
-}
 
 /*
 input[type=text]
@@ -81,9 +79,43 @@ textarea:focus, input:focus{
   	font-size: 3.3333333333333333em;
 }
 
+/*For context menu/visual object creator*/
+.objectCreatorWrapper
+{
+	color:#000000 !important;
+	background-color: none;
+}
+.objectCreatorWrapper ul
+{
+	list-style: none;
+}
 
 
 /*BOOTSTRAP CHANGES*/
+
+/*popovers*/
+.popover
+{
+	border-radius:0px;
+	/*background-color: #2db2ea;*/
+	margin-left: -48px;
+	margin-top: 5px;
+}
+.popover.right .arrow 
+{
+	/*border-right-color: #2db2ea;*/
+}
+
+.popover.left
+{
+}
+
+.popover-content
+{
+	padding:0px;
+}
+
+
 .navbar-inner
 {
 	background-image:none;
@@ -102,6 +134,14 @@ textarea:focus, input:focus{
   vertical-align: top;
   font-size: 2.3333333333333333em;
 }
+
+.tab-content > .active, .pill-content > .active
+{
+	/*fix for tabs content scrollbar being displayed in the parent div*/
+	overflow: auto;
+	height: 300px;
+}
+
 
 /*Things worth considering adding to the overall style: (cleaner, more minimal look)
   
@@ -271,7 +311,7 @@ ui-icon ui-icon-closethick .ui-state-hover
 .ui-layout-pane
 {
 	/*background-color: #FF0000 !important;*/
-	overflow-y: hidden !important;
+	/*overflow-y: hidden !important;*/
 	padding:4px !important;
 }
 
@@ -298,8 +338,8 @@ ui-icon ui-icon-closethick .ui-state-hover
 
 .CodeMirror-scroll 
 {
-        height: 100%;
-        min-height:300px;
+        height: 90%;
+        min-height:200px;
         overflow-y: auto;
         overflow-x: auto;
 }

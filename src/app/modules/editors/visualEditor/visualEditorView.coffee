@@ -21,6 +21,8 @@ define (require) ->
   
   helpers = require './helpers'
   
+  contextMenuTemplate = require "text!./contextMenu.tmpl"
+  
 
   class VisualEditorView extends Backbone.Marionette.ItemView
     template: threedView_template
@@ -51,8 +53,8 @@ define (require) ->
         return @makeScreeshot()
       
       ##########
-      @width = window.innerWidth# 800
-      @height = window.innerHeight# 600
+      @width = window.innerWidth
+      @height = window.innerHeight-10
       @init()
       
     makeScreeshot:(width=300, height=300)=>
@@ -239,11 +241,15 @@ define (require) ->
               @addAxes()
           when 'showConnectors'
             if val
-              THREE.SceneUtils.traverseHierarchy @assembly, (object)-> 
+              @assembly.traverse (object)->
+                console.log "pouet"
+                console.log object
                 if object.name is "connectors"
                   object.visible = true 
             else
-              THREE.SceneUtils.traverseHierarchy @assembly, (object)-> 
+              @assembly.traverse (object)->
+                console.log "pouet"
+                console.log object
                 if object.name is "connectors"
                   object.visible = false 
       @_render()  
@@ -395,8 +401,9 @@ define (require) ->
       @overlayScene.add(@overlayCamera)
 
     setupLights:()=>
+      console.log "Setting up lights"
       pointLight =
-        new THREE.PointLight(0x333333,3)
+        new THREE.PointLight(0x333333,4)
       pointLight.position.x = -2500
       pointLight.position.y = -2500
       pointLight.position.z = 2200
@@ -407,10 +414,10 @@ define (require) ->
       pointLight2.position.y = 2500
       pointLight2.position.z = -5200
 
-      @ambientColor = '0x253565'
-      @ambientColor = '0x354575'
-      @ambientColor = '0x455585'
-      @ambientColor = '0x565595'
+      @ambientColor = 0x253565
+      @ambientColor = 0x354575
+      @ambientColor = 0x455585
+      @ambientColor = 0x565595
       ambientLight = new THREE.AmbientLight(@ambientColor)
       
       spotLight = new THREE.SpotLight( 0xbbbbbb, 1.5)    
@@ -543,7 +550,6 @@ define (require) ->
       @_render()
      
     setBgColor:()=>
-      ###
       console.log "setting bg color"
       bgColor1 = @settings.get("bgColor")
       bgColor2 = @settings.get("bgColor2")
@@ -563,7 +569,6 @@ define (require) ->
         $("body").css("background-attachment", "")
         
         #$("body").css('background-color', @settings.get("bkGndColor"))
-       ### 
     addGrid:()=>
       ###
       Adds both grid & plane (for shadow casting), based on the parameters from the settings object
@@ -620,7 +625,7 @@ define (require) ->
     
     onResize:()=>
       @width =  window.innerWidth# $("#glArea").width()
-      @height = window.innerHeight#-10
+      @height = window.innerHeight-10
       #@camera.aspect = @width / @height
       #@camera.updateProjectionMatrix()
       
@@ -648,14 +653,6 @@ define (require) ->
       
       @camera.updateProjectionMatrix()
       @renderer.setSize(@width, @height)
-      
-      #FIXME: remove this totally random stuff
-      #@overlayCamera.position.z = @camera.position.z
-      #@overlayCamera.position.y = @camera.position.y
-      #@overlayCamera.position.x = @camera.position.x
-      #@overlayCamera.position.z = 150
-      #@overlayCamera.position.y = 250
-      #@overlayCamera.position.x = 150
             
       @_render()
       
@@ -699,6 +696,32 @@ define (require) ->
       @overlayControls.userZoomSpeed=0
       
       @animate()
+      
+      
+    onDomRefresh:=>
+      #FIXME: this needs to be moved to another view
+      $('.objectCreator').popover
+        #container: ".objectCreator"
+        html : true
+        content: _.template($(contextMenuTemplate).filter('#contextMenuTmpl').html()) 
+        placement:"left"
+        #template:'<div class="popover" style="height:45px"><div class="arrow"></div><div class="popover-inner"><h3 class="popover-title" style="display: none"></h3><div class="popover-content"><p></p></div></div></div>'
+      $('.objectCreator').popover
+        show:true
+      @bindUIElements()
+      
+      $('#shapeCreate').on "click", (event)->
+        ###
+        $('.shapeCreate').popover
+          content: "Square"
+          placement:"left"
+          show:true
+       ###
+      @bindUIElements()
+      console.log $('#shapeCreate')
+      $("#shapeCreate").onclick = (event)->
+        console.log "sdf"
+       
     
     _render:()=>
       @renderer.render(@scene, @camera)
@@ -745,12 +768,13 @@ define (require) ->
     _importGeom:(csgObj,rootObj)=>
       geom = THREE.CSG.fromCSG(csgObj)
       shine= 1500
-      spec= 10000000000
+      spec= 1000
       if @renderer instanceof THREE.CanvasRenderer
         mat = new THREE.MeshLambertMaterial({color:  0xFFFFFF}) 
         mat.overdraw = true
       else 
-        mat = new THREE.MeshPhongMaterial({color:  0xFFFFFF , shading: THREE.SmoothShading,  shininess: shine, specular: spec, metal: true, vertexColors: THREE.VertexColors}) 
+        mat = new THREE.MeshPhongMaterial({color:  0xFFFFFF , shading: THREE.SmoothShading,  shininess: shine, specular: spec, metal: false, vertexColors: THREE.VertexColors}) 
+        mat.ambient = mat.color
       mesh = new THREE.Mesh(geom, mat)
       mesh.castShadow =  @settings.get("shadows")
       mesh.receiveShadow = @settings.get("selfShadows") and @settings.get("shadows")
@@ -762,6 +786,7 @@ define (require) ->
       
       #get object connectors
       for i, conn of geom.connectors
+        #console.log "I am a connector at #{i}"
         ###
         mat =  new THREE.LineBasicMaterial({color: 0xff0000})
         line = new THREE.Line(conn, mat)

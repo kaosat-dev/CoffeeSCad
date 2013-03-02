@@ -112,6 +112,7 @@ define (require) ->
       
       three_geometry = new THREE.Geometry()
       polygons = csg_model.toPolygons()
+      properties = csg_model.properties
       
       verticesIndex= {}
       
@@ -170,7 +171,42 @@ define (require) ->
       
       three_geometry.computeBoundingBox()
       three_geometry.computeCentroids()
+      three_geometry.computeFaceNormals();
+      #three_geometry.computeVertexNormals();
       
+      connectors = []
+      searchForConnectors = (obj)->
+        for index, prop of obj
+          if (typeof prop) != "function"
+            #console.log prop
+            #console.log "type "+ typeof prop
+            if prop.constructor.name is "Connector"
+              #console.log "connector"
+              connector = {}
+              point = prop.point
+              axisvector = prop.axisvector
+              geometry = new THREE.CubeGeometry(10,10,10)
+              geometry.basePoint = new THREE.Vector3(point.x, point.y, point.z)
+             
+              ###
+              geometry = new THREE.Geometry()
+              geometry.vertices.push(new THREE.Vector3(point.x, point.y, point.z))
+              end = new THREE.Vector3(point.x+axisvector.x, point.y+axisvector.y, point.z+axisvector.z)
+              end.multiplyScalar(3)
+              geometry.vertices.push(end)
+              ###
+              
+              connectors.push(geometry)
+            ###
+            try
+              if "point" of prop
+                #console.log "haspoint"
+            catch error
+            ###
+            searchForConnectors(prop)
+      
+      searchForConnectors(properties)
+      three_geometry.connectors  = connectors
       #console.log "resulting three.geometry"
       #console.log three_geometry
       end = new Date().getTime()

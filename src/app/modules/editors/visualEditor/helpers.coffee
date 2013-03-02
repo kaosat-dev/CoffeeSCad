@@ -58,7 +58,7 @@ define (require) ->
   class LabeledAxes extends BaseHelper
     constructor:(options)->
       super options
-      defaults = {size:50, xColor:0xFF7700,yColor:0x77FF00,zColor:0x0077FF,textColor:"#FFFFFF",addLabels:true, addArrows:true}
+      defaults = {size:50, xColor:"0xFF7700",yColor:0x77FF00,zColor:0x0077FF,textColor:"#FFFFFF",addLabels:true, addArrows:true}
       options = merge defaults, options
       {@size, @xColor, @yColor, @zColor, @textColor, addLabels, addArrows} = options
 
@@ -84,28 +84,32 @@ define (require) ->
         @add @yArrow
         @add @zArrow
       else
-        @add @_buildAxes()
+        @_buildAxes()
         
       @add @xLabel
       @add @yLabel 
       @add @zLabel
     
     _buildAxes:()=>
-      geometry = new THREE.Geometry()
-      geometry.vertices.push(
-        new THREE.Vector3(-@size or -1, 0, 0 ), new THREE.Vector3( @size or 1, 0, 0 ),
-        new THREE.Vector3(0, -@size or -1, 0), new THREE.Vector3( 0, @size or 1, 0 ),
-        new THREE.Vector3(0, 0, -@size or -1 ), new THREE.Vector3( 0, 0, @size or 1 )
-        )
-        
-      geometry.colors.push(@xColor,@xColor, @yColor, @yColor, @zColor, @zColor)
-        
-      material = new THREE.LineBasicMaterial
-        vertexColors: THREE.VertexColors
-        #depthTest:false
-        linewidth:1
-      return new THREE.Line(geometry, material, THREE.LinePieces)
-   
+      lineGeometryX = new THREE.Geometry()
+      lineGeometryX.vertices.push( new THREE.Vector3(-@size, 0, 0 ))
+      lineGeometryX.vertices.push( new THREE.Vector3( @size, 0, 0 ))
+      xLine = new THREE.Line( lineGeometryX, new THREE.LineBasicMaterial( { color: @xColor } ) )
+      
+      lineGeometryY = new THREE.Geometry()
+      lineGeometryY.vertices.push( new THREE.Vector3(0, -@size, 0 ))
+      lineGeometryY.vertices.push( new THREE.Vector3( 0, @size, 0 ))
+      yLine = new THREE.Line( lineGeometryY, new THREE.LineBasicMaterial( { color: @yColor } ) )
+      
+      lineGeometryZ = new THREE.Geometry()
+      lineGeometryZ.vertices.push( new THREE.Vector3(0, 0, -@size ))
+      lineGeometryZ.vertices.push( new THREE.Vector3(0, 0, @size ))
+      zLine = new THREE.Line( lineGeometryZ, new THREE.LineBasicMaterial( { color: @zColor } ) )
+      
+      @add xLine
+      @add yLine
+      @add zLine
+
   
   class Grid extends BaseHelper
     #Grid class: contains a basic flat grid, a subgrid and an invisible "plane" for shadow projection "onto" the grid
@@ -204,9 +208,9 @@ define (require) ->
        @subGrid.material.opacity = opacity
        
      setColor:(color)=>
-       @color = color
-       @mainGrid.material.color = color
-       @subGrid.material.color = color
+       @color = color 
+       @mainGrid.material.color = new THREE.Color().setHex(@color)
+       @subGrid.material.color = new THREE.Color().setHex(@color)
       
       
   class BoundingCage extends BaseHelper
