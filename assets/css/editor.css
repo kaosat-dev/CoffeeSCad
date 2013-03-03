@@ -6,7 +6,7 @@
 
 .colorsTest
 {
-	background-color:#565595; #253565;
+	background-color:#565595; /*#253565;*/
 	
 }
 
@@ -19,7 +19,6 @@
 .filesTreeContainer
 {
 	color:#2db2ea;
-	left:34px !important;/*34 px is the width of a span6 fluid in our context*/
 	border:none !important;
 }
 .filesTree 
@@ -32,12 +31,34 @@
 	cursor: hand; cursor: pointer;
 	padding: 0.2em 0 0 0;
 }
+.filesTree a
+{
+	cursor: hand; cursor: pointer;
+}
 
 .filesListContainer
 {
 	border:none!important;
 	overflow:auto;
+	left:0px;
 }
+
+.fileListEditable
+{
+	cursor: text !important;
+	border: 2px; 
+	border-color: #000000;
+	/*padding: 0 50px 0px 0;*/
+	background-color:#f3f3f3;
+}
+
+#newFileInput
+{
+	line-height: 10px;
+	height: 1em;
+}
+
+
 
 .codeEditor
 {
@@ -250,7 +271,6 @@ text-shadow: 0 1px 0 white;
 .ui-dialog-titlebar
 {
 	border-color: #000000 !important;
-	height:1em;
 
 }
 .ui-dialog .ui-dialog-titlebar
@@ -331,19 +351,23 @@ ui-icon ui-icon-closethick .ui-state-hover
 
 
 .CodeMirror {
-	position:absolute;top:0; bottom:0;/*to force fill container*/
+	/*position:absolute;*/
+	top:0; bottom:0;/*to force fill container*/
 	height: auto;
 	width:	100%;
 }
 
 .CodeMirror-scroll 
 {
-        height: 90%;
+        height: 100%;
         min-height:200px;
         overflow-y: auto;
         overflow-x: auto;
 }
-
+.CodeMirror-scrollbar
+{
+	overflow-y: auto;
+}
 /*for current full line selection*/
 /*.activeline {background: #e8f2ff !important;}
 .activeline {background: #0AAAF1 !important;}*/
@@ -540,9 +564,9 @@ body {
 }
 
 
-.modal-backdrop {background-color: #aaaaaa;}
+.modal-backdrop {background-color: #000000;}
 .modal-backdrop, .modal-backdrop.fade.in {
-    opacity: 0.35;
+    opacity: 0.2;
 }
 
 /*taken from https://github.com/twitter/bootstrap/issues/675*/
@@ -554,6 +578,15 @@ body {
 .modal-reallyBig {
     width: 1024px;
     margin-left: -502px;
+}
+
+.modal.fade{
+    -webkit-transition: opacity .01s linear, none;
+    -moz-transition: opacity .01s linear, none;
+    -ms-transition: opacity .01s linear, none;
+    -o-transition: opacity .01s linear, none;
+    transition: opacity .01s linear, none;
+    top: 50%;
 }
 
 /*

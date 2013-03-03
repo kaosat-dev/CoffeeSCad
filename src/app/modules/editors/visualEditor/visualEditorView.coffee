@@ -809,10 +809,11 @@ define (require) ->
           @_importGeom(child, mesh) 
      
     _updateAssemblyVisualAttrs:=>
-      for child in @assembly.children
-        child.castShadow =  @settings.get("shadows")
-        child.receiveShadow = @settings.get("selfShadows") and @settings.get("shadows")
-        child.material.wireframe = @settings.get("wireframe")
+      if @assembly?
+        for child in @assembly.children
+          child.castShadow =  @settings.get("shadows")
+          child.receiveShadow = @settings.get("selfShadows") and @settings.get("shadows")
+          child.material.wireframe = @settings.get("wireframe")
      
     _addIndicator:(mesh)->
       #experimental ui elements

@@ -1,8 +1,30 @@
 <script id="fileTmpl" type="text/x-underscore-template">
-	<a class="openFile"><i class="icon-file"></i><%= name %>.<%= ext %></a>
+	<td id="fileNameColumn"> <a class="openFile"><i class="icon-file"></i> <%= name %>.<%= ext %></a></td>
+	<td id="editFileColumn"> <a class="editFile"><i class="icon-edit"></i></a></td>
+	<td id="deleteFileColumn">&nbsp;&nbsp;<a class="deleteFile"><i class="icon-minus"></i></a></td>
+</script>
+
+<script id="projectTmpl" type="text/x-underscore-template">
+	<table>
+		<thead><td><h5><%= name %></h5></td><td><a class="editProjectName"><i class="icon-edit"></i></a></td></thead>
+    <tbody></tbody>
+	
+    <tfoot>
+      <tr>
+        <td id="newFileColumn" class="control-group"> <a><input type="text" style="width: 120px;" id="newFileInput" tabindex="-1"/></td><td> <a class="addFile"><i class="icon-plus"></i></a></td>
+      </tr>
+    </tfoot>
+  </table>
 </script>
 
 
 <script id="rootTmpl" type="text/x-underscore-template">
 	<h5><%= name %></h5>
+	<!--
+	<table class="table">
+		<tr> 
+			<td> <h5><%= name %></h5></td>
+			<td> <a class="editFile"><i class="icon-edit"></i></a></td>
+		</tr>
+	</table>-->
 </script>

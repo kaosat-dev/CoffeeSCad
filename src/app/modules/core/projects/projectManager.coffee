@@ -194,5 +194,8 @@ define (require)->
       modReg = new ModalRegion({elName:"library",large:true})
       modReg.show projectBrowserView
       
+    onProjectLoaded:(project)=>
+      @project=project
+      
   return ProjectManager
   

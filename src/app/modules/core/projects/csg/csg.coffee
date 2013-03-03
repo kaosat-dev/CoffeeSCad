@@ -72,6 +72,8 @@ define (require)->
     "register":register,
     "classRegistry":classRegistry,
     "otherRegistry":otherRegistry
+    "merge":merge
+    "extend":extend
   }
   
   exports = merge(shapes2d,shapes3d)

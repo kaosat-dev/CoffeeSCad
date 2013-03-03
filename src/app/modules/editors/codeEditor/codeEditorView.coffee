@@ -61,8 +61,8 @@ define (require)->
 
     onRender:=>
       #show toolBar 
-      toolBarView = new ToolBarView
-      @toolBar.show(toolBarView)
+      #toolBarView = new ToolBarView
+      #@toolBar.show(toolBarView)
       
       #show files tree
       filesTreeView = new FilesTreeView

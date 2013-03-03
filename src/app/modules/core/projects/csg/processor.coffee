@@ -26,14 +26,14 @@ define (require) ->
       console.log "Using background rebuild:#{@async}"
       @processing = true
       paramValues = null
-      #try
-      if @async
-        @_prepareScriptASync()
-        @parseScriptASync(@script, paramValues)
-      else
-        @_prepareScriptSync()
-        @parseScriptSync(@script, paramValues)
-      @processing = false
+      try
+        if @async
+          @_prepareScriptASync()
+          @parseScriptASync(@script, paramValues)
+        else
+          @_prepareScriptSync()
+          @parseScriptSync(@script, paramValues)
+        @processing = false
       catch error
         console.log error.stack
         @callback(null, null, error)
@@ -42,8 +42,8 @@ define (require) ->
     _prepareScriptASync:()=>
       #prepare the source for compiling : convert to coffeescript, inject dependencies etc
       @script = """
-      {BaseMaterial,CAGBase,CSGBase,Circle,Connector,Cube,Cylinder,Line2D,Line3D,Material,Matrix4x4,
-      OrthoNormalBasis,Part,Path2D,Plane,Polygon,PolygonShared,Properties, Rectangle,
+      {BaseMaterial,CAGBase,CSGBase,Circle,Connector,Cube,Cylinder,extend,Line2D,Line3D,Material,Matrix4x4,
+      merge, OrthoNormalBasis,Part,Path2D,Plane,Polygon,PolygonShared,Properties, Rectangle,
       RoundedCube,RoundedCylinder,RoundedRectangle,Side,Sphere,Vector2D,Vector3D,
       Vertex,Vertex2D,classRegistry,hull,intersect, otherRegistry,register,rotate,
          scale, solve2Linear,subtract,translate,union}=csg
@@ -59,8 +59,8 @@ define (require) ->
     _prepareScriptSync:()=>
       #prepare the source for compiling : convert to coffeescript, inject dependencies etc
       @script = """
-      {BaseMaterial,CAGBase,CSGBase,Circle,Connector,Cube,Cylinder,Line2D,Line3D,Material,Matrix4x4,
-      OrthoNormalBasis,Part,Path2D,Plane,Polygon,PolygonShared,Properties, Rectangle,
+      {BaseMaterial,CAGBase,CSGBase,Circle,Connector,Cube,Cylinder,extend,Line2D,Line3D,Material,Matrix4x4,
+      merge, OrthoNormalBasis,Part,Path2D,Plane,Polygon,PolygonShared,Properties, Rectangle,
       RoundedCube,RoundedCylinder,RoundedRectangle,Side,Sphere,Vector2D,Vector3D,
       Vertex,Vertex2D,classRegistry,hull,intersect, otherRegistry,register,rotate,
          scale, solve2Linear,subtract,translate,union}=csg

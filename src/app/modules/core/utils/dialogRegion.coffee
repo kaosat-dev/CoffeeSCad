@@ -75,8 +75,9 @@ define (require)->
         height: 350
         closeOnEscape: false
         position: 
-          my: "top center"
-          at: "top center"
+          my: "left top"
+          at: "left top+50"
+          #of: @el
         beforeClose: =>
           view.isVisible=false
           view.close()

@@ -91,6 +91,8 @@ define (require)->
       @openFiles.add @collection.first()
       @activeFile = @collection.first()
       
+      @collection.on('remove',(item)=>@openFiles.remove(item) )
+      
       vent.on("file:selected", @showFile)
       vent.on("file:OpenRequest", @showFile)
       vent.on("file:closed", @hideFile)
