@@ -50,9 +50,9 @@ define (require)->
       console.log "_____________"
       ###
       
-    getByName:(name)->
+    getByName:(name)=>
       """Return a specific sub setting by name"""
-      result = this.filter (setting)->
+      result = @filter (setting)->
         return setting.get('name')==name
       return result[0]
       

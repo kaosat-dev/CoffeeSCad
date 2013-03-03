@@ -45,16 +45,17 @@ define (require)->
         
     onStart:()=>
       @settings = @appSettings.getByName("VisualEditor")
-      
-      @mainRegion.show new VisualEditorView 
+      visualEditorView = new VisualEditorView
         model:    @project
         settings: @settings
+      @mainRegion.show visualEditorView
         
     resetEditor:(newProject)=>
       @project = newProject
       @mainRegion.close()
-      @mainRegion.show new VisualEditorView 
+      visualEditorView = new VisualEditorView
         model:    @project
         settings: @settings
+      @mainRegion.show visualEditorView
       
   return VisualEditor

@@ -109,6 +109,7 @@ define (require)->
       @project.on("change",@onProjectChanged)
     
     onProjectChanged:()=>
+      console.log "on project changed"
       switch @settings.get("csgCompileMode")
         when "onRequest"
           console.log ""
@@ -132,8 +133,12 @@ define (require)->
       if @settings?
         backgroundProcessing = @settings.get("csgBackgroundProcessing")
       
-      fullSource = @preProcessor.process(@project,false)
-      
+      try
+        fullSource = @preProcessor.process(@project,false)
+      catch error
+        @project.trigger("compile:error",[error])
+        return
+        
       @csgProcessor.processScript fullSource,backgroundProcessing, (rootAssembly, partRegistry, error)=>
         if error?
           #console.log "CSG processing failed : #{error.msg} on line #{error.lineNumber} stack:"
@@ -196,6 +201,7 @@ define (require)->
       
     onProjectLoaded:(project)=>
       @project=project
+      @project.on("change",@onProjectChanged)
       
   return ProjectManager
   

@@ -61,9 +61,10 @@ define (require)->
         tmpCollection.add connector
       @stores =  tmpCollection
       
-      @projectStores.show new ProjectsStoreView
+      projectsStoreView = new ProjectsStoreView
         collection:tmpCollection
         model: @model
+      @projectStores.show projectsStoreView
         
       if @operation is "save"
         screenshotPromise = reqRes.request("project:getScreenshot")

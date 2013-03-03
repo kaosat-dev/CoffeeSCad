@@ -40,9 +40,11 @@ define (require)->
     onRender:->
       if @model.get("compiled")
           @ui.exportButton.removeClass "disabled"
-          
-      @partsList.show new BomPartListView
+      
+      bomPartListView = new BomPartListView
         collection: @model.bom#@model.get("partsCollection")
+      @partsList.show bomPartListView
+        
     
     onClose:->
       #todo: how to remove event handler correctly for anonymous functions?

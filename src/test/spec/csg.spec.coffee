@@ -11,6 +11,13 @@ define (require)->
   Circle = csg.Circle
   
   
+  describe "Basic , configurable geometry ", ->
+    it 'has a Cube geometry', ->
+      cube = new Cube(size:100)
+      console.log cube
+      #expect(cube.polygons[0].vertices[0].pos.x).toBe(100)
+      
+  
   describe "CSG transforms", ->
     it 'can translate a csg object', ->
       cube = new Cube(size:100)
@@ -133,13 +140,14 @@ define (require)->
       hulledExtruded.fixTJunctions()
       expect(hulledExtruded.polygons.length).toBe(182)
    
+   ###Can get slow, hence why it is commented
    describe "Speed and limitations", ->
      it 'does not cause recursion/stack overflow error with more detailed geometry' , ->
        sphere = new Sphere({r:100,$fn:100})
        sphere2 = new Sphere({r:100,$fn:100})
        
        expect(sphere.union(sphere2)).not.toThrow(new RangeError())
-        
+   ###  
      
     
     

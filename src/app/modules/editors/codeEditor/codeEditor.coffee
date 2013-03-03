@@ -46,7 +46,7 @@ define (require)->
         return CodeEditorSettingsView
         
     onStart:()=>
-      @settings = @appSettings.getByName("CodeEditor")
+      @settings = @appSettings.get("CodeEditor")
       @showRegions()
       
     showRegions:=>
@@ -57,9 +57,10 @@ define (require)->
       ###
       DialogRegion = require 'modules/core/utils/dialogRegion'
       @diaReg = new DialogRegion({elName:"codeEdit"})
-      @diaReg.show new CodeEditorView 
+      codeEditorView = new CodeEditorView 
         model:    @project
         settings: @settings
+      @diaReg.show codeEditorView
     
     resetEditor:(newProject)=>
       console.log "resetting code editor"

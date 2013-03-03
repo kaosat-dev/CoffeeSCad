@@ -8,7 +8,6 @@ define (require)->
 
   class ContextMenu extends Backbone.Marionette.ItemView
     template: contextMenuTemplate
-    events:
       
     constructor:(options)->
       super options

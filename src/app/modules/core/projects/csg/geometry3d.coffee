@@ -343,6 +343,7 @@ define (require)->
       rStart = parseOptionAsFloat(options, "r1", r)
       
       if options.d1?
+        r = parseOptionAsFloat(options, "d", r)/2
         rEnd = parseOptionAsFloat(options, "d2", r)/2
         rStart = parseOptionAsFloat(options, "d1", r)/2
         
@@ -424,12 +425,14 @@ define (require)->
       polygons = []
       qresolution = Math.floor(0.25 * resolution)
       length = direction.length()
+      ### 
       if length < 1e-10
         return Sphere(
           center: p1
           radius: radius
           resolution: resolution
         )
+      ###
       zvector = direction.unit().times(radius)
       xvector = zvector.cross(normal).unit().times(radius)
       yvector = xvector.cross(zvector).unit().times(radius)
