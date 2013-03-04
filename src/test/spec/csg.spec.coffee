@@ -12,20 +12,58 @@ define (require)->
   
   
   describe "Basic , configurable geometry ", ->
-    it 'has a Cube geometry', ->
-      cube = new Cube(size:100)
+    it 'has a Cube geometry, default settings', ->
+      cube = new Cube({size:100})
+      expect(cube.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D())
+      
+    it 'has a Cube geometry, center as boolean', ->
+      cube = new Cube({size:100,center:true})
+      expect(cube.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D())
+    
+    it 'has a Cube geometry, center as vector', ->
+      cube = new Cube({size:100,center:[100,100,100]})
+      expect(cube.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D(100,100,100))
+    
+    it 'has a Cube geometry, size as vector', ->
+      cube = new Cube({size:[100,5,50]})
+      expect(cube.polygons[0].vertices[2].pos).toEqual(new csg.Vector3D(0,5,50))
+      
+    it 'has a Cube geometry, optional corner rounding', ->
+      cube = new Cube({size:100,r:10,$fn:5})
       console.log cube
-      #expect(cube.polygons[0].vertices[0].pos.x).toBe(100)
+      expect(cube.polygons[0].vertices[2].pos).toEqual(new csg.Vector3D(0,5,50))
+      
+    
+    it 'has a Sphere geometry, size set by radius', ->
+      sphere = new Sphere({r:50})
+      expect(sphere.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D())
+    
+    it 'has a Sphere geometry, size set by diameter', ->
+      sphere = new Sphere({d:25})
+      expect(sphere.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D())
+    
+    it 'has a Sphere geometry, settable resolution', ->
+      sphere = new Sphere({d:25,$fn:15})
+      expect(sphere.polygons.length).toEqual(120)
+    
+    it 'has a Sphere geometry, center as boolean', ->
+      sphere = new Sphere({d:25, center:true})
+      expect(sphere.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D())
+    
+    it 'has a Sphere geometry, center as vector', ->
+      sphere = new Sphere({d:25, center:[100,100,100]})
+      expect(sphere.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D())
+      
       
   
   describe "CSG transforms", ->
     it 'can translate a csg object', ->
-      cube = new Cube(size:100)
+      cube = new Cube({size:100})
       cube.translate([100,0,0])
       expect(cube.polygons[0].vertices[0].pos.x).toBe(100)
       
     it 'can rotate a csg object', ->
-      cube = new Cube(size:100)
+      cube = new Cube({size:100})
       cube.rotate([45,45,45])
       expect(cube.polygons[0].vertices[1].pos.x).toBe(85.35533905932736)
     

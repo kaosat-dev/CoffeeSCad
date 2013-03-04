@@ -19,6 +19,7 @@ define (require)->
  
   class Cube extends CSGBase
     # Construct an axis-aligned solid cuboid.
+    #TODO: cleanup all these geometries messiness
     # Parameters:
     #   center: center of cube (default [0,0,0])
     #   radius: radius of cube (default [1,1,1]), can be specified as scalar or as 3D vector
@@ -31,38 +32,38 @@ define (require)->
     constructor : (options) ->
       options = options or {}
       super options
-      #if options.c?
-      #  if options.c == true #
-      center= true
-      c = parseOptionAs3DVector(options, "center", [0, 0, 0])
+      
+      center = [0, 0, 0]
+      
       r = parseOptionAs3DVector(options, "size", [1, 1, 1])
+      size = r
+      if options.center?
+        if options.center == true or options.center == false
+          console.log "pouet"
+          center = new Vector3D([0, 0, 0])#[-size.x/2, -size.y/2, -size.z/2])
+        else
+          center = parseOptionAs3DVector(options, "center", [0, 0, 0])
+      else
+        center = parseOptionAs3DVector(options, "center", [0, 0, 0])
+          
+      console.log "center"+ center
       #radius (size) is nonsensical, divide by 2 to get real dimentions
       r = r.dividedBy(2)
-      ### 
-      result = null
-      CSGBase.fromPolygons
-      vertices = a*a for a in list when a%2 == 0
-      count item  for item in [1..10 ] when item % 3 isnt 0
-      [
-        [pos,norm],
-        [pos,norm]
-      ]
-      ###
       
       result = CSGBase.fromPolygons([[[0, 4, 6, 2], [-1, 0, 0]], [[1, 3, 7, 5], [+1, 0, 0]], [[0, 1, 5, 4], [0, -1, 0]], [[2, 6, 7, 3], [0, +1, 0]], [[0, 2, 3, 1], [0, 0, -1]], [[4, 5, 7, 6], [0, 0, +1]]].map((info) ->
         normal = new Vector3D(info[1])
         vertices = info[0].map((i) ->
-          pos = new Vector3D(c.x + (r.x) * (2 * !!(i & 1) - 1), c.y + (r.y) * (2 * !!(i & 2) - 1), c.z + (r.z) * (2 * !!(i & 4) - 1))
+          pos = new Vector3D(center.x + (r.x) * (2 * !!(i & 1) - 1), center.y + (r.y) * (2 * !!(i & 2) - 1), center.z + (r.z) * (2 * !!(i & 4) - 1))
           new Vertex(pos)
           )
         new Polygon(vertices, null)
       ))
       
       result.properties.cube = new Properties()
-      result.properties.cube.center = new Vector3D(c)
+      result.properties.cube.center = new Vector3D(center)
   
       # add 6 connectors, at the centers of each face:
-      result.properties.cube.facecenters = [new Connector(new Vector3D([r.x, 0, 0]).plus(c), [1, 0, 0], [0, 0, 1]), new Connector(new Vector3D([-r.x, 0, 0]).plus(c), [-1, 0, 0], [0, 0, 1]), new Connector(new Vector3D([0, r.y, 0]).plus(c), [0, 1, 0], [0, 0, 1]), new Connector(new Vector3D([0, -r.y, 0]).plus(c), [0, -1, 0], [0, 0, 1]), new Connector(new Vector3D([0, 0, r.z]).plus(c), [0, 0, 1], [1, 0, 0]), new Connector(new Vector3D([0, 0, -r.z]).plus(c), [0, 0, -1], [1, 0, 0])]
+      result.properties.cube.facecenters = [new Connector(new Vector3D([r.x, 0, 0]).plus(center), [1, 0, 0], [0, 0, 1]), new Connector(new Vector3D([-r.x, 0, 0]).plus(center), [-1, 0, 0], [0, 0, 1]), new Connector(new Vector3D([0, r.y, 0]).plus(center), [0, 1, 0], [0, 0, 1]), new Connector(new Vector3D([0, -r.y, 0]).plus(center), [0, -1, 0], [0, 0, 1]), new Connector(new Vector3D([0, 0, r.z]).plus(center), [0, 0, 1], [1, 0, 0]), new Connector(new Vector3D([0, 0, -r.z]).plus(center), [0, 0, -1], [1, 0, 0])]
       
       #FIXME: if possible remove this additional operation (this one is here to have positioning a la openscad)
       result.translate(r)
@@ -239,7 +240,7 @@ define (require)->
       center = parseOptionAs3DVector(options, "center", [0, 0, 0])
       
       radius = parseOptionAsFloat(options, "r", 1)
-      if options.d
+      if options.d?
         radius = parseOptionAsFloat(options, "d", 0.5)/2
       
       resolution = parseOptionAsInt(options, "$fn", CSGBase.defaultResolution3D)
