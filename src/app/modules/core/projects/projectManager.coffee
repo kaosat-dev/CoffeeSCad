@@ -163,13 +163,24 @@ define (require)->
     onNewProject:()=>
       @createProject()
       
-      projectBrowserView = new ProjectBrowserView
-        model: @project
-        operation: "new"
-        connectors: @connectors
-      
-      modReg = new ModalRegion({elName:"library",large:true})
-      modReg.show projectBrowserView
+      #projectBrowserView = new ProjectBrowserView
+      #  model: @project
+      #  operation: "new"
+      #  connectors: @connectors
+      #
+      #modReg = new ModalRegion({elName:"library",large:true})
+      #modReg.show projectBrowserView
+      if @project.dirty
+        bootbox.dialog "Project is unsaved, you will loose your changes, proceed anyway?", [
+          label: "Ok"
+          class: "btn-inverse"
+          callback: =>
+            @vent.trigger("project:loaded", @project) 
+        ,
+          label: "Cancel"
+          class: "btn-inverse"
+          callback: ->
+        ]
       
     onSaveAsProject:=>
       projectBrowserView = new ProjectBrowserView
