@@ -40,6 +40,8 @@ define (require)->
     constructor:(options)->
       super options
       @store = new backbone_dropbox()
+      console.log "backbone dropbox store"
+      console.log @store
       @isLogginRequired = true
       @loggedIn = true
       @vent = vent
@@ -190,21 +192,23 @@ define (require)->
     
     getProjectsName:(callback)=>
       #hack
-      @store.client.readdir "/", (error, entries) ->
-        if error
-          console.log ("error")
-        else
-          console.log entries
-          callback(entries)
+      if @store.client?
+        @store.client.readdir "/", (error, entries) ->
+          if error
+            console.log ("error")
+          else
+            console.log entries
+            callback(entries)
           
     getProjectFiles:(projectName,callback)=>
       #hack
-      @store.client.readdir "/#{projectName}/", (error, entries) ->
-        if error
-          console.log ("error")
-        else
-          console.log entries
-          callback(entries)
+      if @store.client?
+        @store.client.readdir "/#{projectName}/", (error, entries) ->
+          if error
+            console.log ("error")
+          else
+            console.log entries
+            callback(entries)
       
     
   return DropBoxConnector

@@ -7,6 +7,7 @@ define (require)->
   class DropBoxStorage
     constructor:(debug=false)->
       @debug = debug
+      @client=null
       
     authentificate:()=>
       @client = new Dropbox.Client
