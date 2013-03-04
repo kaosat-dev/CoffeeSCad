@@ -5,6 +5,7 @@ define (require)->
   marionette = require 'marionette'
   jquery_layout = require 'jquery_layout'
   jquery_ui = require 'jquery_ui'
+  require 'jquery_hotkeys'
   
   vent = require 'modules/core/vent'
   
@@ -96,6 +97,20 @@ define (require)->
       vent.on("file:selected", @showFile)
       vent.on("file:OpenRequest", @showFile)
       vent.on("file:closed", @hideFile)
+      
+      @_setupKeyboardBindings()
+    
+    _setupKeyboardBindings:=>
+      #Setup keyBindings
+      ###
+      @$el.bind 'keydown', 'ctrl+s', ->
+        console.log "i want to save a FILE"
+        return false
+
+      $(document).bind "keydown", "ctrl+s", ->
+        console.log "I WANT TO SAVE2"
+        return false
+      ###
     
     onDomRefresh:=>
       console.log "pouet"
@@ -114,6 +129,7 @@ define (require)->
       }
       #@myLayout = @$el.layout({applyDefaultStyles: true})
       #@codeView.setHeight(@$el.parent().height())
+      
     
     onRender:=>
       #show tab nav

@@ -61,7 +61,13 @@ define (require)->
         model:    @project
         settings: @settings
       @diaReg.show codeEditorView
-    
+      
+      #Setup keyBindings
+      ### 
+      $(document).bind('keydown', 'ctrl+a', (event)->
+        console.log "I WANT TO SAVE"
+        )
+      ###
     resetEditor:(newProject)=>
       console.log "resetting code editor"
       @project = newProject
