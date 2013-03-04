@@ -252,7 +252,7 @@ define (require) ->
       if state is STATE.ROTATE
         rotateEnd.set event.clientX, event.clientY
         rotateDelta.subVectors rotateEnd, rotateStart
-        scope.rotateLeft 2 * Math.PI * rotateDelta.x / PIXELS_PER_ROUND * scope.userRotateSpeed
+        scope.rotateLeft 2 * Math.PI * rotateDelta.x / PIXELS_PER_ROUND * scope.userRotateSpeed*-1
         scope.rotateUp 2 * Math.PI * rotateDelta.y / PIXELS_PER_ROUND * scope.userRotateSpeed
         rotateStart.copy rotateEnd
       else if state is STATE.ZOOM
