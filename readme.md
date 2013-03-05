@@ -83,7 +83,8 @@ can get rid of a lot of curly braces etc is a good fit
 
  **A** Sure !  If you want to contribute/play around with newer versions locally
  you can use the included CakeFile : 
- - after installing the depencies : type: "npm install -d"   tp Install the dependencies from the package.json file
+ - after installing the depencies : type: "npm install -d" to Install the dependencies from the package.json file
+ - on Windows rename the Cakefile.windows to Cakefile: "ren Cakefile Cakefile.linux" and "ren Cakefile.windows Cakefile"
  - just type cake serveWatch from the root folder to watch/compile the files and launch a small webserver
  - you can then go to  http://127.0.0.1:8090/ in your browser to use the dev version of CoffeeSCad
  
