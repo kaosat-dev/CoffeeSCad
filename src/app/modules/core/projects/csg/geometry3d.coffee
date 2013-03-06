@@ -39,14 +39,13 @@ define (require)->
       size = r
       if options.center?
         if options.center == true or options.center == false
-          console.log "pouet"
           center = new Vector3D([0, 0, 0])#[-size.x/2, -size.y/2, -size.z/2])
         else
           center = parseOptionAs3DVector(options, "center", [0, 0, 0])
       else
         center = parseOptionAs3DVector(options, "center", [0, 0, 0])
           
-      console.log "center"+ center
+      #console.log "center"+ center
       #radius (size) is nonsensical, divide by 2 to get real dimentions
       r = r.dividedBy(2)
       

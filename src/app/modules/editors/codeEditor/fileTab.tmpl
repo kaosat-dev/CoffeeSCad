@@ -1,5 +1,7 @@
 <script id="fileTabTmpl" type="text/x-underscore-template">
 	<% var cleanedName = name.replace('.','\\.')%>
-	
-	<a href="#" data-toggle="tab"><%=name%>.<%=ext%>&nbsp&nbsp<em class="close">&times;</em></a>
+	<a href="#" data-toggle="tab">
+       <span name="fileName">Home</span>
+       <i class="closeFile icon-remove"></i>
+    </a>
 </script>

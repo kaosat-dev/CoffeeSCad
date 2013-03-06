@@ -15,6 +15,7 @@ define (require)->
   projectTemplate = _.template($(filesTreeTemplate).filter('#projectTmpl').html())
   rootTemplate = _.template($(filesTreeTemplate).filter('#rootTmpl').html())
   
+  
   class FileView extends Backbone.Marionette.ItemView
     template: fileTemplate
     tagName: "tr"
@@ -25,7 +26,7 @@ define (require)->
     events:
       "click .editFile": "onEditFileClicked"
       "click .deleteFile": "onDeleteFileClicked"
-      'dblclick .openFile' : "onFileOpenClicked"
+      'dblclick .openFile' : "onFileSelected"
     
     constructor:(options)->
       super options
@@ -56,8 +57,8 @@ define (require)->
         selector.focusout =>
           _onFileNameEdited()
         
-     onFileOpenClicked:(ev)=>
-      vent.trigger("file:OpenRequest",@model)
+     onFileSelected:(ev)=>
+      vent.trigger("file:selected",@model)
      
      onDeleteFileClicked:(ev)=>
        @trigger("file:delete",@model)
@@ -74,7 +75,7 @@ define (require)->
       newFileInput: "#newFileInput"
     
     events:
-      'dblclick .openFile' : "onFileOpenClicked"
+      #'dblclick .openFile' : "onFileOpenClicked"
       'click .addFile'     : "onFileAddClicked"
     
     constructor:(options)->
@@ -87,9 +88,8 @@ define (require)->
       @on("itemview:file:delete", @onFileDeleteRequest)
       @on("itemview:file:rename", @onFileRenameRequest)
     
-    onFileOpenClicked:(ev)=>
-      console.log @model.get("name")
-      vent.trigger("file:OpenRequest",@model)
+    #onFileOpenClicked:(ev)=>
+    #  vent.trigger("file:OpenRequest",@model)
     
     onFileAddClicked:(ev)=>
       nameWithExt = @ui.newFileInput.val()

@@ -3,6 +3,7 @@ define (require)->
   _ = require 'underscore'
   Backbone = require 'backbone'
   LocalStorage = require 'localstorage'
+  buildProperties = require 'modules/core/utils/buildProperties'
   
   debug  = false
   
@@ -12,35 +13,36 @@ define (require)->
       name:     "mainFile"
       ext:      "coffee"
       content:  ""
+      dirty: false
+    attributeNames: ['name','ext','content','dirty']
+    buildProperties @
       
-    sync=null
-           
     constructor:(options)->
       super options
-      @rendered = false
-      @dirty    = false
       @storedContent = @get("content") #This is used for "dirtyness compare" , might be optimisable (storage vs time , hash vs direct compare)
-      @bind("change", @onChanged)
-      @bind("sync",   @onSynched)
+      @bind("save",   @onSaved)
+      @on("change:name", @onChanged)
+      @on("change:ext", @onChanged)
+      @on("change:content", @onChanged)
     
     onChanged:()=>
       if @storedContent == @get("content")
-          @dirty = false
+          @dirty=false
       else
           @dirty = true
-      if @dirty
-        @trigger "dirtied"
-      else
-        @trigger "cleaned"
     
-    onSynched:()=>
+    onSaved:()=>
       #when save is sucessfull
       @storedContent = @get("content")
       @dirty=false
-      @trigger "saved"
+      
       
   class ProjectFiles extends Backbone.Collection
     model: ProjectFile
+    sync = null
+    constructor:(options)->
+      super options
+      @sync=null
     ###
     parse: (response)=>
       console.log("in projFiles parse")
@@ -120,16 +122,15 @@ define (require)->
           locStorName = @get("name")+"-files"
           @pfiles.sync = ""
           @pfiles.localStorage= new Backbone.LocalStorage(locStorName)
-      
-    ###
-    save:(key, val, options)->
-      super key, val, options
-      console.log "in project, after save"
+    
+    save: (attributes, options)=>
+      super attributes, options
+      rootStoreURI = "projects-"+@get("name")+"-files"
+      @pfiles.sync = @sync
       for index, file of @pfiles.models
-        console.log "project subfile" 
-        console.log file
-        file.save()
-    ###  
+        file.save() 
+        file.trigger("save")
+
     onReset:()->
       if debug
         console.log "Project model reset" 

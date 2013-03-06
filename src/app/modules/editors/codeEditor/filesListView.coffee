@@ -6,6 +6,7 @@ define (require)->
   jquery_layout = require 'jquery_layout'
   jquery_ui = require 'jquery_ui'
   require 'jquery_hotkeys'
+  modelBinder = require 'modelbinder'
   
   vent = require 'modules/core/vent'
   
@@ -23,28 +24,43 @@ define (require)->
     tagName: "li"
     events:
       "click a[data-toggle=\"tab\"]" : "selectFile" 
-      "click em.close":    "closeTab"
+      "click .closeFile":    "closeTab"
 
     constructor:(options)->
       super options
       #model binding
-      @model.on("change:name", @render)
+      converter=()=>
+        extra = ""
+        if @model.dirty
+          extra = "*"
+        return @model.name+extra+"  "
+      
+      @bindings = 
+        name: [{selector: "[name=fileName]",converter:converter}]
+        dirty:[{selector: "[name=fileName]",converter:converter}]
+      @modelBinder = new Backbone.ModelBinder()
 
     selectFile:(e)=>
       e.stopImmediatePropagation()
-      #@$el.addClass("active")
       vent.trigger("file:selected",@model)
       @trigger("file:selected",@model)
       
     closeTab:(e)->
       e.stopImmediatePropagation()
-      @close()
+      @trigger("file:closed",@model)
       vent.trigger("file:closed",@model)
+      @close()
     
     onShow:()=>
       vent.trigger("file:selected",@model)
       @$el.tab('show')
       @$el.addClass("active")
+    
+    onRender:()=>
+      @modelBinder.bind(@model, @el, @bindings)
+    
+    onClose:=>
+      @modelBinder.unbind()
 
   
   class FilesTabView extends Backbone.Marionette.CompositeView
@@ -55,6 +71,31 @@ define (require)->
     
     constructor:(options) ->
       super options
+      @on("itemview:file:selected", @onFileSelected)
+      @on("itemview:file:closed", @onFileClosed)
+    
+    onFileSelected:(childView, file)=>
+      @children.each (childView)->
+        childView.$el.removeClass("active")
+      childView.$el.addClass("active")
+      
+    onFileClosed:(childView, file)=>
+      #if there was only two view open, and the one that got closed was the second one (on the right of the remaining one)
+      console.log @children.length
+      console.log childView.cid
+      console.log @children
+      if @children.length > 1
+        console.log @children.rest()
+        @children.each (childView)->
+          childView.$el.removeClass("active")
+        @children.first().$el.addClass("active")
+        
+      
+    selectFile:(file)=>
+      @children.each (childView)->
+        childView.$el.removeClass("active")
+        if childView.model is file
+          childView.$el.addClass("active")
     
     onRender:->
       @$el.sortable()
@@ -68,9 +109,25 @@ define (require)->
     constructor:(options) ->
       super options
       @settings = options.settings
+      vent.on("file:closed",@onFileClosed)
       
     itemViewOptions:()->
-        settings:@settings
+      settings:@settings
+    
+    selectFile:(file)=>
+      @children.each (childView)->
+        childView.$el.removeClass("active")
+        if childView.model is file
+          childView.$el.addClass("active")
+          childView.$el.removeClass('fade')
+    
+    onFileClosed:(childView, file)=>
+      console.log @children.length
+      #if there was only two view open, and the one that got closed was the second one (on the right of the remaining one)
+      if @children.length > 0
+        @children.each (childView)->
+          childView.$el.addClass("active")
+          childView.$el.removeClass('fade')
   
   
   class FilesListView extends Backbone.Marionette.Layout
@@ -95,7 +152,7 @@ define (require)->
       @collection.on('remove',(item)=>@openFiles.remove(item) )
       
       vent.on("file:selected", @showFile)
-      vent.on("file:OpenRequest", @showFile)
+      #vent.on("file:OpenRequest", @showFile)
       vent.on("file:closed", @hideFile)
       
       @_setupKeyboardBindings()
@@ -133,9 +190,9 @@ define (require)->
     
     onRender:=>
       #show tab nav
-      headerView = new FilesTabView
+      @headerView = new FilesTabView
         collection: @openFiles
-      @tabHeaders.show headerView
+      @tabHeaders.show @headerView
       
       #show content
       @codeView = new FilesCodeView
@@ -168,9 +225,14 @@ define (require)->
       found = @openFiles.find (item)=>
         return (item.get('name') == file.get('name') and item.get('ext') == file.get('ext'))
         
-      if not found
-        @openFiles.add(file)
+      if not found?
         console.log "new File #{file.get('name')}"
+        @openFiles.add(file)
+      else
+        try
+          @headerView.selectFile(found)
+          @codeView.selectFile(found)
+        catch error
         
     hideFile:(file)=>
       found = @openFiles.find (item)=>

@@ -66,7 +66,6 @@ require.config
     forms_custom    : "../assets/js/plugins/backbone.forms.custom"  
     backbone_nested:  "../assets/js/plugins/backbone.nested.min"
     
-    knockback:        "../assets/js/plugins/knockback"
     
     three_csg:        "../assets/js/plugins/ThreeCSG"
     combo_cam:        "../assets/js/plugins/CombinedCamera"

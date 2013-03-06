@@ -1,6 +1,6 @@
 define (require)->
   #base64 = require 'base64'
-  
+  buildProperties = require 'modules/core/utils/buildProperties'
   backbone_dropbox = require './backbone.dropbox'
   vent = require 'modules/core/vent'
   
@@ -31,11 +31,15 @@ define (require)->
       console.log "_____________"
   
   class DropBoxConnector extends Backbone.Model
+    attributeNames: ['loggedIn']
+    buildProperties @
+    
     idAttribute: 'name'
     defaults:
       name: "dropBoxConnector"
       storeType: "dropBox"
       tooltip:"Connector to the Dropbox Cloud based storage: requires login"
+      loggedIn:false
     
     constructor:(options)->
       super options
@@ -43,7 +47,6 @@ define (require)->
       console.log "backbone dropbox store"
       console.log @store
       @isLogginRequired = true
-      @loggedIn = true
       @vent = vent
       @vent.on("dropBoxConnector:login", @login)
       @vent.on("dropBoxConnector:logout", @logout)
@@ -112,6 +115,13 @@ define (require)->
         @login()
         window.history.replaceState('', '', '/')
       else
+        #just for tests
+        ### 
+        if authOk?
+          setTimeout ( =>
+            @login()
+          ), 5000
+        ###
         if authOk?
           @login()
       
@@ -132,6 +142,7 @@ define (require)->
       @vent.trigger("project:loaded",project) 
       
     saveProject:(project)=>
+      console.log "saving project"
       @lib.add(project)
       project.sync=@store.sync
       project.pathRoot=project.get("name") 
@@ -139,7 +150,6 @@ define (require)->
       project.pfiles.sync = @store.sync
       project.pfiles.path = project.get("name") 
       for index, file of project.pfiles.models
-        #file.sync = @store.sync 
         #file.pathRoot= project.get("name")
         #file.save()
         
@@ -169,6 +179,7 @@ define (require)->
             ua = new Uint8Array(ab)
             for i in [0...length]
               ua[i] = byteString.charCodeAt(i)
+          file.trigger("save")
         console.log "saving file to #{filePath}"
         @store.writeFile(filePath, content)
       
@@ -182,7 +193,10 @@ define (require)->
       project.set({"name":projectName},{silent:true})
       
       onProjectLoaded=()=>
+        thumbNailFile = project.pfiles.get(".thumbnail")
+        project.pfiles.remove(thumbNailFile)
         @vent.trigger("project:loaded",project)
+        
       project.pfiles.rawData = true
       project.pfiles.sync = @store.sync
       project.pfiles.path = projectName

@@ -13,7 +13,8 @@ define (require)->
   
   Settings = require 'modules/core/settings/settings'
   Project = require 'modules/core/projects/project'
-  ProjectBrowserView = require './projectBrowseView'
+  ProjectBrowserView = require './projectBrowseView2'
+  #ProjectBrowserView2 = require './projectBrowseView2'
   
   
   class ProjectManager
@@ -192,14 +193,15 @@ define (require)->
       modReg.show projectBrowserView
     
     onSaveProject:=>
-      #if project.pfiles.sync != null
-      
-      ###  
-      projectBrowserView = new ProjectBrowserView
-        model: @project
-        operation: "save"
-        connectors: @connectors
-      ###
+      if @project.pfiles.sync is null
+        projectBrowserView = new ProjectBrowserView
+          model: @project
+          operation: "save"
+          connectors: @connectors
+        modReg = new ModalRegion({elName:"library",large:true})
+        modReg.show projectBrowserView
+      else
+        @project.save()
       
     onLoadProject:=>
       projectBrowserView = new ProjectBrowserView

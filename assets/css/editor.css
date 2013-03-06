@@ -10,7 +10,6 @@
 	
 }
 
-
 /*ToolBar*/
 .toolBar a {text-decoration:none;color:black;line-height:38px; }
 .toolBar a div{background-color: #fea60b; height:34px}
@@ -50,6 +49,11 @@
 	border-color: #000000;
 	/*padding: 0 50px 0px 0;*/
 	background-color:#f3f3f3;
+}
+
+.closeFile:hover
+{
+	color:#2db2ea;
 }
 
 #newFileInput
