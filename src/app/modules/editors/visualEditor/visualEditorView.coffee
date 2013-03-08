@@ -185,6 +185,9 @@ define (require) ->
               @addAxes()
             else
               @removeAxes()
+          when "axesSize"
+              @removeAxes()
+              @addAxes()
           when "shadows"
             if not val
               @renderer.clearTarget(@light.shadowMap)
@@ -592,7 +595,7 @@ define (require) ->
       @axes = new helpers.LabeledAxes({xColor:helpersColor, yColor:helpersColor, zColor:helpersColor, size:200, addLabels:false, addArrows:false})
       @scene.add(@axes)
       
-      @overlayAxes = new helpers.LabeledAxes({textColor:@settings.get("textColor")})
+      @overlayAxes = new helpers.LabeledAxes({textColor:@settings.get("textColor"), size:@settings.get("axesSize")})
       @overlayScene.add @overlayAxes
       
     removeAxes:()->
