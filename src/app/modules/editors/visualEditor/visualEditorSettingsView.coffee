@@ -50,6 +50,7 @@ define (require)->
             #options: ['solid', 'gradient']
           textColor:
             type: 'Text'
+          axesSize: 'Number'
             
         options.fieldsets=[
           "legend":"Render settings"
@@ -62,7 +63,7 @@ define (require)->
           "fields": ["showAxes","helpersColor","showConnectors", "showGrid","gridSize","gridStep","gridColor","gridOpacity"]
         , 
           "legend":"Extra settings"
-          "fields": ["bgColor","bgColor2", "textColor", "showStats"]
+          "fields": ["bgColor","bgColor2", "textColor", "axesSize", "showStats"]
           
         ]
       super options
