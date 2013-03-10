@@ -36,6 +36,7 @@ define (require)->
         
         bgColor      : "#363335"
         bgColor2     : "#363335"
+        axesSize     : 80
         
       constructor:(options)->
         super options

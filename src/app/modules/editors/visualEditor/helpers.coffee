@@ -67,19 +67,21 @@ define (require) ->
       @zColor = new THREE.Color().setHex(@zColor)
 
       if addLabels
+        s = @size * 1.1
         @xLabel=@drawText("X")
-        @xLabel.position.set(@size+5,0,0)
+        @xLabel.position.set(s,0,0)
         
         @yLabel=@drawText("Y")
-        @yLabel.position.set(0,@size+5,0)
+        @yLabel.position.set(0,s,0)
         
         @zLabel=@drawText("Z")
-        @zLabel.position.set(0,0,@size+5)
+        @zLabel.position.set(0,0,s)
         
       if addArrows
-        @xArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,0),@size, @xColor)
-        @yArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,0),@size, @yColor)
-        @zArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(0,0,0),@size, @zColor)
+        s = @size / 1.25 # THREE.ArrowHelper arrow length
+        @xArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,0),s, @xColor)
+        @yArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,0),s, @yColor)
+        @zArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(0,0,0),s, @zColor)
         @add @xArrow
         @add @yArrow
         @add @zArrow
