@@ -28,6 +28,8 @@ define (require)->
       @csgProcessor = new CsgProcessor()
       
       @vent = vent
+      @project = null
+      
       @vent.on("project:new", @onNewProject)
       @vent.on("project:saveAs", @onSaveAsProject)
       @vent.on("project:save", @onSaveProject)
@@ -36,17 +38,28 @@ define (require)->
       @vent.on("project:compile",@compileProject)
       
       @appSettings.on("reset", @onAppSettingsChanged)
-      @appSettings.on("change",@onAppSettingsChanged)
-      
-      @project = null
     
     onAppSettingsChanged:(model, attributes)=>
       @settings = @appSettings.getByName("General")
+      @settings.on("change", @_onSettingsChanged)
+            
+    _onSettingsChanged:(settings, value)=> 
+      console.log "settings changed"
+      mode = @settings.get("csgCompileMode")
+      if mode is "onCodeChange" or mode is "onCodeChangeDelayed"
+        console.log "blah"
+        if @project.isCompileAdvised
+            @compileProject()
+      
+
+    _setupProjectEventHandlers: =>
+      @project.on("change",@onProjectChanged)
+      @project.on("save",@onProjectSaved)
 
     createProject:()->
       @project = new Project()
-      @project.createFile
-        name: @project.get("name")
+      @project.addFile
+        name: @project.get("name")+".coffee"
         content:"""
         #just a comment
         cube = new Cube({size:100}).color([0.9,0.5,0.1])
@@ -104,30 +117,32 @@ define (require)->
       
       assembly.add(body)
         """
-      @project.createFile
-        name: "config"
+      @project.addFile
+        name: "config.coffee"
         content:""" """
-      @project.on("change",@onProjectChanged)
+      @_setupProjectEventHandlers()
+      return @project
     
     onProjectChanged:()=>
-      console.log "on project changed"
       switch @settings.get("csgCompileMode")
-        when "onRequest"
-          console.log ""
-        when "onSaved"
-          console.log ""
         when "onCodeChange"
-          @compileProject()
-        when "onCodeChangeDelayed"
-          console.log "here"
-          if @CodeChangeTimer
-            clearTimeout @CodeChangeTimer
-            @CodeChangeTimer = null
-          callback=()=>
+          if @project.isCompileAdvised
             @compileProject()
-          @CodeChangeTimer = setTimeout callback, @settings.get("csgCompileDelay")*1000
-      
+        when "onCodeChangeDelayed"
+          if @project.isCompileAdvised
+            if @CodeChangeTimer
+              clearTimeout @CodeChangeTimer
+              @CodeChangeTimer = null
+            callback=()=>
+              @compileProject()
+            @CodeChangeTimer = setTimeout callback, @settings.get("csgCompileDelay")*1000
+            
+    onProjectSaved:()=>
+      if @settings.get("csgCompileMode") is "onSave"
+        @compileProject()
+       
     compileProject:()=> 
+      console.log "compiling"
       start = new Date().getTime()
       
       backgroundProcessing = false
@@ -163,14 +178,6 @@ define (require)->
 
     onNewProject:()=>
       @createProject()
-      
-      #projectBrowserView = new ProjectBrowserView
-      #  model: @project
-      #  operation: "new"
-      #  connectors: @connectors
-      #
-      #modReg = new ModalRegion({elName:"library",large:true})
-      #modReg.show projectBrowserView
       if @project.dirty
         bootbox.dialog "Project is unsaved, you will loose your changes, proceed anyway?", [
           label: "Ok"
@@ -193,7 +200,7 @@ define (require)->
       modReg.show projectBrowserView
     
     onSaveProject:=>
-      if @project.pfiles.sync is null
+      if @project.rootFolder.sync is null
         projectBrowserView = new ProjectBrowserView
           model: @project
           operation: "save"
@@ -214,7 +221,8 @@ define (require)->
       
     onProjectLoaded:(project)=>
       @project=project
-      @project.on("change",@onProjectChanged)
+      @_setupProjectEventHandlers()
+      
       
   return ProjectManager
   

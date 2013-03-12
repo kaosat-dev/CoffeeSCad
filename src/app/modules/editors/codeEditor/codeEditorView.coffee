@@ -12,7 +12,6 @@ define (require)->
   
   FilesTreeView = require "./filesTreeView"
   FilesListView = require "./filesListView"
-  ToolBarView   = require "./toolBarView"
 
   class CodeEditorView extends Backbone.Marionette.Layout
     template: filesCodeTemplate
@@ -66,13 +65,13 @@ define (require)->
       
       #show files tree
       filesTreeView = new FilesTreeView
-        collection: @model.pfiles
+        collection: @model.rootFolder
         model: @model
       @filesTree.show filesTreeView
       
       #show files list (tabs)
       filesListView = new FilesListView
-        collection: @model.pfiles
+        collection: @model.rootFolder
         model: @model
         settings: @settings
       @filesList.show(filesListView)

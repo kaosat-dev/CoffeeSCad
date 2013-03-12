@@ -50,11 +50,6 @@ define (require)->
       @showRegions()
       
     showRegions:=>
-      ###   
-      @mainRegion.show new CodeEditorView 
-        model:    @project
-        settings: @settings
-      ###
       DialogRegion = require 'modules/core/utils/dialogRegion'
       @diaReg = new DialogRegion({elName:"codeEdit"})
       codeEditorView = new CodeEditorView 

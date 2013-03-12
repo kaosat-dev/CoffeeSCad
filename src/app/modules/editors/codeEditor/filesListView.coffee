@@ -56,7 +56,8 @@ define (require)->
       @$el.tab('show')
       @$el.addClass("active")
     
-    onRender:()=>
+      
+    onRender:=>
       @modelBinder.bind(@model, @el, @bindings)
     
     onClose:=>
@@ -146,6 +147,8 @@ define (require)->
       @settings = options.settings
       
       @openFiles = new Backbone.Collection()
+      console.log "@collection"
+      console.log @collection
       @openFiles.add @collection.first()
       @activeFile = @collection.first()
       
@@ -223,7 +226,7 @@ define (require)->
       
     showFile:(file)=>
       found = @openFiles.find (item)=>
-        return (item.get('name') == file.get('name') and item.get('ext') == file.get('ext'))
+        return (item.get('name') == file.get('name'))# and item.get('ext') == file.get('ext'))
         
       if not found?
         console.log "new File #{file.get('name')}"
@@ -236,7 +239,7 @@ define (require)->
         
     hideFile:(file)=>
       found = @openFiles.find (item)=>
-        return (item.get('name') == file.get('name') and item.get('ext') == file.get('ext'))
+        return (item.get('name') == file.get('name'))# and item.get('ext') == file.get('ext'))
       if found
         @openFiles.remove(file)
         console.log "removed File #{file.get('name')}"

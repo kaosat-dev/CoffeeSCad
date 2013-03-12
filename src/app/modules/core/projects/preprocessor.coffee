@@ -19,10 +19,10 @@ define (require) ->
       result = ""
       if not project? and path?
         #console.log "will fetch #{path} from local (current project) namespace"
-        shortName = path.split('.')[0]
+        shortName = path
         #console.log "proj"
         #console.log @project
-        result = @project.pfiles.get(shortName).get("content")
+        result = @project.rootFolder.get(shortName).get("content")
         result = "\n#{result}\n"
       #else if project? and path?
         #console.log "will fetch #{path} from project #{project}'s namespace"
@@ -38,8 +38,11 @@ define (require) ->
       #  @lintProject(project)
         
       @project = project
-      mainFileName = @project.get("name")
-      mainFileCode = @project.pfiles.get(mainFileName).get("content")
+      mainFileName = @project.name+".coffee"
+      mainFile = @project.rootFolder.get(mainFileName)
+      if not mainFile?
+        throw new Error("Missing main file (needs to have the same name as the project")
+      mainFileCode = mainFile.get("content")
       result  = @processIncludes(mainFileName, mainFileCode)
       
       if coffeeToJs
@@ -49,7 +52,7 @@ define (require) ->
     lintProject:(project)=>
       @lintErrors = []
       hasError = false
-      for file in project.pfiles.models
+      for file in project.rootFolder.models
         [errorInFile, lintErrors] = @lintFile(project.get("name"),file.get("name")+"."+file.get("ext"), file.get("content"))
         if not hasError
           hasError = errorInFile

@@ -10,39 +10,57 @@ define (require)->
   class ProjectFile extends Backbone.Model
     idAttribute: 'name'
     defaults:
-      name:     "mainFile"
-      ext:      "coffee"
+      name:     "testFile.coffee"
       content:  ""
       dirty: false
-    attributeNames: ['name','ext','content','dirty']
+      isCompileAdvised: false
+    attributeNames: ['name','content','dirty','isCompileAdvised']
+    persistedAttributeNames : ['name','content']
     buildProperties @
       
     constructor:(options)->
       super options
-      @storedContent = @get("content") #This is used for "dirtyness compare" , might be optimisable (storage vs time , hash vs direct compare)
-      @bind("save",   @onSaved)
-      @on("change:name", @onChanged)
-      @on("change:ext", @onChanged)
-      @on("change:content", @onChanged)
+      #This is used for "dirtyness compare" , might be optimisable (storage vs time , hash vs direct compare)
+      @storedContent = @content
+      @on("save",   @onSaved)
+      @on("change:name", @onNameChanged)
+      @on("change:content", @onContentChanged)
     
-    onChanged:()=>
-      if @storedContent == @get("content")
-          @dirty=false
+    onNameChanged:()=>
+      @dirty = true
+
+    onContentChanged:()=>
+      @isCompileAdvised = true
+      if (@storedContent is @content)
+        @dirty = false
       else
-          @dirty = true
+        @dirty = true
     
     onSaved:()=>
       #when save is sucessfull
-      @storedContent = @get("content")
-      @dirty=false
+      @storedContent = @content
+      @dirty = false
+   
+    save: (attributes, options)=>
+      backup = @toJSON
+      @toJSON= =>
+        attributes = _.clone(@attributes)
+        for attrName, attrValue of attributes
+          if attrName not in @persistedAttributeNames
+            delete attributes[attrName]
+        return attributes
+       
+      super attributes, options 
+      @toJSON=backup
       
       
-  class ProjectFiles extends Backbone.Collection
+  class Folder extends Backbone.Collection
     model: ProjectFile
     sync = null
     constructor:(options)->
       super options
       @sync=null
+      @_storageData = []
     ###
     parse: (response)=>
       console.log("in projFiles parse")
@@ -53,11 +71,15 @@ define (require)->
       console.log response      
       return response  
     ###
-    changeSync:(newSync,additional)->
+    changeStorage:(storeName,storeData)->
+      #@sync = newSync
+      #@_storageData.push()
+      @[storeName] = storeData #new Backbone.LocalStorage(rootStoreURI) 
+      ### 
       for index, file of @models
         file.sync = @store.sync 
         file.pathRoot= project.get("name")
-   
+      ###
    
   class Project extends Backbone.Model
     """Main aspect of coffeescad : contains all the files
@@ -70,135 +92,105 @@ define (require)->
     defaults:
       name:     "Project"
       lastModificationDate: null
+      dirty:false #based on propagation from project files : if a project file is changed, the project is tagged as "dirty" aswell
+      isCompiled: false
+      isCompileAdvised:false
+    
+    attributeNames: ['name','lastModificationDate','isCompiled','dirty','isCompileAdvised']
+    persistedAttributeNames : ['name','lastModificationDate']
+    buildProperties @
     
     constructor:(options)->
       super options
-      @dirty    = false #based on propagation from project files : if a project file is changed, the project is tagged as "dirty" aswell
-      @new      = true
-      @bind("reset", @onReset)
-      @bind("sync",  @onSync)
-      @bind("change",@onChanged)
-      @files = []
-      @pfiles = new ProjectFiles()
-      @pfiles.on("reset",@onFilesReset)
-      @on("change:name", @onProjectNameChanged)
+      @rootFolder = new Folder()
+      @rootFolder.on("reset",@_onFilesReset)
+      @on("change:name", @_onNameChanged)
+      @on("compiled",@_onCompiled)
       
       classRegistry={}
       @bom = new Backbone.Collection()
       @rootAssembly = {}
     
-    onProjectNameChanged:(model, name)=>
-      console.log "project name changed from #{@previous('name')} to #{name}"
-      mainFile = @pfiles.get(@previous('name'))
-      console.log mainFile
-      mainFile.set("name",name)
+    _setupFileEventHandlers:(file)=>
+      file.on("change",@_onFileChanged)
+      file.on("save",@_onFileSaved)
+      #file.on("change:content":()=>console.log "file content changed")
+      #file.on("change:dirty":()=>console.log "file dirty changed")
     
-    rename:(newName)=>
-      if newName != @get("name")
-        @set("name",newName)
-    
-    onFilesReset:()=>
-      #add various event bindings, reorder certain specific files
-      mainFileName = @get("name")
-      mainFile = @pfiles.get(mainFileName)
-      @pfiles.remove(mainFileName)
-      @pfiles.add(mainFile, {at:0})
+    _addFile:(file)=>
+      @rootFolder.add file
+      @_setupFileEventHandlers(file)
+      @dirty = true
       
-      configFileName = "config"
-      configFile = @pfiles.get(configFileName)
-      @pfiles.remove(configFileName)
-      @pfiles.add(configFile, {at:1})
+    addFile:(options)->
+      file = new ProjectFile
+        name: options.name ? @name+".coffee"
+        content: options.content ? " \n\n"  
+      @_addFile file   
       
-      for pFile in @pfiles.models
-        pFile.bind("change", ()=> @onFileChanged(pFile.get("id")))
-        pFile.bind("saved" , ()=> @onFileSaved(pFile.get("id")))
-        pFile.bind("dirtied", ()=> @trigger "dirtied")
-        pFile.bind("cleaned", ()=> @onFileSaved(pFile.get("id")))
-    
-    switchStorage:(storageType)->
-      @storageType = storageType
-      switch storageType
-        when "browser"
-          locStorName = @get("name")+"-files"
-          @pfiles.sync = ""
-          @pfiles.localStorage= new Backbone.LocalStorage(locStorName)
+    removeFile:(file)=>
+      @rootFolder.remove(file)
+      @dirty = true
     
     save: (attributes, options)=>
-      super attributes, options
-      rootStoreURI = "projects-"+@get("name")+"-files"
-      @pfiles.sync = @sync
-      for index, file of @pfiles.models
+      backup = @toJSON
+      @toJSON= =>
+        attributes = _.clone(@attributes)
+        for attrName, attrValue of attributes
+          if attrName not in @persistedAttributeNames
+            delete attributes[attrName]
+        return attributes
+       
+      super attributes, options 
+      @toJSON=backup
+      
+      @rootFolder.sync = @sync
+      for index, file of @rootFolder.models
         file.save() 
         file.trigger("save")
-
-    onReset:()->
-      if debug
-        console.log "Project model reset" 
-        console.log @
-        console.log "_____________"
+      @dirty = false
+      @isCompileAdvised = false  
+      @trigger("save",@)
     
-    onSync:()->
-      @new = false
-      if debug
-        console.log "Project sync" 
-        console.log @
-        console.log "_____________"
+    
+    _onCompiled:()=>
+      @isCompileAdvised = false
+      for file in @rootFolder.models
+        file.isCompileAdvised = false
+      @isCompiled = true
       
-    onChanged:(settings, value)=>
-      #@compile()      
-      @dirty=true
-      for key, val of @changedAttributes()
-        switch key
-          when "name"
-            locStorName = val+"-files"
-            @pfiles.localStorage= new Backbone.LocalStorage(locStorName)
-            
-    onFileSaved:(fileName)=>
-      @set("lastModificationDate",new Date())
-      for file of @pfiles
+    _onNameChanged:(model, name)=>
+      try
+        mainFile = @rootFolder.get(@previous('name')+".coffee")
+        if mainFile?
+          console.log "project name changed from #{@previous('name')} to #{name}"
+          mainFile.name = "#{name}.coffee"
+      catch error
+        console.log "error in rename : #{error}"
+    
+    _onFilesReset:()=>
+      #add various event bindings, reorder certain specific files
+      mainFileName ="#{@name}.coffee"
+      mainFile = @rootFolder.get(mainFileName)
+      @rootFolder.remove(mainFileName)
+      @rootFolder.add(mainFile, {at:0})
+      
+      configFileName = "config.coffee"
+      configFile = @rootFolder.get(configFileName)
+      @rootFolder.remove(configFileName)
+      @rootFolder.add(configFile, {at:1})
+      
+      for file in @rootFolder.models
+        @_setupFileEventHandlers(file)
+    
+    _onFileSaved:(fileName)=>
+      @lastModificationDate = new Date()
+      for file of @rootFolder
         if file.dirty
           return
-      @trigger "allSaved"
       
-    onFileChanged:(fileName)=>
-      @trigger "change"
-      
-    isNew2:()->
-      return @new 
-      
-    add:(pFile)=>
-      @pfiles.add pFile
-      @files.push pFile.get("name")
-      pFile.bind("change", ()=> @onFileChanged(pFile.get("id")))
-      pFile.bind("saved" , ()=> @onFileSaved(pFile.get("id")))
-      pFile.bind("dirtied", ()=> @trigger "dirtied")
-      pFile.bind("cleaned", ()=> @onFileSaved(pFile.get("id")))
-      
-      #we added a new file, so project as changed -> mark as dirty
-      @dirty=true
-      @trigger "dirtied"
-    
-    remove:(pFile)=>
-      index = @files.indexOf(pFile.get("name"))
-      @files.splice(index, 1) 
-      @pfiles.remove(pFile)
-    
-    fetch_file:(options)=>
-      id = options.id
-      console.log "id specified: #{id}"
-      if @pfiles.get(id)
-        pFile = @pfiles.get(id)
-      else
-        pFile = new ProjectFile({name:id})
-        pFile.collection = @pfiles
-        pFile.fetch()
-      return pFile
-      
-    createFile:(options)->
-      file = new ProjectFile
-        name: options.name ? "a File"
-        content: options.content ? " \n\n"  
-        ext:  options.ext ? "coffee"
-      @add file      
+    _onFileChanged:(file)=>
+      @dirty = file.dirty if file.dirty is true
+      @isCompileAdvised = file.isCompileAdvised if file.isCompileAdvised is true
       
   return Project

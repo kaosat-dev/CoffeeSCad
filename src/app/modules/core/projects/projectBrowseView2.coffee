@@ -70,7 +70,7 @@ define (require)->
         doScreenShotRes=(screenshotUrl)=>
           @ui.projectThumbNail.attr("src",screenshotUrl)
           @ui.thumbNail.removeClass("hide")
-          @model.createFile
+          @model.addFile
             name:".thumbnail"
             content:screenshotUrl
             ext:"png"  
@@ -219,11 +219,12 @@ define (require)->
     
     onSaveRequested:(fileName)=>
       if @selected
-        #console.log "save to #{fileName} requested"
+        console.log "save to #{fileName} requested"
         projectToSave = @model.targetProject
         if projectToSave?
-          projectToSave.rename(fileName)
-          @model.saveProject(projectToSave)
+          console.log fileName
+          console.log @model
+          @model.saveProject(projectToSave,fileName)
     
     onLoadRequested:(fileName)=>
       console.log "load requested"
