@@ -123,10 +123,21 @@ define (require)->
       @vent.bind "modelChanged", ->
         $('#updateBtn').removeClass("disabled")
         $('#exportStl').addClass("disabled")
-      @vent.bind "parseCsgDone", ->
-        $('#updateBtn').addClass("disabled")
-        $('#exportStl').removeClass("disabled") 
       
+      @vent.on("notify",@onNotificationRequested)
+      @vent.on("project:loaded",()=>@onNotificationRequested("Project:loaded"))
+      @vent.on("project:saved",()=>@onNotificationRequested("Project:saved"))
+      @vent.on("project:compiled",()=>@onNotificationRequested("Project:compiled"))
+      
+      
+    onNotificationRequested:(message)=>
+      console.log "bla NOTIFY"
+      $('.notifications').notify
+        message: { text:message }
+        fadeOut:{enabled:true, delay: 1000 }
+       .show()
+      
+    
     onFileSelected:(model)=>
       $('#undoBtn').addClass("disabled")
       $('#redoBtn').addClass("disabled")

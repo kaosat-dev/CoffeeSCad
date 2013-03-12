@@ -50,7 +50,6 @@ define (require)->
         console.log "blah"
         if @project.isCompileAdvised
             @compileProject()
-      
 
     _setupProjectEventHandlers: =>
       @project.on("change",@onProjectChanged)
@@ -120,6 +119,9 @@ define (require)->
       @project.addFile
         name: "config.coffee"
         content:""" """
+      @project.addFile
+        name: ".project"
+        content:""""""
       @_setupProjectEventHandlers()
       return @project
     
@@ -175,6 +177,7 @@ define (require)->
         end = new Date().getTime()
         console.log "Csg computation time: #{end-start}"
         @project.trigger("compiled",rootAssembly)
+        @vent.trigger("project:compiled")
 
     onNewProject:()=>
       @createProject()
@@ -200,7 +203,7 @@ define (require)->
       modReg.show projectBrowserView
     
     onSaveProject:=>
-      if @project.rootFolder.sync is null
+      if @project.rootFolder.sync is null and @project.dataStore is null
         projectBrowserView = new ProjectBrowserView
           model: @project
           operation: "save"

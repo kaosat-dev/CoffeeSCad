@@ -2,6 +2,7 @@ define (require)->
   $ = require 'jquery'
   _ = require 'underscore'
   marionette = require 'marionette'
+  require 'jquery_hotkeys'
   
   vent = require './core/vent'
   
@@ -80,9 +81,38 @@ define (require)->
     initData:->
       @projectManager.connectors = @connectors
       @project = @projectManager.createProject()
+    
+    _setupKeyboardBindings:=>
+      #Setup keyBindings
+      ### 
+      @$el.bind 'keydown', 'ctrl+s', ->
+        console.log "i want to save a FILE"
+        return false
+      ###
+      $(document).bind "keydown", "alt+n", =>
+        @vent.trigger("project:new")
+        return false
+        
+      $(document).bind "keydown", "ctrl+s", =>
+        @vent.trigger("project:save")
+        return false
+        
+      $(document).bind "keydown", "ctrl+l", =>
+        @vent.trigger("project:load")
+        return false
+      
+      $(document).bind "keydown", "alt+c", =>
+        @vent.trigger("project:compile")
+        return false
+      
+      $(document).bind "keydown", "f4", =>
+        @vent.trigger("project:compile")
+        return false
+      
 
     onStart:()=>
       console.log "app started"
+      @_setupKeyboardBindings()
       @codeEditor.start()
       @visualEditor.start()
       #we check if we came back form an oauth redirect/if we have already been authorized
