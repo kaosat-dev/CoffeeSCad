@@ -31,13 +31,13 @@ define (require)->
       #model binding
       converter=()=>
         extra = ""
-        if @model.dirty
+        if @model.isSaveAdvised
           extra = "*"
         return @model.name+extra+"  "
       
       @bindings = 
         name: [{selector: "[name=fileName]",converter:converter}]
-        dirty:[{selector: "[name=fileName]",converter:converter}]
+        isSaveAdvised:[{selector: "[name=fileName]",converter:converter}]
       @modelBinder = new Backbone.ModelBinder()
 
     selectFile:(e)=>

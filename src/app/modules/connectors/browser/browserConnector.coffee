@@ -19,7 +19,7 @@ define (require)->
       super options
     
     comparator: (project)->
-      date = new Date(project.get('lastModificationDate'))
+      date = new Date(project.lastModificationDate)
       return date.getTime()
       
   
@@ -53,46 +53,40 @@ define (require)->
       @loggedIn = false
     
     authCheck:()->
-      
-    saveProject:(project)=>
-      console.log "saving project"
-      @lib.add(project)
-      rootStoreURI = "projects-"+project.get("name")+"-files"
-      project.pfiles.sync = project.sync
-      project.pfiles.localStorage = new Backbone.LocalStorage(rootStoreURI) 
-      #project.pfiles.sync = Backbone.LocalStorage.sync
-           
-      for index, file of project.pfiles.models
-        file.save() 
-        file.trigger("save")
-        
-      @vent.trigger("project:saved")  
-      project.save()
     
     getProjectsName:(callback)=>
       @lib.fetch()
-      console.log "browser models"
-      console.log @lib.models
       projectNames = []
-      
       for model in @lib.models
         projectNames.push(model.id)
         
       callback(projectNames)
     
+    saveProject:(project, newName)=>
+      project.collection = null
+      @lib.add(project)
+      if newName?
+        project.name = newName
+      
+      rootStoreURI = "projects-"+project.name+"-files"
+      project.rootFolder.changeStorage("localStorage",new Backbone.LocalStorage(rootStoreURI))
+      project.save()
+      @vent.trigger("project:saved")  
+    
     loadProject:(projectName)=>
       project =  @lib.get(projectName)
-      rootStoreURI = "projects-"+project.get("name")+"-files"
-      project.pfiles.sync = project.sync
-      project.pfiles.localStorage = new Backbone.LocalStorage(rootStoreURI) 
+      project.collection = @lib
+      rootStoreURI = "projects-"+project.name+"-files"
+      project.rootFolder.sync = project.sync
+      project.rootFolder.changeStorage("localStorage",new Backbone.LocalStorage(rootStoreURI))
       
       onProjectLoaded=()=>
         #remove old thumbnail
-        thumbNailFile = project.pfiles.get(".thumbnail")
-        project.pfiles.remove(thumbNailFile)
+        thumbNailFile = project.rootFolder.get(".thumbnail")
+        project.rootFolder.remove(thumbNailFile)
         @vent.trigger("project:loaded",project)
       
-      project.pfiles.fetch().done(onProjectLoaded)
+      project.rootFolder.fetch().done(onProjectLoaded)
        
        
   return BrowserConnector

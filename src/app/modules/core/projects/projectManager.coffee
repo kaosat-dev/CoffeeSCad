@@ -178,7 +178,7 @@ define (require)->
 
     onNewProject:()=>
       @createProject()
-      if @project.dirty
+      if @project.isSaveAdvised
         bootbox.dialog "Project is unsaved, you will loose your changes, proceed anyway?", [
           label: "Ok"
           class: "btn-inverse"

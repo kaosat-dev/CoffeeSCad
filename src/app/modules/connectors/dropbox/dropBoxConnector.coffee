@@ -129,8 +129,8 @@ define (require)->
       #project = @lib.create(options)
       project = new Project
         name: fileName
-      project.pfiles.sync = @store.sync
-      project.pfiles.path = project.get("name") 
+      project.rootFolder.sync = @store.sync
+      project.rootFolder.path = project.get("name") 
       
       project.createFile
         name: fileName
@@ -147,9 +147,9 @@ define (require)->
       project.sync=@store.sync
       project.pathRoot=project.get("name") 
       
-      project.pfiles.sync = @store.sync
-      project.pfiles.path = project.get("name") 
-      for index, file of project.pfiles.models
+      project.rootFolder.sync = @store.sync
+      project.rootFolder.path = project.get("name") 
+      for index, file of project.rootFolder.models
         #file.pathRoot= project.get("name")
         #file.save()
         
@@ -190,17 +190,20 @@ define (require)->
       console.log "dropbox loading project #{projectName}"
       #TODO: check if project exists
       project = new Project()
-      project.set({"name":projectName},{silent:true})
+      #FIXME :silent:true only offset the event triggering, it does not silence it 
+      #project.attributes["name"]=projectName
+      #project.set({"name":projectName},{silent:true})
+      project.set("name":projectName)
       
       onProjectLoaded=()=>
-        thumbNailFile = project.pfiles.get(".thumbnail")
-        project.pfiles.remove(thumbNailFile)
+        thumbNailFile = project.rootFolder.get(".thumbnail")
+        project.rootFolder.remove(thumbNailFile)
         @vent.trigger("project:loaded",project)
         
-      project.pfiles.rawData = true
-      project.pfiles.sync = @store.sync
-      project.pfiles.path = projectName
-      project.pfiles.fetch().done(onProjectLoaded)
+      project.rootFolder.rawData = true
+      project.rootFolder.sync = @store.sync
+      project.rootFolder.path = projectName
+      project.rootFolder.fetch().done(onProjectLoaded)
       @lib.add(project)
       return project
     

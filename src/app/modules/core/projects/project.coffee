@@ -12,9 +12,9 @@ define (require)->
     defaults:
       name:     "testFile.coffee"
       content:  ""
-      dirty: false
+      isSaveAdvised: false
       isCompileAdvised: false
-    attributeNames: ['name','content','dirty','isCompileAdvised']
+    attributeNames: ['name','content','isSaveAdvised','isCompileAdvised']
     persistedAttributeNames : ['name','content']
     buildProperties @
       
@@ -22,24 +22,24 @@ define (require)->
       super options
       #This is used for "dirtyness compare" , might be optimisable (storage vs time , hash vs direct compare)
       @storedContent = @content
-      @on("save",   @onSaved)
-      @on("change:name", @onNameChanged)
-      @on("change:content", @onContentChanged)
+      @on("save",   @_onSaved)
+      @on("change:name", @_onNameChanged)
+      @on("change:content", @_onContentChanged)
     
-    onNameChanged:()=>
-      @dirty = true
+    _onNameChanged:()=>
+      @isSaveAdvised = true
 
-    onContentChanged:()=>
+    _onContentChanged:()=>
       @isCompileAdvised = true
       if (@storedContent is @content)
-        @dirty = false
+        @isSaveAdvised = false
       else
-        @dirty = true
+        @isSaveAdvised = true
     
-    onSaved:()=>
+    _onSaved:()=>
       #when save is sucessfull
       @storedContent = @content
-      @dirty = false
+      @isSaveAdvised = false
    
     save: (attributes, options)=>
       backup = @toJSON
@@ -72,9 +72,11 @@ define (require)->
       return response  
     ###
     changeStorage:(storeName,storeData)->
-      #@sync = newSync
-      #@_storageData.push()
-      @[storeName] = storeData #new Backbone.LocalStorage(rootStoreURI) 
+      for oldStoreName in  @_storageData
+        delete @[oldStoreName]
+      @_storageData = []  
+      @_storageData.push(storeName)
+      @[storeName] = storeData
       ### 
       for index, file of @models
         file.sync = @store.sync 
@@ -92,11 +94,11 @@ define (require)->
     defaults:
       name:     "Project"
       lastModificationDate: null
-      dirty:false #based on propagation from project files : if a project file is changed, the project is tagged as "dirty" aswell
+      isSaveAdvised:false #based on propagation from project files : if a project file is changed, the project is tagged as "dirty" aswell
       isCompiled: false
       isCompileAdvised:false
     
-    attributeNames: ['name','lastModificationDate','isCompiled','dirty','isCompileAdvised']
+    attributeNames: ['name','lastModificationDate','isCompiled','isSaveAdvised','isCompileAdvised']
     persistedAttributeNames : ['name','lastModificationDate']
     buildProperties @
     
@@ -115,12 +117,12 @@ define (require)->
       file.on("change",@_onFileChanged)
       file.on("save",@_onFileSaved)
       #file.on("change:content":()=>console.log "file content changed")
-      #file.on("change:dirty":()=>console.log "file dirty changed")
+      #file.on("change:isSaveAdvised":()=>console.log "file isSaveAdvised changed")
     
     _addFile:(file)=>
       @rootFolder.add file
       @_setupFileEventHandlers(file)
-      @dirty = true
+      @isSaveAdvised = true
       
     addFile:(options)->
       file = new ProjectFile
@@ -130,7 +132,7 @@ define (require)->
       
     removeFile:(file)=>
       @rootFolder.remove(file)
-      @dirty = true
+      @isSaveAdvised = true
     
     save: (attributes, options)=>
       backup = @toJSON
@@ -148,7 +150,7 @@ define (require)->
       for index, file of @rootFolder.models
         file.save() 
         file.trigger("save")
-      @dirty = false
+      @isSaveAdvised = false
       @isCompileAdvised = false  
       @trigger("save",@)
     
@@ -186,11 +188,11 @@ define (require)->
     _onFileSaved:(fileName)=>
       @lastModificationDate = new Date()
       for file of @rootFolder
-        if file.dirty
+        if file.isSaveAdvised
           return
       
     _onFileChanged:(file)=>
-      @dirty = file.dirty if file.dirty is true
+      @isSaveAdvised = file.isSaveAdvised if file.isSaveAdvised is true
       @isCompileAdvised = file.isCompileAdvised if file.isCompileAdvised is true
       
   return Project

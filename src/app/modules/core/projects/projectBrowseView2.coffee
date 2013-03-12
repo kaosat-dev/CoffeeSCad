@@ -112,7 +112,7 @@ define (require)->
       
     onProjectLoadRequested:=>
       fileName = $(@ui.fileNameInput).val()
-      if @model.dirty
+      if @model.isSaveAdvised
         bootbox.dialog "Project is unsaved, you will loose your changes, proceed anyway?", [
           label: "Ok"
           class: "btn-inverse"

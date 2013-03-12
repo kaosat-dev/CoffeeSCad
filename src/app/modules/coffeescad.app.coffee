@@ -93,7 +93,7 @@ define (require)->
       console.log "I see app: #{appName} has started"
     
     onAppClosing:()=>
-      #if @project.dirty
+      #if @project.isSaveAdvised
       #  return 'You have unsaved changes!'
     
     onSettingsShow:()=>

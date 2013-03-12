@@ -35,7 +35,7 @@ define (require)->
       project.add mainPart
       
       ########VIEW UPDATES
-      if @app.project.dirty
+      if @app.project.isSaveAdvised
         bootbox.dialog "Project is unsaved, proceed anyway?", [
           label: "Ok"
           class: "btn-inverse"
