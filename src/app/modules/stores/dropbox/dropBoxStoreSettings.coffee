@@ -1,10 +1,10 @@
 define (require)->
   
-  class DropBoxConnectorSettings extends Backbone.Model
+  class DropBoxStoreSettings extends Backbone.Model
     idAttribute: 'name'
     defaults:
-      name: "DropBoxConnector"
-      title: "DropBox Connector"
+      name: "DropBoxStore"
+      title: "DropBox Store"
       configured  : false
       
     constructor:(options)->

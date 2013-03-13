@@ -50,7 +50,7 @@
 
 <script id="projectStoreTmpl" type="text/x-underscore-template">
 	<div class="accordion-group" id="<%=name%>StoreContent">
-	 	<div class="accordion-heading connector-header" >
+	 	<div class="accordion-heading store-header" >
 	 		<a class="accordion-toggle"> <!--data-toggle="collapse" data-parent="#accordion" href="#collapseOne">-->
 				<%= storeType %> <i class="icon-question-sign icon-large" rel="tooltip" title="<%=tooltip%>"></i>
 			</a>
@@ -58,7 +58,7 @@
 			
 		</div>
 		<div id="collapseOne" class="accordion-body collapse in">
-			<div class="accordion-inner connectorProjectsList" ><!--style="overflow:auto;max-height: 150px">-->
+			<div class="accordion-inner storeProjectsList" ><!--style="overflow:auto;max-height: 150px">-->
 				<ul id="projects">
 				</ul>
 			</div>

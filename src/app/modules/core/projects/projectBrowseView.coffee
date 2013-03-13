@@ -42,7 +42,7 @@ define (require)->
     constructor:(options) ->
       super options
       @operation = options.operation ? "save"
-      @connectors = options.connectors ? {}
+      @stores = options.stores ? {}
       @vent = vent
       @vent.on("project:created",@onOperationSucceeded)
       @vent.on("project:saved",@onOperationSucceeded)
@@ -55,10 +55,10 @@ define (require)->
      
     onRender:=>
       tmpCollection = new Backbone.Collection()
-      for name, connector of @connectors
+      for name, store of @stores
         #hack, to inject current, existing project to sub views (for saving only)
-        connector.targetProject = @model
-        tmpCollection.add connector
+        store.targetProject = @model
+        tmpCollection.add store
       @stores =  tmpCollection
       
       projectsStoreView = new ProjectsStoreView
@@ -95,11 +95,11 @@ define (require)->
       
       $(@ui.fileNameInput).val(projectName)
       ### 
-      console.log "connector collection"
+      console.log "store collection"
       console.log @stores
       console.log "current project: #{projectName}"
-      currentConnector = @stores.get("projectName")
-      currentConnector.getProjectFiles(fileNameInput,onProjectFilesResponse)
+      currentStore = @stores.get("projectName")
+      currentStore.getProjectFiles(fileNameInput,onProjectFilesResponse)
       ###
     onProjectNewRequested:=>
       fileName = @ui.fileNameInput.val()
@@ -179,27 +179,27 @@ define (require)->
       vent.on("project:newRequest", @onCreateRequested)
       vent.on("project:saveRequest",@onSaveRequested)
       vent.on("project:loadRequest",@onLoadRequested)
-      vent.on("connector:selected", @onStoreSelected)
+      vent.on("store:selected", @onStoreSelected)
     
     onStoreSelected:(name)=>
       if name.currentTarget?
         if @selected
           @selected = false
-          header = @$el.find(".connector-header")
+          header = @$el.find(".store-header")
           header.removeClass('alert-info')
         else
           @selected = true
-          header = @$el.find(".connector-header")
+          header = @$el.find(".store-header")
           header.addClass('alert-info')
-          vent.trigger("connector:selected",@model.get("name"))
+          vent.trigger("store:selected",@model.get("name"))
       else
         if name != @model.get("name")
           @selected = false
-          header = @$el.find(".connector-header")
+          header = @$el.find(".store-header")
           header.removeClass('alert-info')
         else
           @selected = true
-          header = @$el.find(".connector-header")
+          header = @$el.find(".store-header")
           header.addClass('alert-info')
     
     onProjectSelected:(e)=>
@@ -207,7 +207,7 @@ define (require)->
       id = $(e.currentTarget).attr("id")
       vent.trigger("project:selected",id)
       
-      vent.trigger("connector:selected",@model.get("name"))
+      vent.trigger("store:selected",@model.get("name"))
       @trigger("project:selected", @model)
       
     
@@ -245,7 +245,7 @@ define (require)->
       #clean up events
       vent.off("project:saveRequest",@onSaveRequested)
       vent.off("project:loadRequest",@onLoadRequested)
-      vent.off("connector:selected",@onStoreSelected)
+      vent.off("store:selected",@onStoreSelected)
     
   class ProjectsStoreView extends Backbone.Marionette.CompositeView
     template:projectStoreListTemplate
@@ -256,8 +256,8 @@ define (require)->
       @currentStore = null
       @on("itemview:project:selected",@toto)
     
-    toto:(childView, connector)=>
-      console.log connector
+    toto:(childView, store)=>
+      console.log store
       
     onRenderOLD:->
       @ui.treeTest.jstree 

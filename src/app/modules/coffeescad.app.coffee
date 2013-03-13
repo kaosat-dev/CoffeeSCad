@@ -36,7 +36,7 @@ define (require)->
       
       @editors = {}
       @exporters = {}
-      @connectors = {}
+      @stores = {}
       
       #Exporters
       BomExporter = require './exporters/bomExporter/bomExporter'
@@ -46,13 +46,13 @@ define (require)->
       @exporters["bom"] = new BomExporter()
       @exporters["amf"] = new AmfExporter()
       
-      #Connectors
-      DropBoxConnector = require './connectors/dropbox/dropBoxConnector'
-      #GithubConnector = require './connectors/github/gitHubConnector'
-      BrowserConnector = require './connectors/browser/browserConnector'
-      @connectors["dropBox"] = new DropBoxConnector()
-      #@connectors["gitHub"] = new GithubConnector()
-      @connectors["browser"] = new BrowserConnector()
+      #stores 
+      DropBoxStore = require './stores/dropbox/dropBoxStore'
+      #GithubStore = require './stores/github/gitHubStore'
+      BrowserStore = require './stores/browser/browserStore'
+      @stores["dropBox"] = new DropBoxStore()
+      #@stores["gitHub"] = new GithubStore()
+      @stores["browser"] = new BrowserStore()
       
       #events
       $(window).bind('beforeunload',@onAppClosing)
@@ -70,7 +70,7 @@ define (require)->
      
     initLayout:=>
       @menuView = new MenuView
-        connectors: @connectors
+        stores: @stores
         exporters: @exporters
       @headerRegion.show @menuView
     
@@ -79,7 +79,7 @@ define (require)->
       @bindTo(@settings.get("General"), "change", @settingsChanged)
     
     initData:->
-      @projectManager.connectors = @connectors
+      @projectManager.stores = @stores
       @project = @projectManager.createProject()
     
     _setupKeyboardBindings:=>
@@ -116,8 +116,8 @@ define (require)->
       @codeEditor.start()
       @visualEditor.start()
       #we check if we came back form an oauth redirect/if we have already been authorized
-      for index, connector of @connectors
-        connector.authCheck()
+      for index, store of @stores
+        store.authCheck()
       
     onAppStarted:(appName)->
       console.log "I see app: #{appName} has started"

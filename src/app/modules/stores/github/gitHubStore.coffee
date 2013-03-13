@@ -133,9 +133,9 @@ define (require)->
       console.log @
       console.log "_____________"
   
-  class GitHubConnector extends Backbone.Model
+  class GitHubStore extends Backbone.Model
     defaults:
-      name: "gitHubConnector"
+      name: "gitHubStore"
       storeType: "gitHub"
     
     constructor:(options)->
@@ -144,8 +144,8 @@ define (require)->
       @isLogginRequired = true
       @loggedIn = true
       @vent = vent
-      @vent.on("gitHubConnector:login", @login)
-      @vent.on("gitHubConnector:logout", @logout)
+      @vent.on("gitHubStore:login", @login)
+      @vent.on("gitHubStore:logout", @logout)
       
       #experimental
       @lib = new GitHubLibrary
@@ -159,7 +159,7 @@ define (require)->
           console.log "github logged in"
           localStorage.setItem("githubCon-auth",true)
           @loggedIn = true
-          @vent.trigger("gitHubConnector:loggedIn")
+          @vent.trigger("gitHubStore:loggedIn")
         onLoginFailed=(error)=>
           console.log "github loggin failed"
           throw error
@@ -169,7 +169,7 @@ define (require)->
                             .fail(onLoginFailed)
         #@lib.fetch()
       catch error
-        @vent.trigger("gitHubConnector:loginFailed")
+        @vent.trigger("gitHubStore:loginFailed")
         
     logout:=>
       try
@@ -177,7 +177,7 @@ define (require)->
           console.log "github logged out"
           localStorage.removeItem("githubCon-auth")
           @loggedIn = false
-          @vent.trigger("gitHubConnector:loggedOut")
+          @vent.trigger("gitHubStore:loggedOut")
         onLoginFailed=(error)=>
           console.log "github logout failed"
           throw error
@@ -187,7 +187,7 @@ define (require)->
                             .fail(onLogoutFailed)
       
       catch error
-        @vent.trigger("gitHubConnector:logoutFailed")
+        @vent.trigger("gitHubStore:logoutFailed")
     
     authCheck:()->
       getURLParameter=(paramName)->
@@ -202,10 +202,10 @@ define (require)->
           i++
         null
       urlAuthOk = getURLParameter("code")
-      console.log "githubConnector got redirect param #{urlAuthOk}"
+      console.log "githubStore got redirect param #{urlAuthOk}"
       
       authOk = localStorage.getItem("githubCon-auth")
-      console.log "githubConnector got localstorage Param #{authOk}"
+      console.log "githubStore got localstorage Param #{authOk}"
 
       if urlAuthOk?
         @login()
@@ -257,4 +257,4 @@ define (require)->
           console.log entries
           callback(entries)
        
-  return GitHubConnector
+  return GitHubStore

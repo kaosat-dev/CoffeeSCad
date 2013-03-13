@@ -30,15 +30,15 @@ define (require)->
       console.log @
       console.log "_____________"
   
-  class DropBoxConnector extends Backbone.Model
+  class DropBoxStore extends Backbone.Model
     attributeNames: ['loggedIn']
     buildProperties @
     
     idAttribute: 'name'
     defaults:
-      name: "dropBoxConnector"
+      name: "dropBoxStore"
       storeType: "dropBox"
-      tooltip:"Connector to the Dropbox Cloud based storage: requires login"
+      tooltip:"Store to the Dropbox Cloud based storage: requires login"
       loggedIn:false
     
     constructor:(options)->
@@ -48,8 +48,8 @@ define (require)->
       console.log @store
       @isLogginRequired = true
       @vent = vent
-      @vent.on("dropBoxConnector:login", @login)
-      @vent.on("dropBoxConnector:logout", @logout)
+      @vent.on("dropBoxStore:login", @login)
+      @vent.on("dropBoxStore:logout", @logout)
       
       #experimental
       @lib = new DropBoxLibrary
@@ -66,7 +66,7 @@ define (require)->
           console.log "dropbox logged in"
           localStorage.setItem("dropboxCon-auth",true)
           @loggedIn = true
-          @vent.trigger("dropBoxConnector:loggedIn")
+          @vent.trigger("dropBoxStore:loggedIn")
         onLoginFailed=(error)=>
           console.log "dropbox loggin failed"
           throw error
@@ -76,7 +76,7 @@ define (require)->
                             .fail(onLoginFailed)
         #@lib.fetch()
       catch error
-        @vent.trigger("dropBoxConnector:loginFailed")
+        @vent.trigger("dropBoxStore:loginFailed")
         
     logout:=>
       try
@@ -84,7 +84,7 @@ define (require)->
           console.log "dropbox logged out"
           localStorage.removeItem("dropboxCon-auth")
           @loggedIn = false
-          @vent.trigger("dropBoxConnector:loggedOut")
+          @vent.trigger("dropBoxStore:loggedOut")
         onLoginFailed=(error)=>
           console.log "dropbox logout failed"
           throw error
@@ -94,7 +94,7 @@ define (require)->
                             .fail(onLogoutFailed)
       
       catch error
-        @vent.trigger("dropBoxConnector:logoutFailed")
+        @vent.trigger("dropBoxStore:logoutFailed")
     
     authCheck:()->
       getURLParameter=(paramName)->
@@ -109,10 +109,10 @@ define (require)->
           i++
         null
       urlAuthOk = getURLParameter("_dropboxjs_scope")
-      console.log "dropboxConnector got redirect param #{urlAuthOk}"
+      console.log "dropboxStore got redirect param #{urlAuthOk}"
       
       authOk = localStorage.getItem("dropboxCon-auth")
-      console.log "dropboxConnector got localstorage Param #{authOk}"
+      console.log "dropboxStore got localstorage Param #{authOk}"
 
       if urlAuthOk?
         @login()
@@ -288,4 +288,4 @@ define (require)->
             callback(entries)
       
     
-  return DropBoxConnector
+  return DropBoxStore

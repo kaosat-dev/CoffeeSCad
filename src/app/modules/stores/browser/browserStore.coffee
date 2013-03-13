@@ -25,15 +25,15 @@ define (require)->
       return date.getTime()
       
   
-  class BrowserConnector extends Backbone.Model
+  class BrowserStore extends Backbone.Model
     attributeNames: ['loggedIn']
     buildProperties @
     
     idAttribute: 'name'
     defaults:
-      name: "browserConnector"
+      name: "browserStore"
       storeType: "browser"
-      tooltip:"Connector to localstorage (browser)"
+      tooltip:"Store to localstorage (browser)"
       loggedIn: true
     
     constructor:(options)->
@@ -41,8 +41,8 @@ define (require)->
       @store = new Backbone.LocalStorage("Projects")
       @isLogginRequired = false
       @vent = vent
-      @vent.on("browserConnector:login", @login)
-      @vent.on("browserConnector:logout", @logout)
+      @vent.on("browserStore:login", @login)
+      @vent.on("browserStore:logout", @logout)
       
       #experimental
       @lib = new BrowserLibrary()
@@ -119,4 +119,4 @@ define (require)->
       project.rootFolder.fetch().done(onProjectLoaded)
        
        
-  return BrowserConnector
+  return BrowserStore

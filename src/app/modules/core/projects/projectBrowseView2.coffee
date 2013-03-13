@@ -41,7 +41,7 @@ define (require)->
       console.log "options"
       console.log options.operation
       @operation = options.operation ? "save"
-      @connectors = options.connectors ? {}
+      @stores = options.stores ? {}
       @vent = vent
       @vent.on("project:created",@onOperationSucceeded)
       @vent.on("project:saved",@onOperationSucceeded)
@@ -54,10 +54,10 @@ define (require)->
      
     onRender:=>
       tmpCollection = new Backbone.Collection()
-      for name, connector of @connectors
+      for name, store of @stores
         #hack, to inject current, existing project to sub views (for saving only)
-        connector.targetProject = @model
-        tmpCollection.add connector
+        store.targetProject = @model
+        tmpCollection.add store
       @stores =  tmpCollection
       
       projectsStoreView = new ProjectsStoreView
@@ -71,9 +71,8 @@ define (require)->
           @ui.projectThumbNail.attr("src",screenshotUrl)
           @ui.thumbNail.removeClass("hide")
           @model.addFile
-            name:".thumbnail"
+            name:".thumbnail.png"
             content:screenshotUrl
-            ext:"png"  
         $.when(screenshotPromise).done(doScreenShotRes)
         
       else if @operation is "load"
@@ -93,11 +92,11 @@ define (require)->
       
       $(@ui.fileNameInput).val(projectName)
       ### 
-      console.log "connector collection"
+      console.log "store collection"
       console.log @stores
       console.log "current project: #{projectName}"
-      currentConnector = @stores.get("projectName")
-      currentConnector.getProjectFiles(fileNameInput,onProjectFilesResponse)
+      currentStore = @stores.get("projectName")
+      currentStore.getProjectFiles(fileNameInput,onProjectFilesResponse)
       ###
       
     onProjectSaveRequested:=>
@@ -105,10 +104,7 @@ define (require)->
       vent.trigger("project:saveRequest", fileName)
       
       #most of our job is done, disable the view
-      @close()
-      #@ui.validationButton.attr("disabled",true)
-      #@projectStores.close()
-      #@ui.storesContainer.hide()
+      #@close()
       
     onProjectLoadRequested:=>
       fileName = $(@ui.fileNameInput).val()
@@ -161,7 +157,7 @@ define (require)->
       vent.on("project:newRequest", @onCreateRequested)
       vent.on("project:saveRequest",@onSaveRequested)
       vent.on("project:loadRequest",@onLoadRequested)
-      vent.on("connector:selected", @onStoreSelected)
+      vent.on("store:selected", @onStoreSelected)
       
       #testConverter = (direction, value)->
       testConverter = ()=>
@@ -177,31 +173,31 @@ define (require)->
         return (not @model.get("loggedIn"))
       
       @bindings = {
-        loggedIn: [{selector: '.connectorConnection', elAttribute: 'hidden'} ]
+        loggedIn: [{selector: '.storeConnection', elAttribute: 'hidden'} ]
       }
       
-      #bindings = {loggedIn: [{selector: '[class=connectorConnection]', elAttribute: 'class'},"[name=loggedIn]"]}
+      #bindings = {loggedIn: [{selector: '[class=storeConnection]', elAttribute: 'class'},"[name=loggedIn]"]}
       @modelBinder = new Backbone.ModelBinder()
     
     onStoreSelected:(name)=>
       if name.currentTarget?
         if @selected
           @selected = false
-          header = @$el.find(".connector-header")
+          header = @$el.find(".store-header")
           header.removeClass('alert-info')
         else
           @selected = true
-          header = @$el.find(".connector-header")
+          header = @$el.find(".store-header")
           header.addClass('alert-info')
-          vent.trigger("connector:selected",@model.get("name"))
+          vent.trigger("store:selected",@model.get("name"))
       else
         if name != @model.get("name")
           @selected = false
-          header = @$el.find(".connector-header")
+          header = @$el.find(".store-header")
           header.removeClass('alert-info')
         else
           @selected = true
-          header = @$el.find(".connector-header")
+          header = @$el.find(".store-header")
           header.addClass('alert-info')
     
     onProjectSelected:(e)=>
@@ -209,7 +205,7 @@ define (require)->
       id = $(e.currentTarget).attr("id")
       vent.trigger("project:selected",id)
       
-      vent.trigger("connector:selected",@model.get("name"))
+      vent.trigger("store:selected",@model.get("name"))
       @trigger("project:selected", @model)
       
     
@@ -221,10 +217,27 @@ define (require)->
       if @selected
         console.log "save to #{fileName} requested"
         projectToSave = @model.targetProject
-        if projectToSave?
-          console.log fileName
-          console.log @model
-          @model.saveProject(projectToSave,fileName)
+        projectNameExists = @model.getProject(fileName)
+        if projectNameExists?
+          bootbox.dialog "A project called #{fileName} already exists, overwrite?", [
+            label: "Ok"
+            class: "btn-inverse"
+            callback: =>
+              @model.saveProject(projectToSave,fileName)
+              ###
+              vent.trigger("project:loadRequest", fileName)
+              @close()###
+              #most of our job is done, disable the view
+          ,
+            label: "Cancel"
+            class: "btn-inverse"
+            callback: ->
+          ]
+        else
+          if projectToSave?
+            console.log fileName
+            console.log @model
+            @model.saveProject(projectToSave,fileName)
     
     onLoadRequested:(fileName)=>
       console.log "load requested"
@@ -250,7 +263,7 @@ define (require)->
       #clean up events
       vent.off("project:saveRequest",@onSaveRequested)
       vent.off("project:loadRequest",@onLoadRequested)
-      vent.off("connector:selected",@onStoreSelected)
+      vent.off("store:selected",@onStoreSelected)
       @modelBinder.unbind()
       
   class ProjectsStoreView extends Backbone.Marionette.CompositeView
@@ -262,8 +275,8 @@ define (require)->
       @currentStore = null
       @on("itemview:project:selected",@toto)
     
-    toto:(childView, connector)=>
-      console.log connector
+    toto:(childView, store)=>
+      console.log store
     
       
   ###    

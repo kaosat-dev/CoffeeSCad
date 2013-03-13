@@ -75,7 +75,7 @@ define (require)->
     
     ui: 
       exportersStub: "#exporters"
-      connectorsStub: "#connectors"
+      storesStub: "#stores"
       
     events:
       "click .newProject":    ()->vent.trigger("project:new")
@@ -96,7 +96,7 @@ define (require)->
     constructor:(options)->
       super options
       @vent = vent
-      @connectors= options.connectors ? {}
+      @stores= options.stores ? {}
       @exporters= options.exporters ? {}
       
       @vent.on("file:selected", @onFileSelected)
@@ -170,15 +170,15 @@ define (require)->
          #for more explanation (or lookup "anonymous functions inside loops")
          @ui.exportersStub.append("<li ><a href='#' class='#{className}'>#{index}</li>") 
            
-       for index, connector of @connectors
+       for index, store of @stores
          #TODO: move this in constructor
-         if connector.isLogginRequired
+         if store.isLogginRequired
            loginClassName = "login#{index[0].toUpperCase() + index[1..-1]}"
-           loginEvent = "#{index}Connector:login"
+           loginEvent = "#{index}Store:login"
            @events["click .#{loginClassName}"] = do(loginEvent)-> ->@vent.trigger(loginEvent)
            
            logoutClassName = "logout#{index[0].toUpperCase() + index[1..-1]}"
-           logoutEvent = "#{index}Connector:logout"
+           logoutEvent = "#{index}Store:logout"
            @events["click .#{logoutClassName}"] = do(logoutEvent)-> ->@vent.trigger(logoutEvent)
            
            do(index)=>
@@ -199,10 +199,10 @@ define (require)->
                .show()
                $(selector).replaceWith("<li id='#{loginClassName}' ><a href='#' class='#{loginClassName}'><i class='icon-signin' style='color:red'/>  #{index} - Signed out</a></li>")
              
-             @vent.on("#{index}Connector:loggedIn",()->onLoggedIn())
-             @vent.on("#{index}Connector:loggedOut",()->onLoggedOut())
+             @vent.on("#{index}Store:loggedIn",()->onLoggedIn())
+             @vent.on("#{index}Store:loggedOut",()->onLoggedOut())
            
-           @ui.connectorsStub.append("<li id='#{loginClassName}'><a href='#' class='#{loginClassName}'><i class='icon-signin' style='color:red'/>  #{index} - Signed Out</a></li>") 
+           @ui.storesStub.append("<li id='#{loginClassName}'><a href='#' class='#{loginClassName}'><i class='icon-signin' style='color:red'/>  #{index} - Signed Out</a></li>") 
          
        @delegateEvents()
   

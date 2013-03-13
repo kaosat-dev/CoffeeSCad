@@ -22,7 +22,7 @@ define (require)->
       options = options or {appSettings:null}
       @appSettings = options.appSettings ? new Settings()
       @settings = @appSettings.getByName("General")
-      @connectors = options.connectors ? null
+      @stores = options.stores ? null
       @preProcessor = new PreProcessor()
       @csgProcessor = new CsgProcessor()
       
@@ -196,7 +196,7 @@ define (require)->
       projectBrowserView = new ProjectBrowserView
         model: @project
         operation: "save"
-        connectors: @connectors
+        stores: @stores
       
       modReg = new ModalRegion({elName:"library",large:true})
       modReg.show projectBrowserView
@@ -206,7 +206,7 @@ define (require)->
         projectBrowserView = new ProjectBrowserView
           model: @project
           operation: "save"
-          connectors: @connectors
+          stores: @stores
         modReg = new ModalRegion({elName:"library",large:true})
         modReg.show projectBrowserView
       else
@@ -216,7 +216,7 @@ define (require)->
       projectBrowserView = new ProjectBrowserView
         model: @project
         operation: "load"
-        connectors: @connectors
+        stores: @stores
       
       modReg = new ModalRegion({elName:"library",large:true})
       modReg.show projectBrowserView
