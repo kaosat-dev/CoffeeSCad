@@ -3,8 +3,8 @@ define (require)->
   _ = require 'underscore'
   require 'bootstrap'
   marionette = require 'marionette'
+  modelBinder = require 'modelbinder'
   
-  vent = require 'modules/core/vent'
   reqRes = require 'modules/core/reqRes'
   
   amfExporterTemplate =  require "text!./amfExporter.tmpl"
@@ -14,28 +14,29 @@ define (require)->
     template: amfExporterTemplate
     
     ui:
-      exportButton:   "#amfExportBtn"
       fileNameinput:  "#fileNameinput"
+      exportButton:   "#amfExportBtn"
     
     events:
-      "click .exportAmf":   "onExport"   
+      "mousedown #amfExportBtn":   "onExport"
     
     constructor:(options)->
       super options
-      @vent = vent
-      @vent.on("project:new",     ()->@ui.exportButton.addClass "disabled") 
-      @vent.on("project:compiled",()->@ui.exportButton.removeClass "disabled")
+      @modelBinder = new Backbone.ModelBinder()
+      @bindings = 
+        compiled: [{selector: '#amfExportBtn', elAttribute: 'disabled', converter:=>return (not @model.isCompiled)} ]
       
     onExport:->
-      vent.trigger("export:amf")
-      exportBlobUrl = reqRes.request("amfexportBlobUrl")
-      if exportBlobUrl != null
-        @ui.exportButton.prop("download", "#{@ui.fileNameinput.val()}")
-        @ui.exportButton.prop("href", exportBlobUrl)
+      if not @ui.exportButton.attr('disabled')
+        exportBlobUrl = reqRes.request("amfexportBlobUrl")
+        if exportBlobUrl != null
+          @ui.exportButton.prop("download", "#{@ui.fileNameinput.val()}")
+          @ui.exportButton.prop("href", exportBlobUrl)
         
     onRender:->
-      if @model.get("compiled")
-          @ui.exportButton.removeClass "disabled"
-    
+      @modelBinder.bind(@model, @el, @bindings)
+          
+    onClose:=>
+      @modelBinder.unbind()
         
   return AmfExporterView

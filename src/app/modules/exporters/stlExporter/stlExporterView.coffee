@@ -3,8 +3,8 @@ define (require)->
   _ = require 'underscore'
   require 'bootstrap'
   marionette = require 'marionette'
+  modelBinder = require 'modelbinder'
   
-  vent = require 'modules/core/vent'
   reqRes = require 'modules/core/reqRes'
   
   stlExporterTemplate =  require "text!./stlExporter.tmpl"
@@ -14,30 +14,29 @@ define (require)->
     template: stlExporterTemplate
     
     ui:
-      exportButton:   "#stlExportBtn"
       fileNameinput:  "#fileNameinput"
+      exportButton:   "#stlExportBtn"
     
     events:
-      "click .exportStl":   "onExport"   
+      "click #stlExportBtn":   "onExport"   
     
     constructor:(options)->
       super options
-      @vent = vent
-      @vent.on("project:new",     ()->@ui.exportButton.addClass "disabled") 
-      @vent.on("project:compiled",()->@ui.exportButton.removeClass "disabled")
+      @modelBinder = new Backbone.ModelBinder()
+      @bindings = 
+        compiled: [{selector: '#stlExportBtn', elAttribute: 'disabled', converter:=>return (not @model.isCompiled)} ]
       
     onExport:->
-      vent.trigger("export:stl")
-      exportBlobUrl = reqRes.request("stlexportBlobUrl")
-      if exportBlobUrl != null
-        @ui.exportButton.prop("download", "#{@ui.fileNameinput.val()}")
-        @ui.exportButton.prop("href", exportBlobUrl)
+      if not @ui.exportButton.attr('disabled')
+        exportBlobUrl = reqRes.request("stlexportBlobUrl")
+        if exportBlobUrl != null
+          @ui.exportButton.prop("download", "#{@ui.fileNameinput.val()}")
+          @ui.exportButton.prop("href", exportBlobUrl)
         
     onRender:->
-      if @model.get("compiled")
-          @ui.exportButton.removeClass "disabled"
-    
-    #serializeData: ()->
-    #  null
+      @modelBinder.bind(@model, @el, @bindings)
+          
+    onClose:=>
+      @modelBinder.unbind()
         
   return StlExporterView
