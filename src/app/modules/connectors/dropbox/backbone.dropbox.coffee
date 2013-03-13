@@ -9,6 +9,8 @@ define (require)->
       @debug = debug
       @client=null
       
+      @destroy_cache = []
+      
     authentificate:()=>
       @client = new Dropbox.Client
         key: "h8OY5h+ah3A=|AS0FmmbZJrmc8/QbpU6lMzrCd5lSGZPCKVtjMlA7ZA=="
@@ -66,7 +68,8 @@ define (require)->
           return new Error("Dropbox: uknown error") 
           # Caused by a bug in dropbox.js, in your application, or in Dropbox.
           # Tell the user an error occurred, ask them to refresh the page.
-      
+    
+    
     sync:(method, model, options)=>
       switch method
         when 'read' 
@@ -81,36 +84,51 @@ define (require)->
           console.log "creating"
           unless model.id
             model.set model.id, model.idAttribute
-            #model.id = guid()
           
           console.log("id"+model.get("id"))
           id = model.id
-          if model.get "ext"
-            id = "#{id}.#{model.get('ext')}"
+          id = "#{id}"
           @writeFile(id, JSON.stringify(model))
           return model.toJSON()
           
         when 'update'
           console.log "updating"
           id = model.id
-          if model.get "ext"
-            id = "#{id}.#{model.get('ext')}"
+          id = "#{id}"
           if model.collection?
             if model.collection.path?
               id ="#{model.collection.path}/#{id}"
           console.log "id: #{id}"
           @writeFile(id, JSON.stringify(model))
+          
+          #hack
+          for model in @destroy_cache
+            console.log "REALLY deleting model"
+            console.log model
+            id = model.id
+            if model.collection?
+              if model.collection.path?
+                id ="#{model.collection.path}/#{id}"
+            else if model.memoPath
+              id ="#{model.memoPath}/#{id}"
+            @remove(id)
+          @destroy_cache = []
+          
+          
           return model.toJSON()
           
         when 'delete'
           console.log "deleting"
           console.log model
+          model.memoPath = model.collection.path 
+          @destroy_cache.push(model)
+          ### 
           id = model.id
-          if model.get "ext"
-            id = "#{id}.#{model.get('ext')}"
-          if model.collection.path?
-            id ="#{model.collection.path}/#{id}"
+          if model.collection?
+            if model.collection.path?
+              id ="#{model.collection.path}/#{id}"
           @remove(id)
+          ###
           
     
     find: (model, options) ->
@@ -155,12 +173,14 @@ define (require)->
             results = []
             for i in [0...entries.length]
               entry = entries[i]
+              console.log "entry #{entry}"
               entryData = entry.split('.')
-              ext= entryData[entryData.length - 1]
-              filename = entryData[0...entryData.length-1].join('.')
+              #ext= entryData[entryData.length - 1]
+              #filename = entryData[0...entryData.length-1].join('.')
+              filename = entry
               results.push 
                 name:filename
-                ext:ext
+                #ext:ext
                 content:preResults[i]
           else
             results = $.map(results, JSON.parse)
@@ -179,8 +199,8 @@ define (require)->
       p = $.when(promise).then(fetchData)    
       return p
       
-    remove:(name)->
-      @client.remove name, (error, userInfo)->
+    remove:(name)=>
+      @client.remove name, (error, userInfo)=>
         if error
           return @formatError(error)
         console.log "removed #{name}"
@@ -189,6 +209,7 @@ define (require)->
       @client.writeFile name, content, (error, stat) =>
         if error
           return @formatError(error)
+        #console.log "writen file #{name} with content #{content}"
         console.log ("File saved as revision " + stat.versionTag)
         
     createFolder:(name)->

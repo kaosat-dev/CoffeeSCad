@@ -56,6 +56,9 @@ define (require)->
         sync: @store.sync
       @lib.sync = @store.sync
       
+      #should this be here ?
+      @projectsList = []
+      
     login:=>
       console.log "login requested"
       try
@@ -115,16 +118,29 @@ define (require)->
         @login()
         window.history.replaceState('', '', '/')
       else
-        #just for tests
-        ### 
-        if authOk?
-          setTimeout ( =>
-            @login()
-          ), 5000
-        ###
         if authOk?
           @login()
-      
+    
+    getProjectsName:(callback)=>
+      #hack
+      if @store.client?
+        @store.client.readdir "/", (error, entries) =>
+          if error
+            console.log ("error")
+          else
+            console.log "@projectsList"
+            @projectsList = entries
+            console.log entries
+            callback(entries)
+    
+    getProject:(projectName)=>
+      console.log "locating #{projectName} in @projectsList"
+      console.log @projectsList
+      if projectName in @projectsList
+        return true
+      else
+        return null
+    
     createProject:(fileName)=>
       #project = @lib.create(options)
       project = new Project
@@ -141,25 +157,78 @@ define (require)->
       #@vent.trigger("project:created",project)  
       @vent.trigger("project:loaded",project) 
       
-    saveProject:(project)=>
-      console.log "saving project"
-      @lib.add(project)
-      project.sync=@store.sync
-      project.pathRoot=project.get("name") 
       
-      project.rootFolder.sync = @store.sync
-      project.rootFolder.path = project.get("name") 
+    saveProject__:(project, newName)=>
+      console.log "saving projectto dropbox"
+      project.collection = null
+      @lib.add(project)
+      if newName?
+        project.name = newName
+      project.dataStore = @
+      project.rootPath="/"+project.name+"/"
+      
+      project.sync = @store.sync
+      project.rootFolder.sync = project.sync
+      project.rootFolder.path = project.name
+      
+      for index, file of project.rootFolder.models
+        #actual saving of file, not json INSIDE the file
+        projectName = project.name
+        name = file.name
+        content =file.content
+        filePath = "#{projectName}/#{name}"
+        ext = name.split('.').pop()
+        if ext == "png"
+          #save thumbnail
+          dataURIComponents = content.split(',')
+          mimeString = dataURIComponents[0].split(':')[1].split(';')[0]
+          if(dataURIComponents[0].indexOf('base64') != -1)
+            data =  atob(dataURIComponents[1])
+            array = []
+            for i in [0...data.length]
+              array.push(data.charCodeAt(i))
+            content = new Blob([new Uint8Array(array)], {type: 'image/jpeg'})
+          else
+            byteString = unescape(dataURIComponents[1])
+            length = byteString.length
+            ab = new ArrayBuffer(length)
+            ua = new Uint8Array(ab)
+            for i in [0...length]
+              ua[i] = byteString.charCodeAt(i)
+          file.trigger("save")
+          file.sync = @store.sync
+        console.log "saving file to #{filePath}"
+        @store.writeFile(filePath, content)
+      @vent.trigger("project:saved")
+      
+    saveProject:(project,newName)=>
+      console.log "saving projectto dropbox"
+      project.collection = null
+      @lib.add(project)
+      if newName?
+        project.name = newName
+      project.sync = @store.sync
+      console.log @store
+      console.log @store.sync
+      #project.rootPath="/"+project.name+"/"
+      #project.path = "/"+project.name+"/.project"
+      #project.collection.path = project.name+"/"
+      /#{projectName}/
+      project.rootFolder.sync = project.sync
+      project.rootFolder.path = project.name
+      #project.rootFolder.changeStorage("dropboxDataStore",{path:project.name})
+      project.save()
+      ### 
       for index, file of project.rootFolder.models
         #file.pathRoot= project.get("name")
         #file.save()
         
         #actual saving of file, not json hack
-        projectName = project.get("name")
-        name = file.get("name")
-        ext = file.get("ext")
-        content =file.get("content")
-        filePath = "#{projectName}/#{name}.#{ext}"
-        
+        projectName = project.name
+        name = file.name
+        content =file.content
+        filePath = "#{projectName}/#{name}"
+        ext = name.split('.').pop()
         if ext == "png"
           #save thumbnail
           dataURIComponents = content.split(',')
@@ -182,49 +251,40 @@ define (require)->
           file.trigger("save")
         console.log "saving file to #{filePath}"
         @store.writeFile(filePath, content)
+        ###
       
-      #project.save()
       @vent.trigger("project:saved")
     
     loadProject:(projectName)=>
-      console.log "dropbox loading project #{projectName}"
-      #TODO: check if project exists
-      project = new Project()
-      #FIXME :silent:true only offset the event triggering, it does not silence it 
-      #project.attributes["name"]=projectName
-      #project.set({"name":projectName},{silent:true})
-      project.set("name":projectName)
-      
-      onProjectLoaded=()=>
-        thumbNailFile = project.rootFolder.get(".thumbnail")
-        project.rootFolder.remove(thumbNailFile)
-        @vent.trigger("project:loaded",project)
-        
-      project.rootFolder.rawData = true
-      project.rootFolder.sync = @store.sync
-      project.rootFolder.path = projectName
-      project.rootFolder.fetch().done(onProjectLoaded)
-      @lib.add(project)
-      return project
+      if projectName in @projectsList
+        console.log "dropbox loading project #{projectName}"
     
-    getProjectsName:(callback)=>
-      #hack
-      if @store.client?
-        @store.client.readdir "/", (error, entries) ->
-          if error
-            console.log ("error")
-          else
-            console.log entries
-            callback(entries)
+    loadProject_:(projectName)=>
+      if projectName in @projectsList
+        console.log "dropbox loading project #{projectName}"
+        project = new Project()
+        project.name = projectName
+        
+        onProjectLoaded=()=>
+          #thumbNailFile = project.rootFolder.get(".thumbnail")
+          #project.rootFolder.remove(thumbNailFile)
+          @vent.trigger("project:loaded",project)
           
+        project.rootFolder.rawData = true
+        project.rootFolder.sync = @store.sync
+        project.rootFolder.path = projectName
+        project.rootFolder.fetch().done(onProjectLoaded)
+        @lib.add(project)
+        return project
+    
     getProjectFiles:(projectName,callback)=>
       #hack
       if @store.client?
-        @store.client.readdir "/#{projectName}/", (error, entries) ->
+        @store.client.readdir "/#{projectName}/", (error, entries) =>
           if error
             console.log ("error")
           else
-            console.log entries
+            #console.log entries
             callback(entries)
       
     

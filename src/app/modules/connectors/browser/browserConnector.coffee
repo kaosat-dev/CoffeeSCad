@@ -1,5 +1,7 @@
 define (require)->
   Backbone = require 'backbone'
+  LocalStorage = require 'localstorage'
+
   vent = require 'modules/core/vent'
   buildProperties = require 'modules/core/utils/buildProperties'
   
@@ -62,6 +64,9 @@ define (require)->
         
       callback(projectNames)
     
+    getProject:(projectName)=>
+      return @lib.get(projectName)
+    
     saveProject:(project, newName)=>
       project.collection = null
       @lib.add(project)
@@ -72,6 +77,31 @@ define (require)->
       project.rootFolder.changeStorage("localStorage",new Backbone.LocalStorage(rootStoreURI))
       project.save()
       @vent.trigger("project:saved")  
+    
+    saveProject_alt:(project,newName)=>
+      #experiment of saving projects withouth using backbone localstorage
+      project.collection = null
+      @lib.add(project)
+      if newName?
+        project.name = newName
+      project.dataStore = @
+      project.rootPath="projects-"+project.name #rootStoreURI
+      
+      for index, file of project.rootFolder.models
+        projectName = project.name
+        name = file.name
+        content =file.content
+        filePath = "#{projectName}/#{name}"
+        ext = name.split('.').pop()
+        localStorage["bar"] = foo
+        localStorage.setItem("bar", foo)
+      
+      rootStoreURI = "projects-"+project.name+"-files"
+      project.rootFolder.changeStorage("localStorage",new Backbone.LocalStorage(rootStoreURI))
+      project.save()
+      @vent.trigger("project:saved")  
+      
+      localStorage.setItem("bar", foo);
     
     loadProject:(projectName)=>
       project =  @lib.get(projectName)

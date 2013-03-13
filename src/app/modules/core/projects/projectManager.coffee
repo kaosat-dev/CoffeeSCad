@@ -14,7 +14,6 @@ define (require)->
   Settings = require 'modules/core/settings/settings'
   Project = require 'modules/core/projects/project'
   ProjectBrowserView = require './projectBrowseView2'
-  #ProjectBrowserView2 = require './projectBrowseView2'
   
   
   class ProjectManager

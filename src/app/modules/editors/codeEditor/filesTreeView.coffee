@@ -138,7 +138,8 @@ define (require)->
           label: "Ok"
           class: "btn-inverse"
           callback: =>
-            @collection.remove(projectFile)
+            #@collection.remove(projectFile)
+            projectFile.destroy()
         ,
           label: "Cancel"
           class: "btn-inverse"

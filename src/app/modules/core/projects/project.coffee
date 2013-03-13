@@ -2,7 +2,6 @@ define (require)->
   $ = require 'jquery'
   _ = require 'underscore'
   Backbone = require 'backbone'
-  LocalStorage = require 'localstorage'
   buildProperties = require 'modules/core/utils/buildProperties'
   
   debug  = false
@@ -52,14 +51,14 @@ define (require)->
        
       super attributes, options 
       @toJSON=backup
+      @trigger("save",@)
       
       
   class Folder extends Backbone.Collection
     model: ProjectFile
-    sync = null
+    sync : null
     constructor:(options)->
       super options
-      @sync=null
       @_storageData = []
     ###
     parse: (response)=>
@@ -71,17 +70,20 @@ define (require)->
       console.log response      
       return response  
     ###
+    save:=>
+      for index, file of @models
+        file.sync = @sync
+        file.save() 
+      
     changeStorage:(storeName,storeData)->
       for oldStoreName in  @_storageData
         delete @[oldStoreName]
       @_storageData = []  
       @_storageData.push(storeName)
       @[storeName] = storeData
-      ### 
       for index, file of @models
-        file.sync = @store.sync 
-        file.pathRoot= project.get("name")
-      ###
+        file.sync = @sync 
+        #file.pathRoot= project.get("name")
    
   class Project extends Backbone.Model
     """Main aspect of coffeescad : contains all the files
@@ -112,6 +114,7 @@ define (require)->
       classRegistry={}
       @bom = new Backbone.Collection()
       @rootAssembly = {}
+      @dataStore = null
     
     _setupFileEventHandlers:(file)=>
       file.on("change",@_onFileChanged)
@@ -135,6 +138,23 @@ define (require)->
       @isSaveAdvised = true
     
     save: (attributes, options)=>
+      #project is only a container, data is stored inside the metadata file (.project)
+      #metaDataFile = @rootFolder.get(".project")
+      #metaDataFile.content = {name:@name,lastModificationDate:@lastModificationDate}
+      
+      ###
+      @dataStore.saveProject(@)
+      for index, file of @rootFolder.models
+        file.sync = @sync
+      
+      console.log @sync
+      @rootFolder.sync = @sync
+      @rootFolder.path = @name
+      metaDataFile.sync = @sync
+      metaDataFile.save()
+      ###
+      
+      
       backup = @toJSON
       @toJSON= =>
         attributes = _.clone(@attributes)
@@ -147,9 +167,14 @@ define (require)->
       @toJSON=backup
       
       @rootFolder.sync = @sync
+      @rootFolder.save()
+      
+      ###
       for index, file of @rootFolder.models
-        file.save() 
-        file.trigger("save")
+        file.sync = @sync
+        file.save()
+      ###
+       
       @isSaveAdvised = false
       @isCompileAdvised = false  
       @trigger("save",@)
