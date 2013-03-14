@@ -26,7 +26,7 @@ define (require)->
       
   
   class BrowserStore extends Backbone.Model
-    attributeNames: ['loggedIn']
+    attributeNames: ['name', 'loggedIn']
     buildProperties @
     
     idAttribute: 'name'
@@ -66,6 +66,26 @@ define (require)->
     
     getProject:(projectName)=>
       return @lib.get(projectName)
+    
+    getProjectFiles:(projectName,callback)=>
+      #Get all the file names withing a project : should actually get the file tree? (subdirs support etc)
+      #hack
+      files = []
+      project = @lib.get(projectName)
+      #TODO: oh the horror: we have to fetch all model data just to look at the files list
+      if project?
+        rootStoreURI = "projects-"+project.name+"-files"
+        project.rootFolder.sync = project.sync
+        project.rootFolder.changeStorage("localStorage",new Backbone.LocalStorage(rootStoreURI))
+        
+        onProjectFilesLoaded=()=>
+          for file in project.rootFolder.models
+            files.push(file.name)
+          callback(files)
+        
+        project.rootFolder.fetch().done(onProjectFilesLoaded)
+        
+          
     
     saveProject:(project, newName)=>
       project.collection = null

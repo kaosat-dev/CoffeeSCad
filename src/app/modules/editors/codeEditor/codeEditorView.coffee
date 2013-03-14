@@ -40,13 +40,22 @@ define (require)->
       @$el.height(elHeight)
       @myLayout = @$el.layout( {
         applyDefaultStyles: true,
+        west__size:         220,
+        west__minSize:      220,
         center__childOptions: {
-          center__paneSelector: "#tabContent"
-          south__paneSelector: "#console"
-          applyDefaultStyles: true
-          size:"auto"
+          center__paneSelector: "#tabContent",
+          south__paneSelector: "#console",
+          applyDefaultStyles: true,
+          #size:"auto"
+          north__size: 'auto',
+          south__size: 100
+          
         }
       })
+      
+      elHeight = @$el.parent().height()
+      @$el.height(elHeight)
+      @myLayout.resizeAll()
 
     onResizeStart:=>
       console.log "resized start"
@@ -56,13 +65,16 @@ define (require)->
     onResizeStop:=>
       elHeight = @$el.parent().height()
       @$el.height(elHeight)
-      #@myLayout.resizeAll()
+      @myLayout.resizeAll()
+      
+      #FIXME:horrible hackery to get the different elements to resize correctly
+      elHeight= elHeight-150
+      $(".CodeMirror").height(elHeight)
+      $(".tab-pane active").height(elHeight)
+      $(".tab-pane").height(elHeight)
+      $(".CodeMirror-scroll").height(elHeight)
 
     onRender:=>
-      #show toolBar 
-      #toolBarView = new ToolBarView
-      #@toolBar.show(toolBarView)
-      
       #show files tree
       filesTreeView = new FilesTreeView
         collection: @model.rootFolder

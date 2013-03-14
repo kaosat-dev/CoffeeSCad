@@ -56,9 +56,10 @@ require.config
     eventbinder:      "../assets/js/plugins/backbone.eventbinder.min"
     wreqr:            "../assets/js/plugins/backbone.wreqr.min"
     babysitter:       "../assets/js/plugins/backbone.babysitter.min"
+    pickysitter:      "../assets/js/plugins/backbone.pickysitter" #select one view, unselect all others
     
     localstorage:     "../assets/js/plugins/backbone.localstorage"
-    modelbinder :     "../assets/js/plugins/backbone.ModelBinder.min"
+    modelbinder :     "../assets/js/plugins/backbone.ModelBinder.min" #view model binding , very practical
     collectionbinder :"../assets/js/plugins/backbone.CollectionBinder.min"
     "backbone-forms" :           "../assets/js/plugins/backbone.forms"
     forms_bootstrap : "../assets/js/plugins/backbone.forms.bootstrap"
@@ -66,10 +67,17 @@ require.config
     forms_custom    : "../assets/js/plugins/backbone.forms.custom"  
     backbone_nested:  "../assets/js/plugins/backbone.nested.min"
     
-    
     three_csg:        "../assets/js/plugins/ThreeCSG"
     combo_cam:        "../assets/js/plugins/CombinedCamera"
     orbit_ctrl:       "../assets/js/plugins/OrbitControls"#"../assets/js/plugins/CustomOrbitControls"
+    ### 
+    CopyShader:       "../assets/js/plugins/three/CopyShader"
+    EffectComposer:   "../assets/js/plugins/three/EffectComposer"
+    RenderPass:       "../assets/js/plugins/three/RenderPass"
+    ShaderPass:       "../assets/js/plugins/three/ShaderPass"
+    DotScreenShader :   "../assets/js/plugins/three/DotScreenShader"
+    DotScreenPass :   "../assets/js/plugins/three/DotScreenPass"
+    ###
     
   shim:
     #any AMD compliant lib should NOT need shims
@@ -148,6 +156,21 @@ require.config
       exports : "Detector"
     stats:
       exports : "Stats"
+      
+    ### 
+    CopyShader:
+      deps:    ["three"]
+    EffectComposer:
+      deps:    ["CopyShader"]
+    RenderPass:
+      deps:    ["CopyShader"]
+    ShaderPass:
+      deps:    ["CopyShader"]
+    DotScreenShader:
+      deps:    ["CopyShader"]
+    DotScreenPass :
+      deps:    ["CopyShader","DotScreenShader"]
+    ### 
      
     utils: 
       deps:    ["jquery"]

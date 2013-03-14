@@ -31,7 +31,7 @@ define (require)->
       console.log "_____________"
   
   class DropBoxStore extends Backbone.Model
-    attributeNames: ['loggedIn']
+    attributeNames: ['name','loggedIn']
     buildProperties @
     
     idAttribute: 'name'
@@ -134,12 +134,26 @@ define (require)->
             callback(entries)
     
     getProject:(projectName)=>
-      console.log "locating #{projectName} in @projectsList"
-      console.log @projectsList
+      #console.log "locating #{projectName} in @projectsList"
+      #console.log @projectsList
       if projectName in @projectsList
         return true
       else
         return null
+    
+    getProjectFiles:(projectName,callback)=>
+      console.log "fetching project files for #{projectName}"
+      #hack
+      if @store.client?
+        @store.client.readdir "/#{projectName}/", (error, entries) =>
+          if error
+            console.log ("error")
+            console.log error
+          else
+            callback(entries)
+            
+    getThumbNail:(projectName)=>
+      
     
     createProject:(fileName)=>
       #project = @lib.create(options)
@@ -276,16 +290,6 @@ define (require)->
         project.rootFolder.fetch().done(onProjectLoaded)
         @lib.add(project)
         return project
-    
-    getProjectFiles:(projectName,callback)=>
-      #hack
-      if @store.client?
-        @store.client.readdir "/#{projectName}/", (error, entries) =>
-          if error
-            console.log ("error")
-          else
-            #console.log entries
-            callback(entries)
-      
+
     
   return DropBoxStore

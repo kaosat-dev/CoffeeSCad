@@ -120,15 +120,14 @@ define (require)->
         when 'delete'
           console.log "deleting"
           console.log model
-          model.memoPath = model.collection.path 
-          @destroy_cache.push(model)
-          ### 
+          #delete caching experiment
+          #model.memoPath = model.collection.path 
+          #@destroy_cache.push(model)
           id = model.id
           if model.collection?
             if model.collection.path?
               id ="#{model.collection.path}/#{id}"
           @remove(id)
-          ###
           
     
     find: (model, options) ->

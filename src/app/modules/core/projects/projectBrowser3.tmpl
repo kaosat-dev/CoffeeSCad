@@ -7,34 +7,12 @@
 			<label for="name" >Name:</label>
 			<input id="fileName" type="text" style="width:90%" value="<%=name%>" />
 		</div>
-		<div id="storesContainer">
-			<div id="projectStores" style="float:left; width: 30%"><!--storage types browser-->
-				Location
-			</div>
-			<div id="projectFiles"  style="float:left; width: 40%">
-				<table class="table table-hover table-condensed">
-					<thead><th>Name</th><th>Type</th></thead>
-			    	<tbody id="projectFilesList"></tbody>
-			  	</table>
-			</div>
-			<div id="thumbNail" style="float:left; width:30%;background-color:  #262626;" class="hide">
-				<img id="projectThumbNail" class="img-rounded"/>
-			</div>
+		<div class="storesList">
+		
+		</div>
+		<div class="filesList">
 		</div>
 		
-		<!--
-		<div id="typeFilter" style="float:left; width: 100%">
-			<select id="typeFilterSelect">
-			  <option value="coffeescad">Coffeescad Designs</option>
-			</select>
-		</div>-->
-		<div id="errorConsole" class="alert hide">
-			<h4 class="alert-heading">Oh snap! You got an error!</h4>
-			Errors
-		</div>
-		<div id="opertationProgress" class="progress progress-striped active hide">
-			<div class="bar" style="width: 100%;"></div>
-		</div>
 	</div>
 	<div class="modal-footer">
 		<button class="btn" data-dismiss="modal">Cancel</button>

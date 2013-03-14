@@ -4,6 +4,7 @@ define (require)->
   require 'bootstrap'
   marionette = require 'marionette'
   modelBinder = require 'modelbinder'
+  require 'pickysitter'
   jquery_layout = require 'jquery_layout'
   
   vent = require 'modules/core/vent'
@@ -21,20 +22,30 @@ define (require)->
     ui:
       fileNameColumn:"#fileNameColumn"
       editFileColumn:"#editFileColumn"
-      
+
     events:
       "click .editFile": "onEditFileClicked"
       "click .deleteFile": "onDeleteFileClicked"
       'dblclick .openFile' : "onFileSelected"
     
+    triggers:
+      "click #fileNameColumn": "selected"
+    
     constructor:(options)->
       super options
+      selectable = new Backbone.PickySitter.Selectable(@)
+      _.extend(this, selectable)
+      
+      @on("selected", ()=>@$el.addClass("info"))
+      @on("deselected",()=>@$el.removeClass("info"))
         
       @bindings = 
         name: [{selector: "[name=fileName]"}]
+        
       @modelBinder = new Backbone.ModelBinder()
       #FIXME: weird, this hack is needed, because no auto re-render is taking place
       @model.on 'change', ()=>@render()
+    
     
     onEditFileClicked:=>
       selector = @ui.fileNameColumn
@@ -77,7 +88,7 @@ define (require)->
     template: projectTemplate
     
     itemViewContainer: "tbody"
-    #className : "table"
+    className : "table table-hover table-condensed"
       
     ui:
       newFileColumn: "#newFileColumn"
@@ -89,14 +100,20 @@ define (require)->
     
     constructor:(options)->
       super options
-      #@collection = @model.nodes
       @on("itemview:file:delete", @onFileDeleteRequest)
       @on("itemview:file:rename", @onFileRenameRequest)
+      @on("itemview:selected" ,  @onFileViewSelected)
       #FIXME: weird, this hack is needed, because no auto re-render is taking place
       #@model.on 'change', ()=>@render()
-    
+      
+      singleSelect = new Backbone.PickySitter.SingleSelect(@itemViewContainer)
+      _.extend(this, singleSelect)
+      
     #onFileOpenClicked:(ev)=>
     #  vent.trigger("file:OpenRequest",@model)
+    
+    onFileViewSelected:(childView)=>
+      @select(childView)
     
     onFileAddClicked:(ev)=>
       name = @ui.newFileInput.val()
@@ -162,8 +179,10 @@ define (require)->
             template:'<div class="popover"><div class="arrow"></div><div class="popover-inner"><h3 class="popover-title" style="display: none"></h3><div class="popover-content"><p></p></div></div></div>'
           selector.popover("show")
           #selector.find('.openFile').text("""#{model.get("name")}.#{model.get("ext")}""")
-          selector.find('.openFile').html("""<i class="icon-file"></i> #{model.get("name")}.#{model.get("ext")}</a>""")
-          setTimeout (=> selector.popover('destroy')), 2000
+          selector.find('.openFile').html("""<i class="icon-file"></i> #{model.name}</a>""")
+          setTimeout (=> 
+            selector.popover('destroy')
+            selector.removeClass("error")), 2000
         else 
           model.name = name
           selector.popover("destroy")

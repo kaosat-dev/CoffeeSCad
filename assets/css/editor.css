@@ -17,7 +17,7 @@
 
 .filesTreeContainer
 {
-	color:#2db2ea;
+	/*color:#2db2ea;*/
 	border:none !important;
 }
 .filesTree 
@@ -66,7 +66,7 @@
 
 .codeEditor
 {
-	color:#2db2ea;
+	/*color:#2db2ea;*/
 }
 .codeEditorContainer
 {
@@ -310,7 +310,8 @@ text-shadow: 0 1px 0 white;
 
 .ui-widget-content a
 {
-	color:inherit;
+	/*color:inherit;*/
+	color:#08C; /*BOOTSTRAP COLOR*/
 }
 
 #dialogRegion
@@ -356,15 +357,20 @@ ui-icon ui-icon-closethick .ui-state-hover
 
 .CodeMirror {
 	/*position:absolute;*/
-	top:0; bottom:0;/*to force fill container*/
-	height: auto;
+	top:0;
+	bottom:0;/*to force fill container*/
+  	left: 0;
+  	right: 0;
+	/*height: auto;*/
 	width:	100%;
+	height: 100%;
+	
 }
 
 .CodeMirror-scroll 
 {
         height: 100%;
-        min-height:200px;
+        min-height:300px;
         overflow-y: auto;
         overflow-x: auto;
 }

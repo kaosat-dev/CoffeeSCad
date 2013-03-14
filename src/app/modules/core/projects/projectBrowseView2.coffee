@@ -205,9 +205,18 @@ define (require)->
       id = $(e.currentTarget).attr("id")
       vent.trigger("project:selected",id)
       
-      vent.trigger("store:selected",@model.get("name"))
+      vent.trigger("store:selected",@model.name)
       @trigger("project:selected", @model)
       
+      onFilesFetched=(files)=>
+        $("#projectFilesList").html("")
+        for file in files
+          fullName = file.split('.')
+          ext = fullName.pop()
+          name = fullName.pop()
+          $("#projectFilesList").append("<tr><td>#{file}</td><td>#{ext}</td></tr>")
+      
+      @model.getProjectFiles(id, onFilesFetched)
     
     onCreateRequested:(fileName)=>
       if @selected
@@ -277,57 +286,5 @@ define (require)->
     
     toto:(childView, store)=>
       console.log store
-    
-      
-  ###    
-  SomeModel = Backbone.Model.extend(
-    defaults:
-      firstName: "Bob"
-      lastName: "Morane"
-      totalYears: 25
-      age: 1
-      isOk: true
-
-    calculateYearsLeft: ->
-      console.log "it is a kind of magic"
-      console.log this
-      @get("totalYears") - @get("age")
-  )
-  model = new SomeModel()
-  
-  bindings =
-    firstName: "[name=firstName]"
-    lastName: [
-      selector: "[name=lastName]"
-    ,
-      selector: "[name=operatorSelectEl]"
-    ]
-    age: "[name=age]"
-    isOk: "[name=isOk],[name=isChecked]"
-    yearsLeft: [
-      selector: "[name=yearsLeft]"
-      converter: model.calculateYearsLeft
-    ]
-
-  model.bind "change", ->
-    $("#modelData").html JSON.stringify(model.toJSON())
-
-  ViewClass = Backbone.View.extend(
-    _modelBinder: `undefined`
-    initialize: ->
-      @_modelBinder = new Backbone.ModelBinder()
-
-    close: ->
-      @_modelBinder.unbind()
-
-    render: ->
-      html = "<div id=\"welcome\"> Welcome, <span name=\"firstName\"></span> <span name=\"lastName\"></span><br><br>Edit your information:<input type=\"text\" name=\"firstName\"/><input type=\"text\" name=\"lastName\"/><input type=\"number\" name=\"age\" min=\"1\" max=\"5\"/><input type=\"text\" name=\"yearsLeft\"/><select name=\"operatorSelectEl\">      <option value=\"Dan\">Dan</option>      <option value=\"Eli\">Eli</option>      <option value=\"Frank\">Frank</option></select><input type=\"radio\" name=\"isOk\" value=\"yes\"><input type=\"checkbox\" name=\"isChecked\" checked></div>"
-      @$el.html html
-      @_modelBinder.bind model, @el, bindings
-      this
-  )
-  view = new ViewClass()
-  $("#viewContent").append view.render().$el
-  ###    
       
   return ProjectBrowserView2

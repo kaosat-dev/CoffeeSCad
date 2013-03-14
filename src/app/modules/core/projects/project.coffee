@@ -166,6 +166,9 @@ define (require)->
       super attributes, options 
       @toJSON=backup
       
+      console.log "rootFolder json"
+      console.log @rootFolder.toJSON()
+      
       @rootFolder.sync = @sync
       @rootFolder.save()
       
