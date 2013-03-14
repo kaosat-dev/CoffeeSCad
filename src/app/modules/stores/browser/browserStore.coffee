@@ -46,6 +46,7 @@ define (require)->
       
       #experimental
       @lib = new BrowserLibrary()
+      @projectsList = []
       
     login:=>
       console.log "browser logged in"
@@ -57,13 +58,21 @@ define (require)->
     authCheck:()->
     
     getProjectsName:(callback)=>
-      console.log @lib
+      projectsList = localStorage.getItem("#{storeURI}")
+      if projectsList
+        projectsList = projectsList.split(',')
+      else
+        projectsList = []
+      @projectsList = projectsList
+      #kept for now
       @lib.fetch()
+      ### 
       projectNames = []
       for model in @lib.models
         projectNames.push(model.id)
-        
-      callback(projectNames)
+        @projectsList.push(model.id) 
+      ### 
+      callback(@projectsList)
     
     getProject:(projectName)=>
       return @lib.get(projectName)
@@ -105,9 +114,10 @@ define (require)->
       if newName?
         project.name = newName
       project.dataStore = @
-      project.rootPath="projects-"+project.name #rootStoreURI
       
       projectName = project.name 
+      @_addToProjectsList(project.name)
+      
       projectURI = "#{storeURI}-#{projectName}"
       rootStoreURI = "#{projectURI}-files"
        
@@ -123,17 +133,15 @@ define (require)->
       
       #fetch old list of files, for diff, delete old file if not present anymore
       oldFiles = localStorage.getItem(rootStoreURI)
-      oldFiles = oldFiles.split(',')
+      if oldFiles?
+        oldFiles = oldFiles.split(',')
+        added = _.difference(filesList,oldFiles)
+        removed = _.difference(oldFiles,filesList)
+        @_removeFile(projectName, fileName) for fileName in removed
       
-      added = _.difference(filesList,oldFiles)
-      removed = _.difference(oldFiles,filesList)
-      @_removeFile(projectName, fileName) for fileName in removed
-        
       localStorage.setItem(rootStoreURI,filesList.join(","))
       localStorage.setItem(projectURI,JSON.stringify(project.toJSON()))
       
-      @_addToProjectsList(project.name)
-      project.dataStore = @
       
       @vent.trigger("project:saved")  
     
@@ -158,28 +166,25 @@ define (require)->
       d = $.Deferred()
       console.log "browser storage deletion of #{projectName}"
       project = @lib.get(projectName)
-      project.collection = @lib
       
       projectURI = "#{storeURI}-#{projectName}"
       rootStoreURI = "#{projectURI}-files"
-      project.rootFolder.sync = project.sync
-      project.rootFolder.changeStorage("localStorage",new Backbone.LocalStorage(rootStoreURI))
-      
-      #DESTROYING via backbone does not work!!
-      localStorage.removeItem(rootStoreURI)
       
       file = null
-      while (file = project.rootFolder.pop()) 
-        fileUri = "#{rootStoreURI}-#{file.name}"
-        console.log "deleting #{fileUri}"
-        #DESTROYING via backbone does not work!! 
-        localStorage.removeItem(fileUri)
+      filesURI = "#{projectURI}-files"
+      console.log "filesURI #{filesURI}"
+      fileNames = localStorage.getItem(filesURI)
+      console.log "fileNames #{fileNames}"
+      if fileNames
+        fileNames = fileNames.split(',')
+        for fileName in fileNames 
+          fileUri = "#{rootStoreURI}-#{fileName}"
+          console.log "deleting #{fileUri}"
+          localStorage.removeItem(fileUri)
       
-      @_removeFromProjectsList()
-      
+      @_removeFromProjectsList(projectName)
       @lib.remove(project)
       
-      localStorage.removeItem(projectURI)
       return d.resolve()
       
     renameProject:(oldName, newName)=>
@@ -198,19 +203,37 @@ define (require)->
       
     _removeFromProjectsList:(projectName)=>
       projects = localStorage.getItem(storeURI)
-      projects = projects.split(',')
-      index = projects.indexOf(projectName)
-      projects.splice(index, 1)
-      projects = projects.join(',')
-      localStorage.setItem(storeURI,projects)
+      if projects?
+        projects = projects.split(',')
+        index = projects.indexOf(projectName)
+        projects.splice(index, 1)
+        if projects.length>0 then projects=projects.join(',') else projects = ""
+        localStorage.setItem(storeURI,projects)
+        index = @projectsList.indexOf(projectName)
+        @projectsList.splice(index, 1)
+        
+        console.log "projectName"
+        projectURI = "#{storeURI}-#{projectName}"
+        rootStoreURI = "#{projectURI}-files"
+        
+        localStorage.removeItem(rootStoreURI)
+        localStorage.removeItem(projectURI)
       
     _addToProjectsList:(projectName)=>
       projects = localStorage.getItem(storeURI)
-      projects = projects.split(',')
-      if not projectName in projects
-        projects.push(projectName)
-        projects = projects.join(',')
-        localStorage.setItem(storeURI,projects)
+      if projects?
+        if projects == ""
+          projects = "#{projectName}"
+        else
+          projects = projects.split(',')
+          if not (projectName in projects)
+            projects.push(projectName)
+            projects = projects.join(',')
+      else
+        projects = "#{projectName}"
+      
+      @projectsList.push(projectName)
+      localStorage.setItem(storeURI,projects)
         
     _removeFile:(projectName, fileName)=>
       projectURI = "#{storeURI}-#{projectName}"

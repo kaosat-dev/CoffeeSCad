@@ -211,8 +211,9 @@ define (require)->
       @client.writeFile name, content, (error, stat) =>
         if error
           return @formatError(error)
-        #console.log "writen file #{name} with content #{content}"
-        console.log ("File saved as revision " + stat.versionTag)
+        if @debug
+          console.log "writen file #{name} with content #{content}"
+          console.log ("File saved as revision " + stat.versionTag)
         
     createFolder:(name)->
       @client.mkdir name, (error,stat) =>

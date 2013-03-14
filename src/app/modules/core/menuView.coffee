@@ -131,7 +131,6 @@ define (require)->
       
       
     onNotificationRequested:(message)=>
-      console.log "bla NOTIFY"
       $('.notifications').notify
         message: { text:message }
         fadeOut:{enabled:true, delay: 1000 }

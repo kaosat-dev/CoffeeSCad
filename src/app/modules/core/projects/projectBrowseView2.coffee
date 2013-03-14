@@ -15,6 +15,7 @@ define (require)->
   projectStoreListTemplate = _.template($(projectBrowserTemplate).filter('#projectStoreListTmpl').html())
   projectStoreTemplate = _.template($(projectBrowserTemplate).filter('#projectStoreTmpl').html())
 
+  debug = false
   
   class ProjectBrowserView2 extends Backbone.Marionette.Layout
     template:rootTemplate
@@ -168,7 +169,9 @@ define (require)->
         class: "btn-inverse"
         callback: =>
           onDeleted= =>
-            $("##{@selectedModelName}").parent().remove()
+            #console.log "#{@model.name}#{@selectedModelName}"
+            #console.log $("##{@model.name}#{@selectedModelName}")
+            $("##{@model.name}#{@selectedModelName}").parent().remove()
             $("#projectFilesList").html("")
           @model.deleteProject(@selectedModelName).done(onDeleted)
       ,
@@ -179,8 +182,8 @@ define (require)->
       
     onProjectRenameRequest:()=>
       onRenameOk=(fileName)=>
-        $("##{@selectedModelName}").text("#{fileName}")
-        $("##{@selectedModelName}").attr("id",fileName)
+        $("##{@model.name}#{@selectedModelName}").text("#{fileName}")
+        $("##{@model.name}#{@selectedModelName}").attr("id",fileName)
         @selectedModelName = fileName
         
         onFilesFetched=(files)=>
@@ -229,9 +232,11 @@ define (require)->
     onProjectSelected:(e)=>
       @trigger("store:selected")
       e.preventDefault()
-      id = $(e.currentTarget).attr("id")
-      vent.trigger("project:selected",id)
-      @selectedModelName = id
+      projectName = $(e.currentTarget).attr("id")
+      projectName= projectName.split("#{@model.name}").pop()
+      @selectedModelName = projectName
+      
+      vent.trigger("project:selected",projectName)
       @trigger("project:selected", @model)
       
       onFilesFetched=(files)=>
@@ -241,7 +246,7 @@ define (require)->
           ext = fullName.pop()
           $("#projectFilesList").append("<tr><td>#{file}</td><td>#{ext}</td></tr>")
       
-      @model.getProjectFiles(id, onFilesFetched)
+      @model.getProjectFiles(projectName, onFilesFetched)
     
     onSaveRequested:(fileName)=>
       if @selected
@@ -265,7 +270,7 @@ define (require)->
     
     onLoadRequested:(fileName)=>
       if @selected
-        console.log "load requested from #{@model.name}"
+        #console.log "load requested from #{@model.name}"
         @model.loadProject(fileName)
     
     onRender:->
@@ -277,7 +282,7 @@ define (require)->
       #console.log "projectNames #{projectNames}"
       #console.log @
       for name in projectNames
-        @ui.projects.append("<li><a id=#{name} class='projectSelector' href='#' data-toggle='context' data-target='##{@model.name}ProjectContextMenu'>#{name}</a></li>")
+        @ui.projects.append("<li><a id='#{@model.name}#{name}' class='projectSelector' href='#' data-toggle='context' data-target='##{@model.name}ProjectContextMenu'>#{name}</a></li>")
           
       @delegateEvents()
       @ui.projects.slimScroll({size:"10px";height:"100px",alwaysVisible: true})

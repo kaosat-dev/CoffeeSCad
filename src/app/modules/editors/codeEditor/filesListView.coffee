@@ -147,8 +147,6 @@ define (require)->
       @settings = options.settings
       
       @openFiles = new Backbone.Collection()
-      console.log "@collection"
-      console.log @collection
       @openFiles.add @collection.first()
       @activeFile = @collection.first()
       
@@ -173,10 +171,8 @@ define (require)->
       ###
     
     onDomRefresh:=>
-      console.log "pouet"
       @console.el=  @ui.console
       @tabContent.el = @ui.tabContent
-      
       #elHeight = 500#@$el.parent().height()-200
       #@$el.css('height':"#{elHeight}px")
       @$el.parent().addClass("filesListContainer")

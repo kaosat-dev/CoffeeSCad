@@ -64,16 +64,7 @@ define (require)->
     constructor:(options)->
       super options
       @_storageData = []
-    ###
-    parse: (response)=>
-      console.log("in projFiles parse")
-      for i, v of response
-        response[i] = new ProjectFile(v)
-        response[i].collection = @
-        
-      console.log response      
-      return response  
-    ###
+
     save:=>
       for index, file of @models
         file.sync = @sync

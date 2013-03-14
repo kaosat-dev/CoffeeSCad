@@ -181,11 +181,6 @@ define (require)->
       if newName?
         project.name = newName
       project.dataStore = @
-      project.rootPath="/"+project.name+"/"
-      
-      project.sync = @store.sync
-      project.rootFolder.sync = project.sync
-      project.rootFolder.path = project.name
       
       filesList = []
       for index, file of project.rootFolder.models
@@ -213,8 +208,7 @@ define (require)->
             ua = new Uint8Array(ab)
             for i in [0...length]
               ua[i] = byteString.charCodeAt(i)
-          file.trigger("save")
-          file.sync = @store.sync
+        file.trigger("save")
         console.log "saving file to #{filePath}"
         @store.writeFile(filePath, content)
         
