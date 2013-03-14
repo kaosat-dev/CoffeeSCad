@@ -6,14 +6,14 @@ define (require)->
   buildProperties = require 'modules/core/utils/buildProperties'
   
   Project = require 'modules/core/projects/project'
-  
+  storeURI = "projects"
   
   class BrowserLibrary extends Backbone.Collection
     """
     a library contains multiple projects, stored in localstorage (browser)
     """  
     model: Project
-    localStorage: new Backbone.LocalStorage("Projects")
+    localStorage: new Backbone.LocalStorage(storeURI)
     defaults:
       recentProjects: []
     
@@ -38,7 +38,7 @@ define (require)->
     
     constructor:(options)->
       super options
-      @store = new Backbone.LocalStorage("Projects")
+      @store = new Backbone.LocalStorage(storeURI)
       @isLogginRequired = false
       @vent = vent
       @vent.on("browserStore:login", @login)
@@ -57,6 +57,7 @@ define (require)->
     authCheck:()->
     
     getProjectsName:(callback)=>
+      console.log @lib
       @lib.fetch()
       projectNames = []
       for model in @lib.models
@@ -74,7 +75,8 @@ define (require)->
       project = @lib.get(projectName)
       #TODO: oh the horror: we have to fetch all model data just to look at the files list
       if project?
-        rootStoreURI = "projects-"+project.name+"-files"
+        projectURI = "#{storeURI}-#{projectName}"
+        rootStoreURI = "#{projectURI}-files"
         project.rootFolder.sync = project.sync
         project.rootFolder.changeStorage("localStorage",new Backbone.LocalStorage(rootStoreURI))
         
@@ -85,20 +87,18 @@ define (require)->
         
         project.rootFolder.fetch().done(onProjectFilesLoaded)
         
-          
-    
-    saveProject:(project, newName)=>
+    saveProject_:(project, newName)=>
       project.collection = null
       @lib.add(project)
       if newName?
         project.name = newName
-      
-      rootStoreURI = "projects-"+project.name+"-files"
+      projectURI = "#{storeURI}-#{newName}"
+      rootStoreURI = "#{projectURI}-files"
       project.rootFolder.changeStorage("localStorage",new Backbone.LocalStorage(rootStoreURI))
       project.save()
       @vent.trigger("project:saved")  
     
-    saveProject_alt:(project,newName)=>
+    saveProject:(project,newName)=>
       #experiment of saving projects withouth using backbone localstorage
       project.collection = null
       @lib.add(project)
@@ -107,26 +107,32 @@ define (require)->
       project.dataStore = @
       project.rootPath="projects-"+project.name #rootStoreURI
       
+      projectURI = "#{storeURI}-#{project.name}"
+      rootStoreURI = "#{projectURI}-files"
+      
+      filesList = []
       for index, file of project.rootFolder.models
         projectName = project.name
         name = file.name
         content =file.content
-        filePath = "#{projectName}/#{name}"
+        filePath = "#{rootStoreURI}-#{name}"
         ext = name.split('.').pop()
-        localStorage["bar"] = foo
-        localStorage.setItem("bar", foo)
+        localStorage.setItem(filePath,JSON.stringify(file.toJSON()))
+        filesList.push(file.name)
+        
+      localStorage.setItem(rootStoreURI,filesList.join(","))
+      localStorage.setItem(projectURI,JSON.stringify(project.toJSON()))
       
-      rootStoreURI = "projects-"+project.name+"-files"
-      project.rootFolder.changeStorage("localStorage",new Backbone.LocalStorage(rootStoreURI))
-      project.save()
+      @_addToProjectsList(project.name)
+      
       @vent.trigger("project:saved")  
       
-      localStorage.setItem("bar", foo);
     
     loadProject:(projectName)=>
       project =  @lib.get(projectName)
       project.collection = @lib
-      rootStoreURI = "projects-"+project.name+"-files"
+      projectURI = "#{storeURI}-#{projectName}"
+      rootStoreURI = "#{projectURI}-files"
       project.rootFolder.sync = project.sync
       project.rootFolder.changeStorage("localStorage",new Backbone.LocalStorage(rootStoreURI))
       
@@ -137,6 +143,65 @@ define (require)->
         @vent.trigger("project:loaded",project)
       
       project.rootFolder.fetch().done(onProjectLoaded)
-       
+   
+    deleteProject:(projectName)=>
+      d = $.Deferred()
+      console.log "browser storage deletion of #{projectName}"
+      #FIXME: I DONT understand AT ALL , destroying files does NOT WORK
+      project = @lib.get(projectName)
+      project.collection = @lib
+      
+      projectURI = "#{storeURI}-#{projectName}"
+      rootStoreURI = "#{projectURI}-files"
+      project.rootFolder.sync = project.sync
+      project.rootFolder.changeStorage("localStorage",new Backbone.LocalStorage(rootStoreURI))
+      
+      #DESTROYING via backbone does not work!!
+      localStorage.removeItem(rootStoreURI)
+      
+      file = null
+      while (file = project.rootFolder.pop()) 
+        fileUri = "#{rootStoreURI}-#{file.name}"
+        console.log "deleting #{fileUri}"
+        #DESTROYING via backbone does not work!! 
+        localStorage.removeItem(fileUri)
+      
+      @_removeFromProjectsList()
+      
+      @lib.remove(project)
+      
+      localStorage.removeItem(projectURI)
+      return d.resolve()
+      
+    renameProject:(oldName, newName)=>
+      #EVEN MORREEE HACKS ! thanks backbone
+      project = @lib.get(oldName)
+      @lib.remove(project)
+      project.name = newName
+      
+      projectURI = "#{storeURI}-#{newName}"
+      project.localstorage = new Backbone.LocalStorage(projectURI)
+      rootStoreURI = "#{projectURI}-files"
+      project.rootFolder.changeStorage("localStorage",new Backbone.LocalStorage(rootStoreURI))
+      project.save()
+      
+      @lib.add(project)
+      
+    _removeFromProjectsList:(projectName)=>
+      projects = localStorage.getItem(storeURI)
+      projects = projects.split(',')
+      index = projects.indexOf(projectName)
+      projects.splice(index, 1)
+      projects = projects.join(',')
+      localStorage.setItem(storeURI,projects)
+      
+    _addToProjectsList:(projectName)=>
+      projects = localStorage.getItem(storeURI)
+      projects = projects.split(',')
+      if not projectName in projects
+        projects.push(projectName)
+        projects = projects.join(',')
+        localStorage.setItem(storeURI,projects)
+      
        
   return BrowserStore

@@ -142,8 +142,7 @@ define (require)->
         return null
     
     getProjectFiles:(projectName,callback)=>
-      console.log "fetching project files for #{projectName}"
-      #hack
+      #console.log "fetching project files for #{projectName}"
       if @store.client?
         @store.client.readdir "/#{projectName}/", (error, entries) =>
           if error
@@ -269,11 +268,11 @@ define (require)->
       
       @vent.trigger("project:saved")
     
-    loadProject:(projectName)=>
+    loadProject__:(projectName)=>
       if projectName in @projectsList
         console.log "dropbox loading project #{projectName}"
     
-    loadProject_:(projectName)=>
+    loadProject:(projectName)=>
       if projectName in @projectsList
         console.log "dropbox loading project #{projectName}"
         project = new Project()
@@ -290,6 +289,17 @@ define (require)->
         project.rootFolder.fetch().done(onProjectLoaded)
         @lib.add(project)
         return project
-
+        
+    deleteProject:(projectName)=>
+      index = @projectsList.indexOf(projectName)
+      @projectsList.splice(index, 1)
+      return @store.remove("/#{projectName}")
+      
+    renameProject:(oldName, newName)=>
+      #move /rename project and its main file
+      index = @projectsList.indexOf(oldName)
+      @projectsList.splice(index, 1)
+      @projectsList.push(newName)      
+      return @store.move(oldName,newName).done(@store.move("/#{newName}/#{oldName}.coffee","/#{newName}/#{newName}.coffee"))
     
   return DropBoxStore

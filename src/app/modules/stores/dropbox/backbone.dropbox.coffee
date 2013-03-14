@@ -199,10 +199,13 @@ define (require)->
       return p
       
     remove:(name)=>
+      d = $.Deferred()
       @client.remove name, (error, userInfo)=>
         if error
           return @formatError(error)
         console.log "removed #{name}"
+        d.resolve()
+      return d.promise()
         
     writeFile:(name, content)->
       @client.writeFile name, content, (error, stat) =>
@@ -216,6 +219,14 @@ define (require)->
         if error
           return @formatError(error)  
         console.log "folder create ok"
+    
+    move:(fromPath, toPath)=>
+      d = $.Deferred()
+      @client.move fromPath, toPath, (error)=>
+        if error
+          return @formatError(error)
+        d.resolve()
+      return d.promise()
         
     _readDir:(path)->
       d = $.Deferred()

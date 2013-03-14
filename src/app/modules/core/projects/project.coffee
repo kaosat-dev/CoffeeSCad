@@ -52,6 +52,10 @@ define (require)->
       super attributes, options 
       @toJSON=backup
       @trigger("save",@)
+     
+     destroy:(options)=>
+      options = options or {}
+      @trigger('destroy', @, @collection, options)
       
       
   class Folder extends Backbone.Collection

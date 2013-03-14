@@ -2,8 +2,8 @@ define (require)->
   $ = require 'jquery'
   _ = require 'underscore'
   require 'bootstrap'
-  marionette = require 'marionette'
-  modelBinder = require 'modelbinder'
+  require 'marionette'
+  require 'modelbinder'
   require 'pickysitter'
   jquery_layout = require 'jquery_layout'
   

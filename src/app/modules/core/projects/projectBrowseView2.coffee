@@ -3,8 +3,9 @@ define (require)->
   _ = require 'underscore'
   boostrap = require 'bootstrap'
   contextMenu = require 'contextMenu'
-  marionette = require 'marionette'
-  modelBinder = require 'modelbinder'
+  require 'marionette'
+  require 'modelbinder'
+  require 'pickysitter'
   
   vent = require 'modules/core/vent'
   reqRes = require 'modules/core/reqRes'
@@ -79,6 +80,8 @@ define (require)->
         $(@ui.fileNameInput).attr("readonly", "readonly")
       #$(@ui.errorConsole).alert()
       #$(@ui.errorConsole).css("z-index",12000)
+      #@projectStores.currentView.on("project:selected", ()=>console.log "vgsdmflsfsdfsdfdsf")
+    
     
     onProjectSelected:(projectName)=>
       #hack
@@ -89,22 +92,11 @@ define (require)->
         @delegateEvents()
         @ui.projectFiles.slimScroll({size:"10px";height:"300px",alwaysVisible: true})
       
-      
       $(@ui.fileNameInput).val(projectName)
-      ### 
-      console.log "store collection"
-      console.log @stores
-      console.log "current project: #{projectName}"
-      currentStore = @stores.get("projectName")
-      currentStore.getProjectFiles(fileNameInput,onProjectFilesResponse)
-      ###
       
     onProjectSaveRequested:=>
       fileName = @ui.fileNameInput.val()
       vent.trigger("project:saveRequest", fileName)
-      
-      #most of our job is done, disable the view
-      #@close()
       
     onProjectLoadRequested:=>
       fileName = $(@ui.fileNameInput).val()
@@ -118,10 +110,6 @@ define (require)->
               vent.trigger("project:loadRequest", fileName)
               @close()
             ), 10
-            ###
-            vent.trigger("project:loadRequest", fileName)
-            @close()###
-            #most of our job is done, disable the view
         ,
           label: "Cancel"
           class: "btn-inverse"
@@ -141,71 +129,109 @@ define (require)->
       @vent.off("project:loaded",@onOperationSucceeded)
       @vent.off("project:selected",(id)=>$(@ui.fileNameInput).val(id))
       
+      
   class StoreView extends Backbone.Marionette.ItemView
     template:projectStoreTemplate
     ui: 
       projects: "#projects"
       
     events:
-      "click .accordion-heading" : "onStoreSelected"
-      "click .projectSelector" : "onProjectSelected"
-     
+      "mousedown .projectSelector" : "onProjectSelected"
+      "click .deleteProject": "onProjectDeleteRequest"
+      "click .renameProject": "onProjectRenameRequest"
+      
+    triggers:
+      "click .accordion-heading": "store:selected" 
+      
     constructor:(options)->
       super options
-      #hack
-      @selected = false
+      selectable = new Backbone.PickySitter.Selectable(@)
+      _.extend(this, selectable)
+      
+      @on("selected", @onStoreSelectToggled)
+      @on("deselected",@onStoreSelectToggled)
+      
+      @selectedModelName = null
       vent.on("project:newRequest", @onCreateRequested)
       vent.on("project:saveRequest",@onSaveRequested)
       vent.on("project:loadRequest",@onLoadRequested)
-      vent.on("store:selected", @onStoreSelected)
       
-      #testConverter = (direction, value)->
-      testConverter = ()=>
-        return @model.get("name")+"30"
-      testConverter2 = ()=> 
-        if @model.get("loggedIn") is true
-          return "hide"
-        else 
-          return ""
-      testConverter3 = ()=> 
-        return true
-      testConverter4 = ()=> 
-        return (not @model.get("loggedIn"))
-      
-      @bindings = {
+      @bindings = 
         loggedIn: [{selector: '.storeConnection', elAttribute: 'hidden'} ]
-      }
       
-      #bindings = {loggedIn: [{selector: '[class=storeConnection]', elAttribute: 'class'},"[name=loggedIn]"]}
       @modelBinder = new Backbone.ModelBinder()
     
-    onStoreSelected:(name)=>
-      if name.currentTarget?
-        if @selected
-          @selected = false
-          header = @$el.find(".store-header")
-          header.removeClass('alert-info')
-        else
-          @selected = true
-          header = @$el.find(".store-header")
-          header.addClass('alert-info')
-          vent.trigger("store:selected",@model.get("name"))
-      else
-        if name != @model.get("name")
-          @selected = false
-          header = @$el.find(".store-header")
-          header.removeClass('alert-info')
-        else
-          @selected = true
-          header = @$el.find(".store-header")
-          header.addClass('alert-info')
+    onProjectDeleteRequest:=>
+      #FIXME: YUCK CODE
+      bootbox.dialog "Are you sure you want to delete <b>#{@selectedModelName}</b> ? There is no going back!", [
+        label: "Ok"
+        class: "btn-inverse"
+        callback: =>
+          onDeleted= =>
+            $("##{@selectedModelName}").parent().remove()
+            $("#projectFilesList").html("")
+          @model.deleteProject(@selectedModelName).done(onDeleted)
+      ,
+        label: "Cancel"
+        class: "btn-inverse"
+        callback: ->
+      ]
+      
+    onProjectRenameRequest:()=>
+      onRenameOk=(fileName)=>
+        $("##{@selectedModelName}").text("#{fileName}")
+        $("##{@selectedModelName}").attr("id",fileName)
+        @selectedModelName = fileName
+        
+        onFilesFetched=(files)=>
+          $("#projectFilesList").html("")
+          for file in files
+            fullName = file.split('.')
+            ext = fullName.pop()
+            $("#projectFilesList").append("<tr><td>#{file}</td><td>#{ext}</td></tr>")
+      
+        @model.getProjectFiles(@selectedModelName, onFilesFetched)
+      
+      onReallyRename=(fileName)=>
+        console.log "renaming to #{fileName}"
+        projectToSave = @selectedModelName
+        projectNameExists = @model.getProject(fileName)
+        if projectNameExists?
+          bootbox.dialog "A project called #{fileName} already exists, overwrite?", [
+            label: "Ok"
+            class: "btn-inverse"
+            callback: =>
+              @model.renameProject(projectToSave, fileName).done(()=>onRenameOk(fileName))
+              
+          ,
+            label: "Cancel"
+            class: "btn-inverse"
+            callback: ->
+          ]
+         else
+           @model.renameProject(projectToSave, fileName).done(()=>onRenameOk(fileName))
+      
+      bootbox.prompt "New name","Cancel","Rename",
+        (result) =>
+          if result?
+            onReallyRename(result)
+        ,"#{@selectedModelName}"
+
     
+    onStoreSelectToggled:()=>
+      if @selected
+          header = @$el.find(".store-header")
+          header.addClass('alert-info')
+        else
+          header = @$el.find(".store-header")
+          header.removeClass('alert-info')
+     
     onProjectSelected:(e)=>
+      @trigger("store:selected")
       e.preventDefault()
       id = $(e.currentTarget).attr("id")
       vent.trigger("project:selected",id)
-      
-      vent.trigger("store:selected",@model.name)
+      @selectedModelName = id
       @trigger("project:selected", @model)
       
       onFilesFetched=(files)=>
@@ -213,14 +239,9 @@ define (require)->
         for file in files
           fullName = file.split('.')
           ext = fullName.pop()
-          name = fullName.pop()
           $("#projectFilesList").append("<tr><td>#{file}</td><td>#{ext}</td></tr>")
       
       @model.getProjectFiles(id, onFilesFetched)
-    
-    onCreateRequested:(fileName)=>
-      if @selected
-        @model.createProject(fileName)
     
     onSaveRequested:(fileName)=>
       if @selected
@@ -233,10 +254,6 @@ define (require)->
             class: "btn-inverse"
             callback: =>
               @model.saveProject(projectToSave,fileName)
-              ###
-              vent.trigger("project:loadRequest", fileName)
-              @close()###
-              #most of our job is done, disable the view
           ,
             label: "Cancel"
             class: "btn-inverse"
@@ -244,13 +261,11 @@ define (require)->
           ]
         else
           if projectToSave?
-            console.log fileName
-            console.log @model
             @model.saveProject(projectToSave,fileName)
     
     onLoadRequested:(fileName)=>
-      console.log "load requested"
       if @selected
+        console.log "load requested from #{@model.name}"
         @model.loadProject(fileName)
     
     onRender:->
@@ -262,7 +277,7 @@ define (require)->
       #console.log "projectNames #{projectNames}"
       #console.log @
       for name in projectNames
-        @ui.projects.append("<li><a id=#{name} class='projectSelector' href='#' data-toggle='context' data-target='#context-menu'>#{name}  </a></li>")
+        @ui.projects.append("<li><a id=#{name} class='projectSelector' href='#' data-toggle='context' data-target='##{@model.name}ProjectContextMenu'>#{name}</a></li>")
           
       @delegateEvents()
       @ui.projects.slimScroll({size:"10px";height:"100px",alwaysVisible: true})
@@ -281,10 +296,19 @@ define (require)->
     
     constructor:(options)->
       super options
+      singleSelect = new Backbone.PickySitter.SingleSelect(@itemViewContainer)
+      _.extend(this, singleSelect)
+      
       @currentStore = null
-      @on("itemview:project:selected",@toto)
+      @on("itemview:project:selected",@onProjectSelected)
+      @on("itemview:store:selected" ,  @onStoreViewSelected)
     
-    toto:(childView, store)=>
-      console.log store
+    onProjectSelected:(childView)=>
+      @trigger("project:selected")
+      
+    onStoreViewSelected:(childView)=>
+      @currentStore = childView.model
+      @select(childView)
+      
       
   return ProjectBrowserView2
