@@ -95,7 +95,6 @@ define (require)->
     * a project contains files 
     * a project can reference another project (includes)
     """
-    
     idAttribute: 'name'
     defaults:
       name:     "Project"
@@ -123,8 +122,7 @@ define (require)->
     _setupFileEventHandlers:(file)=>
       file.on("change",@_onFileChanged)
       file.on("save",@_onFileSaved)
-      #file.on("change:content":()=>console.log "file content changed")
-      #file.on("change:isSaveAdvised":()=>console.log "file isSaveAdvised changed")
+      file.on("destroy",@_onFileDestroyed)
     
     _addFile:(file)=>
       @rootFolder.add file
@@ -142,23 +140,11 @@ define (require)->
       @isSaveAdvised = true
     
     save: (attributes, options)=>
-      #project is only a container, data is stored inside the metadata file (.project)
+      #project is only a container, if really data is stored inside the metadata file (.project)
       #metaDataFile = @rootFolder.get(".project")
       #metaDataFile.content = {name:@name,lastModificationDate:@lastModificationDate}
-      
-      ###
       @dataStore.saveProject(@)
-      for index, file of @rootFolder.models
-        file.sync = @sync
-      
-      console.log @sync
-      @rootFolder.sync = @sync
-      @rootFolder.path = @name
-      metaDataFile.sync = @sync
-      metaDataFile.save()
       ###
-      
-      
       backup = @toJSON
       @toJSON= =>
         attributes = _.clone(@attributes)
@@ -166,26 +152,17 @@ define (require)->
           if attrName not in @persistedAttributeNames
             delete attributes[attrName]
         return attributes
-       
       super attributes, options 
       @toJSON=backup
-      
-      console.log "rootFolder json"
-      console.log @rootFolder.toJSON()
-      
       @rootFolder.sync = @sync
       @rootFolder.save()
-      
-      ###
       for index, file of @rootFolder.models
         file.sync = @sync
         file.save()
       ###
-       
       @isSaveAdvised = false
       @isCompileAdvised = false  
       @trigger("save",@)
-    
     
     _onCompiled:()=>
       @isCompileAdvised = false
@@ -226,5 +203,9 @@ define (require)->
     _onFileChanged:(file)=>
       @isSaveAdvised = file.isSaveAdvised if file.isSaveAdvised is true
       @isCompileAdvised = file.isCompileAdvised if file.isCompileAdvised is true
+    
+    _onFileDestroyed:(file)=>
+      if @dataStore
+        @dataStore.destroyFile(@name, file.name)
       
   return Project

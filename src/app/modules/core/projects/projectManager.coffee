@@ -118,9 +118,6 @@ define (require)->
       @project.addFile
         name: "config.coffee"
         content:""" """
-      @project.addFile
-        name: ".project"
-        content:""""""
       @_setupProjectEventHandlers()
       return @project
     

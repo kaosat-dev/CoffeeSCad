@@ -107,26 +107,35 @@ define (require)->
       project.dataStore = @
       project.rootPath="projects-"+project.name #rootStoreURI
       
-      projectURI = "#{storeURI}-#{project.name}"
+      projectName = project.name 
+      projectURI = "#{storeURI}-#{projectName}"
       rootStoreURI = "#{projectURI}-files"
-      
+       
       filesList = []
       for index, file of project.rootFolder.models
-        projectName = project.name
         name = file.name
         content =file.content
         filePath = "#{rootStoreURI}-#{name}"
         ext = name.split('.').pop()
         localStorage.setItem(filePath,JSON.stringify(file.toJSON()))
         filesList.push(file.name)
+        file.trigger("save")
+      
+      #fetch old list of files, for diff, delete old file if not present anymore
+      oldFiles = localStorage.getItem(rootStoreURI)
+      oldFiles = oldFiles.split(',')
+      
+      added = _.difference(filesList,oldFiles)
+      removed = _.difference(oldFiles,filesList)
+      @_removeFile(projectName, fileName) for fileName in removed
         
       localStorage.setItem(rootStoreURI,filesList.join(","))
       localStorage.setItem(projectURI,JSON.stringify(project.toJSON()))
       
       @_addToProjectsList(project.name)
+      project.dataStore = @
       
       @vent.trigger("project:saved")  
-      
     
     loadProject:(projectName)=>
       project =  @lib.get(projectName)
@@ -138,16 +147,16 @@ define (require)->
       
       onProjectLoaded=()=>
         #remove old thumbnail
-        thumbNailFile = project.rootFolder.get(".thumbnail")
+        thumbNailFile = project.rootFolder.get(".thumbnail.png")
         project.rootFolder.remove(thumbNailFile)
         @vent.trigger("project:loaded",project)
       
+      project.dataStore = @
       project.rootFolder.fetch().done(onProjectLoaded)
    
     deleteProject:(projectName)=>
       d = $.Deferred()
       console.log "browser storage deletion of #{projectName}"
-      #FIXME: I DONT understand AT ALL , destroying files does NOT WORK
       project = @lib.get(projectName)
       project.collection = @lib
       
@@ -202,6 +211,22 @@ define (require)->
         projects.push(projectName)
         projects = projects.join(',')
         localStorage.setItem(storeURI,projects)
+        
+    _removeFile:(projectName, fileName)=>
+      projectURI = "#{storeURI}-#{projectName}"
+      filesURI = "#{projectURI}-files"
+      fileNames = localStorage.getItem(filesURI)
+      fileNames = fileNames.split(',')
+      index = fileNames.indexOf(fileName)
+      fileNames.splice(index, 1)
+      fileNames = fileNames.join(',')
+      localStorage.setItem(filesURI,fileNames)
+      
+      fileURI = "#{filesURI}-#{fileName}"
+      localStorage.removeItem(fileURI)
+      
+    destroyFile:(projectName, fileName)=>
+      return @_removeFile(projectName, fileName)  
       
        
   return BrowserStore

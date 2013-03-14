@@ -150,6 +150,9 @@ define (require)->
             console.log error
           else
             callback(entries)
+   
+    getProjectFiles2:(projectName)=> 
+      return @store.client.readdir "/#{projectName}/"
             
     getThumbNail:(projectName)=>
       
@@ -171,7 +174,7 @@ define (require)->
       @vent.trigger("project:loaded",project) 
       
       
-    saveProject__:(project, newName)=>
+    saveProject:(project, newName)=>
       console.log "saving projectto dropbox"
       project.collection = null
       @lib.add(project)
@@ -184,12 +187,14 @@ define (require)->
       project.rootFolder.sync = project.sync
       project.rootFolder.path = project.name
       
+      filesList = []
       for index, file of project.rootFolder.models
         #actual saving of file, not json INSIDE the file
         projectName = project.name
         name = file.name
         content =file.content
         filePath = "#{projectName}/#{name}"
+        filesList.push(file.name)
         ext = name.split('.').pop()
         if ext == "png"
           #save thumbnail
@@ -212,21 +217,26 @@ define (require)->
           file.sync = @store.sync
         console.log "saving file to #{filePath}"
         @store.writeFile(filePath, content)
+        
+      #fetch old list of files, for diff, delete old file if not present anymore
+      ###
+      oldFiles = @projectsList
+      added = _.difference(filesList,oldFiles)
+      removed = _.difference(oldFiles,filesList)
+      console.log "added",added
+      console.log "removed", removed
+      @_removeFile(projectName, fileName) for fileName in removed
+      ###
+        
       @vent.trigger("project:saved")
       
-    saveProject:(project,newName)=>
+    saveProject_:(project,newName)=>
       console.log "saving projectto dropbox"
       project.collection = null
       @lib.add(project)
       if newName?
         project.name = newName
       project.sync = @store.sync
-      console.log @store
-      console.log @store.sync
-      #project.rootPath="/"+project.name+"/"
-      #project.path = "/"+project.name+"/.project"
-      #project.collection.path = project.name+"/"
-      /#{projectName}/
       project.rootFolder.sync = project.sync
       project.rootFolder.path = project.name
       #project.rootFolder.changeStorage("dropboxDataStore",{path:project.name})
@@ -265,12 +275,7 @@ define (require)->
         console.log "saving file to #{filePath}"
         @store.writeFile(filePath, content)
         ###
-      
       @vent.trigger("project:saved")
-    
-    loadProject__:(projectName)=>
-      if projectName in @projectsList
-        console.log "dropbox loading project #{projectName}"
     
     loadProject:(projectName)=>
       if projectName in @projectsList
@@ -279,8 +284,8 @@ define (require)->
         project.name = projectName
         
         onProjectLoaded=()=>
-          #thumbNailFile = project.rootFolder.get(".thumbnail")
-          #project.rootFolder.remove(thumbNailFile)
+          thumbNailFile = project.rootFolder.get(".thumbnail.png")
+          project.rootFolder.remove(thumbNailFile)
           @vent.trigger("project:loaded",project)
           
         project.rootFolder.rawData = true
@@ -288,6 +293,7 @@ define (require)->
         project.rootFolder.path = projectName
         project.rootFolder.fetch().done(onProjectLoaded)
         @lib.add(project)
+        project.dataStore = @
         return project
         
     deleteProject:(projectName)=>
@@ -301,5 +307,12 @@ define (require)->
       @projectsList.splice(index, 1)
       @projectsList.push(newName)      
       return @store.move(oldName,newName).done(@store.move("/#{newName}/#{oldName}.coffee","/#{newName}/#{newName}.coffee"))
+      
+    _removeFile:(projectName, fileName)=>
+      return @store.remove("#{projectName}/#{fileName}")
     
+    destroyFile:(projectName, fileName)=>
+      return @store.remove("#{projectName}/#{fileName}")
+      
+      
   return DropBoxStore
