@@ -5,29 +5,30 @@ define (require)->
   
   describe "Project ", ->
     project = null
+    compiler = null
     
     beforeEach ->
       project = new Project
-        name:"test_project"
+        name:"Project"
     
     it 'can make new project files',->
-      project.createFile
-        name:"testFileName"
+      project.addFile
+        name:"Project.coffee"
         content:"testContent"
       
-      expect(project.pfiles.at(0).get("name")).toBe("testFileName")
+      expect(project.rootFolder.at(0).name).toBe("Project.coffee")
     
     it 'can remove files from itself' , ->
-      file = project.createFile
+      file = project.addFile
         name:"testFileName"
         content:"testContent" 
       
-      project.remove(file)
-      expect(project.files.length).toBe 0
+      project.removeFile(file)
+      expect(project.rootFolder.length).toBe 0
       
     it 'compiles the contents of its files into an assembly of parts', ->
-      project.createFile
-        name:"test_project"
+      project.addFile
+        name:"toto.coffee"
         content:"""
         class TestPart extends Part
           constructor:(options) ->
@@ -37,11 +38,23 @@ define (require)->
         testPart = new TestPart()
         assembly.add(testPart)
         """
+      compiledCallback = jasmine.createSpy('-compileEventCallback-')
+      project.on("compiled", compiledCallback)
+      spy = spyOn(project,"compile")
+      
       project.compile()
-      expect(project.rootAssembly.children[0].polygons.length).toBe(9)
+      console.log spy.mostRecentCall.args
+      
+      
+      args = compiledCallback.mostRecentCall.args
+      expect(args).toBeDefined()
+      ###console.log args
+      #spy = spyOn(event
+      console.log project
+      expect(project.rootAssembly.children[0].polygons.length).toBe(9)###
    
     it 'generates bom data when compiling',->
-      project.createFile
+      project.addFile
         name:"test_project"
         content:"""
         class TestPart extends Part
@@ -65,8 +78,8 @@ define (require)->
       expect(JSON.stringify(project.bom)).toEqual('[{"name":"TestPart","variant":"Default","params":"","quantity":2,"manufactured":true,"included":true}]')
       
     it 'is marked as "dirty" when one of its files gets modified', ->
-      expect(project.dirty).toBe(false)
-      project.createFile
+      expect(project.isCompileAdvised).toBe(false)
+      project.addFile
         name:"test_project"
         content:"""
         class TestPart extends Part
@@ -77,11 +90,10 @@ define (require)->
         testPart = new TestPart()
         assembly.add(testPart)
         """
-      expect(project.dirty).toBe(true)
-      project.dirty = false
-      mainFile = project.pfiles.get("test_project")
-      mainFile.set("content","")
-      expect(project.dirty).toBe(true)
+      project.isCompileAdvised = false
+      mainFile = project.rootFolder.get("test_project")
+      mainFile.content= ""
+      expect(project.isCompileAdvised).toBe(true)
      
    
    #########################
@@ -105,14 +117,14 @@ define (require)->
       localStorage.removeItem("Library-test_project-parts")
       
     
-    it 'flags itself as dirty on change' , ->  
-      part.set("content","DummyContent")
-      expect(part.dirty).toBe true
+    it 'flags itself as isCompileAdvised on change' , ->  
+      part.content="DummyContent"
+      expect(part.isCompileAdvised).toBe true
       
-    it 'flags itself as not dirty on save' , ->  
-      part.set("content","DummyContent")
+    it 'flags itself as not isCompileAdvised on save' , ->  
+      part.content="DummyContent"
       part.save()
-      expect(part.dirty).toBe false
+      expect(part.isCompileAdvised).toBe false
     ### 
     
       

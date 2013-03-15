@@ -43,9 +43,13 @@ require.config
     marionette:       "../assets/js/plugins/backbone.marionette.min"
     eventbinder:      "../assets/js/plugins/backbone.eventbinder.min"
     wreqr:            "../assets/js/plugins/backbone.wreqr.min"
+    babysitter:       "../assets/js/plugins/backbone.babysitter.min"
+    pickysitter:      "../assets/js/plugins/backbone.pickysitter"
+    
     localstorage:     "../assets/js/plugins/backbone.localstorage"
     modelbinder :     "../assets/js/plugins/backbone.ModelBinder.min"
     collectionbinder :"../assets/js/plugins/backbone.CollectionBinder.min"
+    
     "backbone-forms" :           "../assets/js/plugins/backbone.forms"
     forms_bootstrap : "../assets/js/plugins/backbone.forms.bootstrap"
     forms_list      : "../assets/js/plugins/backbone.forms.list.min"  

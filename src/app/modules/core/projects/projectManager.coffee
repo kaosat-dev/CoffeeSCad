@@ -4,9 +4,6 @@ define (require)->
   Backbone = require 'backbone'
   marionette = require 'marionette'
   
-  PreProcessor = require "./preprocessor"
-  CsgProcessor = require "./csg/processor"
-  
   vent = require 'modules/core/vent'
   reqRes = require 'modules/core/reqRes'
   ModalRegion = require 'modules/core/utils/modalRegion'
@@ -15,6 +12,7 @@ define (require)->
   Project = require 'modules/core/projects/project'
   ProjectBrowserView = require './projectBrowseView2'
   
+  Compiler = require './compiler'
   
   class ProjectManager
     
@@ -23,11 +21,10 @@ define (require)->
       @appSettings = options.appSettings ? new Settings()
       @settings = @appSettings.getByName("General")
       @stores = options.stores ? null
-      @preProcessor = new PreProcessor()
-      @csgProcessor = new CsgProcessor()
       
       @vent = vent
       @project = null
+      @compiler = new Compiler()
       
       @vent.on("project:new", @onNewProject)
       @vent.on("project:saveAs", @onSaveAsProject)
@@ -53,9 +50,11 @@ define (require)->
     _setupProjectEventHandlers: =>
       @project.on("change",@onProjectChanged)
       @project.on("save",@onProjectSaved)
+      @project.on("compiled", @onProjectCompiled)
 
     createProject:()->
-      @project = new Project()
+      @project = new Project
+        compiler:@compiler
       @project.addFile
         name: @project.get("name")+".coffee"
         content:"""
@@ -138,8 +137,15 @@ define (require)->
     onProjectSaved:()=>
       if @settings.get("csgCompileMode") is "onSave"
         @compileProject()
+    
+    onProjectCompiled:=>
+      @vent.trigger("project:compiled")
        
-    compileProject:()=> 
+    compileProject:=>
+      @project.compile
+        backgroundProcessing : @settings.get("csgBackgroundProcessing")
+      
+    compileProject_:()=> 
       console.log "compiling"
       start = new Date().getTime()
       
@@ -220,6 +226,7 @@ define (require)->
       
     onProjectLoaded:(project)=>
       @project=project
+      @project.compiler = @compiler
       @_setupProjectEventHandlers()
       
       

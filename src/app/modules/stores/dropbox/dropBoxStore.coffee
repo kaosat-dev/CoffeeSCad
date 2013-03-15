@@ -3,6 +3,7 @@ define (require)->
   buildProperties = require 'modules/core/utils/buildProperties'
   backbone_dropbox = require './backbone.dropbox'
   vent = require 'modules/core/vent'
+  reqRes = require 'modules/core/reqRes'
   
   Project = require 'modules/core/projects/project'
   
@@ -58,6 +59,9 @@ define (require)->
       
       #should this be here ?
       @projectsList = []
+      
+      #handler for project/file data fetch requests
+      reqRes.addHandler("getdropboxFileOrProjectCode",@_sourceFetchHandler)
       
     login:=>
       console.log "login requested"
@@ -137,7 +141,7 @@ define (require)->
       #console.log "locating #{projectName} in @projectsList"
       #console.log @projectsList
       if projectName in @projectsList
-        return true
+        return @loadProject(projectName,true)
       else
         return null
     
@@ -153,6 +157,9 @@ define (require)->
    
     getProjectFiles2:(projectName)=> 
       return @store.client.readdir "/#{projectName}/"
+      
+    getProjectFile:(projectName, fileName)=>
+      
             
     getThumbNail:(projectName)=>
       
@@ -271,7 +278,7 @@ define (require)->
         ###
       @vent.trigger("project:saved")
     
-    loadProject:(projectName)=>
+    loadProject:(projectName,silent=false)=>
       if projectName in @projectsList
         console.log "dropbox loading project #{projectName}"
         project = new Project()
@@ -280,7 +287,8 @@ define (require)->
         onProjectLoaded=()=>
           thumbNailFile = project.rootFolder.get(".thumbnail.png")
           project.rootFolder.remove(thumbNailFile)
-          @vent.trigger("project:loaded",project)
+          if not silent
+            @vent.trigger("project:loaded",project)
           
         project.rootFolder.rawData = true
         project.rootFolder.sync = @store.sync
@@ -294,7 +302,10 @@ define (require)->
       index = @projectsList.indexOf(projectName)
       @projectsList.splice(index, 1)
       return @store.remove("/#{projectName}")
-      
+    
+    destroyFile:(projectName, fileName)=>
+      return @store.remove("#{projectName}/#{fileName}")
+    
     renameProject:(oldName, newName)=>
       #move /rename project and its main file
       index = @projectsList.indexOf(oldName)
@@ -305,8 +316,43 @@ define (require)->
     _removeFile:(projectName, fileName)=>
       return @store.remove("#{projectName}/#{fileName}")
     
-    destroyFile:(projectName, fileName)=>
-      return @store.remove("#{projectName}/#{fileName}")
-      
+    _sourceFetchHandler:([store,projectName,path])=>
+      #This method handles project/file content requests and returns appropriate data
+      if store != "dropbox"
+        return null
+      console.log "handler recieved #{store}/#{project}/#{path}"
+      result = ""
+      if not projectName? and path?
+        shortName = path
+        #console.log "proj"
+        #console.log @project
+        file = @project.rootFolder.get(shortName)
+        result = file.content
+        result = "\n#{result}\n"
+      else if projectName? and not path?
+        console.log "will fetch project #{projectName}'s namespace"
+        project = @getProject(projectName)
+        console.log project
+        namespaced = {}
+        for index, file of project.rootFolder.models
+          namespaced[file.name]=file.content
+          
+        namespaced = "#{projectName}={"
+        for index, file of project.rootFolder.models
+          namespaced += "#{file.name}:'#{file.content}'"
+        namespaced+= "}"
+        #namespaced = "#{projectName}="+JSON.stringify(namespaced)
+        #namespaced = """#{projectName}=#{namespaced}"""
+        result = namespaced
+        
+      else if projectName? and path?
+        console.log "will fetch #{path} from #{projectName}"
+        onProject
+        project = @getProject(projectName)
+        file = project.rootFolder.get(path)
+        result = file.content
+        result = "\n#{result}\n"
+        
+      return result
       
   return DropBoxStore

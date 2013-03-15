@@ -3,17 +3,19 @@ define (require)->
   LocalStorage = require 'localstorage'
 
   vent = require 'modules/core/vent'
+  reqRes = require 'modules/core/reqRes'
+  
   buildProperties = require 'modules/core/utils/buildProperties'
+  utils = require 'modules/core/utils/utils'
+  merge = utils.merge
   
   Project = require 'modules/core/projects/project'
-  storeURI = "projects"
   
   class BrowserLibrary extends Backbone.Collection
     """
     a library contains multiple projects, stored in localstorage (browser)
     """  
     model: Project
-    localStorage: new Backbone.LocalStorage(storeURI)
     defaults:
       recentProjects: []
     
@@ -37,8 +39,12 @@ define (require)->
       loggedIn: true
     
     constructor:(options)->
+      defaults = {storeURI:"projects"}
+      options = merge defaults, options
+      {@storeURI} = options
       super options
-      @store = new Backbone.LocalStorage(storeURI)
+        
+      @store = new Backbone.LocalStorage(@storeURI)
       @isLogginRequired = false
       @vent = vent
       @vent.on("browserStore:login", @login)
@@ -46,7 +52,11 @@ define (require)->
       
       #experimental
       @lib = new BrowserLibrary()
+      @lib.localStorage = new Backbone.LocalStorage(@storeURI)
       @projectsList = []
+      
+      #handler for project/file data fetch requests
+      reqRes.addHandler("getbrowserFileOrProjectCode",@_sourceFetchHandler)
       
     login:=>
       console.log "browser logged in"
@@ -58,21 +68,24 @@ define (require)->
     authCheck:()->
     
     getProjectsName:(callback)=>
-      projectsList = localStorage.getItem("#{storeURI}")
-      if projectsList
-        projectsList = projectsList.split(',')
-      else
-        projectsList = []
-      @projectsList = projectsList
-      #kept for now
-      @lib.fetch()
-      ### 
-      projectNames = []
-      for model in @lib.models
-        projectNames.push(model.id)
-        @projectsList.push(model.id) 
-      ### 
-      callback(@projectsList)
+      try
+        projectsList = localStorage.getItem("#{@storeURI}")
+        if projectsList
+          projectsList = projectsList.split(',')
+        else
+          projectsList = []
+        @projectsList = projectsList
+        #kept for now
+        @lib.fetch()
+        ### 
+        projectNames = []
+        for model in @lib.models
+          projectNames.push(model.id)
+          @projectsList.push(model.id) 
+        ### 
+        callback(@projectsList)
+      catch error
+        console.log "could not fetch projectsName from #{@name} because of error #{error}"
     
     getProject:(projectName)=>
       return @lib.get(projectName)
@@ -84,7 +97,7 @@ define (require)->
       project = @lib.get(projectName)
       #TODO: oh the horror: we have to fetch all model data just to look at the files list
       if project?
-        projectURI = "#{storeURI}-#{projectName}"
+        projectURI = "#{@storeURI}-#{projectName}"
         rootStoreURI = "#{projectURI}-files"
         project.rootFolder.sync = project.sync
         project.rootFolder.changeStorage("localStorage",new Backbone.LocalStorage(rootStoreURI))
@@ -101,7 +114,7 @@ define (require)->
       @lib.add(project)
       if newName?
         project.name = newName
-      projectURI = "#{storeURI}-#{newName}"
+      projectURI = "#{@storeURI}-#{newName}"
       rootStoreURI = "#{projectURI}-files"
       project.rootFolder.changeStorage("localStorage",new Backbone.LocalStorage(rootStoreURI))
       project.save()
@@ -118,7 +131,7 @@ define (require)->
       projectName = project.name 
       @_addToProjectsList(project.name)
       
-      projectURI = "#{storeURI}-#{projectName}"
+      projectURI = "#{@storeURI}-#{projectName}"
       rootStoreURI = "#{projectURI}-files"
        
       filesList = []
@@ -140,15 +153,22 @@ define (require)->
         @_removeFile(projectName, fileName) for fileName in removed
       
       localStorage.setItem(rootStoreURI,filesList.join(","))
-      localStorage.setItem(projectURI,JSON.stringify(project.toJSON()))
+      
+      attributes = _.clone(project.attributes)
+      for attrName, attrValue of attributes
+        if attrName not in project.persistedAttributeNames
+          delete attributes[attrName]
+      strinfigiedProject = JSON.stringify(attributes)
+      
+      localStorage.setItem(projectURI,strinfigiedProject)
       
       
       @vent.trigger("project:saved")  
     
-    loadProject:(projectName)=>
+    loadProject:(projectName, silent=false)=>
       project =  @lib.get(projectName)
       project.collection = @lib
-      projectURI = "#{storeURI}-#{projectName}"
+      projectURI = "#{@storeURI}-#{projectName}"
       rootStoreURI = "#{projectURI}-files"
       project.rootFolder.sync = project.sync
       project.rootFolder.changeStorage("localStorage",new Backbone.LocalStorage(rootStoreURI))
@@ -157,17 +177,19 @@ define (require)->
         #remove old thumbnail
         thumbNailFile = project.rootFolder.get(".thumbnail.png")
         project.rootFolder.remove(thumbNailFile)
-        @vent.trigger("project:loaded",project)
+        if not silent
+          @vent.trigger("project:loaded",project)
+        return project
       
       project.dataStore = @
-      project.rootFolder.fetch().done(onProjectLoaded)
+      return project.rootFolder.fetch().done(onProjectLoaded)
    
     deleteProject:(projectName)=>
       d = $.Deferred()
       console.log "browser storage deletion of #{projectName}"
       project = @lib.get(projectName)
       
-      projectURI = "#{storeURI}-#{projectName}"
+      projectURI = "#{@storeURI}-#{projectName}"
       rootStoreURI = "#{projectURI}-files"
       
       file = null
@@ -193,16 +215,19 @@ define (require)->
       @lib.remove(project)
       project.name = newName
       
-      projectURI = "#{storeURI}-#{newName}"
+      projectURI = "#{@storeURI}-#{newName}"
       project.localstorage = new Backbone.LocalStorage(projectURI)
       rootStoreURI = "#{projectURI}-files"
       project.rootFolder.changeStorage("localStorage",new Backbone.LocalStorage(rootStoreURI))
       project.save()
       
       @lib.add(project)
+    
+    destroyFile:(projectName, fileName)=>
+      return @_removeFile(projectName, fileName)  
       
     _removeFromProjectsList:(projectName)=>
-      projects = localStorage.getItem(storeURI)
+      projects = localStorage.getItem(@storeURI)
       if projects?
         projects = projects.split(',')
         index = projects.indexOf(projectName)
@@ -220,7 +245,7 @@ define (require)->
         localStorage.removeItem(projectURI)
       
     _addToProjectsList:(projectName)=>
-      projects = localStorage.getItem(storeURI)
+      projects = localStorage.getItem(@storeURI)
       if projects?
         if projects == ""
           projects = "#{projectName}"
@@ -233,10 +258,10 @@ define (require)->
         projects = "#{projectName}"
       
       @projectsList.push(projectName)
-      localStorage.setItem(storeURI,projects)
+      localStorage.setItem(@storeURI,projects)
         
     _removeFile:(projectName, fileName)=>
-      projectURI = "#{storeURI}-#{projectName}"
+      projectURI = "#{@storeURI}-#{projectName}"
       filesURI = "#{projectURI}-files"
       fileNames = localStorage.getItem(filesURI)
       fileNames = fileNames.split(',')
@@ -248,8 +273,47 @@ define (require)->
       fileURI = "#{filesURI}-#{fileName}"
       localStorage.removeItem(fileURI)
       
-    destroyFile:(projectName, fileName)=>
-      return @_removeFile(projectName, fileName)  
+    _sourceFetchHandler:([store,projectName,path])=>
+      #This method handles project/file content requests and returns appropriate data
+      if store != "browser"
+        return null
+      console.log "handler recieved #{store}/#{project}/#{path}"
+      result = ""
+      if not projectName? and path?
+        shortName = path
+        #console.log "proj"
+        #console.log @project
+        file = @project.rootFolder.get(shortName)
+        result = file.content
+        result = "\n#{result}\n"
+      else if projectName? and not path?
+        console.log "will fetch project #{projectName}'s namespace"
+        project = @getProject(projectName)
+        console.log project
+        namespaced = {}
+        for index, file of project.rootFolder.models
+          namespaced[file.name]=file.content
+          
+        namespaced = "#{projectName}={"
+        for index, file of project.rootFolder.models
+          namespaced += "#{file.name}:'#{file.content}'"
+        namespaced+= "}"
+        #namespaced = "#{projectName}="+JSON.stringify(namespaced)
+        #namespaced = """#{projectName}=#{namespaced}"""
+        result = namespaced
+        
+      else if projectName? and path?
+        console.log "will fetch #{path} from #{projectName}"
+        getContent=(project) =>
+          console.log project
+          project.rootFolder.fetch()
+          file = project.rootFolder.get(path)
+          result = file.content
+          result = "\n#{result}\n"
+          return result
+        @loadProject(projectName,true).done(getContent)
+        
+      
       
        
   return BrowserStore

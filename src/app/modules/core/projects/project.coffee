@@ -3,6 +3,7 @@ define (require)->
   _ = require 'underscore'
   Backbone = require 'backbone'
   buildProperties = require 'modules/core/utils/buildProperties'
+  Compiler = require './compiler'
   
   debug  = false
   
@@ -99,67 +100,65 @@ define (require)->
     buildProperties @
     
     constructor:(options)->
+      options = options or {}
       super options
+      @compiler = options.compiler ? new Compiler()
+      
       @rootFolder = new Folder()
       @rootFolder.on("reset",@_onFilesReset)
-      @on("change:name", @_onNameChanged)
-      @on("compiled",@_onCompiled)
       
       classRegistry={}
       @bom = new Backbone.Collection()
       @rootAssembly = {}
       @dataStore = null
-    
-    _setupFileEventHandlers:(file)=>
-      file.on("change",@_onFileChanged)
-      file.on("save",@_onFileSaved)
-      file.on("destroy",@_onFileDestroyed)
-    
-    _addFile:(file)=>
-      @rootFolder.add file
-      @_setupFileEventHandlers(file)
-      @isSaveAdvised = true
+      
+      @on("change:name", @_onNameChanged)
+      @on("compiled",@_onCompiled)
+      @on("compile:error",@_onCompileError)
       
     addFile:(options)->
       file = new ProjectFile
         name: options.name ? @name+".coffee"
         content: options.content ? " \n\n"  
       @_addFile file   
+      return file
       
     removeFile:(file)=>
       @rootFolder.remove(file)
       @isSaveAdvised = true
     
     save: (attributes, options)=>
-      #project is only a container, if really data is stored inside the metadata file (.project)
-      #metaDataFile = @rootFolder.get(".project")
-      #metaDataFile.content = {name:@name,lastModificationDate:@lastModificationDate}
+      #project is only a container, if really necessary data could be stored inside the metadata file (.project)
       @dataStore.saveProject(@)
-      ###
-      backup = @toJSON
-      @toJSON= =>
-        attributes = _.clone(@attributes)
-        for attrName, attrValue of attributes
-          if attrName not in @persistedAttributeNames
-            delete attributes[attrName]
-        return attributes
-      super attributes, options 
-      @toJSON=backup
-      @rootFolder.sync = @sync
-      @rootFolder.save()
-      for index, file of @rootFolder.models
-        file.sync = @sync
-        file.save()
-      ###
       @isSaveAdvised = false
       @isCompileAdvised = false  
       @trigger("save",@)
+      
+    compile:(options)=>
+      if not @compiler?
+        throw new Error("No compiler specified")
+      @compiler.project = @
+      @compiler.compile(options)
+      
+    _addFile:(file)=>
+      @rootFolder.add file
+      @_setupFileEventHandlers(file)
+      @isSaveAdvised = true
     
-    _onCompiled:()=>
+    _setupFileEventHandlers:(file)=>
+      file.on("change",@_onFileChanged)
+      file.on("save",@_onFileSaved)
+      file.on("destroy",@_onFileDestroyed)
+      
+    _onCompiled:=>
+      @compiler.project = null
       @isCompileAdvised = false
       for file in @rootFolder.models
         file.isCompileAdvised = false
       @isCompiled = true
+      
+    _onCompileError:=>
+      @compiler.project = null
       
     _onNameChanged:(model, name)=>
       try

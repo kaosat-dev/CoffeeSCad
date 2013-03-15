@@ -16,7 +16,7 @@ define (require)->
       projectManager.project = project
     
     it 'can export a project to amf (blobUrl)',->
-      project.createFile
+      project.addFile
         name:"test_project"
         content:"""
         class TestPart extends Part
@@ -36,7 +36,7 @@ define (require)->
       expect(blobUrl).not.toBe(null)
     
     it 'triggers an amfExport:error event when export fails',-> 
-      project.createFile
+      project.addFile
         name:"test_project"
       errorCallback = jasmine.createSpy('-error event callback-')
       amfExporter.vent.on("amfExport:error", errorCallback)
@@ -47,7 +47,7 @@ define (require)->
       expect(errorArgs[0].message).toBe("Failed to merge csgObject children with error: TypeError: Object #<Object> has no method 'clone'")
       
     it 'returns null when export fails',->   
-      project.createFile
+      project.addFile
           name:"testFileName"
       blobUrl = amfExporter.export(project.rootAssembly)
       expect(blobUrl).toBe(null)
