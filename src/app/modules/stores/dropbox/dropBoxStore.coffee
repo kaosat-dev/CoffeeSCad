@@ -59,38 +59,32 @@ define (require)->
       
       #should this be here ?
       @projectsList = []
-      
+      @cachedProjects = {}
       #handler for project/file data fetch requests
       reqRes.addHandler("getdropboxFileOrProjectCode",@_sourceFetchHandler)
       
     login:=>
-      console.log "login requested"
       try
         onLoginSucceeded=()=>
-          console.log "dropbox logged in"
           localStorage.setItem("dropboxCon-auth",true)
           @loggedIn = true
           @vent.trigger("dropBoxStore:loggedIn")
         onLoginFailed=(error)=>
-          console.log "dropbox loggin failed"
           throw error
           
         loginPromise = @store.authentificate()
         $.when(loginPromise).done(onLoginSucceeded)
                             .fail(onLoginFailed)
-        #@lib.fetch()
       catch error
         @vent.trigger("dropBoxStore:loginFailed")
         
     logout:=>
       try
         onLogoutSucceeded=()=>
-          console.log "dropbox logged out"
           localStorage.removeItem("dropboxCon-auth")
           @loggedIn = false
           @vent.trigger("dropBoxStore:loggedOut")
         onLoginFailed=(error)=>
-          console.log "dropbox logout failed"
           throw error
           
         logoutPromise = @store.signOut()
@@ -279,8 +273,11 @@ define (require)->
       @vent.trigger("project:saved")
     
     loadProject:(projectName,silent=false)=>
+      d = $.Deferred()
       if projectName in @projectsList
         console.log "dropbox loading project #{projectName}"
+        @lib.add(project)
+        
         project = new Project()
         project.name = projectName
         
@@ -289,14 +286,18 @@ define (require)->
           project.rootFolder.remove(thumbNailFile)
           if not silent
             @vent.trigger("project:loaded",project)
-          
+          d.resolve(project)
+        
+        project.dataStore = @  
         project.rootFolder.rawData = true
         project.rootFolder.sync = @store.sync
         project.rootFolder.path = projectName
+        
         project.rootFolder.fetch().done(onProjectLoaded)
-        @lib.add(project)
-        project.dataStore = @
-        return project
+        
+      else
+        d.fail(new Error("Project #{projectName} not found")) 
+      return d
         
     deleteProject:(projectName)=>
       index = @projectsList.indexOf(projectName)
@@ -316,11 +317,11 @@ define (require)->
     _removeFile:(projectName, fileName)=>
       return @store.remove("#{projectName}/#{fileName}")
     
-    _sourceFetchHandler:([store,projectName,path])=>
+    _sourceFetchHandler:([store, projectName, path, deferred])=>
       #This method handles project/file content requests and returns appropriate data
       if store != "dropbox"
         return null
-      console.log "handler recieved #{store}/#{project}/#{path}"
+      console.log "handler recieved #{store}/#{projectName}/#{path}"
       result = ""
       if not projectName? and path?
         shortName = path
@@ -347,11 +348,26 @@ define (require)->
         
       else if projectName? and path?
         console.log "will fetch #{path} from #{projectName}"
-        onProject
-        project = @getProject(projectName)
-        file = project.rootFolder.get(path)
-        result = file.content
-        result = "\n#{result}\n"
+        getContent=(project) =>
+          #cache for faster access: TODO: clear cache
+          @cachedProjects[projectName]=project
+          file = project.rootFolder.get(path)
+          
+          #now we replace all "local" (internal to the project includes) with full path includes
+          result = file.content
+          result = result.replace /(?!\s*?#)(?:\s*?include\s*?)(?:\(?\"([\w\//:'%~+#-.*]+)\"\)?)/g, (match,matchInner) =>
+            includeFull = matchInner.toString()
+            return """\ninclude("dropbox:/#{projectName}/#{includeFull}")\n"""
+            
+          result = "\n#{result}\n"
+          deferred.resolve(result)
+        
+        if not (projectName of @cachedProjects)
+          @loadProject(projectName,true).done(getContent)
+        else 
+          getContent(@cachedProjects[projectName])
+          
+           
         
       return result
       

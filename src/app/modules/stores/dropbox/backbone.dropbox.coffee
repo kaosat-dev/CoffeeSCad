@@ -5,7 +5,7 @@ define (require)->
   Dropbox = require "dropbox"
   
   class DropBoxStorage
-    constructor:(debug=false)->
+    constructor:(debug=true)->
       @debug = debug
       @client=null
       
@@ -73,7 +73,6 @@ define (require)->
     sync:(method, model, options)=>
       switch method
         when 'read' 
-          console.log "reading"
           if model.id?
             console.log "bla",model.id
             return @find(model, options)
@@ -81,7 +80,6 @@ define (require)->
             return @findAll(model, options)
           
         when 'create'
-          console.log "creating"
           unless model.id
             model.set model.id, model.idAttribute
           
@@ -92,7 +90,6 @@ define (require)->
           return model.toJSON()
           
         when 'update'
-          console.log "updating"
           id = model.id
           id = "#{id}"
           if model.collection?
@@ -118,8 +115,6 @@ define (require)->
           return model.toJSON()
           
         when 'delete'
-          console.log "deleting"
-          console.log model
           #delete caching experiment
           #model.memoPath = model.collection.path 
           #@destroy_cache.push(model)
@@ -159,11 +154,12 @@ define (require)->
       promise  = @_readDir(model.path)
       model.trigger('fetch', model, null, options)
       
-      
       fetchData=(entries)=>
+        #d = $.Deferred()
         for fileName in entries
           filePath = "#{rootPath}/#{fileName}"
-          console.log "file path: #{filePath}"
+          if @debug
+            console.log "file path: #{filePath}"
           promises.push @_readFile(filePath)
         $.when.apply($, promises).done ()=>
           preResults = arguments
@@ -172,7 +168,8 @@ define (require)->
             results = []
             for i in [0...entries.length]
               entry = entries[i]
-              console.log "entry #{entry}"
+              if @debug
+                console.log "retrieved entry #{entry}"
               entryData = entry.split('.')
               #ext= entryData[entryData.length - 1]
               #filename = entryData[0...entryData.length-1].join('.')
@@ -195,7 +192,10 @@ define (require)->
           if success?
             success(results)
           return results
+        #return d
+          
       p = $.when(promise).then(fetchData)    
+      
       return p
       
     remove:(name)=>

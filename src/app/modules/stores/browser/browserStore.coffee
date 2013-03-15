@@ -166,6 +166,7 @@ define (require)->
       @vent.trigger("project:saved")  
     
     loadProject:(projectName, silent=false)=>
+      d = $.Deferred()
       project =  @lib.get(projectName)
       project.collection = @lib
       projectURI = "#{@storeURI}-#{projectName}"
@@ -179,10 +180,11 @@ define (require)->
         project.rootFolder.remove(thumbNailFile)
         if not silent
           @vent.trigger("project:loaded",project)
-        return project
+        d.resolve(project)
       
       project.dataStore = @
-      return project.rootFolder.fetch().done(onProjectLoaded)
+      project.rootFolder.fetch().done(onProjectLoaded)
+      return d
    
     deleteProject:(projectName)=>
       d = $.Deferred()
@@ -273,11 +275,11 @@ define (require)->
       fileURI = "#{filesURI}-#{fileName}"
       localStorage.removeItem(fileURI)
       
-    _sourceFetchHandler:([store,projectName,path])=>
+    _sourceFetchHandler:([store, projectName, path, deferred])=>
       #This method handles project/file content requests and returns appropriate data
       if store != "browser"
         return null
-      console.log "handler recieved #{store}/#{project}/#{path}"
+      console.log "handler recieved #{store}/#{projectName}/#{path}"
       result = ""
       if not projectName? and path?
         shortName = path
@@ -305,14 +307,18 @@ define (require)->
       else if projectName? and path?
         console.log "will fetch #{path} from #{projectName}"
         getContent=(project) =>
-          console.log project
           project.rootFolder.fetch()
           file = project.rootFolder.get(path)
+          
+          #now we replace all "local" (internal to the project includes) with full path includes
           result = file.content
+          result = result.replace /(?!\s*?#)(?:\s*?include\s*?)(?:\(?\"([\w\//:'%~+#-.*]+)\"\)?)/g, (match,matchInner) =>
+            includeFull = matchInner.toString()
+            return """\ninclude("browser:/#{projectName}/#{includeFull}")\n"""
+          
           result = "\n#{result}\n"
-          return result
+          deferred.resolve(result)
         @loadProject(projectName,true).done(getContent)
-        
       
       
        

@@ -21,6 +21,20 @@ define (require)->
         name:"NotTheRightName.coffee"
         content:""""""
       expect(()-> (preprocessor.process(project))).toThrow("Missing main file (needs to have the same name as the project containing it)")
+      
+    it 'can check for circular dependency issues and raise an exception',->
+      project.addFile
+        name:"TestProject.coffee"
+        content:"""include ("config.coffee")"""
+      project.addFile
+        name:"config.coffee"
+        content:"""include ("someOtherFile.coffee")"""
+      project.addFile
+        name:"someOtherFile.coffee"
+        content:"""include ("TestProject.coffee")"""
+        
+      expect(()-> (preprocessor.process(project))).toThrow("Circular dependency detected from someOtherFile.coffee to TestProject.coffee")
+    
     
     it 'can emulate coffeescript function syntax (with or without parens) (as it is a "pseudo method") for includes',->
       project.addFile
@@ -71,7 +85,7 @@ define (require)->
       expect(obsPreprocessedSource).toBe(expPreProcessedSource)
       
       
-    it 'can process file includes from another project (browserStore)',->
+    it 'can process file includes from another project (browserStore) single level',->
       project.addFile
         name:"TestProject.coffee"
         content:"""include ("config.coffee")
@@ -95,6 +109,44 @@ define (require)->
       
       testVariable = 42
       
+      otherProjectVariable = 666
+      
+      mainVariable = testVariable+2
+      """
+      
+      obsPreprocessedSource = preprocessor.process(project)
+      expect(obsPreprocessedSource).toBe(expPreProcessedSource)
+    
+    it 'can process file includes from another project (browserStore) multi level',->
+      project.addFile
+        name:"TestProject.coffee"
+        content:"""include ("config.coffee")
+        include ("browser:OtherProject/OtherProject.coffee")
+        mainVariable = testVariable+2
+        """
+      project.addFile
+        name:"config.coffee"
+        content:"""testVariable = 42"""
+      
+      otherProject = new Project({name:"OtherProject"})
+      otherProject.addFile
+        name:"OtherProject.coffee"
+        content:"""
+        otherProjectVariable = 666
+        include("config.coffee")
+        """
+      otherProject.addFile
+        name:"config.coffee"
+        content:"""secondLevelIncludeVar = 24"""
+      
+      browserStore = new BrowserStore({storeURI:"testStore"})
+      browserStore.saveProject(otherProject)
+      
+      expPreProcessedSource = """
+      
+      testVariable = 42
+      
+      secondLevelIncludeVar = 24
       otherProjectVariable = 666
       
       mainVariable = testVariable+2
@@ -137,35 +189,12 @@ define (require)->
       expect(obsPreprocessedSource).toBe(expPreProcessedSource)
     ###
     
-    it 'can check for circular dependency issues and raise an exception',->
-      project.addFile
-        name:"TestProject.coffee"
-        content:"""include ("config.coffee")"""
-      project.addFile
-        name:"config.coffee"
-        content:"""include ("someOtherFile.coffee")"""
-      project.addFile
-        name:"someOtherFile.coffee"
-        content:"""include ("TestProject.coffee")"""
-        
-      expect(()-> (preprocessor.process(project))).toThrow("Circular dependency detected from someOtherFile.coffee to TestProject.coffee")
     
-    
-    
-    #TODO : how to do these ? in specs ??
+    #TODO : how to do these
     ###
     it 'can process local stl file includes',->
       project.addFile
         name:"TestProject"
         content:"""include ("toto.stl")"""
-     
-    it 'can process dropbox (remote) file includes',->
-      project.addFile
-        name:"TestProject"
-        content:"""include "browser:MCAD/gears/myGear.coffee" """
     ###
-    ###    
-    source = """include \"dropbox:mySupaProject/toto/blabla.coffee\"
-      include ("browser:otherProject")
-      """
-    ###
+  

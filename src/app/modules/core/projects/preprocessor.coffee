@@ -12,20 +12,21 @@ define (require) ->
       @resolvedIncludes = []
       @unresolvedIncludes = []
     
-    _testSourceFetchHandler:([store,project,path])=>
+    _testSourceFetchHandler:([store,project,path,deferred])=>
       #console.log "handler recieved #{store}/#{project}/#{path}"
       result = ""
       if not project? and path?
-        #console.log "will fetch #{path} from local (current project) namespace"
+        console.log "will fetch #{path} from local (current project) namespace"
         shortName = path
         #console.log "proj"
         #console.log @project
         file = @project.rootFolder.get(shortName)
         result = file.content
         result = "\n#{result}\n"
-      #else if project? and path?
+        deferred.resolve(result)
+      else if project? and path?
+        throw new Error("non prefixed includes can only get files from current project")
         #console.log "will fetch #{path} from project #{project}'s namespace"
-      return result
       
     process:(project, coffeeToJs, lint)=>
       coffeeToJs = coffeeToJs or false
@@ -36,7 +37,6 @@ define (require) ->
       #if lint
       #  @lintProject(project)
       @project = project
-      console.log @project
       mainFileName = @project.name+".coffee"
       mainFile = @project.rootFolder.get(mainFileName)
       if not mainFile?
@@ -88,6 +88,8 @@ define (require) ->
       return [hasError, lintErrors]
       
     processIncludes:(filename, source)=>
+      #FIXME: as now all stores return deferreds/callbacks , the code here to fetch data should be CHANGED accordingly
+      
       #finds all matches of "include xxx", and fetches the corresponding text 
       #console.log "processing #{filename}"
       #console.log "@unresolvedIncludes : #{@unresolvedIncludes.join(' ')}"
@@ -125,12 +127,14 @@ define (require) ->
           throw new Error("Circular dependency detected from #{filename} to #{includeeFileName}")
         if not (includeeFileName in @resolvedIncludes)
           try
-            result = @fetch_data(store,projectName,projectSubPath)
-            result = @processIncludes(includeeFileName, result)
+            fetchResult = @fetch_data(store,projectName,projectSubPath)
+            $.when(fetchResult).then (fileContent)=>
+              result = @processIncludes(includeeFileName, fileContent)
           catch error
             throw error
-          
           @resolvedIncludes.push(includeeFileName)
+        console.log "result"
+        console.log result
         return result
         
       @unresolvedIncludes.splice(@unresolvedIncludes.indexOf(filename), 1)  
@@ -141,7 +145,10 @@ define (require) ->
       try
         fileOrProjectRequest = "#{store}/#{project}/#{path}"
         if store is null then prefix = "local" else prefix = store
-        return reqRes.request("get#{prefix}FileOrProjectCode",[store, project, path])
+        deferred = $.Deferred()
+        reqRes.request("get#{prefix}FileOrProjectCode",[store, project, path, deferred])
+        result = deferred.promise()
+        return result
       catch error
         console.log "error: #{error}"
         throw new Error("#{path} : No such file or directory")
