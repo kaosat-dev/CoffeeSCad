@@ -158,7 +158,7 @@ require.config
       exports : "Detector"
     stats:
       exports : "Stats"
-    
+
     ### 
     track_ctrl:
       deps:    ["three"] 

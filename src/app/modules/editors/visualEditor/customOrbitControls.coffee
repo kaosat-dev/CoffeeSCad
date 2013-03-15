@@ -132,77 +132,27 @@ define (require) ->
     @panCamera = ->
       mouseChange = _panEnd.clone().sub(_panStart)
       if mouseChange.lengthSq()
-        
-        #mouseChange.multiplyScalar( this.target.length() * this.panSpeed );
         mouseChange.multiplyScalar @panSpeed
-        
-        pan = @target.clone().cross(@object.up).setLength(mouseChange.x)
-        pan.add @object.up.clone().setLength(mouseChange.y)
-        pan2 = @object.up.clone()
-        
-        #console.log("up vector: ("+pan2.x+", "+pan2.y+", ",+pan2.z+")")
-        #@object.matrixWorld.scale(pan2)
-        #@object.matrixWorld.multiplyVector3 pan2
-        #Matrix4's .multiplyVector3() has been removed. Use vector.applyMatrix4( matrix ) or vector.applyProjection( matrix )
-        
-        #console.log("up vector 2: ("+pan2.x+", "+pan2.y+", ",+pan2.z+")")
-        
-        #we need two vectors relative to the camera: up and left 
-        #             *  for this we need the "eye vector (see below) and either cam.up or cam.left to get the other"
-        #             * and scale these two by mousechange values
-        #             * 
-        
-        #console.log("View angle : #{@theta} #{@phi}")
-        
+
         #get "eye vector" (ray from cam to target)
         eyeVector = @object.position.clone().sub(@target)
         
-        #console.log("Cam position: #{@object.position.x}, #{@object.position.y}, #{@object.position.z}")
-        #console.log("eyeVector: ("+eyeVector.x+", "+eyeVector.y+", "+eyeVector.z+")")
-        
         #get cam up vector 
-        upVector = @object.up.clone()
-        leftVector = new THREE.Vector3(1,0,0)
+        cameraUpVector = @object.up.clone()
         
         #get actual pan vector: 
         #for x first (cam pan left/right)
-        panVector = eyeVector.clone().cross(upVector).setLength(mouseChange.x)#this works
+        leftVector= eyeVector.clone().cross(cameraUpVector)
+        #we then calculate the non local up vector
+        upVector = eyeVector.clone().cross(leftVector)
         
-        panVector.add( @object.up.clone().setLength( mouseChange.y ) )#not right
-        #panVector.add(eyeVector.clone().cross(leftVector).setLength(mouseChange.y))#not right
-        #console.log "test vect #{toto.x} #{toto.y} #{toto.z}"
+        #finally, scale both vectors according to mouse delta
+        vLeft = leftVector.normalize().multiplyScalar(mouseChange.x)
+        vUp = upVector.normalize().multiplyScalar(-mouseChange.y)
         
-        vector2dAngle= (vector)=>
-          if(vector.x != 0)
-            if vector.x > 0
-              return  Math.atan(vector.y/vector.x)
-            else
-              return Math.atan(vector.y/vector.x) - Math.PI
-          else
-            if vector.y > 0
-              return Math.PI/2 
-            else
-              return -Math.PI/2
+        panVector = new THREE.Vector3().addVectors(vLeft,vUp)
         
-        ###
-        #left/right vector
-        tmp1 = new THREE.Vector2(0,1)
-        tmp1 = new THREE.Vector2(panVector.x,panVector.y) 
-        
-        angDifUp = - (Math.PI/2.0) + vector2dAngle(tmp1)
-        angDelta = vector2dAngle(mouseChange)
-        
-        #Norm of the delta vector
-        normDelta = mouseChange.length()
-        newDelta = new THREE.Vector2(normDelta*Math.cos(angDelta+angDifUp),normDelta*Math.sin(angDelta+angDifUp))
-        
-        #console.log ("angDifUp #{angDifUp}, angDelta#{angDelta}, deltaNorm #{normDelta}, newDelta #{newDelta.x} #{newDelta.y}")
-        panVector = new THREE.Vector3(newDelta.x,newDelta.y,0)
-        ###
-        
-        console.log("pan vector: ("+panVector.x+", "+panVector.y+", "+panVector.z+")")
-        
-        
+        #console.log("pan vector: ("+panVector.x+", "+panVector.y+", "+panVector.z+")")
         
         pan = panVector
         @object.position.add pan
@@ -275,7 +225,6 @@ define (require) ->
         state = STATE.ZOOM
         zoomStart.set(event.clientX, event.clientY)
         
-
       document.addEventListener "mousemove", onMouseMove, false
       document.addEventListener "mouseup", onMouseUp, false
       
