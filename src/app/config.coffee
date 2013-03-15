@@ -72,6 +72,7 @@ require.config
     combo_cam:        "../assets/js/plugins/CombinedCamera"
     orbit_ctrl:       "../assets/js/plugins/OrbitControls"#"../assets/js/plugins/CustomOrbitControls"
     ### 
+    track_ctrl :      "../assets/js/plugins/three/TrackBallControls"
     CopyShader:       "../assets/js/plugins/three/CopyShader"
     EffectComposer:   "../assets/js/plugins/three/EffectComposer"
     RenderPass:       "../assets/js/plugins/three/RenderPass"
@@ -157,8 +158,10 @@ require.config
       exports : "Detector"
     stats:
       exports : "Stats"
-      
+    
     ### 
+    track_ctrl:
+      deps:    ["three"] 
     CopyShader:
       deps:    ["three"]
     EffectComposer:

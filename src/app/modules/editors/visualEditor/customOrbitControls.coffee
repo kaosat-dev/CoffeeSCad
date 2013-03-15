@@ -125,6 +125,9 @@ define (require) ->
       thetaDelta = 0
       phiDelta = 0
       #scale = 1;
+      @theta =theta
+      @phi = phi
+      
     
     @panCamera = ->
       mouseChange = _panEnd.clone().sub(_panStart)
@@ -133,13 +136,12 @@ define (require) ->
         #mouseChange.multiplyScalar( this.target.length() * this.panSpeed );
         mouseChange.multiplyScalar @panSpeed
         
-        #mouseChange.multiplyScalar( this.eye.length() * this.panSpeed );
         pan = @target.clone().cross(@object.up).setLength(mouseChange.x)
         pan.add @object.up.clone().setLength(mouseChange.y)
         pan2 = @object.up.clone()
         
         #console.log("up vector: ("+pan2.x+", "+pan2.y+", ",+pan2.z+")")
-        @object.matrixWorld.scale(pan2)
+        #@object.matrixWorld.scale(pan2)
         #@object.matrixWorld.multiplyVector3 pan2
         #Matrix4's .multiplyVector3() has been removed. Use vector.applyMatrix4( matrix ) or vector.applyProjection( matrix )
         
@@ -150,36 +152,65 @@ define (require) ->
         #             * and scale these two by mousechange values
         #             * 
         
+        #console.log("View angle : #{@theta} #{@phi}")
+        
         #get "eye vector" (ray from cam to target)
         eyeVector = @object.position.clone().sub(@target)
         
+        #console.log("Cam position: #{@object.position.x}, #{@object.position.y}, #{@object.position.z}")
+        #console.log("eyeVector: ("+eyeVector.x+", "+eyeVector.y+", "+eyeVector.z+")")
+        
         #get cam up vector 
         upVector = @object.up.clone()
+        leftVector = new THREE.Vector3(1,0,0)
         
+        #get actual pan vector: 
+        #for x first (cam pan left/right)
+        panVector = eyeVector.clone().cross(upVector).setLength(mouseChange.x)#this works
+        
+        panVector.add( @object.up.clone().setLength( mouseChange.y ) )#not right
+        #panVector.add(eyeVector.clone().cross(leftVector).setLength(mouseChange.y))#not right
+        #console.log "test vect #{toto.x} #{toto.y} #{toto.z}"
+        
+        vector2dAngle= (vector)=>
+          if(vector.x != 0)
+            if vector.x > 0
+              return  Math.atan(vector.y/vector.x)
+            else
+              return Math.atan(vector.y/vector.x) - Math.PI
+          else
+            if vector.y > 0
+              return Math.PI/2 
+            else
+              return -Math.PI/2
+        
+        ###
         #left/right vector
-        #var sideVector = new THREE.Vector3(1,0,0);
-        #var panVector = new THREE.Vector3(mouseChange.x,0,mouseChange.y).cross(eyeVector);
-        panVector = eyeVector.cross(upVector).setLength(mouseChange.x)
-        panVector.add upVector.setLength(mouseChange.y)
+        tmp1 = new THREE.Vector2(0,1)
+        tmp1 = new THREE.Vector2(panVector.x,panVector.y) 
         
-        #console.log("eyeVector: ("+eyeVector.x+", "+eyeVector.y+", ",+eyeVector.z+")");
-        #console.log("pan vector: ("+panVector.x+", "+panVector.y+", ",+panVector.z+")");
+        angDifUp = - (Math.PI/2.0) + vector2dAngle(tmp1)
+        angDelta = vector2dAngle(mouseChange)
+        
+        #Norm of the delta vector
+        normDelta = mouseChange.length()
+        newDelta = new THREE.Vector2(normDelta*Math.cos(angDelta+angDifUp),normDelta*Math.sin(angDelta+angDifUp))
+        
+        #console.log ("angDifUp #{angDifUp}, angDelta#{angDelta}, deltaNorm #{normDelta}, newDelta #{newDelta.x} #{newDelta.y}")
+        panVector = new THREE.Vector3(newDelta.x,newDelta.y,0)
+        ###
+        
+        console.log("pan vector: ("+panVector.x+", "+panVector.y+", "+panVector.z+")")
+        
+        
+        
         pan = panVector
         @object.position.add pan
         @target.add pan
         
         #console.log("mouse: ("+mouseChange.x+ ", "+ mouseChange.y +") Pan:("+pan.x+ ", " + pan.y + ", "+pan.z+")");
         _panStart = _panEnd
-        #
-        #            if ( _this.staticMoving ) {
-        #
-        #                _panStart = _panEnd;
-        #
-        #            } else {
-        #
-        #                _panStart.add( mouseChange.sub( _panEnd, _panStart ).multiplyScalar( _this.dynamicDampingFactor ) );
-        #
-        #            }
+
         
     @update_old = ->
       position = @object.position
@@ -217,6 +248,7 @@ define (require) ->
         @zoomCamera()
       if not @noPan 
         @panCamera()
+        
       @object.position.addVectors( @target, @eye)
       @object.lookAt(@target)
       
