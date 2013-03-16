@@ -27,27 +27,31 @@ define (require)->
       console.log @project
       start = new Date().getTime()
       
+      
       try
-        fullSource = @preProcessor.process(@project,false)
+        @preProcessor.process(@project,false).done( (fullSource) =>
+          @csgProcessor.processScript fullSource,@backgroundProcessing, (rootAssembly, partRegistry, error)=>
+            if error?
+              @project.trigger("compile:error",[error])
+              return
+            @project.bom = new Backbone.Collection()
+            for name,params of partRegistry
+              for param, quantity of params
+                variantName = "Default"
+                if param != ""
+                  variantName=""
+                @project.bom.add { name: name,variant:variantName, params: param,quantity: quantity, manufactured:true, included:true } 
+            
+            @project.rootAssembly = rootAssembly
+            end = new Date().getTime()
+            console.log "Csg computation time: #{end-start}"
+            @project.trigger("compiled",rootAssembly)
+        )
+        #fullSource = @preProcessor.process(@project,false)
       catch error
         @project.trigger("compile:error",[error])
         return
         
-      @csgProcessor.processScript fullSource,@backgroundProcessing, (rootAssembly, partRegistry, error)=>
-        if error?
-          @project.trigger("compile:error",[error])
-          return
-        @project.bom = new Backbone.Collection()
-        for name,params of partRegistry
-          for param, quantity of params
-            variantName = "Default"
-            if param != ""
-              variantName=""
-            @project.bom.add { name: name,variant:variantName, params: param,quantity: quantity, manufactured:true, included:true } 
-        
-        @project.rootAssembly = rootAssembly
-        end = new Date().getTime()
-        console.log "Csg computation time: #{end-start}"
-        @project.trigger("compiled",rootAssembly)
+      
 
   return  Compiler

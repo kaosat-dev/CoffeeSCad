@@ -50,16 +50,15 @@ define (require) ->
       @patternReplacers= []
       @includePattern = /(?!\s*?#)(?:\s*?include\s*?)(?:\(?\"([\w\//:'%~+#-.*]+)\"\)?)/g
       @processedSource = ""
-      
+      @results = []
+      @processedResult = mainFileCode
       @processIncludes(mainFileName, mainFileCode)
       
+     
       
       $.when.apply($, @patterReplaceDeferreds).done ()=>
-        console.log "tutu"
-        console.log @processedSource
-        @deferred.resolve("toto")
-        console.log "@processedSource: \n #{@processedSource}"    
-      
+        console.log @processedResult
+        @deferred.resolve(@processedResult)
       
       return @deferred.promise()
       ### 
@@ -75,16 +74,23 @@ define (require) ->
       matches = []
       match = @includePattern.exec(source)
       while match  
-        matches.push(match[1])
+        matches.push(match)
         match = @includePattern.exec(source)
       return matches
     
     processIncludes:(filename, source)=>
       @unresolvedIncludes.push(filename)
       
-      matches =  @_findMatches(source)     
+      ### currentFilePatternReplacers = []
+      localResult = source
+      $.when.apply($, currentFilePatternReplacers).done ()=>
+        console.log "Done with this file"
+        console.log localResult
+      ###
       
-      for includeEntry in matches
+      matches =  @_findMatches(source)     
+      for match in matches
+        includeEntry = match[1] 
         store = null
         projectName = null
         projectSubPath = null
@@ -104,7 +110,7 @@ define (require) ->
           else
             projectName = includeEntry
             
-        console.log("store: #{store}, project: #{projectName}, subpath: #{projectSubPath}")
+        #console.log("store: #{store}, project: #{projectName}, subpath: #{projectSubPath}")
         includeeFileName = fullIncludePath
         result = ""
         if includeeFileName in @unresolvedIncludes
@@ -114,17 +120,19 @@ define (require) ->
           try
             deferred = $.Deferred()
             @patternReplacers.push(deferred)
-            
             fetchResult = @fetch_data2(store,projectName,projectSubPath, deferred)
             $.when(fetchResult).then (fileContent)=>
-              source = source.replace(fullIncludePath, fileContent)
+              #source = source.replace(match[0], fileContent)
               #console.log "new source :\n #{source}"
+              #console.log "pattern to remove #{match[0]}"
+              @processedResult=@processedResult.replace(match[0], fileContent)
               @processIncludes(includeeFileName, fileContent)
+              
           catch error
             throw error
           @resolvedIncludes.push(includeeFileName)
       
-      @processedSource = source
+      @results.push(source)
       @unresolvedIncludes.splice(@unresolvedIncludes.indexOf(filename), 1)  
 
     fetch_data2:(store,project,path,deferred)=>

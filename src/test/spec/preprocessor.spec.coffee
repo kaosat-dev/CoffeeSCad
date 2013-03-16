@@ -5,6 +5,15 @@ define (require)->
   PreProcessor = require "modules/core/projects/preprocessor"
   BrowserStore = require "modules/stores/browser/browserStore"
   
+  checkDeferred=(df,fn) ->
+    callback = jasmine.createSpy()
+    df.then(callback)
+    waitsFor -> callback.callCount > 0
+    
+    runs -> 
+      #expect(callback).toHaveBeenCalled()
+      fn.apply @,callback.mostRecentCall.args if fn
+  
   
   describe "PreProcessor", ->
     project = null
@@ -15,13 +24,14 @@ define (require)->
         name:"TestProject"
       
       preprocessor = new PreProcessor()
-    ### 
+   
+    
     it 'throws an error if there is no correctly named main file',->
       project.addFile
         name:"NotTheRightName.coffee"
         content:""""""
       expect(()-> (preprocessor.process(project))).toThrow("Missing main file (needs to have the same name as the project containing it)")
-      
+    
     it 'can check for circular dependency issues and raise an exception',->
       project.addFile
         name:"TestProject.coffee"
@@ -34,7 +44,6 @@ define (require)->
         content:"""include ("TestProject.coffee")"""
         
       expect(()-> (preprocessor.process(project))).toThrow("Circular dependency detected from someOtherFile.coffee to TestProject.coffee")
-    
     
     it 'can emulate coffeescript function syntax (with or without parens) (as it is a "pseudo method") for includes',->
       project.addFile
@@ -49,21 +58,10 @@ define (require)->
       testVariable = 42
       
       """
-      obsPreprocessedSource = preprocessor.process(project) 
-      expect(obsPreprocessedSource).toBe(expPreProcessedSource)
+      checkDeferred $.when(preprocessor.process(project)), (obsPreprocessedSource) =>
+        expect(obsPreprocessedSource).toBe(expPreProcessedSource)
       
-      
-      project.addFile
-        name:"TestProject.coffee"
-        content:"""include "config.coffee" """
-      project.addFile
-        name:"config.coffee"
-        content:"""testVariable = 42"""  
-      
-      obsPreprocessedSource = preprocessor.process(project) 
-      expect(obsPreprocessedSource).toBe(expPreProcessedSource)
-      
-      
+    
     it 'can process file includes from the current project',->
       project.addFile
         name:"TestProject.coffee"
@@ -81,8 +79,7 @@ define (require)->
       mainVariable = testVariable+2
       """
       
-      obsPreprocessedSource = preprocessor.process(project)
-      expect(obsPreprocessedSource).toBe(expPreProcessedSource)
+      
       
       
     it 'can process file includes from another project (browserStore) single level',->
@@ -114,9 +111,10 @@ define (require)->
       mainVariable = testVariable+2
       """
       
-      obsPreprocessedSource = preprocessor.process(project)
-      expect(obsPreprocessedSource).toBe(expPreProcessedSource)
-    ###
+      checkDeferred $.when(preprocessor.process(project)), (obsPreprocessedSource) =>
+        expect(obsPreprocessedSource).toBe(expPreProcessedSource)
+      
+      
     
     it 'can process file includes from another project (browserStore) multi level',->
       project.addFile
@@ -147,15 +145,17 @@ define (require)->
       
       testVariable = 42
       
-      secondLevelIncludeVar = 24
       otherProjectVariable = 666
+      secondLevelIncludeVar = 24
+      
+      
       
       mainVariable = testVariable+2
       """
       
-      obsPreprocessedSource = preprocessor.process(project)
-      expect(obsPreprocessedSource).toBe(expPreProcessedSource)
-    
+      checkDeferred $.when(preprocessor.process(project)), (obsPreprocessedSource) =>
+        expect(obsPreprocessedSource).toBe(expPreProcessedSource)
+
     ###
     it 'can process project includes',->
       project.addFile
