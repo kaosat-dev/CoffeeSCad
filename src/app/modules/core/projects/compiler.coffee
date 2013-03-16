@@ -23,13 +23,14 @@ define (require)->
       if @project is null
         throw new Error("No project given to the compiler")
         
-      console.log "compiling"
-      console.log @project
-      start = new Date().getTime()
-      
       
       try
-        @preProcessor.process(@project,false).done( (fullSource) =>
+        $.when(@preProcessor.process(@project,false)).then (fullSource) =>
+          console.log "compiling"
+          console.log @project
+          start = new Date().getTime()
+          console.log "here"
+        #@preProcessor.process(@project,false).done( (fullSource) =>
           @csgProcessor.processScript fullSource,@backgroundProcessing, (rootAssembly, partRegistry, error)=>
             if error?
               @project.trigger("compile:error",[error])
@@ -46,7 +47,7 @@ define (require)->
             end = new Date().getTime()
             console.log "Csg computation time: #{end-start}"
             @project.trigger("compiled",rootAssembly)
-        )
+        
         #fullSource = @preProcessor.process(@project,false)
       catch error
         @project.trigger("compile:error",[error])

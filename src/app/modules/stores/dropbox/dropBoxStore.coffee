@@ -284,6 +284,7 @@ define (require)->
         onProjectLoaded=()=>
           thumbNailFile = project.rootFolder.get(".thumbnail.png")
           project.rootFolder.remove(thumbNailFile)
+          project._clearFlags()
           if not silent
             @vent.trigger("project:loaded",project)
           d.resolve(project)

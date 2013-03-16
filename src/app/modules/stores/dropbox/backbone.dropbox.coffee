@@ -5,7 +5,7 @@ define (require)->
   Dropbox = require "dropbox"
   
   class DropBoxStorage
-    constructor:(debug=true)->
+    constructor:(debug=false)->
       @debug = debug
       @client=null
       

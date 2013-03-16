@@ -7,19 +7,21 @@ define (require) ->
   class PreProcessor
     #dependency resolving solved with the help of http://www.electricmonk.nl/docs/dependency_resolving_algorithm/dependency_resolving_algorithm.html
     constructor:()->
+      @debug = null
       @project = null
-      @lintErrors = []
+      
       @resolvedIncludes = []
       @unresolvedIncludes = []
+      
+      @lintErrors = []
     
     _localSourceFetchHandler:([store,project,path,deferred])=>
       #console.log "handler recieved #{store}/#{project}/#{path}"
       result = ""
       if not project? and path?
-        console.log "will fetch #{path} from local (current project) namespace"
+        if @debug
+          console.log "will fetch #{path} from local (current project) namespace"
         shortName = path
-        #console.log "proj"
-        #console.log @project
         file = @project.rootFolder.get(shortName)
         result = file.content
         result = "\n#{result}\n"
@@ -44,29 +46,19 @@ define (require) ->
       
       reqRes.addHandler("getlocalFileOrProjectCode",@_localSourceFetchHandler)
       
-      #@currentTokenIndex = 0
-      #@replacementTokenPattern = "_%$%$%$%$_"
       @deferred = $.Deferred()
       @patternReplacers= []
       @includePattern = /(?!\s*?#)(?:\s*?include\s*?)(?:\(?\"([\w\//:'%~+#-.*]+)\"\)?)/g
-      @processedSource = ""
-      @results = []
       @processedResult = mainFileCode
+      
       @processIncludes(mainFileName, mainFileCode)
       
-     
-      
-      $.when.apply($, @patterReplaceDeferreds).done ()=>
-        console.log @processedResult
+      $.when.apply($, @patternReplacers).done ()=>
+        if coffeeToJs
+          @processedResult = CoffeeScript.compile(@processedResult, {bare: true})
         @deferred.resolve(@processedResult)
       
       return @deferred.promise()
-      ### 
-      if coffeeToJs
-        result = CoffeeScript.compile(result, {bare: true})
-      return result
-      ###
-    
     
     _findMatches:(source)=>
       source = source or ""
@@ -80,14 +72,7 @@ define (require) ->
     
     processIncludes:(filename, source)=>
       @unresolvedIncludes.push(filename)
-      
-      ### currentFilePatternReplacers = []
-      localResult = source
-      $.when.apply($, currentFilePatternReplacers).done ()=>
-        console.log "Done with this file"
-        console.log localResult
-      ###
-      
+     
       matches =  @_findMatches(source)     
       for match in matches
         includeEntry = match[1] 
@@ -120,11 +105,8 @@ define (require) ->
           try
             deferred = $.Deferred()
             @patternReplacers.push(deferred)
-            fetchResult = @fetch_data2(store,projectName,projectSubPath, deferred)
+            fetchResult = @_fetch_data(store,projectName,projectSubPath, deferred)
             $.when(fetchResult).then (fileContent)=>
-              #source = source.replace(match[0], fileContent)
-              #console.log "new source :\n #{source}"
-              #console.log "pattern to remove #{match[0]}"
               @processedResult=@processedResult.replace(match[0], fileContent)
               @processIncludes(includeeFileName, fileContent)
               
@@ -132,81 +114,13 @@ define (require) ->
             throw error
           @resolvedIncludes.push(includeeFileName)
       
-      @results.push(source)
       @unresolvedIncludes.splice(@unresolvedIncludes.indexOf(filename), 1)  
 
-    fetch_data2:(store,project,path,deferred)=>
+    _fetch_data:(store,project,path,deferred)=>
       #console.log "fetching data from Store: #{store}, project: #{project}, path: #{path}"
       try
         fileOrProjectRequest = "#{store}/#{project}/#{path}"
         if store is null then prefix = "local" else prefix = store
-        reqRes.request("get#{prefix}FileOrProjectCode",[store, project, path, deferred])
-        result = deferred.promise()
-        return result
-      catch error
-        console.log "error: #{error}"
-        throw new Error("#{path} : No such file or directory")
-      
-    processIncludes_:(filename, source)=>
-      #FIXME: as now all stores return deferreds/callbacks , the code here to fetch data should be CHANGED accordingly
-      
-      #finds all matches of "include xxx", and fetches the corresponding text 
-      #console.log "processing #{filename}"
-      #console.log "@unresolvedIncludes : #{@unresolvedIncludes.join(' ')}"
-      @unresolvedIncludes.push(filename)
-      
-      source = source or ""
-      source = source.replace /(?!\s*?#)(?:\s*?include\s*?)(?:\(?\"([\w\//:'%~+#-.*]+)\"\)?)/g, (match,matchInner) =>
-        #console.log "Matched : #{matchInner}"
-        includeFull = matchInner.toString()
-        store = null
-        projectName = null
-        projectSubPath = null
-        fileInclude = false
-        
-        if includeFull.indexOf(':') != -1
-          storeComponents = includeFull.split(':')
-          store = storeComponents[0]
-          includeFull = storeComponents[1]
-          
-        if includeFull.indexOf('/') != -1
-          fullPath = includeFull.split('/')
-          projectName = fullPath[0]
-          projectSubPath = fullPath[1..fullPath.length].join('/')
-          
-        else
-          if includeFull.indexOf('.') != -1 or includeFull.indexOf('.') == 0
-            projectSubPath = includeFull#we have a dot -> we have a file
-          else
-            projectName = includeFull
-        #console.log("store: #{store}, project: #{projectName}, subpath: #{projectSubPath}")
-        includeeFileName = projectSubPath
-        #includeeFileName = projectSubPath.split(".")[0]
-        result = ""
-        if includeeFileName in @unresolvedIncludes
-          throw new Error("Circular dependency detected from #{filename} to #{includeeFileName}")
-        if not (includeeFileName in @resolvedIncludes)
-          try
-          
-            fetchResult = @fetch_data(store,projectName,projectSubPath)
-            $.when(fetchResult).then (fileContent)=>
-              result = @processIncludes(includeeFileName, fileContent)
-          catch error
-            throw error
-          @resolvedIncludes.push(includeeFileName)
-        console.log "result"
-        console.log result
-        return result
-        
-      @unresolvedIncludes.splice(@unresolvedIncludes.indexOf(filename), 1)  
-      return source
-    
-    fetch_data:(store,project,path)=>
-      #console.log "fetching data from Store: #{store}, project: #{project}, path: #{path}"
-      try
-        fileOrProjectRequest = "#{store}/#{project}/#{path}"
-        if store is null then prefix = "local" else prefix = store
-        deferred = $.Deferred()
         reqRes.request("get#{prefix}FileOrProjectCode",[store, project, path, deferred])
         result = deferred.promise()
         return result

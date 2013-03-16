@@ -150,6 +150,14 @@ define (require)->
       file.on("save",@_onFileSaved)
       file.on("destroy",@_onFileDestroyed)
       
+    _clearFlags:=>
+      #used to reset project into a "neutral" state (no save and compile required)
+      for file in @rootFolder.models
+        file.isSaveAdvised = false
+        file.isCompileAdvised = false
+      @isSaveAdvised = false
+      @isCompileAdvised = false
+      
     _onCompiled:=>
       @compiler.project = null
       @isCompileAdvised = false
@@ -183,6 +191,8 @@ define (require)->
       
       for file in @rootFolder.models
         @_setupFileEventHandlers(file)
+        
+      @_clearFlags()
     
     _onFileSaved:(fileName)=>
       @lastModificationDate = new Date()
