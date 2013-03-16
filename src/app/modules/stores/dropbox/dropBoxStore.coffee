@@ -357,7 +357,7 @@ define (require)->
           result = file.content
           result = result.replace /(?!\s*?#)(?:\s*?include\s*?)(?:\(?\"([\w\//:'%~+#-.*]+)\"\)?)/g, (match,matchInner) =>
             includeFull = matchInner.toString()
-            return """\ninclude("dropbox:/#{projectName}/#{includeFull}")\n"""
+            return """\ninclude("dropbox:#{projectName}/#{includeFull}")\n"""
             
           result = "\n#{result}\n"
           deferred.resolve(result)

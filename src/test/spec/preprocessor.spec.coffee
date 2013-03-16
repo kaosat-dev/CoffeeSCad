@@ -15,7 +15,7 @@ define (require)->
         name:"TestProject"
       
       preprocessor = new PreProcessor()
-    
+    ### 
     it 'throws an error if there is no correctly named main file',->
       project.addFile
         name:"NotTheRightName.coffee"
@@ -116,6 +116,7 @@ define (require)->
       
       obsPreprocessedSource = preprocessor.process(project)
       expect(obsPreprocessedSource).toBe(expPreProcessedSource)
+    ###
     
     it 'can process file includes from another project (browserStore) multi level',->
       project.addFile

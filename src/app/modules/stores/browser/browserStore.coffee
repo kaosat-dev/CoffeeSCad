@@ -279,7 +279,7 @@ define (require)->
       #This method handles project/file content requests and returns appropriate data
       if store != "browser"
         return null
-      console.log "handler recieved #{store}/#{projectName}/#{path}"
+      #console.log "handler recieved #{store}/#{projectName}/#{path}"
       result = ""
       if not projectName? and path?
         shortName = path
@@ -314,9 +314,10 @@ define (require)->
           result = file.content
           result = result.replace /(?!\s*?#)(?:\s*?include\s*?)(?:\(?\"([\w\//:'%~+#-.*]+)\"\)?)/g, (match,matchInner) =>
             includeFull = matchInner.toString()
-            return """\ninclude("browser:/#{projectName}/#{includeFull}")\n"""
-          
+            return """\ninclude("browser:#{projectName}/#{includeFull}")\n"""
           result = "\n#{result}\n"
+          #console.log "browserStore returning #{result}"
+          
           deferred.resolve(result)
         @loadProject(projectName,true).done(getContent)
       
