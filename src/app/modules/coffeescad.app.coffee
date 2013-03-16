@@ -58,6 +58,7 @@ define (require)->
       $(window).bind('beforeunload',@onAppClosing)
       @vent.on("app:started", @onAppStarted)
       @vent.on("settings:show", @onSettingsShow)
+      @vent.on("project:loaded", @onProjectLoaded)
       
       #handle exporters initialization
       for name, exporter of @exporters

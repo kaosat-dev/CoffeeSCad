@@ -3,8 +3,8 @@ define (require)->
   _ = require 'underscore'
   require 'bootstrap'
   marionette = require 'marionette'
+  modelBinder = require 'modelbinder'
   
-  vent = require 'modules/core/vent'
   reqRes = require 'modules/core/reqRes'
   
   bomExporterTemplate =  require "text!./bomExporter.tmpl"
@@ -24,34 +24,26 @@ define (require)->
       
     constructor:(options)->
       super options
-      @vent = vent
-      @vent.on("project:new",     ()->@ui.exportButton.addClass "disabled") 
-      @vent.on("project:compiled",()->@ui.exportButton.removeClass "disabled")
+      @modelBinder = new Backbone.ModelBinder()
+      @bindings = 
+        compiled: [{selector: '#bomExportBtn', elAttribute: 'disabled', converter:=>return (not @model.isCompiled)} ]
     
     onExport:->
-      vent.trigger("export:bom")
-      exportUrl = reqRes.request("bomExportUrl")
-      
-      if exportUrl != null
-        fileName = @model.get("name")
-        @ui.exportButton.prop("download", "#{@ui.fileNameinput.val()}")
-        @ui.exportButton.prop("href", exportUrl)
-        
+      if @model.isCompiled
+        exportUrl = reqRes.request("bomExportUrl")
+        if exportUrl != null
+          fileName = @model.get("name")
+          @ui.exportButton.prop("download", "#{@ui.fileNameinput.val()}")
+          @ui.exportButton.prop("href", exportUrl)
+     
     onRender:->
-      if @model.get("compiled")
-          @ui.exportButton.removeClass "disabled"
-      
+      @modelBinder.bind(@model, @el, @bindings)
       bomPartListView = new BomPartListView
-        collection: @model.bom#@model.get("partsCollection")
+        collection: @model.bom
       @partsList.show bomPartListView
-        
-    
-    onClose:->
-      #todo: how to remove event handler correctly for anonymous functions?
-      #@vent.off("project:new")
-      #@vent.off("project:compiled")
-      
-    #serializeData: ()->
-    #  null
+          
+    onClose:=>
+      @modelBinder.unbind()
+
         
   return BomExporterView
