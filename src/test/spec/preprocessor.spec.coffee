@@ -11,7 +11,6 @@ define (require)->
     waitsFor -> callback.callCount > 0
     
     runs -> 
-      #expect(callback).toHaveBeenCalled()
       fn.apply @,callback.mostRecentCall.args if fn
   
   

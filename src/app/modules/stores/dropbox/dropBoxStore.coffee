@@ -45,8 +45,6 @@ define (require)->
     constructor:(options)->
       super options
       @store = new backbone_dropbox()
-      console.log "backbone dropbox store"
-      console.log @store
       @isLogginRequired = true
       @vent = vent
       @vent.on("dropBoxStore:login", @login)
@@ -126,9 +124,9 @@ define (require)->
           if error
             console.log ("error")
           else
-            console.log "@projectsList"
+            #console.log "@projectsList"
             @projectsList = entries
-            console.log entries
+            #console.log entries
             callback(entries)
     
     getProject:(projectName)=>

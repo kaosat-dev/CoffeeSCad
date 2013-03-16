@@ -3,6 +3,16 @@ define (require)->
   _ = require 'underscore'
   Project = require "modules/core/projects/project"
   
+  
+  checkDeferred=(df,fn) ->
+    callback = jasmine.createSpy()
+    errback = jasmine.createSpy()
+    df.then(callback, errback)
+    waitsFor -> callback.callCount > 0
+    runs -> 
+      fn.apply @,callback.mostRecentCall.args if fn
+      expect(errback).not.toHaveBeenCalled()
+  
   describe "Project ", ->
     project = null
     compiler = null
@@ -28,7 +38,7 @@ define (require)->
       
     it 'compiles the contents of its files into an assembly of parts', ->
       project.addFile
-        name:"toto.coffee"
+        name:"Project.coffee"
         content:"""
         class TestPart extends Part
           constructor:(options) ->
@@ -38,34 +48,30 @@ define (require)->
         testPart = new TestPart()
         assembly.add(testPart)
         """
-      compiledCallback = jasmine.createSpy('-compileEventCallback-')
-      project.on("compiled", compiledCallback)
-      spy = spyOn(project,"compile")
+      checkDeferred $.when(project.compile()), (assembly) =>
+        expect(project.rootAssembly.children[0].polygons.length).toBe(9)
       
-      project.compile()
-      console.log spy.mostRecentCall.args
-      
-      
-      args = compiledCallback.mostRecentCall.args
-      expect(args).toBeDefined()
-      ###console.log args
-      #spy = spyOn(event
-      console.log project
-      expect(project.rootAssembly.children[0].polygons.length).toBe(9)###
    
     it 'generates bom data when compiling',->
       project.addFile
-        name:"test_project"
+        name:"Project.coffee"
         content:"""
+        class SubPart extends Part
+          constructor:(options)->
+            super options
+          
         class TestPart extends Part
           constructor:(options) ->
             super options
             @union(new Cylinder(h:300, r:20,$fn:3))
+            @add(new SubPart())
+            @add(new SubPart()) 
         
         testPart = new TestPart()
         assembly.add(testPart)
         """
       project.compile()
+      ###
       expBom = new Backbone.Collection()
       expPart = new Backbone.Model
         included: true
@@ -74,8 +80,11 @@ define (require)->
         params: ""
         quantity: 2
         variant: "Default"
-      expBom.add  expPart
-      expect(JSON.stringify(project.bom)).toEqual('[{"name":"TestPart","variant":"Default","params":"","quantity":2,"manufactured":true,"included":true}]')
+      expBom.add  expPart###
+      
+      checkDeferred $.when(project.compile()), (assembly) =>
+        expect(JSON.stringify(project.bom)).toEqual('[{"name":"TestPart","variant":"Default","params":"","quantity":1,"manufactured":true,"included":true},{"name":"SubPart","variant":"Default","params":"","quantity":2,"manufactured":true,"included":true}]')
+    
       
     it 'is marked as "dirty" when one of its files gets modified', ->
       expect(project.isCompileAdvised).toBe(false)
@@ -86,6 +95,7 @@ define (require)->
           constructor:(options) ->
             super options
             @union(new Cylinder(h:300, r:20,$fn:3))
+        
         
         testPart = new TestPart()
         assembly.add(testPart)

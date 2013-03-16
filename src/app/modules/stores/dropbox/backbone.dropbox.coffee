@@ -36,39 +36,40 @@ define (require)->
           d.resolve(error)
       return d.promise()
       
-    formatError:(error)->
+    formatError:(error, deferred)->
+      error = null
       switch error.status
         when 401
           # If you're using dropbox.js, the only cause behind this error is that
           # the user token expired.
           # Get the user through the authentication flow again.
-          return new Error("DropBox token expired") 
+          error = new Error("DropBox token expired") 
         when 404 
           # The file or folder you tried to access is not in the user's Dropbox.
           # Handling this error is specific to your application.
-          return new Error("Failed to find the specified file or folder") 
+          error = new Error("Failed to find the specified file or folder") 
         when 507 
           # The user is over their Dropbox quota.
           # Tell them their Dropbox is full. Refreshing the page won't help.
-          return new Error("Dropbox quota exceeded") 
+          error = new Error("Dropbox quota exceeded") 
         when 503 
           # Too many API requests. Tell the user to try again later.
           # Long-term, optimize your code to use fewer API calls.
-          return new Error("Dropbox: too many requests") 
+          error = new Error("Dropbox: too many requests") 
         when 400  
-          return new Error("Dropbox: bad input parameter") 
+          error = new Error("Dropbox: bad input parameter") 
           # Bad input parameter
         when 403  
           # Bad OAuth request.
-          return new Error("Dropbox: bad oauth request") 
+          error = new Error("Dropbox: bad oauth request") 
         when 405 
           # Request method not expected
-          return new Error("Dropbox: unexpected request method") 
+          error = new Error("Dropbox: unexpected request method") 
         else
-          return new Error("Dropbox: uknown error") 
+          error = new Error("Dropbox: uknown error") 
           # Caused by a bug in dropbox.js, in your application, or in Dropbox.
           # Tell the user an error occurred, ask them to refresh the page.
-    
+      deferred.reject(error)
     
     sync:(method, model, options)=>
       switch method
@@ -202,30 +203,33 @@ define (require)->
       d = $.Deferred()
       @client.remove name, (error, userInfo)=>
         if error
-          return @formatError(error)
+          @formatError(error,d)
         console.log "removed #{name}"
         d.resolve()
       return d.promise()
         
     writeFile:(name, content)->
+      d = $.Deferred()
       @client.writeFile name, content, (error, stat) =>
         if error
-          return @formatError(error)
+          @formatError(error,d)
         if @debug
           console.log "writen file #{name} with content #{content}"
           console.log ("File saved as revision " + stat.versionTag)
+        d.resolve()
+      return d.promise()
         
     createFolder:(name)->
       @client.mkdir name, (error,stat) =>
         if error
-          return @formatError(error)  
+          @formatError(error,d)  
         console.log "folder create ok"
     
     move:(fromPath, toPath)=>
       d = $.Deferred()
       @client.move fromPath, toPath, (error)=>
         if error
-          return @formatError(error)
+          @formatError(error,d)
         d.resolve()
       return d.promise()
         
@@ -233,7 +237,7 @@ define (require)->
       d = $.Deferred()
       @client.readdir path, (error, entries)=>
         if error
-          return @formatError(error)
+          @formatError(error,d)
         d.resolve entries
       return d.promise()
         
@@ -241,7 +245,7 @@ define (require)->
       d = $.Deferred()
       @client.readFile path, (error, data)=>
         if error
-          return @formatError(error)
+          @formatError(error,d)
         d.resolve data
       return d.promise()
     
@@ -250,7 +254,7 @@ define (require)->
       d = $.Deferred()
       @client.findByName path,name, (error, data)=>
         if error
-          return @formatError(error)
+          @formatError(error,d)
         console.log "found data #{data}"
         d.resolve(data)
       return d.promise()

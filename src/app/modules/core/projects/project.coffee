@@ -138,7 +138,7 @@ define (require)->
       if not @compiler?
         throw new Error("No compiler specified")
       @compiler.project = @
-      @compiler.compile(options)
+      return @compiler.compile(options)
       
     _addFile:(file)=>
       @rootFolder.add file
