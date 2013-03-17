@@ -137,6 +137,7 @@ define (require)->
     onProjectSaved:()=>
       if @settings.get("csgCompileMode") is "onSave"
         @compileProject()
+      @memoizeCurrentProject()
     
     onProjectCompiled:=>
       @vent.trigger("project:compiled")
@@ -228,7 +229,29 @@ define (require)->
       @project=project
       @project.compiler = @compiler
       @_setupProjectEventHandlers()
+      @memoizeCurrentProject()
       
+    memoizeCurrentProject:=>
+      #store current project name + storage, to be able to auto reload it
+      if @project.dataStore?
+        console.log "Saving project"
+        localStorage.setItem("coffeescad_lastProjectStore",@project.dataStore.name)  
+        localStorage.setItem("coffeescad_lastProjectName",@project.name)
+      
+    reloadLast:=>
+      if @settings.get("autoReloadLastProject") is true
+        #attempt to auto reload last project
+        lastProjectName = localStorage.getItem("coffeescad_lastProjectName")
+        if lastProjectName?
+          storeName = localStorage.getItem("coffeescad_lastProjectStore")
+          storeName = storeName.replace("Store","")
+          console.log storeName
+          console.log "please reload last project: #{lastProjectName} from #{storeName}"
+          @stores[storeName].loadProject(lastProjectName)
+          loadProj= =>
+            @stores[storeName].loadProject(lastProjectName)
+        
+        
       
   return ProjectManager
   

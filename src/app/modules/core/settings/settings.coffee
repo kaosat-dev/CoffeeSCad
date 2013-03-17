@@ -66,6 +66,8 @@ define (require)->
       csgCompileDelay: 1.0
       csgBackgroundProcessing: false
       
+      autoReloadLastProject : false
+      
       maxRecentFilesDisplay:  5
       theme: "slate"
       

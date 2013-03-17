@@ -19,9 +19,6 @@ define (require)->
       
       d = $.Deferred()
       @client.authenticate (error, client)=>
-        console.log "in auth"
-        console.log error
-        console.log client
         if error?
           d.reject(@formatError(error))
         d.resolve(error)

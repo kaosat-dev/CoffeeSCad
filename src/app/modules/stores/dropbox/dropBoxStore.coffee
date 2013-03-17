@@ -44,6 +44,8 @@ define (require)->
     
     constructor:(options)->
       super options
+      @debug = true
+      
       @store = new backbone_dropbox()
       @isLogginRequired = true
       @vent = vent
@@ -67,6 +69,7 @@ define (require)->
           localStorage.setItem("dropboxCon-auth",true)
           @loggedIn = true
           @vent.trigger("dropBoxStore:loggedIn")
+          
         onLoginFailed=(error)=>
           throw error
           
@@ -124,10 +127,9 @@ define (require)->
           if error
             console.log ("error")
           else
-            #console.log "@projectsList"
             @projectsList = entries
-            #console.log entries
-            callback(entries)
+            if callback?
+              callback(entries)
     
     getProject:(projectName)=>
       #console.log "locating #{projectName} in @projectsList"
@@ -154,7 +156,9 @@ define (require)->
       
             
     getThumbNail:(projectName)=>
-      
+    
+    checkProjectExists:(projectName)=>
+      return @store._readDir "/#{projectName}/"
     
     createProject:(fileName)=>
       #project = @lib.create(options)
@@ -293,9 +297,13 @@ define (require)->
         project.rootFolder.path = projectName
         
         project.rootFolder.fetch().done(onProjectLoaded)
-        
       else
-        d.fail(new Error("Project #{projectName} not found")) 
+        @checkProjectExists(projectName)
+        .fail(()=>d.fail(new Error("Project #{projectName} not found")))
+        .done ()=>
+          @projectsList.push(projectName)
+          @loadProject(projectName)
+        
       return d
         
     deleteProject:(projectName)=>

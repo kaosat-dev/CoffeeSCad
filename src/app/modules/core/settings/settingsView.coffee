@@ -131,12 +131,20 @@ define (require)->
           maxRecentFilesDisplay: 
             type:'Number'
             title: 'Max recent files to display'
+          
+          autoReloadLastProject:
+            type:'Checkbox'
+            title: 'Reload last project on application start'
+            
           theme:
             type:'Select'
             options : ["slate", "spacelab"]
         options.fieldsets=[
           "legend": "CSG compiling settings"
           "fields": ["csgCompileMode","csgCompileDelay","csgBackgroundProcessing"]
+        ,
+          "legend": "Save and load"
+          "fields":["autoReloadLastProject"]
         , 
           "legend":"Other settings"
           "fields": ["maxRecentFilesDisplay","theme"]

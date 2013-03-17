@@ -55,6 +55,9 @@ define (require)->
       @lib.localStorage = new Backbone.LocalStorage(@storeURI)
       @projectsList = []
       
+      #TODO: should this be here ? ie this preloads all projects, perhaps we could lazy load?
+      @lib.fetch()
+      
       #handler for project/file data fetch requests
       reqRes.addHandler("getbrowserFileOrProjectCode",@_sourceFetchHandler)
       
@@ -76,7 +79,6 @@ define (require)->
           projectsList = []
         @projectsList = projectsList
         #kept for now
-        @lib.fetch()
         ### 
         projectNames = []
         for model in @lib.models
