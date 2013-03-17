@@ -40,6 +40,16 @@ define (require)->
       #TODO: these are commands, not events
       @vent.on("file:undoRequest", @undo)
       @vent.on("file:redoRequest", @redo)
+      
+      #hack to fix annoying resize bug
+      @vent.on("codeMirror:refresh",@onRefreshRequested)
+    
+    onRefreshRequested:(newHeight)=>
+      #elHeight
+      @editor.refresh()
+      console.log @editor
+      @editor.setSize("100%",newHeight)#"100%")
+      @editor.refresh()
     
     onFileSelected:(model)=>
       if model == @model

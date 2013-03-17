@@ -118,6 +118,11 @@ textarea:focus, input:focus{
 
 /*BOOTSTRAP CHANGES*/
 
+
+.tab-pane active
+{
+	height: 100%!important;
+}
 /*popovers*/
 .popover
 {
@@ -363,7 +368,6 @@ ui-icon ui-icon-closethick .ui-state-hover
   	right: 0;
 	/*height: auto;*/
 	width:	100%;
-	height: 100%;
 	
 }
 

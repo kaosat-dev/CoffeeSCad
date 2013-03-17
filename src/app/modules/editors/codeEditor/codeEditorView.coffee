@@ -69,10 +69,14 @@ define (require)->
       
       #FIXME:horrible hackery to get the different elements to resize correctly
       elHeight= elHeight-150
-      $(".CodeMirror").height(elHeight)
-      $(".tab-pane active").height(elHeight)
+      #$(".CodeMirror").height(elHeight)
+      #$(".tab-pane active").height(elHeight)
+      $(".tab-pane active").height("100%")
       $(".tab-pane").height(elHeight)
-      $(".CodeMirror-scroll").height(elHeight)
+      #$(".CodeMirror-scroll").height(elHeight)
+      
+      #hack
+      vent.trigger("codeMirror:refresh",elHeight)
 
     onRender:=>
       #show files tree
