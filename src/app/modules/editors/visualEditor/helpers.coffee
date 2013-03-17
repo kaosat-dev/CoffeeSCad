@@ -28,15 +28,42 @@ define (require) ->
       spriteMaterial = new THREE.SpriteMaterial
          map: texture
          transparent:true
-         #alphaTest: 0.5
+         alphaTest: 0.5
          #alignment: THREE.SpriteAlignment.topLeft,
          useScreenCoordinates: false
          scaleByViewport:false
          color: 0xffffff
       sprite = new THREE.Sprite(spriteMaterial)
-      sprite.scale.set( size, size, 1 )
+      sprite.scale.set( size/4, size/4, size/4 )
       return sprite
+    
+    drawTextOnPlane:(text, size=256)=>
+      #unlike a sprite, does not orient itself to face the camera
+      #also, no snakes here
+      canvas = document.createElement('canvas')
+      canvas.width = size
+      canvas.height = size
+      context = canvas.getContext('2d')
+      context.font = "17px sans-serif"
+      context.textAlign = 'center'
+      context.fillStyle = @textColor
+      context.fillText(text, canvas.width/2, canvas.height/2)
+     
+      context.strokeStyle = @textColor
+      context.strokeText(text, canvas.width/2, canvas.height/2)
       
+      texture = new THREE.Texture(canvas)
+      texture.needsUpdate = true
+      
+      material = new THREE.MeshBasicMaterial
+        map: texture
+        transparent: true 
+      
+      plane = new THREE.Mesh(new THREE.PlaneGeometry(size/8, size/8),material)
+      plane.doubleSided = true
+      plane.overdraw = true
+      return plane
+    
     drawText2:(text)=>
       helpersColor = @settings.get("helpersColor")
       if helpersColor.indexOf "0x" == 0
@@ -119,9 +146,9 @@ define (require) ->
     constructor:(options)->
       super options
       
-      defaults = {size:1000, step:100, color:0xFFFFFF, opacity:0.1}
+      defaults = {size:1000, step:100, color:0xFFFFFF, opacity:0.1, addText:true, textColor:"#FFFFFF"}
       options = merge defaults, options
-      {@size, @step, @color, @opacity} = options
+      {@size, @step, @color, @opacity, @addText, @textColor} = options
       
       gridGeometry = new THREE.Geometry()
       gridMaterial = new THREE.LineBasicMaterial
@@ -130,6 +157,8 @@ define (require) ->
         linewidth:2
         transparent:true
       
+      @labels = new THREE.Object3D()
+      
       for i in [-@size/2..@size/2] by @step
         gridGeometry.vertices.push(new THREE.Vector3(-@size/2, i, 0))
         gridGeometry.vertices.push(new THREE.Vector3(@size/2, i, 0))
@@ -137,8 +166,22 @@ define (require) ->
         gridGeometry.vertices.push(new THREE.Vector3(i, -@size/2, 0))
         gridGeometry.vertices.push(new THREE.Vector3(i, @size/2, 0))
         
+        #Add size labeling
+        sizeLabel=@drawTextOnPlane("#{i}",32)
+        sizeLabel2 =sizeLabel.clone() #for other direction labeling
+        sizeLabel.rotation.z=Math.PI/2
+        sizeLabel.position.set(i,0,0.1)
+        @labels.add(sizeLabel)
+        if i != 0 
+          #don't draw 0 twice
+          sizeLabel2.position.set(0,i,0.1)
+          @labels.add(sizeLabel2)
+        
       @mainGrid = new THREE.Line(gridGeometry, gridMaterial, THREE.LinePieces)
       
+      @mainGrid.add(@labels)
+      for label in @labels.children
+        label.visible = @addText
       
       subGridGeometry = new THREE.Geometry()
       subGridMaterial = new THREE.LineBasicMaterial({ color: new THREE.Color().setHex(@color), opacity: @opacity/2 ,transparent:true})
@@ -213,6 +256,11 @@ define (require) ->
        @color = color 
        @mainGrid.material.color = new THREE.Color().setHex(@color)
        @subGrid.material.color = new THREE.Color().setHex(@color)
+     
+     toggleText:(toggle)=>
+       @addText = toggle
+       for label in @labels.children
+        label.visible = toggle
       
       
   class BoundingCage extends BaseHelper

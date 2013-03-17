@@ -54,6 +54,7 @@ define (require) ->
         return @makeScreeshot()
       
       ##########
+      @defaultCameraPosition = new THREE.Vector3(100,100,200)
       @width = window.innerWidth
       @height = window.innerHeight-10
       @init()
@@ -181,6 +182,8 @@ define (require) ->
           when "gridOpacity"
             if @grid?
               @grid.setOpacity(val)
+          when "gridText"
+            @grid.toggleText(val)
           when "showAxes"
             if val
               @addAxes()
@@ -364,13 +367,8 @@ define (require) ->
           FAR)
 
       #function ( width, height, fov, near, far, orthoNear, orthoFar )
-      
       @camera.up = new THREE.Vector3( 0, 0, 1 )
-      
-      @camera.position.x = 450
-      @camera.position.y = 450
-      @camera.position.z = 750
-      
+      @camera.position = @defaultCameraPosition
           
       @scene = new THREE.Scene()
       @scene.add(@camera)
@@ -445,9 +443,7 @@ define (require) ->
         @camera.position.x = 0
       switch val
         when 'diagonal'
-          @camera.position.x = -450
-          @camera.position.y = -450
-          @camera.position.z = 750
+          @camera.position = @defaultCameraPosition
           
           @overlayCamera.position.x = -150
           @overlayCamera.position.y = -150
@@ -467,7 +463,7 @@ define (require) ->
             @camera.position = nPost
             
           catch error
-            @camera.position = new THREE.Vector3(0,0,750)
+            @camera.position = new THREE.Vector3(0,0,@defaultCameraPosition.z)
             
           @overlayCamera.position = new THREE.Vector3(0,0,250)
           @camera.lookAt(@scene.position)
@@ -484,7 +480,7 @@ define (require) ->
             nPost.z = -offset.length()
             @camera.position = nPost
           catch error
-            @camera.position = new THREE.Vector3(0,0,-750)
+            @camera.position = new THREE.Vector3(0,0,-@defaultCameraPosition.z)
             
           @overlayCamera.position = new THREE.Vector3(0,0,-250)
           @camera.lookAt(@scene.position)
@@ -500,7 +496,7 @@ define (require) ->
             nPost.y = -offset.length()
             @camera.position = nPost
           catch error
-            @camera.position = new THREE.Vector3(0,-450,0)
+            @camera.position = new THREE.Vector3(0,-@defaultCameraPosition.y,0)
             
           @overlayCamera.position = new THREE.Vector3(0,-250,0)
           @camera.lookAt(@scene.position)
@@ -517,7 +513,7 @@ define (require) ->
             nPost.y = offset.length()
             @camera.position = nPost
           catch error
-            @camera.position = new THREE.Vector3(0,450,0)
+            @camera.position = new THREE.Vector3(0,@defaultCameraPosition.y,0)
           #@camera.rotationAutoUpdate = true
           @overlayCamera.position = new THREE.Vector3(0,250,0)
           @camera.lookAt(@scene.position)
@@ -531,7 +527,7 @@ define (require) ->
             nPost.x = offset.length()
             @camera.position = nPost
           catch error
-            @camera.position = new THREE.Vector3(450,0,0)
+            @camera.position = new THREE.Vector3(@defaultCameraPosition.x,0,0)
           #@camera.rotationAutoUpdate = true
           @overlayCamera.position = new THREE.Vector3(250,0,0)
           @camera.lookAt(@scene.position)
@@ -545,7 +541,7 @@ define (require) ->
             nPost.x = -offset.length()
             @camera.position = nPost
           catch error
-            @camera.position = new THREE.Vector3(-450,0,0)
+            @camera.position = new THREE.Vector3(-@defaultCameraPosition.x,0,0)
           #@camera.rotationAutoUpdate = true
           @overlayCamera.position = new THREE.Vector3(-250,0,0)
           @camera.lookAt(@scene.position)
@@ -582,8 +578,9 @@ define (require) ->
         gridStep = @settings.get("gridStep")
         gridColor = @settings.get("gridColor")
         gridOpacity = @settings.get("gridOpacity")
+        gridText = @settings.get("gridText")
         
-        @grid = new helpers.Grid({size:gridSize,step:gridStep,color:gridColor,opacity:gridOpacity})
+        @grid = new helpers.Grid({size:gridSize,step:gridStep,color:gridColor,opacity:gridOpacity,addText:gridText,textColor:@settings.get("textColor")})
         @scene.add @grid
        
     removeGrid:()=>
@@ -593,7 +590,7 @@ define (require) ->
       
     addAxes:()->
       helpersColor = @settings.get("helpersColor")
-      @axes = new helpers.LabeledAxes({xColor:helpersColor, yColor:helpersColor, zColor:helpersColor, size:200, addLabels:false, addArrows:false})
+      @axes = new helpers.LabeledAxes({xColor:helpersColor, yColor:helpersColor, zColor:helpersColor, size:@settings.get("gridSize")/2, addLabels:false, addArrows:false})
       @scene.add(@axes)
       
       @overlayAxes = new helpers.LabeledAxes({textColor:@settings.get("textColor"), size:@settings.get("axesSize")})
@@ -632,15 +629,9 @@ define (require) ->
       @height = window.innerHeight-10
       #@camera.aspect = @width / @height
       #@camera.updateProjectionMatrix()
-      
       #@camera.setSize(@width,@height)
       @camera.updateProjectionMatrix()
       @renderer.setSize(@width, @height)
-      
-      #@overlayCamera.position.z = @camera.position.z/3
-      #@overlayCamera.position.y = @camera.position.y/3
-      #@overlayCamera.position.x = @camera.position.x/3
-      
       @_render()
     
     onRender:()=>
@@ -667,26 +658,14 @@ define (require) ->
       container = $(@ui.renderBlock)
       container.append(@renderer.domElement)
       
-      
       @controls = new CustomOrbitControls(@camera, @el)
       @controls.rotateSpeed = 1.8
       @controls.zoomSpeed = 4.2
       @controls.panSpeed = 1.8
       @controls.addEventListener( 'change', @_render )
-      
-      ### 
-      @controls = new TrackballControls(@camera, @el)
-      @controls.rotateSpeed = 1.8
-      @controls.zoomSpeed = 4.2
-      @controls.panSpeed = 1.8
-      @controls.addEventListener('change', @_render)
-      ###
+
       @controls.staticMoving = true
       @controls.dynamicDampingFactor = 0.3
-      ###
-      
-      
-      ########
       
       container2 = $(@ui.glOverlayBlock)
       container2.append(@overlayRenderer.domElement)
@@ -745,10 +724,9 @@ define (require) ->
       if csgResult?
         console.log "CSG conversion result ok:"
       
-    fromCsg:(csg)=>
+    fromCsg:()=>
       #try
       start = new Date().getTime()
-      res = csg
       #console.log "project compiled, updating view"
       if @assembly?
         @scene.remove @assembly
@@ -757,14 +735,11 @@ define (require) ->
       @assembly = new THREE.Mesh(new THREE.Geometry())
       @assembly.name = "assembly"
       
-      for index, part of res.children
-        @_importGeom(part,@assembly)
+      if @model.rootAssembly.children?
+        for index, part of @model.rootAssembly.children
+          @_importGeom(part,@assembly)
         
       @scene.add @assembly 
-      #catch error
-      #  console.log "Csg Generation error: #{error} "
-      #  @vent.trigger("csgParseError", error)
-      #finally
       end = new Date().getTime()
       console.log "Csg visualization time: #{end-start}"
       @_render()

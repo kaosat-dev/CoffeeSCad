@@ -26,6 +26,7 @@ define (require)->
           gridStep     : 'Number'
           gridColor    : 'Text'
           gridOpacity  : 'Number'
+          gridText     : 'Checkbox'
           
           showStats    : 'Checkbox'
           position     :
@@ -60,7 +61,7 @@ define (require)->
           "fields": ["position","projection","center","wireframe"]
         ,
           "legend":"Axes and Grid settings"
-          "fields": ["showAxes","helpersColor","showConnectors", "showGrid","gridSize","gridStep","gridColor","gridOpacity"]
+          "fields": ["showAxes","helpersColor","showConnectors", "showGrid","gridSize","gridStep","gridColor","gridOpacity","gridText"]
         , 
           "legend":"Extra settings"
           "fields": ["bgColor","bgColor2", "textColor", "axesSize", "showStats"]

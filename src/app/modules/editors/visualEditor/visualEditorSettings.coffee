@@ -19,10 +19,11 @@ define (require)->
         showConnectors: false
         
         showGrid     : true
-        gridSize     : 1000
-        gridStep     : 100
+        gridSize     : 200
+        gridStep     : 10
         gridColor    : "0xFFFFFF"
         gridOpacity  : 0.1
+        gridText     : true
         
         showStats    : false
         
