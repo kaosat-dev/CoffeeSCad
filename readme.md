@@ -10,6 +10,11 @@ live demo here : http://kaosat-dev.github.com/CoffeeSCad/
 
 Feedback, bug reports, ideas and contributions are welcome !
 
+Contributors
+=============
+Derrick Oswald
+Jim Wygralak
+
 
 Features
 =============
@@ -94,7 +99,7 @@ can get rid of a lot of curly braces etc is a good fit
 Inspiration
 =============
 - openscad 
-- openjscad
+- openjscad (coffeescad was originally based on OpenJSCad but became an independant fork along the way and is not compatible with it anymore)
 - a lot of webgl demos & tutorials
 	- many of the Three.js demos
 	- http://workshop.chromeexperiments.com/machines/
