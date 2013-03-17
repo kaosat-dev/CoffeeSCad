@@ -8,9 +8,10 @@ define (require) ->
     constructor:(options)->
       super options
       
-    drawText:(text)=>
+    drawText:(text, displaySize)=>
       canvas = document.createElement('canvas')
       size = 256
+      displaySize = displaySize or size
       canvas.width = size
       canvas.height = size
       context = canvas.getContext('2d')
@@ -34,7 +35,7 @@ define (require) ->
          scaleByViewport:false
          color: 0xffffff
       sprite = new THREE.Sprite(spriteMaterial)
-      sprite.scale.set( size/4, size/4, size/4 )
+      sprite.scale.set( displaySize, displaySize, displaySize)
       return sprite
     
     drawTextOnPlane:(text, size=256)=>
@@ -306,13 +307,14 @@ define (require) ->
         cage.position = delta
         
         if @addLabels
-          widthLabel=@drawText("w: #{width.toFixed(2)}")
+          labelSize = 60
+          widthLabel=@drawText("w: #{width.toFixed(2)}",labelSize)
           widthLabel.position.set(-length/2-10,0,height/2)
           
-          lengthLabel=@drawText("l: #{length.toFixed(2)}")
+          lengthLabel=@drawText("l: #{length.toFixed(2)}",labelSize)
           lengthLabel.position.set(0,-width/2-10,height/2)
     
-          heightLabel=@drawText("h: #{height.toFixed(2)}")
+          heightLabel=@drawText("h: #{height.toFixed(2)}",labelSize)
           heightLabel.position.set(-length/2-10,-width/2-10,height/2)
           
           cage.add widthLabel
