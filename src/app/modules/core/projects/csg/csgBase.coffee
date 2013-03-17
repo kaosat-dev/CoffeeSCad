@@ -39,8 +39,7 @@ define (require)->
   Function::setter = (prop, set) ->
     Object.defineProperty @prototype, prop, {set, configurable: yes}
   
-  #ALWAYS ensure that all operations that MIGHT change the bounding box , invalidate or recompute the bounding box
-  
+  #IMPORTANT : ALWAYS ensure that all operations that MIGHT change the bounding box , invalidate or recompute the bounding box
   
   class CSGBase extends TransformBase
     @defaultResolution2D : 32
@@ -98,13 +97,7 @@ define (require)->
       for child in @children
         childClone = child.clone()
         newInstance.children.push childClone
-        
-      ###
-      console.log "original:"
-      console.log @
-      console.log "cloned:"
-      console.log newInstance
-      ###
+
       #newInstance = $.extend(true, {}, @)#OLD, jquery version, not web worker compatible
       return newInstance
       
@@ -551,10 +544,10 @@ define (require)->
         extrudedface = CSGBase.fromPolygons extrudedface
         result = result.unionSub(extrudedface, false, false)
       
-      console.log "here"
+      #console.log "here"
       polygons = (extrudePolygon(polygon) for polygon in csg.polygons)
       csg.polygons = polygons
-      console.log "csg polys #{polygons}"
+      #console.log "csg polys #{polygons}"
       # Make a list of all unique vertex pairs (i.e. all sides of the solid)
       # For each vertex pair we collect the following:
       #   v1: first coordinate

@@ -36,13 +36,13 @@ define (require) ->
         @processing = false
       catch error
         console.log error.stack
-        @callback(null, null, error)
+        @callback(null,null,null, error)
         @processing = false
       
     _prepareScriptASync:()=>
       #prepare the source for compiling : convert to coffeescript, inject dependencies etc
       @script = """
-      {BaseMaterial,CAGBase,CSGBase,Circle,Connector,Cube,Cylinder,extend,Line2D,Line3D,Material,Matrix4x4,
+      {BaseMaterial,CAGBase,CSGBase,Circle,Connector,Cube,Cylinder,extend,Line2D,Line3D,log,Material,Matrix4x4,
       merge, OrthoNormalBasis,Part,Path2D,Plane,Polygon,PolygonShared,Properties, Rectangle,
       RoundedCube,RoundedCylinder,RoundedRectangle,Side,Sphere,Vector2D,Vector3D,
       Vertex,Vertex2D,classRegistry,hull,intersect, otherRegistry,register,rotate,
@@ -59,16 +59,25 @@ define (require) ->
     _prepareScriptSync:()=>
       #prepare the source for compiling : convert to coffeescript, inject dependencies etc
       @script = """
-      {BaseMaterial,CAGBase,CSGBase,Circle,Connector,Cube,Cylinder,extend,Line2D,Line3D,Material,Matrix4x4,
+      {BaseMaterial,CAGBase,CSGBase,Circle,Connector,Cube,Cylinder,extend,Line2D,Line3D,log,Material,Matrix4x4,
       merge, OrthoNormalBasis,Part,Path2D,Plane,Polygon,PolygonShared,Properties, Rectangle,
       RoundedCube,RoundedCylinder,RoundedRectangle,Side,Sphere,Vector2D,Vector3D,
       Vertex,Vertex2D,classRegistry,hull,intersect, otherRegistry,register,rotate,
          scale, solve2Linear,subtract,translate,union}=csg
-        
+         
+      #clear log entries
+      log.entries = []
+      
+      #include script
       #{@script}
       
+      #export data to the passed "partRegistry" object
       for klass of classRegistry
         partRegistry[klass] = classRegistry[klass]
+      
+      #export log entries to the passed in "logEntries" object
+      for entry in log.entries
+        logEntries.push(entry)
       """
       
       @script = CoffeeScript.compile(@script, {bare: true})
@@ -88,11 +97,12 @@ define (require) ->
           super
       rootAssembly = new Assembly()
       partRegistry = {}
+      logEntries = []
       
-      f = new Function("assembly","partRegistry", "csg",workerscript)
-      result = f(rootAssembly,partRegistry, csg)
+      f = new Function("assembly","partRegistry", "logEntries","csg",workerscript)
+      result = f(rootAssembly,partRegistry,logEntries, csg)
       
-      @callback(rootAssembly,partRegistry)
+      @callback(rootAssembly,partRegistry,logEntries)
     
     parseScriptASync:(script, params)->
       #Parse the given coffeescad script in a seperate thread (web worker)
@@ -100,6 +110,7 @@ define (require) ->
       workerScript = """
       var rootUrl = "#{rootUrl}";
       importScripts(rootUrl + '/assets/js/libs/require.min.js');
+      csg = null;
       require(
         {baseUrl: rootUrl +"/app"},["require","modules/core/projects/csg/csg"],
         function(require,csg){
@@ -107,27 +118,41 @@ define (require) ->
             {
               #{script}
               var result_compact = assembly.toCompactBinary()
-              postMessage({cmd: 'rendered', rootAssembly: result_compact, partRegistry:classRegistry});
+              postMessage({cmd: 'rendered', rootAssembly: result_compact, partRegistry:classRegistry,'logEntries':log.entries});
             }
             catch(error)
             {
               postMessage({cmd: 'error', err: {msg:error.message, lineNumber:error.lineNumber,stack:error.stack} });
             }
             
-            /*
-            onmessage = function(e) { 
-            postMessage("Got",e.data);
+      });
+      /*
+      onmessage = function(e) 
+      { 
             var data = e.data;
             if(data == 'render')
             {
-              postMessage({cmd: 'rendered', rootAssembly: result_compact, partRegistry:});
+              try
+              {
+                #{script}
+                var result_compact = assembly.toCompactBinary()
+                postMessage({cmd: 'rendered', rootAssembly: result_compact, partRegistry:classRegistry});
+              }
+              catch(error)
+              {
+                postMessage({cmd: 'error', err: {msg:error.message, lineNumber:error.lineNumber,stack:error.stack} });
+              }
             }
             if(data == 'stop')
             {
               postMessage('msg from worker: I WILL STOP'); 
             }
-            }*/
-      });
+            if(data == 'msg')
+            {
+               //postMessage({txt: "Got", cmd:"log"});
+            }
+      }*/
+      
       """
 
       blobURL = utils.textToBlobUrl(workerScript)
@@ -135,20 +160,26 @@ define (require) ->
       worker.onmessage = (e) =>
         if e.data
           if e.data.cmd is 'rendered'
+            logEntries = e.data.logEntries
+            console.log(logEntries)
+            
             converters = require './converters' 
             rootAssembly = converters.fromCompactBinary(e.data.rootAssembly)
             partRegistry = e.data.partRegistry
-            @callback(rootAssembly,partRegistry)
+            @callback(rootAssembly,partRegistry,logEntries)
           else if e.data.cmd is "error"
+            console.log "error"
+            console.log e.data.err
             err = e.data.err
             error = new Error(err.msg)#{"message":err.msg,"lineNumber":err.lineNumber, "stack":err.stack})
             error.lineNumber=err.lineNumber
             error.stack = err.stack
             #throw  error
             @callback(null, null, error)
-          else console.log e.data.txt  if e.data.cmd is "log"
+          else if e.data.cmd is "log"
+            console.log e.data.txt
       worker.onerror = (error) =>
-        errtxt = "Error in line " + e.lineno + ": " + e.message
+        errtxt = "Error in line " + error.lineno + ": " + error.message
         @callback null, null, errtxt      
       worker.postMessage("render")
     

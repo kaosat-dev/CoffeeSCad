@@ -14,44 +14,62 @@ define (require)->
       
       @preProcessor = new PreProcessor()
       @csgProcessor = new CsgProcessor()
+      
+      #this data structure is filled with log & error data 
+      @compileResultData = {}
+      @compileResultData["logEntries"] = null
+      @compileResultData["errors"] = null
     
     compile:(options)=>
       defaults = {backgroundProcessing:false}
       options = merge defaults, options
       {@backgroundProcessing} = options
       
-      @deferred = $.Deferred()
+      @compileResultData["logEntries"] = []
+      @compileResultData["errors"] = []
+      
+      console.log "compiling"
+      @_compileStartTime = new Date().getTime()
+      
+      return @preProcessor.process(@project,false).pipe(@_processScript)
+        .done () =>
+          @project.trigger("compiled",@compileResultData)
+          #TODO : should this be merged into the event above?
+          #@project.trigger(log:messages
+          #@project.trigger("log:messages",logEntries)
+          return
+        .fail (errors) =>
+          @compileResultData["errors"] = errors
+          console.log "errors"
+          console.log errors
+          @project.trigger("compile:error",@compileResultData)
+      
+    _processScript:(source)=>
+      deferred = $.Deferred()
       
       if @project is null
         error = new Error("No project given to the compiler")
-        @deferred.reject(error)
-        throw error
-        return
-        
-      console.log "compiling"
-      @_compileStartTime = new Date().getTime()
-      try
-        @preProcessor.process(@project,false).pipe(@_processScript)
-      catch error
-        @deferred.reject("compile:error",[error])
-        @project.trigger("compile:error",[error])
-        
-      return @deferred.promise()
+        deferred.reject(error)
       
-    _processScript:(source)=>
-      @csgProcessor.processScript source,@backgroundProcessing, (rootAssembly, partRegistry, error)=>
+      @csgProcessor.processScript source,@backgroundProcessing, (rootAssembly, partRegistry, logEntries, error)=>
         if error?
-          @deferred.reject("compile:error",[error])
-          @project.trigger("compile:error",[error])
+          deferred.reject([error])
+          return
+          
+        #@_parseLogEntries(logEntries)
+        @compileResultData["logEntries"] = logEntries
         
         @_generateBomEntries(rootAssembly, partRegistry)
         @project.rootAssembly = rootAssembly
         
         @_compileEndTime = new Date().getTime()
         console.log "Csg computation time: #{@_compileEndTime-@_compileStartTime}"
-        
-        @project.trigger("compiled",rootAssembly)
-        @deferred.resolve(rootAssembly)
+        deferred.resolve()
+      return deferred
+    
+    _parseLogEntries:(logEntries)=>
+      result = []
+      return result
       
     _generateBomEntries:(rootAssembly, partRegistry)=>
       availableParts = new Backbone.Collection()
@@ -68,18 +86,18 @@ define (require)->
       
       getChildrenData=(assembly) =>
         for index, part of assembly.children
-          #TODO: make recursive
           partClassName = part.__proto__.constructor.name
-          params = Object.keys(partRegistry[partClassName])[0]
-          #params = partRegistry[partClassName][index]
-          variantName = "Default"
-          if params != ""
-            variantName=""
-          
-          if not (partClassName of parts)
-            parts[partClassName] = {}
-            parts[partClassName][params] = 0
-          parts[partClassName][params] += 1
+          if partClassName of partRegistry
+            params = Object.keys(partRegistry[partClassName])[0]
+            #params = partRegistry[partClassName][index]
+            variantName = "Default"
+            if params != ""
+              variantName=""
+            
+            if not (partClassName of parts)
+              parts[partClassName] = {}
+              parts[partClassName][params] = 0
+            parts[partClassName][params] += 1
           getChildrenData(part)
           
       getChildrenData(rootAssembly)

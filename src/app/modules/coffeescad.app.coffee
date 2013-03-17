@@ -110,7 +110,6 @@ define (require)->
         @vent.trigger("project:compile")
         return false
       
-
     onStart:()=>
       console.log "app started"
       @_setupKeyboardBindings()
@@ -119,6 +118,8 @@ define (require)->
       #we check if we came back form an oauth redirect/if we have already been authorized
       for index, store of @stores
         store.authCheck()
+     
+      @projectManager.reloadLast()
       
     onAppStarted:(appName)->
       console.log "I see app: #{appName} has started"

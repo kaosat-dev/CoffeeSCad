@@ -16,10 +16,12 @@ define (require)->
     constructor:(options)->
       super options
       @vent = vent
+      @model.on("compiled",@onErrors)
       @model.on("compile:error", @onErrors)
-      @vent.on("file:errors",   @onErrors)
+      @vent.on("file:errors",   @onLintErrors)
       @vent.on("file:noError", @clearConsole)
       @vent.on("file:selected", @onFileSelected)
+      @model.on("log:messages",@onLogEntries)
       
     serializeData: ()->
       null
@@ -32,7 +34,29 @@ define (require)->
     onRender:=>
       @clearConsole()
 
-    onErrors:(errors)=>
+    onErrors:(compileResultData)=>
+      #TODO: cleanup
+      try
+        @$el.removeClass("well")
+        @$el.html("")
+        @$el.addClass("alert alert-error")
+        for error in compileResultData.errors
+          errLine = error.message.split("line ")
+          errLine = errLine[errLine.length - 1]
+          errLine = error.lineNumber
+          errMsg = error.message
+          errStack= error.stack
+          @$el.append("<div><b>File: line #{errLine}:</b>  #{errMsg}<br/>#{errStack}<br/>===============================================<br/><br/></div>")
+        for entry in compileResultData.logEntries
+          level = entry.lvl
+          msg = entry.msg
+          @$el.append("<div><b>#{level}:</b> #{msg}</div>")
+        
+      catch err
+        console.log("Inner err: "+ err)
+        @$el.text("Yikes! Error displaying error:#{err}")
+     
+    onLintErrors:(errors)=>
       try
         @$el.removeClass("well")
         @$el.html("")
@@ -44,10 +68,11 @@ define (require)->
           errMsg = error.message
           errStack= error.stack
           @$el.append("<div><b>File: line #{errLine}:</b>  #{errMsg}<br/>#{errStack}<br/>===============================================<br/><br/></div>")
+        
       catch err
         console.log("Inner err: "+ err)
         @$el.text("Yikes! Error displaying error:#{err}")
-        
+       
      onFileSelected:(model)=>
        @clearConsole()
         
