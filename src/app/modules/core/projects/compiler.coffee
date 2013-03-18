@@ -40,8 +40,6 @@ define (require)->
           return
         .fail (errors) =>
           @compileResultData["errors"] = errors
-          console.log "errors"
-          console.log errors
           @project.trigger("compile:error",@compileResultData)
       
     _processScript:(source)=>
@@ -52,19 +50,19 @@ define (require)->
         deferred.reject(error)
       
       @csgProcessor.processScript source,@backgroundProcessing, (rootAssembly, partRegistry, logEntries, error)=>
+        @compileResultData["logEntries"] = logEntries or []
         if error?
           deferred.reject([error])
-          return
+        else          
+          console.log "here"  
+          #@_parseLogEntries(logEntries)
           
-        #@_parseLogEntries(logEntries)
-        @compileResultData["logEntries"] = logEntries
-        
-        @_generateBomEntries(rootAssembly, partRegistry)
-        @project.rootAssembly = rootAssembly
-        
-        @_compileEndTime = new Date().getTime()
-        console.log "Csg computation time: #{@_compileEndTime-@_compileStartTime}"
-        deferred.resolve()
+          @_generateBomEntries(rootAssembly, partRegistry)
+          @project.rootAssembly = rootAssembly
+          
+          @_compileEndTime = new Date().getTime()
+          console.log "Csg computation time: #{@_compileEndTime-@_compileStartTime}"
+          deferred.resolve()
       return deferred
     
     _parseLogEntries:(logEntries)=>

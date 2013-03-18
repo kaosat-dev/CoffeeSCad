@@ -168,19 +168,17 @@ define (require) ->
             partRegistry = e.data.partRegistry
             @callback(rootAssembly,partRegistry,logEntries)
           else if e.data.cmd is "error"
-            console.log "error"
-            console.log e.data.err
             err = e.data.err
             error = new Error(err.msg)#{"message":err.msg,"lineNumber":err.lineNumber, "stack":err.stack})
             error.lineNumber=err.lineNumber
             error.stack = err.stack
             #throw  error
-            @callback(null, null, error)
+            @callback(null, null,null, error)
           else if e.data.cmd is "log"
             console.log e.data.txt
       worker.onerror = (error) =>
         errtxt = "Error in line " + error.lineno + ": " + error.message
-        @callback null, null, errtxt      
+        @callback(null, null, null, errtxt) 
       worker.postMessage("render")
     
             

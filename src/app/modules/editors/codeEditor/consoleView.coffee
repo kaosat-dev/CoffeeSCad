@@ -41,8 +41,6 @@ define (require)->
         @$el.html("")
         @$el.addClass("alert alert-error")
         for error in compileResultData.errors
-          errLine = error.message.split("line ")
-          errLine = errLine[errLine.length - 1]
           errLine = error.lineNumber
           errMsg = error.message
           errStack= error.stack
