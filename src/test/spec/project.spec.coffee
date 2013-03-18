@@ -13,6 +13,7 @@ define (require)->
       fn.apply @,callback.mostRecentCall.args if fn
       expect(errback).not.toHaveBeenCalled()
   
+  
   describe "Project ", ->
     project = null
     compiler = null
@@ -35,6 +36,35 @@ define (require)->
       
       project.removeFile(file)
       expect(project.rootFolder.length).toBe 0
+    
+    it 'can have only one active file at a time (selectable)', ->
+      file = project.addFile
+        name:"Project.coffee"
+        content:"testContent" 
+      file2 = project.addFile
+        name:"otherFile.coffee"
+        content:"testContent" 
+      activeFile = project.makeFileActive({file:file})
+      expect(activeFile).toEqual file
+      expect(file.isActive).toBe true
+      expect(file2.isActive).toBe false
+      
+      activeFile = project.makeFileActive({fileName:file2.name})
+      expect(activeFile).toEqual file2
+      expect(file2.isActive).toBe true
+      expect(file.isActive).toBe false
+      
+      activeFile = project.makeFileActive(file.name)
+      expect(activeFile).toEqual file
+      expect(file.isActive).toBe true
+      expect(file2.isActive).toBe false
+      
+      activeFile = project.makeFileActive(file2)
+      expect(activeFile).toEqual file2
+      expect(file2.isActive).toBe true
+      expect(file.isActive).toBe false
+     
+      
       
     it 'compiles the contents of its files into an assembly of parts', ->
       project.addFile

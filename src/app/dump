@@ -1,3 +1,13 @@
+
+    settingsChanged:(settings, value)=> 
+      for key, val of @settings.changedAttributes()
+        switch key
+          when "maxRecentFilesDisplay"
+            filtered = @originalCollection.first(@settings.get("maxRecentFilesDisplay"))
+            @collection = new Backbone.Collection(filtered)
+            @render()
+    ###
+
 csg compile mode settings as they were in visualeditorview
 ###   
           when "csgRenderMode"

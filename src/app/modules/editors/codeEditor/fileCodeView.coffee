@@ -47,7 +47,6 @@ define (require)->
     onRefreshRequested:(newHeight)=>
       #elHeight
       @editor.refresh()
-      console.log @editor
       @editor.setSize("100%",newHeight)#"100%")
       @editor.refresh()
     

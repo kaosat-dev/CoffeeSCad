@@ -2,72 +2,21 @@ define (require)->
   $ = require 'jquery'
   _ = require 'underscore'
   marionette = require 'marionette'
+  modelBinder = require 'modelbinder'
   require 'bootstrap'
   require 'bootbox'
   require 'notify'
   
   vent = require './vent'
-  mainMenu_template = require "text!./mainMenu2.tmpl"
-  sF_template = require "text!./menuFiles.tmpl"
   
+  mainMenuMasterTemplate = require "text!./mainMenu.tmpl"
   
-  class RecentFilesView extends Backbone.Marionette.ItemView
-    template: sF_template
-    tagName:  "li"
-    
-    onRender:()=>
-      @$el.attr("id",@model.get("name"))
+  mainMenuTemplate = _.template($(mainMenuMasterTemplate).filter('#mainMenuTmpl').html())
+  recentFileTemplate = _.template($(mainMenuMasterTemplate).filter('#recentFileTmpl').html())
   
-  class ExamplesView extends Backbone.Marionette.ItemView
-    
-    constructor:->
-      #examples = require "modules/examples"
-      #{Library,Project,ProjectFile} = require "modules/project"
-    
-    loadExample:(ev)=>
-      #TOTAL HACK !! yuck
-      index = ev.currentTarget.id
-      project = new Project({name:examples[index].name})  
-      mainPart = new ProjectFile
-          name: "mainPart"
-          ext: "coscad"
-          content: examples[index].content    
-      project.add mainPart
-      
-      ########VIEW UPDATES
-      if @app.project.isSaveAdvised
-        bootbox.dialog "Project is unsaved, proceed anyway?", [
-          label: "Ok"
-          class: "btn-inverse"
-          callback: =>
-            @app.project = project
-            @app.mainPart= mainPart
-            @app.codeEditorView.switchModel @app.mainPart
-            @app.glThreeView.switchModel @app.mainPart
-            @app.mainMenuView.switchModel @app.project
-        ,
-          label: "Cancel"
-          class: "btn-inverse"
-          callback: ->
-        ]
-      else
-        @app.project = project
-        @app.mainPart= mainPart
-        @app.codeEditorView.switchModel @app.mainPart
-        @app.glThreeView.switchModel @app.mainPart
-        @app.mainMenuView.switchModel @app.project
-    
-    onRender:()->
-      @ui.examplesList.html("")
-      for index,example of examples
-        @ui.examplesList.append("<li id='#{index}' class='exampleProject'><a href=#> #{example.name}</a> </li>")
-    
-    
-  class ExportersView extends Backbone.Marionette.CollectionView
-   
   
   class MainMenuView extends Backbone.Marionette.Layout
-    template: mainMenu_template
+    template: mainMenuTemplate
     regions:
       recentProjects:   "#recentProjects"
       examplesStub:         "#examples"
@@ -84,93 +33,63 @@ define (require)->
       "click .saveProject":   ()->vent.trigger("project:save")
       "click .loadProject":   ()->vent.trigger("project:load")
       "click .deleteProject": ()->vent.trigger("project:delete")
-      
       "click .undo":          "onUndoClicked"
       "click .redo":          "onRedoClicked"
-
-      "click .settings":      ()=>vent.trigger("settings:show")
+      
+      "click .settings":      ()->vent.trigger("settings:show")
       "click .showEditor":    ()->vent.trigger("codeEditor:show")
       
       "click .compileProject"  : ()->vent.trigger("project:compile")
       
+      "click .about" : "showAbout"
+  
     constructor:(options)->
       super options
       @vent = vent
       @stores= options.stores ? {}
       @exporters= options.exporters ? {}
       
-      @vent.on("file:selected", @onFileSelected)
-      
-      @on "file:new:mouseup" ,=>
-        @vent.trigger("fileNewRequest", @)
-      
-      @on "project:compiled" ,=>
-        if not  $('#updateBtn').hasClass "disabled"
-          @vent.trigger("parseCsgRequest", @)
+      #TODO: move this to data binding
+      @vent.on("file:undoAvailable", @_onUndoAvailable)
+      @vent.on("file:redoAvailable", @_onRedoAvailable)
+      @vent.on("file:undoUnAvailable", @_onNoUndoAvailable)
+      @vent.on("file:redoUnAvailable", @_onNoRedoAvailable)
+      @vent.on("clearUndoRedo", @_clearUndoRedo)
         
-      @vent.bind "file:undoAvailable", ->
-        $('#undoBtn').removeClass("disabled")
-      @vent.bind "file:redoAvailable", ->
-        $('#redoBtn').removeClass("disabled")
-      @vent.bind "file:undoUnAvailable", ->
-        $('#undoBtn').addClass("disabled")
-      @vent.bind "file:redoUnAvailable", ->
-        $('#redoBtn').addClass("disabled")
-        
-      @vent.bind "clearUndoRedo", ->
-        $('#undoBtn').addClass("disabled")
-        $('#redoBtn').addClass("disabled")
-      @vent.bind "modelChanged", ->
-        $('#updateBtn').removeClass("disabled")
-        $('#exportStl').addClass("disabled")
-      
       @vent.on("notify",@onNotificationRequested)
-      @vent.on("project:loaded",()=>@onNotificationRequested("Project:loaded"))
-      @vent.on("project:saved",()=>@onNotificationRequested("Project:saved"))
-      @vent.on("project:compiled",()=>@onNotificationRequested("Project:compiled"))
-      
-      
-    onNotificationRequested:(message)=>
-      $('.notifications').notify
-        message: { text:message }
-        fadeOut:{enabled:true, delay: 1000 }
-       .show()
-      
+      @vent.on("project:loaded",()=>@_onNotificationRequested("Project:loaded"))
+      @vent.on("project:saved",()=>@_onNotificationRequested("Project:saved"))
+      @vent.on("project:compiled",()=>@_onNotificationRequested("Project:compiled"))
+      @vent.on("project:loaded", @onProjectLoaded)
     
-    onFileSelected:(model)=>
+    _onNotificationRequested:(message)=>
+      $('.notifications').notify(message: { text:message },fadeOut:{enabled:true, delay: 1000 }).show()
+      
+    _clearUndoRedo:=>
       $('#undoBtn').addClass("disabled")
       $('#redoBtn').addClass("disabled")
-     
-    onUndoClicked:->
-      console.log $('#undoBtn')
-      if not  $('#undoBtn').hasClass "disabled"
-        console.log "triggering undo Request"
-        @vent.trigger("file:undoRequest")
-        
-    onRedoClicked:->
-      if not  $('#redoBtn').hasClass "disabled"
-        @vent.trigger("file:redoRequest")
+    _onUndoAvailable:=>
+      $('#undoBtn').removeClass("disabled")
+    _onRedoAvailable:=>
+      $('#redoBtn').removeClass("disabled")
+    _onNoUndoAvailable:=>
+      $('#undoBtn').addClass("disabled")
+    _onNoRedoAvailable:=>
+      $('#redoBtn').addClass("disabled")
     
-    onDomRefresh:=>
-      @$el.find('[rel=tooltip]').tooltip({'placement': 'bottom'})
-    
-    onRender:=>
-       $('#undoBtn').addClass("disabled")
-       $('#redoBtn').addClass("disabled")
-       
-       for index, exporterName of @exporters
+    _addExporterEntries:=>
+      #add exporter entries to menu, and their event handlers
+      for index, exporterName of @exporters
          className = "start#{index[0].toUpperCase() + index[1..-1]}Exporter"
          event = "#{index}Exporter:start"
          @events["click .#{className}"] = do(event)-> ->@vent.trigger(event)
-         #console.log "events"
-         #console.log @events
-         #TODO: move this in constructor
          #see http://www.mennovanslooten.nl/blog/post/62 and http://rzrsharp.net/2011/06/27/what-does-coffeescripts-do-do.html
          #for more explanation (or lookup "anonymous functions inside loops")
          @ui.exportersStub.append("<li ><a href='#' class='#{className}'>#{index}</li>") 
            
-       for index, store of @stores
-         #TODO: move this in constructor
+    _addStoreEntries:=>
+      #add store entries to menu, and their event handlers
+      for index, store of @stores
          if store.isLogginRequired
            loginClassName = "login#{index[0].toUpperCase() + index[1..-1]}"
            loginEvent = "#{index}Store:login"
@@ -202,57 +121,36 @@ define (require)->
              @vent.on("#{index}Store:loggedOut",()->onLoggedOut())
            
            @ui.storesStub.append("<li id='#{loginClassName}'><a href='#' class='#{loginClassName}'><i class='icon-signin' style='color:red'/>  #{index} - Signed Out</a></li>") 
-         
-       @delegateEvents()
-  
-  
-  class MainMenuView_old extends Backbone.Marionette.CompositeView
-    template: mainMenu_template
-    tagName:  "ul"
-    itemView: RecentFilesView
-    itemViewContainer: "#recentFilesList"
-    ui:
-      dirtyStar:    "#dirtyStar"
-      examplesList: "#examplesList"
-
-    triggers: 
-      "mouseup .newFile":     "file:new:mouseup"
-      "mouseup .saveFile":    "file:save:mouseup"
-      "mouseup .saveFileAs":  "file:saveas:mouseup"
-      "mouseup .loadFile":    "file:load:mouseup"
-      "mouseup .newProject":  "project:new:mouseup"
-      "mouseup .settings":    "settings:mouseup"
-      "mouseup .undo":        "file:undo:mouseup"
-      "mouseup .redo":        "file:redo:mouseup"
-      "mouseup .parseCSG"  :  "csg:parserender:mouseup"
-      "mouseup .downloadStl" :"download:stl:mouseup"
-      
     
-     events: 
-      "mouseup .loadFileDirect":    "requestFileLoad"
-      "mouseup .showEditor":        "showEditor"
-      "mouseup #aboutBtn":          "showAbout"
-      "mouseup .exampleProject":     "loadExample"
-      
-     templateHelpers:
-       dirtyStar: ()=>
-         if @model?
-          if @model.dirty then return "*" else return ""
-         else
-          return ""
+    onDomRefresh:=>
+      @$el.find('[rel=tooltip]').tooltip({'placement': 'bottom'})
+      @_addExporterEntries()
+      @_addStoreEntries()
+      @delegateEvents()
     
-    requestFileLoad:(ev)=>
-      fileName = $(ev.currentTarget).html()
-      @vent.trigger("fileLoadRequest", fileName)
+    onRedoClicked:=>
+      if not ($('#redoBtn').hasClass("disabled"))
+        @vent.trigger("file:redoRequest")
     
-    showEditor:(ev)=>
-      @vent.trigger("editorShowRequest")
-      
+    onUndoClicked:->
+      console.log $('#undoBtn')
+      if not ($('#undoBtn').hasClass("disabled"))
+        console.log "triggering undo Request"
+        @vent.trigger("file:undoRequest")
+    
+    _fetchFiles:=>
+      #just experimenting
+      serverUrl = window.location.href
+      examplesUrl = "#{serverUrl}/examples"
+      console.log "ServerURL : #{serverUrl}"
+      $.get "#{examplesUrl}", (data) =>
+        console.log "totot"
+        console.log data
+        
     showAbout:(ev)=>
-      bootbox.dialog """<b>Coffeescad v0.1</b> (experimental)<br/><br/>
+      bootbox.dialog """<b>Coffeescad v0.3</b> (pre-alpha)<br/><br/>
       Licenced under the MIT Licence<br/>
-      @2012 by Mark 'kaosat-dev' Moissette
-      
+      @2012-2013 by Mark 'kaosat-dev' Moissette
       """, [
           label: "Ok"
           class: "btn-inverse"
@@ -260,82 +158,59 @@ define (require)->
         "backdrop" : false
         "keyboard":   true
         "animate":false
-      
-    constructor:(options)->
-      super options
-      @vent = vent
-      @settings = null
-      
-      #@settings = @app.settings.byName("General")
-      #filtered = @collection.first(@settings.get("maxRecentFilesDisplay"))
-      #@originalCollection = @collection
-      #@collection = new Backbone.Collection(filtered)
-      
-      
-      @bindTo(@model, "change", @modelChanged)
-      @bindTo(@model, "allSaved", @modelSaved)
-      @bindTo(@settings, "change", @settingsChanged)
-      
-      @on "file:new:mouseup" ,=>
-        @vent.trigger("fileNewRequest", @)
-      @on "file:undo:mouseup" ,=>
-        if not  $('#undoBtn').hasClass "disabled"
-          @vent.trigger("undoRequest", @)
-      @on "file:redo:mouseup" ,=>
-        if not  $('#redoBtn').hasClass "disabled"
-          @vent.trigger("redoRequest", @)
-      @on "csg:parserender:mouseup" ,=>
-        if not  $('#updateBtn').hasClass "disabled"
-          @vent.trigger("parseCsgRequest", @)
-      @on "download:stl:mouseup" ,=>
-        if not $('#exportStl').hasClass "disabled"
-          @vent.trigger("downloadStlRequest", @) 
-        
-      @vent.bind "undoAvailable", ->
-        $('#undoBtn').removeClass("disabled")
-      @vent.bind "redoAvailable", ->
-        $('#redoBtn').removeClass("disabled")
-      @vent.bind "undoUnAvailable", ->
-        $('#undoBtn').addClass("disabled")
-      @vent.bind "redoUnAvailable", ->
-        $('#redoBtn').addClass("disabled")
-      @vent.bind "clearUndoRedo", ->
-        $('#undoBtn').addClass("disabled")
-        $('#redoBtn').addClass("disabled")
-      @vent.bind "modelChanged", ->
-        $('#updateBtn').removeClass("disabled")
-        $('#exportStl').addClass("disabled")
-      @vent.bind "parseCsgDone", ->
-        $('#updateBtn').addClass("disabled")
-        $('#exportStl').removeClass("disabled")
-      
-      @vent.bind "stlGenDone", (blob)=>
-        tmpLnk = $("#exportStlLink")
-        fileName = @app.project.get("name")
-        tmpLnk.prop("download", "#{fileName}.stl")
-        tmpLnk.prop("href", blob)
-        
-    switchModel:(newModel)->
-      #replace current model with a new one
-      #@unbindFrom(@model) or @unbindAll() ?
-      @model = newModel
-      @bindTo(@model, "dirtied", @modelChanged)
-      @bindTo(@model, "allSaved", @modelSaved)
-      @render()
-      
-    modelChanged: (model, value)=>
-      @ui.dirtyStar.text "*"
-     
-    modelSaved: (model)=>
-      @ui.dirtyStar.text ""
-      
-    settingsChanged:(settings, value)=> 
-      for key, val of @settings.changedAttributes()
-        switch key
-          when "maxRecentFilesDisplay"
-            filtered = @originalCollection.first(@settings.get("maxRecentFilesDisplay"))
-            @collection = new Backbone.Collection(filtered)
-            @render()
+
+  class RecentFileView extends Backbone.Marionette.ItemView
+    template: recentFileTemplate
+    tagName:  "li"
     
+    onRender:()=>
+      @$el.attr("id",@model.name)
+  
+  class RecentFilesView extends Backbone.Marionette.CollectionView
+    
+  class ExamplesView extends Backbone.Marionette.ItemView
+    
+    constructor:->
+      #examples = require "modules/examples"
+      #{Library,Project,ProjectFile} = require "modules/project"
+    
+    loadExample:(ev)=>
+      #TOTAL HACK !! yuck
+      index = ev.currentTarget.id
+      project = new Project({name:examples[index].name})  
+      mainPart = new ProjectFile
+          name: "mainPart"
+          ext: "coscad"
+          content: examples[index].content    
+      project.add mainPart
       
+      #VIEW UPDATES
+      if @app.project.isSaveAdvised
+        bootbox.dialog "Project is unsaved, proceed anyway?", [
+          label: "Ok"
+          class: "btn-inverse"
+          callback: =>
+            @app.project = project
+            @app.mainPart= mainPart
+            @app.codeEditorView.switchModel @app.mainPart
+            @app.glThreeView.switchModel @app.mainPart
+            @app.mainMenuView.switchModel @app.project
+        ,
+          label: "Cancel"
+          class: "btn-inverse"
+          callback: ->
+        ]
+      else
+        @app.project = project
+        @app.mainPart= mainPart
+        @app.codeEditorView.switchModel @app.mainPart
+        @app.glThreeView.switchModel @app.mainPart
+        @app.mainMenuView.switchModel @app.project
+    
+    onRender:()->
+      @ui.examplesList.html("")
+      for index,example of examples
+        @ui.examplesList.append("<li id='#{index}' class='exampleProject'><a href=#> #{example.name}</a> </li>")
+
+
   return MainMenuView

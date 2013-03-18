@@ -17,7 +17,7 @@ define (require)->
   Settings = require './core/settings/settings'
   SettingsView = require './core/settings/settingsView'
    
-
+  
   class CoffeeScadApp extends Backbone.Marionette.Application
     ###
     Main application class, gets instanciated only once on startup
@@ -64,15 +64,15 @@ define (require)->
       for name, exporter of @exporters
         @vent.on("#{name}Exporter:start", do(name)=> =>@exporters[name].start({project:@project}))
         
-      
       @addRegions @regions
-      @initLayout()
       @initData()
+      @initLayout()
      
     initLayout:=>
       @menuView = new MenuView
         stores: @stores
         exporters: @exporters
+        model : @project
       @headerRegion.show @menuView
     
     initSettings:->

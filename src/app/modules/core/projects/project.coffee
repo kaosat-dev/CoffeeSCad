@@ -7,14 +7,16 @@ define (require)->
   
   debug  = false
   
+  
   class ProjectFile extends Backbone.Model
     idAttribute: 'name'
     defaults:
       name:     "testFile.coffee"
       content:  ""
+      isActive: false
       isSaveAdvised: false
       isCompileAdvised: false
-    attributeNames: ['name','content','isSaveAdvised','isCompileAdvised']
+    attributeNames: ['name','content','isActive','isSaveAdvised','isCompileAdvised']
     persistedAttributeNames : ['name','content']
     buildProperties @
       
@@ -25,6 +27,7 @@ define (require)->
       @on("save",   @_onSaved)
       @on("change:name", @_onNameChanged)
       @on("change:content", @_onContentChanged)
+      @on("change:isActive",@_onIsActiveChanged)
     
     _onNameChanged:()=>
       @isSaveAdvised = true
@@ -40,6 +43,12 @@ define (require)->
       #when save is sucessfull
       @storedContent = @content
       @isSaveAdvised = false
+      
+    _onIsActiveChanged:=>
+      if @isActive
+        @trigger("activated")
+      else
+        @trigger("deActivated")
    
     save: (attributes, options)=>
       backup = @toJSON
@@ -91,11 +100,12 @@ define (require)->
     defaults:
       name:     "Project"
       lastModificationDate: null
+      activeFile : null
       isSaveAdvised:false #based on propagation from project files : if a project file is changed, the project is tagged as "dirty" aswell
       isCompiled: false
       isCompileAdvised:false
     
-    attributeNames: ['name','lastModificationDate','isCompiled','isSaveAdvised','isCompileAdvised']
+    attributeNames: ['name','lastModificationDate','activeFile','isCompiled','isSaveAdvised','isCompileAdvised']
     persistedAttributeNames : ['name','lastModificationDate']
     buildProperties @
     
@@ -139,6 +149,32 @@ define (require)->
         throw new Error("No compiler specified")
       @compiler.project = @
       return @compiler.compile(options)
+    
+    makeFileActive:(options)=>
+      #set the currently active file (only one at a time)
+      #you could argue that this is purely UI side, in fact it is not : events, adding data to the file etc should use the currently active
+      #file, therefore there is logic , not just UI , but the UI should reflect this
+      options = options or {}
+      fileName = null
+      
+      if options instanceof String or typeof options is 'string' 
+        fileName = options
+      if options instanceof ProjectFile 
+        fileName = options.name
+      if options.file
+        fileName = options.file.name
+      if options.fileName
+        fileName = options.fileName
+        
+      file = @rootFolder.get(fileName)  
+      if file?
+        file.isActive = true
+        @activeFile =file
+        #DESELECT ALL OTHERS   
+        otherFiles = _.without(@rootFolder.models, file) 
+        for otherFile in otherFiles
+          otherFile.isActive=false
+      return @activeFile
       
     _addFile:(file)=>
       @rootFolder.add file

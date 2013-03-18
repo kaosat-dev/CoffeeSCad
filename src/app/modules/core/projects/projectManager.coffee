@@ -59,7 +59,7 @@ define (require)->
         name: @project.get("name")+".coffee"
         content:"""
         #just a comment
-        cube = new Cube({size:100}).color([0.9,0.5,0.1])
+        cube = new Cube({size:20}).color([0.9,0.5,0.1])
         assembly.add(cube)
         """
         content_3:"""
@@ -146,42 +146,6 @@ define (require)->
       @project.compile
         backgroundProcessing : @settings.get("csgBackgroundProcessing")
       
-    compileProject_:()=> 
-      console.log "compiling"
-      start = new Date().getTime()
-      
-      backgroundProcessing = false
-      if @settings?
-        backgroundProcessing = @settings.get("csgBackgroundProcessing")
-      
-      try
-        fullSource = @preProcessor.process(@project,false)
-      catch error
-        @project.trigger("compile:error",[error])
-        return
-        
-      @csgProcessor.processScript fullSource,backgroundProcessing, (rootAssembly, partRegistry, error)=>
-        if error?
-          #console.log "CSG processing failed : #{error.msg} on line #{error.lineNumber} stack:"
-          #console.log error.stack
-          @project.trigger("compile:error",[error])
-          return
-          
-        #@set({"partRegistry":window.classRegistry}, {silent: true})
-        @project.bom = new Backbone.Collection()
-        for name,params of partRegistry
-          for param, quantity of params
-            variantName = "Default"
-            if param != ""
-              variantName=""
-            @project.bom.add { name: name,variant:variantName, params: param,quantity: quantity, manufactured:true, included:true } 
-        
-        @project.rootAssembly = rootAssembly
-        end = new Date().getTime()
-        console.log "Csg computation time: #{end-start}"
-        @project.trigger("compiled",rootAssembly)
-        @vent.trigger("project:compiled")
-
     onNewProject:()=>
       @createProject()
       if @project.isSaveAdvised

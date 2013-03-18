@@ -1,83 +1,128 @@
 <script id="mainMenuTmpl" type="text/x-underscore-template">
-	<div  class="navbar navbar-fixed-top " style="padding-right: 30px; padding-left: 10px">
-				    <div class="btn-toolbar"  style="height: 25px; padding-top: 0px">
-				    	<div class="btn-group">
-				    		<a class="btn btn-small dropdown-toggle btn-inverse" data-toggle="dropdown" href="#" rel="tooltip" title="File"><i class="icon-file icon-large"></i>
-				    			<span class="caret"></span>
-				    		</a>
-				    		<ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
-				    			<li id ="newFileBtn" class="newFile"><a tabindex="-1" href="#"><i class="icon-file"></i>New</a></li>
-				    			<li id ="saveFileBtn" class="saveFile"><a tabindex="-1" href="#"><i class="icon-save"></i>Save</a></li>
-				    			<li id ="saveFileAsBtn" class="saveFileAs"><a tabindex="-1" href="#"><i class="icon-save"></i>Save As</a></li>
-				    			<!--<li id ="saveToBtn" class="dropdown-submenu">
-				    				<a tabindex="-1" href="#"><i class="icon-save"></i>Save To</a>
-				    				<ul class="dropdown-menu">
-                    					<li><a href="#" class="btn disabled"><i class="icon-hdd"></i> Local file (download) </a></li>
-                    					<li><a href="#" class="btn disabled"><i class="icon-github"></i> Gist (versionned) </a></li>
-				    				</ul>
-				    			</li>-->
-				    			<li id ="loadFileBtn" class="loadFile"><a tabindex="-1" href="#"><i class="icon-file"></i>Load</a></li>
-				    			<li id ="loadRecentBtn" class="dropdown-submenu">
+	<div  class="navbar navbar-fixed-top" style="padding-bottom: 0px">
+		<div class="navbar-inner" style="height: 15px; padding-top: 0px">
+			<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+		        <span class="icon-bar"></span>
+		        <span class="icon-bar"></span>
+		        <span class="icon-bar"></span>
+		      </a>
+			     <div class="nav-collapse collapse navbar-responsive-collapse">
+                    <ul class="nav">
+                      <li >
+                      	<a href="#" class="dropdown-toggle" data-toggle="dropdown">Project
+                      		<b class="caret"></b>
+                      	</a>
+                      	<ul class="dropdown-menu" role="menu" aria-labelledby="dLabel">
+				    		<li id ="newFileBtn" class="dropdown-submenu">
+				    			<a tabindex="-1" href="#"><i class="icon-file"></i>New</a>
+				    			<ul class="dropdown-menu">
+				    				<li class="newProject"><a tabindex="-1" href="#">Project</a></li>
+				    			</ul>
+				    		</li>
+                      		<li id ="saveFileBtn" class="saveProject"><a tabindex="-1" href="#"><i class="icon-save"></i>Save</a></li>
+				    			<li id ="saveFileAsBtn" class="saveProjectAs"><a tabindex="-1" href="#"><i class="icon-save"></i>Save As</a></li>
+				    			<li id ="loadFileBtn" class="loadProject"><a tabindex="-1" href="#"><i class="icon-file"></i>Load</a></li>
+				    			<li class="divider"></li>
+				    			<li id ="browseProjectsBtn" class="browseProjects"><a tabindex="-1" href="#"><i class="icon-list"></i>Explore</a></li>
+				    			<li class="dropdown-submenu">
 				    				<a tabindex="-1" href="#"><i class="icon-file"></i>Recent</a>
 				    				<ul id="recentProjects" class="dropdown-menu"></ul>
 				    			</li>
-				    			<li id ="examplesBtn" class="dropdown-submenu">
+				    			<li class="dropdown-submenu">
 				    				<a tabindex="-1" href="#"><i class="icon-list-ul"></i>Examples</a>
 				    				<ul id="examples" class="dropdown-menu"></ul>
 				    			</li>
-				    			<li class="divider"></li>
-				    			<li id ="importBtn" class="dropdown-submenu">
+		                       	
+		                        <li class="divider"></li>
+		                        <li id ="importBtn" class="dropdown-submenu">
 				    				<a tabindex="-1" href="#"><i class="icon-download-alt"></i>Import</a>
 				    				<ul class="dropdown-menu">
                     					<li><a href="#" class="btn disabled"><i class="icon-download disabled"></i> Openscad</a></li>
 				    				</ul>
 				    			</li>
-				    			<li id ="exportBtn" class="dropdown-submenu">
+		                        <li id ="exportBtn" class="dropdown-submenu">
 				    				<a tabindex="-1" href="#"><i class="icon-upload-alt"></i>Export</a>
 				    				<ul id="exporters" class="dropdown-menu"></ul>
-				    				<!--
-				    				<ul class="dropdown-menu"> 
-                    					<li id="exportStl" class="disabled downloadStl"> <a id="exportStlLink"   href="#" class="btn"><i class="icon-download"></i> Stl</a></li>
-                    					<li id="exportDxf" class="disabled" > <a href="#" class="btn"><i class="icon-download-alt disabled"></i> Dxf</a></li>
-				    				</ul>
-				    				-->
 				    			</li>
-		                        <li class="divider"></li>
-		                        <li><a tabindex="-1" href="#" id="aboutBtn"><i class="icon-bullhorn"></i>About</a></li> 
-				    		</ul>
-				    		
-				    	</div>
-				    	<div class="btn-group">
-				    		<a class="btn btn-small btn-inverse showEditor" href="#" rel="tooltip" title="Editor" ><i class="icon-edit icon-large"></i>
-				    		</a>
-				    	</div>
-				    	<div class="btn-group">	
-				    		<a id="undoBtn" class="btn btn-small disabled undo btn-inverse" href="#" rel="tooltip" title="Undo (CTRL+Z)"><i class="icon-undo icon-large"></i></a>
-					  		<a id="redoBtn" class="btn btn-small disabled redo btn-inverse" href="#" rel="tooltip" title="Redo (CTRL+Y)"><i class="icon-repeat icon-large"></i></a>
-				    	</div>
-					    <div class="btn-group">
-						    <a id="updateBtn" class="btn btn-small disabled parseCSG btn-inverse" href="#" rel="tooltip" title="Update view" ><i class="icon-refresh icon-large"></i></a>
-						  	<a id="abortBtn" class="btn hide" href="#" rel="tooltip" title="Abort"><i class="icon-remove icon-large"></i></a>
-						</div>
-						<div class="btn-group">
-							<a id="toolsBtn" class="btn btn-mini tools btn-inverse" href="#" rel="tooltip" title="Tools"><i class="icon-wrench "></i></a>
-					    	<a id="settingsBtn" class="btn btn-small settings btn-inverse" href="#" rel="tooltip" title="Settings"><i class="icon-cogs icon-large"></i></a>
-						</div>
-						<a id="projectName" class="btn btn-inverse disabled btn-small" style="text-align: center;display: inline-block;position: absolute;top: 10;left: 50%" href="#" ><%=name%> <span id="dirtyStar"/></a>
-						<div class="btn-group  pull-right">
-							<a class="btn btn-small btn-inverse" href="https://github.com/kaosat-dev/CoffeeSCad/wiki" target="_blank" rel="tooltip" title="Help"><i class="icon-question-sign icon-large"></i></a>
-							<a class="btn btn-small btn-inverse" href="https://github.com/kaosat-dev/CoffeeSCad" target="_blank" rel="tooltip" title="Fork me on GitHub!"><i class="icon-github icon-large"></i></a>
-						</div>
-						
-					</div>
-					<!--
-					<div class="btn-group-wrap" style="text-align: center; padding:0;border:0">
-							<div class="btn-group" style="margin: 0 auto; 
-    text-align: center;
-    width: inherit;
-    display: inline-block;">
-				    			<a id="projectName" class="btn btn-inverse disabled btn-small" href="#" >Assembly.coscad</a>
-							</div>
-					</div>-->
-				</div>
+                      	</ul>
+                      </li>
+                     <li class="dropdown">
+                     	<a class="dropdown-toggle" data-toggle="dropdown" href="#" rel="tooltip" title="Edit">
+                     	Edit
+                     	<b class="caret"></b>
+                     	</a>
+                     	<ul class="dropdown-menu">
+                     		<li><a href="#"><i class="icon-undo"></i>Undo</a></li>
+                     		<li><a href="#"><i class="icon-repeat"></i>Undo</a></li>
+                     	</ul>
+                     </li>
+                     <li>
+                     	<a id="" class="" href="#" rel="tooltip" title="Tools">Tools</a>
+                     </li>
+                     <li>
+                   		<a class="settings" href="#" rel="tooltip" title="Settings">Settings</a>
+                     </li>
+                     <li class="dropdown">
+                     	<a href="#" class="dropdown-toggle" data-toggle="dropdown"  rel="tooltip" title="Help">
+                     		Help
+                      		<b class="caret"></b>
+                      	</a>
+                     	<ul class="dropdown-menu" >
+                     		<li class="dropdown-submenu">
+				    			<a href="#">Learning</a>
+				    			<ul class="dropdown-menu">
+				    				<!--<li><a href="#">QuickStart</a></li>-->
+				    				<li><a href="https://github.com/kaosat-dev/CoffeeSCad/wiki" target="_blank">Wiki</a></li>
+                    				<li><a href="#">Video Tutorials (N/A yet)</a></li>
+				    			</ul>
+				    		</li>
+				    		<li class="dropdown-submenu">
+				    			<a href="#">Contact</a>
+				    			<ul class="dropdown-menu">
+                    				<li>
+										<a href="//plus.google.com/117965920069380418940?prsrc=3" rel="publisher" style="text-decoration:none;" target="_blank">
+										Follow Coffeescad on <img src="//ssl.gstatic.com/images/icons/gplus-16.png" alt="Google+" style="border:0;width:16px;height:16px;"/></a>
+									</li>
+                    				<li><a href="https://github.com/kaosat-dev/CoffeeSCad" target="_blank">Github</a></li>
+				    			</ul>
+				    		</li>
+                     		<li class="about"><a href="#"><i class="icon-bullhorn"></i>About CoffeeSCad</a></li>
+                     	</ul>
+                     </li>
+                      <li id="undoBtn" class="undo"> 
+                      	<a href="#" rel="tooltip" title="Undo (CTRL+Z)"><i class="icon-undo "></i></a>
+                      <li id="redoBtn" class="redo">
+                      	<a href="#" rel="tooltip" title="Redo (CTRL+Y)"><i class="icon-repeat "></i></a>
+                     </li>
+                     <li>
+                     	<a id="compileBtn" class="disabled compileProject" href="#" rel="tooltip" title="Compile and render project" ><i class="icon-bolt"></i></a>
+                     </li>
+                     <li class="hide">
+                     	<a id="abortBtn" href="#" rel="tooltip" title="Abort"><i class="icon-remove"></i></a>
+                     </li>
+                    </ul>
+                    
+                    <ul class="nav pull-right">
+                      <li class="divider-vertical"></li>
+                      <li class="notifications top-left"></li>
+                      <li class="dropdown">
+                     	<a class="dropdown-toggle" data-toggle="dropdown" href="#" rel="tooltip" title="Login">
+                     	Login
+                     	<b class="caret"></b>
+                     	</a>
+                     	<ul id="stores" class="dropdown-menu">
+                     		
+                     	</ul>
+                     </li>
+                      <li>
+                      	<a href="#" rel="tooltip" title="Fork me on GitHub!"><i class="icon-github"></i></a>
+					  </li> 
+                    </ul>
+                  </div>
+       	</div>	
+	</div>
+</script>
+
+<script id="recentFileTmpl" type="text/x-underscore-template">
+	<a tabindex='-1' href='#' class="loadFileDirect"><%= name %></a>
 </script>
