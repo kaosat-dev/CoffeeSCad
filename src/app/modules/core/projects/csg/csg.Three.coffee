@@ -211,6 +211,8 @@ define (require) ->
       #console.log three_geometry
       end = new Date().getTime()
       console.log "Conversion to three.geometry time: #{end-start}"
+      
+      three_geometry.tmpPos = new THREE.Vector3(csg_model.position.x,csg_model.position.y,csg_model.position.z)
       three_geometry
   
     fromCSG_: (csg_model) ->

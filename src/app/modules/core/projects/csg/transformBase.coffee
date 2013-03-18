@@ -6,6 +6,11 @@ define (require)->
   
   class TransformBase 
     # Add several convenience methods to the classes that support a transform() method:
+    
+    constructor:(options)->
+      @position = new Vector3D(0,0,0)
+      @rotation = new Vector3D()
+      
     mirrored : (plane) ->
       @transform Matrix4x4.mirroring(plane)
   
@@ -21,8 +26,17 @@ define (require)->
       plane = new Plane(new Vector3D(0, 0, 1), 0)
       @mirrored plane
   
-    translate : (v) ->
-      @transform Matrix4x4.translation(v)
+    translate : (v) =>
+      #TODO: find why check is needed for the strange 
+      #cases where @position is not defined: could be a transformbase subclass which does not call super(options)?
+      if @position?
+        v = new Vector3D(v)
+        @position = @position.plus(v)
+      else
+        v = new Vector3D(v)
+        @position = new Vector3D(v)
+      
+      return @transform Matrix4x4.translation(v)
   
     scale : (f) ->
       @transform Matrix4x4.scaling(f)
@@ -39,9 +53,20 @@ define (require)->
     rotate : (degrees, rotationCenter) ->
       rotationCenter = [0, 0, 0]  unless rotationCenter?
       @translate(rotationCenter)
-      @transform(Matrix4x4.rotationX(degrees[0]))
-      @transform(Matrix4x4.rotationY(degrees[1]))
-      @transform(Matrix4x4.rotationZ(degrees[2]))
+      
+      xMatrix = Matrix4x4.rotationX(degrees[0])
+      yMatrix = Matrix4x4.rotationY(degrees[1])
+      zMatrix = Matrix4x4.rotationZ(degrees[2])
+      
+      @transform(xMatrix)
+      @transform(yMatrix)
+      @transform(zMatrix)
+      
+      #if not @rotation?
+      #  @rotation = new Vector3D()
+      @rotation.multiply4x4(yMatrix)#.transform(yMatrix).transform(zMatrix)
       @
+      
+      
       
   return TransformBase

@@ -393,17 +393,13 @@ define (require) ->
           FAR)
       @overlayCamera.up = new THREE.Vector3( 0, 0, 1 )
       
-      #@overlayCamera.position.x = 150
-      #@overlayCamera.position.y = 150
-      #@overlayCamera.position.z = 250
-      
       #@overlayCamera.toOrthographic()
       #@overlayCamera.setZoom(0.05)
       @overlayScene = new THREE.Scene()
       @overlayScene.add(@overlayCamera)
 
     setupLights:()=>
-      console.log "Setting up lights"
+      #console.log "Setting up lights"
       pointLight =
         new THREE.PointLight(0x333333,4)
       pointLight.position.x = -2500
@@ -661,7 +657,7 @@ define (require) ->
       @controls = new CustomOrbitControls(@camera, @el)
       @controls.rotateSpeed = 1.8
       @controls.zoomSpeed = 4.2
-      @controls.panSpeed = 1.8
+      @controls.panSpeed = 0.8#1.4
       @controls.addEventListener( 'change', @_render )
 
       @controls.staticMoving = true
@@ -755,6 +751,11 @@ define (require) ->
         mat = new THREE.MeshPhongMaterial({color:  0xFFFFFF , shading: THREE.SmoothShading,  shininess: shine, specular: spec, metal: false, vertexColors: THREE.VertexColors}) 
         mat.ambient = mat.color
       mesh = new THREE.Mesh(geom, mat)
+      
+      #TODO: solve this positioning issue
+      #mesh.position = geom.tmpPos
+      #delete geom.tmpPos
+      
       mesh.castShadow =  @settings.get("shadows")
       mesh.receiveShadow = @settings.get("selfShadows") and @settings.get("shadows")
       mesh.material.wireframe = @settings.get("wireframe")

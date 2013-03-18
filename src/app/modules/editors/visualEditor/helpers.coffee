@@ -83,6 +83,27 @@ define (require) ->
       texture.needsUpdate = true
       return texture
   
+  class Arrow extends BaseHelper
+    constructor:(options)->
+      super options
+      defaults = {direction:new THREE.Vector3(1,0,0),origin:new THREE.Vector3(0,0,0),length:50, color:"#FF0000"}
+      options = merge defaults, options
+      {@direction, @origin, @length, @color} = options
+
+      #dir, origin, length, hex
+      lineGeometry = new THREE.Geometry()
+      lineGeometry.vertices.push(@origin)
+      lineGeometry.vertices.push(@direction.setLength(@length))
+      @line = new THREE.Line( lineGeometry, new THREE.LineBasicMaterial( { color: @color } ) )
+      @add @line
+      
+      @arrowHeadRootPosition = @origin.clone().add(@direction)
+      @arrowHead = new THREE.Mesh(new THREE.CylinderGeometry(0, 1, 5, 10, 10, false),new THREE.MeshBasicMaterial({color:@color,side : THREE.DoubleSide,blending: THREE.AdditiveBlending}))
+      @arrowHead.position = @arrowHeadRootPosition
+      #@arrowHead.rotation = Math.PI/2
+      @add @arrowHead
+      
+  
   class LabeledAxes extends BaseHelper
     constructor:(options)->
       super options
@@ -173,10 +194,13 @@ define (require) ->
         sizeLabel.rotation.z=Math.PI/2
         sizeLabel.position.set(i,0,0.1)
         @labels.add(sizeLabel)
+        
         if i != 0 
           #don't draw 0 twice
           sizeLabel2.position.set(0,i,0.1)
+          sizeLabel2.rotation.z=Math.PI/2
           @labels.add(sizeLabel2)
+          
         
       @mainGrid = new THREE.Line(gridGeometry, gridMaterial, THREE.LinePieces)
       
@@ -322,9 +346,12 @@ define (require) ->
           cage.add heightLabel
       
         #TODO: solve z fighting issue
-        widthArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,0),50, 0xFF7700)
-        lengthArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,0),50, 0x77FF00)
-        heightArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(-length/2,-width/2,-height/2),height, 0x0077FF)
+        widthArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,0),width/2, 0xFF7700) #new Arrow({length:width/2, color:"#FF7700"})#
+        lengthArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,0),length/2, 0x77FF00)
+        heightArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(0,0,0),height/2, 0x0077FF)
+        
+        #mesh.material.side= THREE.BackSide
+        #widthArrow.material.side = THREE.FrontSide
         
         cage.add widthArrow
         cage.add lengthArrow
@@ -334,4 +361,4 @@ define (require) ->
         mesh.add cage
       catch error
 
-  return {"LabeledAxes":LabeledAxes, "Grid":Grid, "BoundingCage":BoundingCage}
+  return {"LabeledAxes":LabeledAxes, "Arrow":Arrow, "Grid":Grid, "BoundingCage":BoundingCage}
