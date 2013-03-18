@@ -98,7 +98,7 @@ define (require) ->
       @add @line
       
       @arrowHeadRootPosition = @origin.clone().add(@direction)
-      @arrowHead = new THREE.Mesh(new THREE.CylinderGeometry(0, 1, 5, 10, 10, false),new THREE.MeshBasicMaterial({color:@color,side : THREE.DoubleSide,blending: THREE.AdditiveBlending}))
+      @arrowHead = new THREE.Mesh(new THREE.CylinderGeometry(0, 1, 5, 10, 10, false),new THREE.MeshBasicMaterial({color:@color}))
       @arrowHead.position = @arrowHeadRootPosition
       #@arrowHead.rotation = Math.PI/2
       @add @arrowHead
@@ -350,6 +350,14 @@ define (require) ->
         lengthArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,0),length/2, 0x77FF00)
         heightArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(0,0,0),height/2, 0x0077FF)
         
+        
+        selectionAxis = new THREE.AxisHelper( width )
+        selectionAxis.material.depthTest = false
+        selectionAxis.material.transparent = true
+        selectionAxis.position = new THREE.Vector3(width,length,height/2)
+        #selectionAxis.matrixAutoUpdate = false
+        
+        mesh.add selectionAxis
         #mesh.material.side= THREE.BackSide
         #widthArrow.material.side = THREE.FrontSide
         
