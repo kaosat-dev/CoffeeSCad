@@ -32,6 +32,10 @@ define (require)->
   
   materials = require './materials'
   
+  s4 = ->
+    Math.floor((1 + Math.random()) * 0x10000).toString(16).substring 1
+  guid = ->
+    s4() + s4() + "-" + s4() + "-" + s4() + "-" + s4() + "-" + s4() + s4() + s4()
   
   Function::getter = (prop, get) ->
     Object.defineProperty @prototype, prop, {get, configurable: yes}
@@ -47,6 +51,7 @@ define (require)->
     
     constructor:(options)->
       super options
+      @uid = guid()
       @polygons = []
       @properties = new Properties()
       @isCanonicalized = true
@@ -63,9 +68,10 @@ define (require)->
       
     add:(objects...)->
       for obj in objects
+        obj.position = obj.position.plus(@position)
         @children.push(obj)
       
-    clone:()->
+    clone:->
       _clone=(obj)->
         if not obj? or typeof obj isnt 'object'
           return obj
@@ -89,8 +95,9 @@ define (require)->
       #newInstance.properties = Properties.cloneObj()
       newInstance.isCanonicalized = @isCanonicalized
       newInstance.isRetesselated = @isRetesselated
+      
       for key of @
-        if key != "polygons" and key!= "isCanonicalized" and key != "isRetesselated" and key != "constructor" and key != "children"
+        if key != "polygons" and key!= "isCanonicalized" and key != "isRetesselated" and key != "constructor" and key != "children" and key!= "uid"
           #console.log "key #{key}"
           if @.hasOwnProperty(key)
               newInstance[key] = _clone @[key]
@@ -99,6 +106,7 @@ define (require)->
         newInstance.children.push childClone
 
       #newInstance = $.extend(true, {}, @)#OLD, jquery version, not web worker compatible
+      newInstance.uid = guid()
       return newInstance
       
     @fromPolygons : (polygons) ->
@@ -544,7 +552,6 @@ define (require)->
         extrudedface = CSGBase.fromPolygons extrudedface
         result = result.unionSub(extrudedface, false, false)
       
-      #console.log "here"
       polygons = (extrudePolygon(polygon) for polygon in csg.polygons)
       csg.polygons = polygons
       #console.log "csg polys #{polygons}"
@@ -676,7 +683,6 @@ define (require)->
       # and build spheres at each vertex
       # We will try to set the x and z axis to the normals of 2 planes
       # This will ensure that our sphere tesselation somewhat matches 2 planes
-      console.log "here"
       for vertextag of vertexmap
         vertexobj = vertexmap[vertextag]
         # use the first normal to be the x axis of our sphere:
@@ -705,7 +711,6 @@ define (require)->
           axes: [xaxis, yaxis, zaxis]
         )
         result = result.unionSub(sphere, false, false)
-      console.log "at end"
       result
       
     canonicalize: ->

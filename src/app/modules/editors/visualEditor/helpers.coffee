@@ -351,13 +351,13 @@ define (require) ->
         heightArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(0,0,0),height/2, 0x0077FF)
         
         
-        selectionAxis = new THREE.AxisHelper( width )
+        selectionAxis = new THREE.AxisHelper(Math.min(width,length, height))
         selectionAxis.material.depthTest = false
         selectionAxis.material.transparent = true
-        selectionAxis.position = new THREE.Vector3(width,length,height/2)
+        selectionAxis.position = mesh.position
         #selectionAxis.matrixAutoUpdate = false
         
-        mesh.add selectionAxis
+        cage.add selectionAxis
         #mesh.material.side= THREE.BackSide
         #widthArrow.material.side = THREE.FrontSide
         

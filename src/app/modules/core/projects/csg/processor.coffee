@@ -51,6 +51,7 @@ define (require) ->
       assembly = new CSGBase();
         
       #{@script}
+      
       """
       @script = CoffeeScript.compile(@script, {bare: true})
       #console.log "JSIFIED script"
@@ -126,7 +127,9 @@ define (require) ->
             }
             
       });
-      /*
+      """
+      
+      ###
       onmessage = function(e) 
       { 
             var data = e.data;
@@ -151,9 +154,8 @@ define (require) ->
             {
                //postMessage({txt: "Got", cmd:"log"});
             }
-      }*/
-      
-      """
+      }
+      ###
 
       blobURL = utils.textToBlobUrl(workerScript)
       worker = new Worker(blobURL)

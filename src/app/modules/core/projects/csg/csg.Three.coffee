@@ -114,12 +114,15 @@ define (require) ->
       polygons = csg_model.toPolygons()
       properties = csg_model.properties
       
+      rootPos = csg_model.position
+      #csg_model.position.x,csg_model.position.y,csg_model.position.z
+      
       verticesIndex= {}
       
       fetchVertexIndex = (vertex, index)=>
-        x = vertex.pos.x 
-        y = vertex.pos.y 
-        z = vertex.pos.z
+        x = vertex.pos.x - rootPos.x #offset to compensate for dual translation: one in geometry space and the other in viewspace
+        y = vertex.pos.y - rootPos.y
+        z = vertex.pos.z - rootPos.z
         key = "#{x},#{y},#{z}"
         if not (key of verticesIndex)
           threeVertex = new THREE.Vector3(vertex.pos._x,vertex.pos._y,vertex.pos._z)
@@ -144,6 +147,7 @@ define (require) ->
           [index,v,found] = fetchVertexIndex(vertex,vertexIndex)
           polyVertices.push(index)
           if not found
+            v = v.sub(rootPos)
             three_geometry.vertices.push(v)
             vertexIndex+=1
         

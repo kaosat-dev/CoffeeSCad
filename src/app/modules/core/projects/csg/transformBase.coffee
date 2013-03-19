@@ -9,7 +9,7 @@ define (require)->
     
     constructor:(options)->
       @position = new Vector3D(0,0,0)
-      @rotation = new Vector3D()
+      @rotation = new Vector3D(0,0,0)
       
     mirrored : (plane) ->
       @transform Matrix4x4.mirroring(plane)
@@ -26,7 +26,7 @@ define (require)->
       plane = new Plane(new Vector3D(0, 0, 1), 0)
       @mirrored plane
   
-    translate : (v) =>
+    translate : (v) ->
       #TODO: find why check is needed for the strange 
       #cases where @position is not defined: could be a transformbase subclass which does not call super(options)?
       if @position?
@@ -35,7 +35,6 @@ define (require)->
       else
         v = new Vector3D(v)
         @position = new Vector3D(v)
-      
       return @transform Matrix4x4.translation(v)
   
     scale : (f) ->
@@ -62,9 +61,9 @@ define (require)->
       @transform(yMatrix)
       @transform(zMatrix)
       
-      #if not @rotation?
-      #  @rotation = new Vector3D()
-      @rotation.multiply4x4(yMatrix)#.transform(yMatrix).transform(zMatrix)
+      if not @rotation?
+        @rotation = new Vector3D()
+      @rotation = @rotation.multiply4x4(yMatrix).transform(yMatrix).transform(zMatrix)
       @
       
       

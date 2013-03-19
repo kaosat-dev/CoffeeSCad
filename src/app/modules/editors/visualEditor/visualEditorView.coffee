@@ -499,7 +499,6 @@ define (require) ->
           @overlayCamera.lookAt(@overlayScene.position)
           #@camera.rotationAutoUpdate = true
           
-          
         when 'back'
           #@camera.toBackView()
           #@overlayCamera.toBackView()
@@ -753,8 +752,8 @@ define (require) ->
       mesh = new THREE.Mesh(geom, mat)
       
       #TODO: solve this positioning issue
-      #mesh.position = geom.tmpPos
-      #delete geom.tmpPos
+      mesh.position = geom.tmpPos
+      delete geom.tmpPos
       
       mesh.castShadow =  @settings.get("shadows")
       mesh.receiveShadow = @settings.get("selfShadows") and @settings.get("shadows")
