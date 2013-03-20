@@ -861,8 +861,10 @@ define (require)->
       @polygons = polygons
       @
   
-    color: (rgb) ->
-      newshared = new PolygonShared([rgb[0], rgb[1], rgb[2]])
+    color: (rgba) ->
+      if rgba.length<4
+        rgba[3]=1
+      newshared = new PolygonShared([rgba[0], rgba[1], rgba[2], rgba[3]])
       @setShared newshared
     
     getTransformationToFlatLying: ->

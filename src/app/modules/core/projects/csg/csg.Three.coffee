@@ -114,6 +114,7 @@ define (require) ->
       polygons = csg_model.toPolygons()
       properties = csg_model.properties
       
+      opacity = 1
       rootPos = csg_model.position
       #csg_model.position.x,csg_model.position.y,csg_model.position.z
       
@@ -133,10 +134,11 @@ define (require) ->
         else
           [index,v] = verticesIndex[key]
           return [index,v,true]
-        
+      
       vertexIndex = 0
       for polygon, polygonIndex in polygons
         color = new THREE.Color(0xaaaaaa)
+        opacity = polygon.shared.color[3]
         try
           color.r = polygon.shared.color[0]
           color.g = polygon.shared.color[1]
@@ -217,6 +219,7 @@ define (require) ->
       console.log "Conversion to three.geometry time: #{end-start}"
       
       three_geometry.tmpPos = new THREE.Vector3(csg_model.position.x,csg_model.position.y,csg_model.position.z)
+      three_geometry.opacity  = opacity
       three_geometry
   
     fromCSG_: (csg_model) ->

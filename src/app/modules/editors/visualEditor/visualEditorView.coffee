@@ -125,6 +125,11 @@ define (require) ->
               @current.origMaterial = @current.material
               @current.material = newMat
               @addCage @current
+              #center cam on object
+              @controls.zoomInOn(@current)
+              @camera.lookAt(@current.position.clone())
+              @_render()
+              
       @_render()
     
     switchModel:(newModel)->
@@ -441,8 +446,8 @@ define (require) ->
         when 'diagonal'
           @camera.position = @defaultCameraPosition
           
-          @overlayCamera.position.x = -150
-          @overlayCamera.position.y = -150
+          @overlayCamera.position.x = 150
+          @overlayCamera.position.y = 150
           @overlayCamera.position.z = 250
           
           @camera.lookAt(@scene.position)
@@ -743,12 +748,16 @@ define (require) ->
       geom = THREE.CSG.fromCSG(csgObj)
       shine= 1500
       spec= 1000
+      opacity = geom.opacity
+      
       if @renderer instanceof THREE.CanvasRenderer
         mat = new THREE.MeshLambertMaterial({color:  0xFFFFFF}) 
         mat.overdraw = true
       else 
         mat = new THREE.MeshPhongMaterial({color:  0xFFFFFF , shading: THREE.SmoothShading,  shininess: shine, specular: spec, metal: false, vertexColors: THREE.VertexColors}) 
+        mat.opacity = opacity
         mat.ambient = mat.color
+        mat.transparent = (opacity < 1)
       mesh = new THREE.Mesh(geom, mat)
       
       #TODO: solve this positioning issue

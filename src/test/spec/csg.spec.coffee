@@ -11,13 +11,28 @@ define (require)->
   Circle = csg.Circle
   
   
-  describe "Basic , configurable geometry ", ->
+  describe "CSG: Basic , configurable geometry (3d) ", ->
+    #CUBE
     it 'has a Cube geometry, default settings', ->
-      cube = new Cube({size:100})
+      cube = new Cube()
       expect(cube.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D())
       
-    it 'has a Cube geometry, center as boolean', ->
+    it 'has a Cube geometry, object as arguments', ->
+      cube = new Cube({size:100})
+      expect(cube.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D())
+    
+    ###No support for splats/simple arguments, might stay this way 
+    it 'has a Cube geometry, simple arguments', ->
+      cube = new Cube(null,100)
+      expect(cube.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D()) 
+    ###
+      
+    it 'has a Cube geometry, center as boolean:true', ->
       cube = new Cube({size:100,center:true})
+      expect(cube.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D(-50,-50,-50))
+    
+    it 'has a Cube geometry, center as boolean:false', ->
+      cube = new Cube({size:100,center:false})
       expect(cube.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D())
     
     it 'has a Cube geometry, center as vector', ->
@@ -27,20 +42,27 @@ define (require)->
     it 'has a Cube geometry, size as vector', ->
       cube = new Cube({size:[100,5,50]})
       expect(cube.polygons[0].vertices[2].pos).toEqual(new csg.Vector3D(0,5,50))
-      
-    it 'has a Cube geometry, optional corner rounding', ->
-      cube = new Cube({size:100,r:10,$fn:5})
+    
+    ###
+    it 'has a Cube geometry, optional corner rounding , with rounding radius parameter, default rounding resolution', ->
+      cube = new Cube({size:100,r:10})
       console.log cube
       expect(cube.polygons[0].vertices[2].pos).toEqual(new csg.Vector3D(0,5,50))
-      
+     
+    it 'has a Cube geometry, optional corner rounding , with all rounding parameters', ->
+      cube = new Cube({size:100,r:10,$fn:3})
+      console.log cube
+      expect(cube.polygons[0].vertices[2].pos).toEqual(new csg.Vector3D(0,5,50))
+    ###  
     
+    #SPHERE
     it 'has a Sphere geometry, size set by radius', ->
       sphere = new Sphere({r:50})
-      expect(sphere.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D())
+      expect(sphere.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D(50,0,0))
     
     it 'has a Sphere geometry, size set by diameter', ->
-      sphere = new Sphere({d:25})
-      expect(sphere.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D())
+      sphere = new Sphere({d:100})
+      expect(sphere.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D(50,0,0))
     
     it 'has a Sphere geometry, settable resolution', ->
       sphere = new Sphere({d:25,$fn:15})
@@ -48,12 +70,36 @@ define (require)->
     
     it 'has a Sphere geometry, center as boolean', ->
       sphere = new Sphere({d:25, center:true})
-      expect(sphere.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D())
+      expect(sphere.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D(25,12.5,12.5))
     
     it 'has a Sphere geometry, center as vector', ->
       sphere = new Sphere({d:25, center:[100,100,100]})
-      expect(sphere.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D())
-      
+      expect(sphere.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D(112.5,100,100))
+    
+    #CYLINDER
+    it 'has a Cylinder geometry, top and bottom radius set by radius parameter, default height', ->
+      cylinder = new Cylinder({r:25,$fn:5})
+      expect(cylinder.polygons[14].vertices[1].pos).toEqual(new csg.Vector3D(25,6.123031769111886e-15,1))
+
+    it 'has a Cylinder geometry, top and bottom radius set by radius parameter, specified height', ->
+      cylinder = new Cylinder({r:25, h:10,$fn:5})
+      expect(cylinder.polygons[14].vertices[0].pos).toEqual(new csg.Vector3D(0,0,10))
+    
+    it 'has a Cylinder geometry, top and bottom radius set by diameter parameter', ->
+      cylinder = new Cylinder({d:100,$fn:3})
+      expect(cylinder.polygons[3].vertices[2].pos).toEqual(new csg.Vector3D(-25.00000000000002,43.30127018922192,0))
+    
+    it 'has a Cylinder geometry, with settable resolution', ->
+      cylinder = new Cylinder({d:25,$fn:15})
+      expect(cylinder.polygons.length).toEqual(45)
+    
+    it 'has a Sphere geometry, center as boolean', ->
+      cylinder = new Cylinder({d:25, center:true, $fn:5})
+      expect(cylinder.polygons[0].vertices[1].pos).toEqual(new csg.Vector3D(12.5,0,-0.5))
+    
+    it 'has a Sphere geometry, center as vector', ->
+      cylinder = new Cylinder({d:25, center:[100,100,100], $fn:5})
+      expect(cylinder.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D(100,100,100))
       
   
   describe "CSG transforms", ->

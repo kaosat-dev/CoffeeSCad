@@ -8,6 +8,34 @@ define (require)->
   Polygon = maths.Polygon
   Side    = maths.Side
   
+  
+  merge = (options, overrides) ->
+    extend (extend {}, options), overrides
+
+  extend = (object, properties) ->
+    for key, val of properties
+      object[key] = val
+    object
+  
+  parseOptions = (options, defaults)->
+    if  Object.getPrototypeOf( options ) == Object.prototype
+      options = merge defaults, options
+    else if options instanceof Array
+      indexToName = {}
+      result = {}
+      index =0
+      for own key,val of defaults
+        indexToName[index]=key
+        result[key]=val
+        index++
+        
+      for option, index in options
+        if option?
+          name = indexToName[index]
+          result[name]=option
+      
+      options = result
+    return options  
 
   parseOption = (options, optionname, defaultvalue) ->
     # Parse an option from the options object
@@ -16,9 +44,18 @@ define (require)->
     result = options[optionname]  if optionname of options  if options
     result
   
-  parseOptionAs3DVector = (options, optionname, defaultvalue) ->
+  parseOptionAs3DVector = (options, optionname, defaultvalue, defaultvalue2) ->
     # Parse an option and force into a Vector3D. If a scalar is passed it is converted
-    # into a vector with equal x,y,z
+    # into a vector with equal x,y,z, if a boolean is passed and is true, take defaultvalue, otherwise defaultvalue2
+    
+    if optionname of options
+      if options[optionname] == false or options[optionname] == true
+        doCenter = parseOptionAsBool(options,optionname,false)  
+        if doCenter
+          options[optionname]=defaultvalue
+        else
+          options[optionname]=defaultvalue2
+    
     result = parseOption(options, optionname, defaultvalue)
     result = new Vector3D(result)
     result
@@ -616,6 +653,7 @@ define (require)->
       
   return {
       "parseOption": parseOption
+      "parseOptions":parseOptions
       "parseOptionAs3DVector": parseOptionAs3DVector  
       "parseOptionAs2DVector": parseOptionAs2DVector
       "parseOptionAsFloat": parseOptionAsFloat

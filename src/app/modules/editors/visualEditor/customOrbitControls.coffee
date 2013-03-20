@@ -18,7 +18,6 @@ define (require) ->
     _panEnd = new THREE.Vector2()
     
     # API
-    @center = new THREE.Vector3()
     @userZoom = true
     @userZoomSpeed = 1.0
     @userRotate = true
@@ -161,36 +160,6 @@ define (require) ->
         #console.log("mouse: ("+mouseChange.x+ ", "+ mouseChange.y +") Pan:("+pan.x+ ", " + pan.y + ", "+pan.z+")");
         _panStart = _panEnd
 
-        
-    @update_old = ->
-      position = @object.position
-      offset = position.clone().sub(@center)
-      #angle from z-axis around y-axis
-      theta = Math.atan2(offset.x, offset.z)
-      # angle from y-axis
-      phi = Math.atan2(Math.sqrt(offset.x * offset.x + offset.z * offset.z), offset.y)
-      @rotateLeft getAutoRotationAngle()  if @autoRotate
-      theta += thetaDelta
-      phi += phiDelta
-      # restrict phi to be between desired limits
-      phi = Math.max(@minPolarAngle, Math.min(@maxPolarAngle, phi))
-      #restrict phi to be betwee EPS and PI-EPS
-      phi = Math.max(EPS, Math.min(Math.PI - EPS, phi))
-      radius = offset.length() * scale
-      # restrict radius to be between desired limits
-      radius = Math.max(@minDistance, Math.min(@maxDistance, radius))
-      offset.x = radius * Math.sin(phi) * Math.sin(theta)
-      offset.y = radius * Math.cos(phi)
-      offset.z = radius * Math.sin(phi) * Math.cos(theta)
-      position.copy(@center).add offset
-      @object.lookAt @center
-      thetaDelta = 0
-      phiDelta = 0
-      scale = 1
-      if lastPosition.distanceTo(@object.position) > 0
-        @dispatchEvent changeEvent
-        lastPosition.copy @object.position
-     
     @update = =>
       if not @noRotate
         @rotateCamera()
@@ -205,6 +174,12 @@ define (require) ->
       if ( lastPosition.distanceToSquared( @object.position ) >0)
         @dispatchEvent(changeEvent)
         lastPosition.copy(@object.position)
+    
+    
+    @zoomInOn=(object) =>
+      @target = object.position.clone()
+      #@zoomIn(2)
+      
     
     getAutoRotationAngle = ->
       2 * Math.PI / 60 / 60 * scope.autoRotateSpeed
