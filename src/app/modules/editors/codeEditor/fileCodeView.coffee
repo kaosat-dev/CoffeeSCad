@@ -192,6 +192,7 @@ define (require)->
       @editor = CodeMirror.fromTextArea @ui.codeBlock.get(0),
         theme: "lesser-dark"
         mode:"coffeescript"
+        
         tabSize: 2
         indentUnit:2
         indentWithTabs:false
@@ -215,12 +216,18 @@ define (require)->
             "Ctrl-Q": (cm) ->
               foldFunc(cm, cm.getCursor().line)
             Tab:(cm)->
-              cm.replaceSelection("  ", "end")
-      
+              if (cm.somethingSelected()) 
+                cm.indentSelection("add")
+              else cm.replaceSelection("  ", "end")
+            #Tab:(cm)->
+            #  cm.replaceSelection("  ", "end")
+            ### 
+            
+            ###
             
       @hlLine=  @editor.setLineClass(0, "activeline")
       
       setTimeout @editor.refresh, 0 #necessary hack
-      @$el.attr('id', @model.get("name"))
+      @$el.attr('id', @model.name)
       
   return FileCodeView
