@@ -10,6 +10,14 @@
 	
 }
 
+#glOverlay
+{
+position:absolute;
+   bottom:0;
+   height:255px;
+   /*style="position:left ; bottom: 0px; left:10px; "*/
+}
+
 /*ToolBar*/
 .toolBar a {text-decoration:none;color:black;line-height:38px; }
 .toolBar a div{background-color: #fea60b; height:34px}
@@ -106,7 +114,10 @@ textarea:focus, input:focus{
     outline: none !important;
 }
 */
-
+#overlay
+{
+	position:absolute; right:20px;top:50%;
+}
 
 /*Experimental, for 3d ui*/
 .partDots{}
