@@ -68,6 +68,8 @@ define (require)->
       
     add:(objects...)->
       for obj in objects
+        if obj instanceof CAGBase
+          obj = obj.extrude({offset:[0,0,1]})
         obj.position = obj.position.plus(@position)
         @children.push(obj)
       

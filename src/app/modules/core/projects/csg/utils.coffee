@@ -1,4 +1,5 @@
 define (require)->
+  globals = require './globals'
   maths = require './maths'
   Vector2D = maths.Vector2D
   Vector3D = maths.Vector3D
@@ -44,26 +45,34 @@ define (require)->
     result = options[optionname]  if optionname of options  if options
     result
   
-  parseOptionAs3DVector = (options, optionname, defaultvalue, defaultvalue2) ->
+  parseOptionAs3DVector = (options, optionname, defaultValue, defaultValue2) ->
     # Parse an option and force into a Vector3D. If a scalar is passed it is converted
     # into a vector with equal x,y,z, if a boolean is passed and is true, take defaultvalue, otherwise defaultvalue2
-    
     if optionname of options
       if options[optionname] == false or options[optionname] == true
         doCenter = parseOptionAsBool(options,optionname,false)  
         if doCenter
-          options[optionname]=defaultvalue
+          options[optionname]=defaultValue
         else
-          options[optionname]=defaultvalue2
+          options[optionname]=defaultValue2
     
-    result = parseOption(options, optionname, defaultvalue)
+    result = parseOption(options, optionname, defaultValue)
     result = new Vector3D(result)
     result
   
-  parseOptionAs2DVector = (options, optionname, defaultvalue) ->
+  parseOptionAs2DVector = (options, optionname, defaultValue, defaultValue2) ->
     # Parse an option and force into a Vector2D. If a scalar is passed it is converted
-    # into a vector with equal x,y
-    result = parseOption(options, optionname, defaultvalue)
+    # into a vector with equal x,y, if a boolean is passed and is true, take defaultvalue, otherwise defaultvalue2
+    if optionname of options
+      if options[optionname] == false or options[optionname] == true
+        doCenter = parseOptionAsBool(options,optionname,false)  
+        if doCenter
+          options[optionname]=defaultValue
+        else
+          options[optionname]=defaultValue2
+    
+    
+    result = parseOption(options, optionname, defaultValue)
     result = new Vector2D(result)
     result
   
@@ -85,6 +94,20 @@ define (require)->
       result = false  if result is "false"
       result = false  if result is 0
     result = !!result
+    result
+    
+  parseOptionAsLocations = (options, optionName, defaultValue) ->
+    result = parseOption(options, optionName, defaultValue)
+    switch result
+      when "left"
+        result = globals.left
+      when "right"
+        result = globals.right
+      when "top"
+        result = globals.top
+      when "bottom"
+        result = globals.bottom
+    
     result
     
   insertSorted = (array, element, comparefunc) ->
@@ -659,6 +682,7 @@ define (require)->
       "parseOptionAsFloat": parseOptionAsFloat
       "parseOptionAsInt": parseOptionAsInt
       "parseOptionAsBool": parseOptionAsBool
+      "parseOptionAsLocations":parseOptionAsLocations
       "insertSorted": insertSorted
       "interpolateBetween2DPointsForY": interpolateBetween2DPointsForY 
       "reTesselateCoplanarPolygons": reTesselateCoplanarPolygons 

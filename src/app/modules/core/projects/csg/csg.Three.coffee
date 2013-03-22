@@ -138,11 +138,11 @@ define (require) ->
       vertexIndex = 0
       for polygon, polygonIndex in polygons
         color = new THREE.Color(0xaaaaaa)
-        opacity = polygon.shared.color[3]
         try
           color.r = polygon.shared.color[0]
           color.g = polygon.shared.color[1]
           color.b = polygon.shared.color[2]
+          opacity = polygon.shared.color[3]
         
         polyVertices = []
         for vertex,vindex in polygon.vertices
