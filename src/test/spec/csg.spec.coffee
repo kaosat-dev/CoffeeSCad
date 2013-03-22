@@ -9,7 +9,131 @@ define (require)->
   hull = csg.hull
   Rectangle = csg.Rectangle
   Circle = csg.Circle
+  utils = require "modules/core/projects/csg/utils"
   
+  
+  describe "Options parsing utilities (not public api)", ->
+    it 'has a locationsParser', ->
+      
+      options = {"corners":["left"]}
+      parsed = utils.parseOptionAsLocations(options,"corners","111111")
+      expBitMap = "111011".toString(2)
+      expect(parsed).toEqual(expBitMap)
+      
+      options = {"corners":["right"]}
+      parsed = utils.parseOptionAsLocations(options,"corners","111111")
+      expBitMap = "110111".toString(2)
+      expect(parsed).toEqual(expBitMap)
+      
+      options = {"corners":["top"]}
+      parsed = utils.parseOptionAsLocations(options,"corners","111111")
+      expBitMap = "101111".toString(2)
+      expect(parsed).toEqual(expBitMap)
+      
+      options = {"corners":["bottom"]}
+      parsed = utils.parseOptionAsLocations(options,"corners","111111")
+      expBitMap = "11111".toString(2)
+      expect(parsed).toEqual(expBitMap)
+      
+      options = {"corners":["right","left"]}
+      parsed = utils.parseOptionAsLocations(options,"corners","111111")
+      expBitMap = "111111".toString(2)
+      expect(parsed).toEqual(expBitMap)
+      
+      options = {"corners":["top","bottom"]}
+      parsed = utils.parseOptionAsLocations(options,"corners","111111")
+      expBitMap = "111111".toString(2)
+      expect(parsed).toEqual(expBitMap)
+      
+      options = {"corners":["top right"]}
+      parsed = utils.parseOptionAsLocations(options,"corners","111111")
+      expBitMap = "100111".toString(2)
+      expect(parsed).toEqual(expBitMap)
+      
+      options = {"corners":["top left"]}
+      parsed = utils.parseOptionAsLocations(options,"corners","111111")
+      expBitMap = "101011".toString(2)
+      expect(parsed).toEqual(expBitMap)
+      
+      options = {"corners":["bottom right"]}
+      parsed = utils.parseOptionAsLocations(options,"corners","111111")
+      expBitMap = "10111".toString(2)
+      expect(parsed).toEqual(expBitMap)
+      
+      options = {"corners":["bottom left"]}
+      parsed = utils.parseOptionAsLocations(options,"corners","111111")
+      expBitMap = "11011".toString(2)
+      expect(parsed).toEqual(expBitMap)
+      
+      options = {"corners":["left front"]}
+      parsed = utils.parseOptionAsLocations(options,"corners","111111")
+      expBitMap = "111010".toString(2)
+      expect(parsed).toEqual(expBitMap)
+      
+      options = {"corners":["right front"]}
+      parsed = utils.parseOptionAsLocations(options,"corners","111111")
+      expBitMap = "110110".toString(2)
+      expect(parsed).toEqual(expBitMap)
+      
+      options = {"corners":["left back"]}
+      parsed = utils.parseOptionAsLocations(options,"corners","111111")
+      expBitMap = "111001".toString(2)
+      expect(parsed).toEqual(expBitMap)
+      
+      options = {"corners":["right back"]}
+      parsed = utils.parseOptionAsLocations(options,"corners","111111")
+      expBitMap = "110101".toString(2)
+      expect(parsed).toEqual(expBitMap)
+      
+      #FULL
+      options = {"corners":["top right front"]}
+      parsed = utils.parseOptionAsLocations(options,"corners","111111")
+      expBitMap = "100110".toString(2)
+      expect(parsed).toEqual(expBitMap)
+      
+      options = {"corners":["top right back"]}
+      parsed = utils.parseOptionAsLocations(options,"corners","111111")
+      expBitMap = "100101".toString(2)
+      expect(parsed).toEqual(expBitMap)
+      
+      options = {"corners":["top left front"]}
+      parsed = utils.parseOptionAsLocations(options,"corners","111111")
+      expBitMap = "101010".toString(2)
+      expect(parsed).toEqual(expBitMap)
+      
+      options = {"corners":["top left back"]}
+      parsed = utils.parseOptionAsLocations(options,"corners","111111")
+      expBitMap = "101001".toString(2)
+      expect(parsed).toEqual(expBitMap)
+      
+      options = {"corners":["bottom right front"]}
+      parsed = utils.parseOptionAsLocations(options,"corners","111111")
+      expBitMap = "10110".toString(2)
+      expect(parsed).toEqual(expBitMap)
+      
+      options = {"corners":["bottom right back"]}
+      parsed = utils.parseOptionAsLocations(options,"corners","111111")
+      expBitMap = "10101".toString(2)
+      expect(parsed).toEqual(expBitMap)
+      
+      options = {"corners":["bottom left front"]}
+      parsed = utils.parseOptionAsLocations(options,"corners","111111")
+      expBitMap = "11010".toString(2)
+      expect(parsed).toEqual(expBitMap)
+      
+      options = {"corners":["bottom left back"]}
+      parsed = utils.parseOptionAsLocations(options,"corners","111111")
+      expBitMap = "11001".toString(2)
+      expect(parsed).toEqual(expBitMap)
+      
+      #even more complex
+      ###
+      options = {"corners":["bottom left back","top right front" ]}
+      parsed = utils.parseOptionAsLocations(options,"corners","111111")
+      expBitMap = "11001".toString(2)
+      expect(parsed).toEqual(expBitMap)
+      ###
+      
   
   describe "CSG: Basic , configurable geometry (3d) ", ->
     #CUBE
@@ -135,8 +259,29 @@ define (require)->
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["left"]})
       expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(0,5))
     
-    it 'has a Rectangle geometry, optional corner rounding , with rounding radius parameter, default rounding resolution, right corners', ->
+    it 'has a Rectangle geometry, corner rounding , various corners', ->
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["right"]})
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(0,5))
+      
+      rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["left"]})
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(0,5))
+      
+      rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["front"]})
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(0,5))
+      
+      rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["back"]})
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(0,5))
+      
+      rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["front left"]})
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(0,5))
+      
+      rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["front right"]})
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(0,5))
+      
+      rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["back left"]})
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(0,5))
+      
+      rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["back right"]})
       expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(0,5))
       
       

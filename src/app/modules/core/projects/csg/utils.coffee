@@ -98,17 +98,49 @@ define (require)->
     
   parseOptionAsLocations = (options, optionName, defaultValue) ->
     result = parseOption(options, optionName, defaultValue)
-    switch result
-      when "left"
-        result = globals.left
-      when "right"
-        result = globals.right
-      when "top"
-        result = globals.top
-      when "bottom"
-        result = globals.bottom
-    
-    result
+    #left, right, top, bottom, front back when used alone, overide all others
+    #front left front right , top left etc (dual params) override ternary params
+    #so by params size : 1>2>3 
+    mapping_old = {
+    "top":globals.top,
+    "bottom":globals.bottom,
+    "left":globals.left,
+    "right":globals.right,
+    "front":globals.front,
+    "back":globals.back,
+    }
+
+    mapping = {
+      "top": (parseInt("101111",2)),
+      "bottom":parseInt("011111",2),
+      "left":parseInt("111011",2),
+      "right":parseInt("110111",2),
+      "front":parseInt("111110",2),
+      "back":parseInt("111101",2)
+    }
+
+    stuff = null
+    for location in result
+      #trim leading and trailing whitespaces
+      location = location.replace /^\s+|\s+$/g, ""
+      locations =location.split(" ")
+      console.log "location"
+      console.log location 
+      
+      subStuff = null
+      for loc in locations
+        loc = mapping[loc]
+        if not subStuff?
+          subStuff = loc
+        else 
+          subStuff = subStuff & loc
+      if not stuff?
+        stuff = subStuff
+      else
+        stuff = stuff | subStuff
+      
+    console.log stuff.toString(2)
+    stuff.toString(2)
     
   insertSorted = (array, element, comparefunc) ->
     leftbound = 0

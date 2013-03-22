@@ -63,7 +63,7 @@ define (require)->
     #
     constructor: (options) ->
       options = options or {}
-      defaults = {size:[1,1],center:[0,0],cr:0,$fn:0,corners:globals.all}
+      defaults = {size:[1,1],center:[0,0],cr:0,$fn:0,corners:[globals.all]}
       options = utils.parseOptions(options,defaults)
       super options
       
@@ -74,20 +74,30 @@ define (require)->
       cornerRadius = parseOptionAsFloat(options,"cr",defaults["cr"])
       cornerResolution = parseOptionAsInt(options,"$fn",defaults["$fn"])
       
-      if cornerRadius is 0 and cornerResolution is 0
+      if cornerRadius is 0 or cornerResolution is 0
         points = [center.plus(size), center.plus(new Vector2D(size.x, 0)), center, center.minus(new Vector2D(0, -size.y))]
         result = CAGBase.fromPoints points
         @sides = result.sides
       else if cornerRadius > 0 and cornerResolution > 0
-        if corners is globals.all
-          rect = new Rectangle({size:size,center:center})
+        if corners is globals.all or globals.all in corners
+          sizeOffset = new Vector2D(cornerRadius*2,cornerRadius*2)
+          adjustedSize = size.minus(sizeOffset)
+          rect = new Rectangle({size:adjustedSize,center:center.plus(sizeOffset.dividedBy(2))})
           rect = rect.expand(cornerRadius, cornerResolution)
           @sides = rect.sides
         else if corners is globals.left
           rect = new Rectangle({size:size,center:center})
-          cornerTopLeft = new Circle({r:cornerRadius,$fn:cornerResolution})
-          cornerBottomLeft= new Circle({r:cornerRadius,$fn:cornerResolution})
-          
+          rect = rect.expand(cornerRadius, cornerResolution)
+          rect2 = new Rectangle({size:size.minus(new Vector2D(cornerRadius,0)),center:center.plus(new Vector2D(cornerRadius,0))})
+          rect = rect.intersect(rect2)
+          @sides = rect.sides
+        else if corners is globals.front
+          sizeOffset = new Vector2D(cornerRadius*2,cornerRadius*2)
+          adjustedSize = size.minus(sizeOffset)
+          rect = new Rectangle({size:adjustedSize,center:center.plus(sizeOffset.dividedBy(2))})
+          rect = rect.expand(cornerRadius, cornerResolution)
+          rect2 = new Rectangle({size:size.minus(new Vector2D(0,cornerRadius)),center:center.plus(new Vector2D(0,cornerRadius))})
+          rect = rect2.intersect(rect)
           @sides = rect.sides
         
   return {

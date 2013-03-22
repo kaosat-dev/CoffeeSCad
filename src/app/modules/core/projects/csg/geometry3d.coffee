@@ -326,7 +326,7 @@ define (require)->
     constructor : (options) ->
       options = options or {}
       if ("r" of options or "r1" of options) then hasRadius = true
-      defaults = {h:1,center:[0,0,0],r:1,d:2,$fn:CSGBase.defaultResolution2D}
+      defaults = {h:1,center:[0,0,0],r:1,d:2,$fn:CSGBase.defaultResolution2D,rounded:false}
       options = utils.parseOptions(options,defaults)
       super options
       
@@ -390,119 +390,13 @@ define (require)->
       @properties.cylinder.end = new Connector(e, axisZ, axisX)
       @properties.cylinder.facepoint = s.plus(axisX.times(rStart))
 
-  
-  class RoundedCylinder extends CSGBase
-    # Like a cylinder, but with rounded ends instead of flat
-    #
-    # Parameters:
-    #   start: start point of cylinder (default [0, -1, 0])
-    #   end: end point of cylinder (default [0, 1, 0])
-    #   radius: radius of cylinder (default 1), must be a scalar
-    #   resolution: determines the number of polygons per 360 degree revolution (default 12)
-    #   normal: a vector determining the starting angle for tesselation. Should be non-parallel to start.minus(end)
-    # 
-    # Example usage:
-    # 
-    #     var cylinder = RoundedCylinder({
-    #       start: [0, -1, 0],
-    #       end: [0, 1, 0],
-    #       radius: 1,
-    #       resolution: 16
-    #     });
-    constructor : (options) ->
-      options = options or {}
-      p1 = parseOptionAs3DVector(options, "start", [0, -1, 0])
-      p2 = parseOptionAs3DVector(options, "end", [0, 1, 0])
-      radius = parseOptionAsFloat(options, "r", 1)
+      roundEnds = options["rounded"]
+      if roundEnds
+        @union(new Sphere({r:radius,$fn:slices}).translate(end.pos))
+        @union(new Sphere({r:radius,$fn:slices}).translate(start.pos))
       
-      h = parseOptionAsFloat(options, "h", 1)
-      s = new Vector3D([0, 0, 0])
-      e = new Vector3D([0, 0, h])
-      
-      direction = p2.minus(p1)
-      defaultnormal = undefined
-      if Math.abs(direction.x) > Math.abs(direction.y)
-        defaultnormal = new Vector3D(0, 1, 0)
-      else
-        defaultnormal = new Vector3D(1, 0, 0)
-      normal = parseOptionAs3DVector(options, "normal", defaultnormal)
-      resolution = parseOptionAsFloat(options, "resolution", CSGBase.defaultResolution3D)
-      resolution = 4  if resolution < 4
-      polygons = []
-      qresolution = Math.floor(0.25 * resolution)
-      length = direction.length()
-      ### 
-      if length < 1e-10
-        return Sphere(
-          center: p1
-          radius: radius
-          resolution: resolution
-        )
-      ###
-      zvector = direction.unit().times(radius)
-      xvector = zvector.cross(normal).unit().times(radius)
-      yvector = xvector.cross(zvector).unit().times(radius)
-      prevcylinderpoint = undefined
-      slice1 = 0
-    
-      while slice1 <= resolution
-        angle = Math.PI * 2.0 * slice1 / resolution
-        cylinderpoint = xvector.times(Math.cos(angle)).plus(yvector.times(Math.sin(angle)))
-        if slice1 > 0
-          
-          # cylinder vertices:
-          vertices = []
-          vertices.push new Vertex(p1.plus(cylinderpoint))
-          vertices.push new Vertex(p1.plus(prevcylinderpoint))
-          vertices.push new Vertex(p2.plus(prevcylinderpoint))
-          vertices.push new Vertex(p2.plus(cylinderpoint))
-          polygons.push new Polygon(vertices)
-          prevcospitch = undefined
-          prevsinpitch = undefined
-          slice2 = 0
-    
-          while slice2 <= qresolution
-            pitch = 0.5 * Math.PI * slice2 / qresolution
-            
-            #var pitch = Math.asin(slice2/qresolution);
-            cospitch = Math.cos(pitch)
-            sinpitch = Math.sin(pitch)
-            if slice2 > 0
-              vertices = []
-              vertices.push new Vertex(p1.plus(prevcylinderpoint.times(prevcospitch).minus(zvector.times(prevsinpitch))))
-              vertices.push new Vertex(p1.plus(cylinderpoint.times(prevcospitch).minus(zvector.times(prevsinpitch))))
-              vertices.push new Vertex(p1.plus(cylinderpoint.times(cospitch).minus(zvector.times(sinpitch))))  if slice2 < qresolution
-              vertices.push new Vertex(p1.plus(prevcylinderpoint.times(cospitch).minus(zvector.times(sinpitch))))
-              polygons.push new Polygon(vertices)
-              vertices = []
-              vertices.push new Vertex(p2.plus(prevcylinderpoint.times(prevcospitch).plus(zvector.times(prevsinpitch))))
-              vertices.push new Vertex(p2.plus(cylinderpoint.times(prevcospitch).plus(zvector.times(prevsinpitch))))
-              vertices.push new Vertex(p2.plus(cylinderpoint.times(cospitch).plus(zvector.times(sinpitch))))  if slice2 < qresolution
-              vertices.push new Vertex(p2.plus(prevcylinderpoint.times(cospitch).plus(zvector.times(sinpitch))))
-              vertices.reverse()
-              polygons.push new Polygon(vertices)
-            prevcospitch = cospitch
-            prevsinpitch = sinpitch
-            slice2++
-        prevcylinderpoint = cylinderpoint
-        slice1++
-      result = CSGBase.fromPolygons(polygons)
-      ray = zvector.unit()
-      axisX = xvector.unit()
-      result.properties.roundedCylinder = new Properties()
-      result.properties.roundedCylinder.start = new Connector(p1, ray.negated(), axisX)
-      result.properties.roundedCylinder.end = new Connector(p2, ray, axisX)
-      result.properties.roundedCylinder.facepoint = p1.plus(xvector)
-      
-      @properties= result.properties
-      @polygons= result.polygons
-      @isCanonicalized = result.isCanonicalized
-      @isRetesselated = result.isRetesselated
-    
-
   return {
     "Cube": Cube
     "Sphere": Sphere
     "Cylinder": Cylinder
-    "RoundedCylinder":RoundedCylinder
     }
