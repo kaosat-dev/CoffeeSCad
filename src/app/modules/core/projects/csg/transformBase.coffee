@@ -30,9 +30,13 @@ define (require)->
       #TODO: find why check is needed for the strange 
       #cases where @position is not defined: could be a transformbase subclass which does not call super(options)?
       if @position?
+        if v instanceof csgMaths.Vector2D
+          v = v.toVector3D()
         v = new Vector3D(v)
         @position = @position.plus(v)
       else
+        if v instanceof csgMaths.Vector2D
+          v = v.toVector3D()
         v = new Vector3D(v)
         @position = new Vector3D(v)
       return @transform Matrix4x4.translation(v)

@@ -3,9 +3,6 @@ define (require)->
   CAGBase = base.CAGBase
   
   maths = require './maths'
-  Vertex = maths.Vertex
-  Vertex2D = maths.Vertex
-  Vector2D = maths.Vector2D
   Side = maths.Side
   
   globals = require './globals'
@@ -261,7 +258,7 @@ define (require)->
     hullSet(minPoint, furthestPoint, rightSet, hull)
     hullSet(furthestPoint, maxPoint, rightSet2, hull)
           
-  quickHull2d = (cag...) ->
+  quickHull2d = (cag) ->
     #quickhull hull implementation experiment
     #see here http://westhoffswelt.de/blog/0040_quickhull_introduction_and_php_implementation.html/
     cags = undefined

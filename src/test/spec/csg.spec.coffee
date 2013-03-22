@@ -224,6 +224,11 @@ define (require)->
       cylinder = new Cylinder({d:25, center:[100,100,100], $fn:5})
       expect(cylinder.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D(100,100,100))
       
+    it 'has a Cylinder geometry, with optional end rounding', ->
+      cylinder = new Cylinder({d:25, center:[100,100,100], $fn:5})
+      expect(cylinder.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D(100,100,100))
+      
+      
   describe "CSG: Basic , configurable geometry (2d) ", ->
     #SQUARE
     it 'has a Rectangle geometry, default settings', ->

@@ -111,6 +111,7 @@ define (require)->
     }
 
     mapping = {
+      "all":(parseInt("111111",2)),
       "top": (parseInt("101111",2)),
       "bottom":parseInt("011111",2),
       "left":parseInt("111011",2),
@@ -124,9 +125,8 @@ define (require)->
       #trim leading and trailing whitespaces
       location = location.replace /^\s+|\s+$/g, ""
       locations =location.split(" ")
-      console.log "location"
-      console.log location 
-      
+      #console.log "location"
+      #console.log location 
       subStuff = null
       for loc in locations
         loc = mapping[loc]
@@ -139,7 +139,6 @@ define (require)->
       else
         stuff = stuff | subStuff
       
-    console.log stuff.toString(2)
     stuff.toString(2)
     
   insertSorted = (array, element, comparefunc) ->

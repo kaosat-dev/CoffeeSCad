@@ -77,6 +77,8 @@ define (require)->
   
     toVector3D: (z) ->
       # extend to a 3D vector by adding a z coordinate:
+      if not z?
+        z=0
       new Vector3D(@_x, @_y, z)
   
     equals: (a) ->
@@ -117,6 +119,12 @@ define (require)->
   
     lengthSquared: ->
       @dot this
+    
+    normalize: ->
+      return @dividedBy( @length() )
+    
+    setLength: (l)->
+      return @normal().times(l)
   
     unit: ->
       @dividedBy @length()
