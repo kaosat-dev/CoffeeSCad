@@ -63,7 +63,7 @@ define (require)->
         @editor.setHistory history
         #@editor.refresh()
         @updateUndoRedo()
-        @updateHints()
+        @_updateHints()
         @editor.focus()
       else
         @_clearMarkers()
@@ -113,7 +113,7 @@ define (require)->
             @editor.setOption("firstLineNumber",val)
             @render()
           when "linting"
-            @updateHints()
+            @_updateHints()
     
     _clearMarkers:=>
       @_markers = []
@@ -235,6 +235,12 @@ define (require)->
                 cm.indentSelection("add")
               else cm.replaceSelection("  ", "end")
           "Ctrl-Space": "autocomplete"
+          "Ctrl-D":(cm)->
+            console.log cm
+            doc = cm.getDoc()
+            line = doc.sel.anchor.line
+            cm.getDoc().removeLine(line)
+            return false
       
       @$el.attr('id', @model.name)
       @hlLine=  @editor.addLineClass(0, "activeline")
