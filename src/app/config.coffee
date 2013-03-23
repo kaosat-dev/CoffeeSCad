@@ -43,14 +43,17 @@ require.config
     contextMenu:      "../assets/js/plugins/bootstrap-contextmenu"
     notify:           "../assets/js/plugins/bootstrap-notify"
     
-    foldcode:         "../assets/js/plugins/foldcode"
     coffeelint:       "../assets/js/plugins/coffeelint"
-    jsHint:           "../assets/js/plugins/javascript-hint"
     coffee_synhigh:   "../assets/js/libs/codeMirror/mode/coffeescript/coffeescript"
-    search:           "../assets/js/plugins/codemirror_search"
-    search_cursor:    "../assets/js/plugins/codemirror_searchcursor"
-    dialog:           "../assets/js/plugins/codemirror_dialog"
-    match_high:       "../assets/js/plugins/codemirror_match-high"
+    
+    foldcode:         "../assets/js/plugins/codemirror/fold/foldcode"
+    indent_fold:      "../assets/js/plugins/codemirror/fold/indent-fold"
+    search:           "../assets/js/plugins/codemirror/search/search"
+    search_cursor:    "../assets/js/plugins/codemirror/search/searchcursor"
+    match_high:       "../assets/js/plugins/codemirror/search/match-highlighter"
+    dialog:           "../assets/js/plugins/codemirror/dialog/dialog"
+    hint:             "../assets/js/plugins/codemirror/hint/show-hint"
+    jsHint:           "../assets/js/plugins/codemirror/hint/javascript-hint"
     
     marionette:       "../assets/js/plugins/backbone.marionette.min"
     eventbinder:      "../assets/js/plugins/backbone.eventbinder.min"
@@ -127,10 +130,12 @@ require.config
       exports:  "CodeMirror"
     foldcode:
       deps:    ["CodeMirror"]
+    indent_fold:
+      deps:    ["CodeMirror","foldcode"]
     coffee_synhigh:
       deps:    ["CodeMirror"]
     jsHint:
-      deps:    ["CodeMirror"]
+      deps:    ["CodeMirror","hint"]
     search:
       deps:    ["CodeMirror"]
     search_cursor:
@@ -138,11 +143,10 @@ require.config
     dialog:
       deps:    ["CodeMirror"]
     match_high:
-      deps:    ["CodeMirror","search_cursor"]
-    
-    jquery_codemirror:
-      deps:    ["CodeMirror","jquery"]
-      
+      deps:    ["CodeMirror","search","search_cursor"]
+    hint:
+      deps:    ["CodeMirror"]
+
     three: 
       exports : "THREE"
     three_csg: 
