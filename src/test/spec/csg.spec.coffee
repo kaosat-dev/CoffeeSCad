@@ -258,36 +258,36 @@ define (require)->
     
     it 'has a Rectangle geometry, optional corner rounding , with rounding radius parameter, default rounding resolution, all corners', ->
       rectangle = new Rectangle({size:10,cr:2,$fn:5})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(0,5))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,2))
     
     it 'has a Rectangle geometry, optional corner rounding , with rounding radius parameter, default rounding resolution, left corners', ->
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["left"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(0,5))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,2))
     
     it 'has a Rectangle geometry, corner rounding , various corners', ->
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["right"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(0,5))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,0))
       
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["left"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(0,5))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,2))
       
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["front"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(0,5))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,0))
       
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["back"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(0,5))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,2))
       
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["front left"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(0,5))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,0))
       
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["front right"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(0,5))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,0))
       
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["back left"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(0,5))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,2))
       
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["back right"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(0,5))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,0))
       
       
     #CIRCLE
@@ -305,7 +305,7 @@ define (require)->
     
     it 'has a Circle geometry, center as boolean', ->
       circle = new Circle({d:25, center:true})
-      expect(circle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(25,12.5))
+      expect(circle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(12.5,0))
     
     it 'has a Circle geometry, center as vector', ->
       circle = new Circle({d:25, center:[100,100]})
@@ -400,7 +400,7 @@ define (require)->
     it 'can generate a convex hull around 2d shapes', ->
       circle = new Circle({r:25,center:[0,0],$fn:10}).translate([0,-25,0])
       rectangle = new Rectangle(size:20).translate([100,0,0])
-      hulled = hull(circle,rectangle)
+      hulled = hull([circle,rectangle])
       expect(hulled.sides.length).toBe(9)
   
   describe "Base CSG class utilities", ->
@@ -438,7 +438,6 @@ define (require)->
       stlCube = cube.fixTJunctions()
       expect(cube.polygons.length).toBe(10)
     
-    
     it 'can generate valid (stl compatible) data out of tranformed 3d geometry' , -> 
       cube = new Cube({size:100})
       cube.rotate([25,10,15])
@@ -449,7 +448,7 @@ define (require)->
       circle = new Circle({r:25,center:[10,50,20], $fn:6})
       circle2 = new Circle({r:25,center:[10,100,20], $fn:6})
       #rectangle = new Rectangle({size:10})
-      hulled = hull(circle,circle2)
+      hulled = hull([circle,circle2])
       hulledExtruded = hulled.extrude({offset:[0,0,1],steps:1,twist:0})
       hulledExtruded.fixTJunctions()
       expect(hulledExtruded.polygons.length).toBe(182)

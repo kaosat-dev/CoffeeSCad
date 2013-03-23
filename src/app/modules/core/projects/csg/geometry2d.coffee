@@ -83,6 +83,11 @@ define (require)->
       else if cornerRadius > 0 and cornerResolution > 0
         #2D so we only care about left/right, front/back
         
+        #helper
+        sign = (p1,p2,p3)->
+          return (p1.x - p3.x) * (p2.y - p3.y) - (p2.x - p3.x) * (p1.y - p3.y)
+        
+        
         chosenIndices = []
         
         console.log corners.toString(2)
@@ -90,10 +95,10 @@ define (require)->
         console.log validCorners.toString(2)
         backFlag = 0x1#hex vs bin compare?
         frontFlag = 0x2
-        rightFlag = 0x3#parseInt("100",2)#
-        leftFlag = 0x4#parseInt("1000",2)#0x4
-        console.log "front: #{frontFlag} left: #{parseInt(leftFlag,16)} right: #{parseInt(rightFlag,16)}"
-        #FIXME: god awfull hack
+        rightFlag = parseInt("100",2)
+        leftFlag = parseInt("1000",2)
+        console.log "front: #{frontFlag.toString(2)} left: #{leftFlag.toString(2)} right: #{rightFlag.toString(2)}"
+        #FIXME: god awfull hack?
         if (validCorners & frontFlag)
           if (validCorners & leftFlag)
             chosenIndices.push(3)
@@ -110,14 +115,16 @@ define (require)->
         rCornerPositions = []
         for i in [-1,1]
           for j in [-1,1]
-            subCenter = new Vector2D(i*size.x/2,j*size.y/2).plus(center)
+            sizeOffset = new Vector2D(size).dividedBy(2)
+            subCenter = new Vector2D(i*size.x/2,j*size.y/2).plus(center).plus(sizeOffset)
             rCornerPositions.push(subCenter)
         
         for i in [0...rCornerPositions.length]
           r =  new Rectangle({size:cornerRadius,center:true})
           corner = rCornerPositions[i]
-          bX = corner.x/Math.abs(corner.x)
-          bY = corner.y/Math.abs(corner.y)
+          bX = if corner.x > center.x then +1 else -1
+          bY = if corner.y > center.y then +1 else -1
+          
           insetVector = corner.minus(new Vector2D(bX,bY).times(cornerRadius/2))
           r.translate(insetVector)
           console.log "corner: #{corner.x} #{corner.y}"
@@ -126,8 +133,9 @@ define (require)->
           
         for index in chosenIndices
           corner = rCornerPositions[index]
-          bX = corner.x/Math.abs(corner.x)
-          bY = corner.y/Math.abs(corner.y)
+          bX = if corner.x > center.x then +1 else -1
+          bY = if corner.y > center.y then +1 else -1
+          
           insetVector = corner.minus(new Vector2D(bX,bY).times(cornerRadius))
           #console.log "Rounded cornerElement position: #{insetVector.x} #{insetVector.y}"
           c = new Circle({r:cornerRadius,$fn:cornerResolution,center:true})
