@@ -126,8 +126,9 @@ define (require) ->
               @current.material = newMat
               @addCage @current
               #center cam on object
-              @controls.zoomInOn(@current)
               @camera.lookAt(@current.position.clone())
+              @controls.zoomInOn(@current)
+              
               @_render()
               
       @_render()
