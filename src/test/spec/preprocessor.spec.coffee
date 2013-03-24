@@ -61,7 +61,7 @@ define (require)->
         expect(obsPreprocessedSource).toBe(expPreProcessedSource)
       
     
-    it 'can process file includes from the current project',->
+    it 'can process file includes from the current project (simple)',->
       project.addFile
         name:"TestProject.coffee"
         content:"""include ("config.coffee")
@@ -77,9 +77,52 @@ define (require)->
 
       mainVariable = testVariable+2
       """
+      checkDeferred $.when(preprocessor.process(project)), (obsPreprocessedSource) =>
+        expect(obsPreprocessedSource).toBe(expPreProcessedSource)
       
+    it 'can process file includes from the current project (complex)',->
+      project.addFile
+        name:"TestProject.coffee"
+        content:"""include "config.coffee"
+        include "file1.coffee"
+        include "file2.coffee"
+        include "file3.coffee"
+        mainVariable = testVariable+2
+        """
+      project.addFile
+        name:"config.coffee"
+        content:"""testVariable = 42"""
       
+      project.addFile
+        name:"file1.coffee"
+        content:"""
+        include "config.coffee"
+        a=1"""
+      project.addFile
+        name:"file2.coffee"
+        content:"""
+        include "config.coffee"
+        b=2"""
+      project.addFile
+        name:"file3.coffee"
+        content:"""
+        include "config.coffee"
+        c=3"""
       
+      expPreProcessedSource = """
+      
+      testVariable = 42
+      
+      a=1
+      
+      b=2
+      
+      c=3
+
+      mainVariable = testVariable+2
+      """
+      checkDeferred $.when(preprocessor.process(project)), (obsPreprocessedSource) =>
+        expect(obsPreprocessedSource).toBe(expPreProcessedSource)
       
     it 'can process file includes from another project (browserStore) single level',->
       project.addFile

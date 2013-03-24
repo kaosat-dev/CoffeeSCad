@@ -33,6 +33,7 @@ define (require) ->
       coffeeToJs = coffeeToJs or false
       lint= lint or true
       @resolvedIncludes = []
+      @resolvedIncludesFull = []
       @unresolvedIncludes = []
       
       #if lint
@@ -56,6 +57,10 @@ define (require) ->
       $.when.apply($, @patternReplacers).done ()=>
         if coffeeToJs
           @processedResult = CoffeeScript.compile(@processedResult, {bare: true})
+        ### 
+        for include in @resolvedIncludesFull
+          @processedResult.replace(include, "")
+        @processedResult.replace("""include""","toto")###
         @deferred.resolve(@processedResult)
       
       return @deferred.promise()
@@ -113,6 +118,9 @@ define (require) ->
           catch error
             throw error
           @resolvedIncludes.push(includeeFileName)
+          @resolvedIncludesFull.push match[0]
+        else
+          @processedResult=@processedResult.replace(match[0], "")
       
       @unresolvedIncludes.splice(@unresolvedIncludes.indexOf(filename), 1)  
 
