@@ -39,7 +39,7 @@ define (require)->
       super options
       
       size = parseOptionAs3DVector(options, "size", defaults["size"])
-      center= parseOptionAs3DVector(options,"center",size.negated().dividedBy(2), defaults["center"])
+      center= parseOptionAs3DVector(options,"center",defaults["center"],size.dividedBy(2))
       
       #do params validation
       throw new Error("Cube size should be non-negative") if size.x <0 or size.y <0 or size.z <0
@@ -58,7 +58,7 @@ define (require)->
       @polygons = [[[0, 4, 6, 2], [-1, 0, 0]], [[1, 3, 7, 5], [+1, 0, 0]], [[0, 1, 5, 4], [0, -1, 0]], [[2, 6, 7, 3], [0, +1, 0]], [[0, 2, 3, 1], [0, 0, -1]], [[4, 5, 7, 6], [0, 0, +1]]].map((info) ->
         normal = new Vector3D(info[1])
         vertices = info[0].map((i) ->
-          pos = new Vector3D(center.x+size.x/2  + (size.x/2) * (2 * !!(i & 1) - 1), center.y+size.y/2 + (size.y/2) * (2 * !!(i & 2) - 1), center.z+size.z/2 + (size.z/2) * (2 * !!(i & 4) - 1))
+          pos = new Vector3D(center.x+size.x/2 * (2 * !!(i & 1) - 1), center.y+size.y/2 * (2 * !!(i & 2) - 1), center.z+size.z/2 * (2 * !!(i & 4) - 1))
           new Vertex(pos)
           )
         new Polygon(vertices, null)
@@ -237,7 +237,7 @@ define (require)->
       radius = diameter/2 
       if hasRadius
         radius = parseOptionAsFloat(options, "r", radius)
-      center= parseOptionAs3DVector(options,"center",radius, defaults["center"])
+      center= parseOptionAs3DVector(options,"center",defaults["center"],radius)
       resolution = parseOptionAsInt(options, "$fn", CSGBase.defaultResolution3D)
       
       #do params validation

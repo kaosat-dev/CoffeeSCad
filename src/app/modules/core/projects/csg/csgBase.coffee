@@ -86,6 +86,8 @@ define (require)->
           flags += 'm' if obj.multiline?
           flags += 'y' if obj.sticky?
           return new RegExp(obj.source, flags) 
+        if obj instanceof CSGBase or obj instanceof CAGBase
+          return obj.clone()
         newInstance = new obj.constructor()
         for key of obj
           newInstance[key] = _clone obj[key]

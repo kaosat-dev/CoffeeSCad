@@ -70,14 +70,19 @@ define (require)->
       super options
       
       size = parseOptionAs2DVector(options, "size", defaults["size"])
-      center= parseOptionAs2DVector(options,"center",size.negated().dividedBy(2), defaults["center"])
+      center= parseOptionAs2DVector(options,"center",defaults["center"], size.dividedBy(2))
       #rounding
       corners = parseOptionAsLocations(options, "corners",defaults["corners"])
       cornerRadius = parseOptionAsFloat(options,"cr",defaults["cr"])
       cornerResolution = parseOptionAsInt(options,"$fn",defaults["$fn"])
       
+      
       if cornerRadius is 0 or cornerResolution is 0
-        points = [center.plus(size), center.plus(new Vector2D(size.x, 0)), center, center.minus(new Vector2D(0, -size.y))]
+        halfSize = size.dividedBy(2)
+        sSwap = new Vector2D(halfSize.x, -halfSize.y)
+        points = [center.plus(halfSize), center.plus(sSwap), center.minus(halfSize), center.minus(sSwap)]
+        
+        #points = [center.plus(size), center.plus(new Vector2D(size.x, 0)), center, center.minus(new Vector2D(0, -size.y))]
         result = CAGBase.fromPoints points
         @sides = result.sides
       else if cornerRadius > 0 and cornerResolution > 0
@@ -115,8 +120,8 @@ define (require)->
         rCornerPositions = []
         for i in [-1,1]
           for j in [-1,1]
-            sizeOffset = new Vector2D(size).dividedBy(2)
-            subCenter = new Vector2D(i*size.x/2,j*size.y/2).plus(center).plus(sizeOffset)
+            #sizeOffset = new Vector2D(size).dividedBy(2)
+            subCenter = new Vector2D(i*size.x/2,j*size.y/2).plus(center)#.plus(sizeOffset)
             rCornerPositions.push(subCenter)
         
         for i in [0...rCornerPositions.length]
@@ -142,6 +147,11 @@ define (require)->
           c.translate(insetVector)
           subShapes[index] = c  
         
+        ### 
+        result = new CAGBase()
+        for shape in subShapes
+          result.union(shape)
+        ###
         result = extras.hull(subShapes)
         @sides = result.sides
 

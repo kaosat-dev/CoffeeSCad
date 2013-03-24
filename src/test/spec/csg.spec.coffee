@@ -144,11 +144,11 @@ define (require)->
     ###
     it 'has a Cube geometry, default settings', ->
       cube = new Cube()
-      expect(cube.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D())
+      expect(cube.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D(-0.5,-0.5,-0.5))
       
     it 'has a Cube geometry, object as arguments', ->
       cube = new Cube({size:100})
-      expect(cube.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D())
+      expect(cube.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D(-50,-50,-50))
       
     it 'has a Cube geometry, center as boolean:true', ->
       cube = new Cube({size:100,center:true})
@@ -160,11 +160,11 @@ define (require)->
     
     it 'has a Cube geometry, center as vector', ->
       cube = new Cube({size:100,center:[100,100,100]})
-      expect(cube.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D(100,100,100))
+      expect(cube.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D(50,50,50))
     
     it 'has a Cube geometry, size as vector', ->
       cube = new Cube({size:[100,5,50]})
-      expect(cube.polygons[0].vertices[2].pos).toEqual(new csg.Vector3D(0,5,50))
+      expect(cube.polygons[0].vertices[2].pos).toEqual(new csg.Vector3D(-50,2.5,25))
     
     ###
     it 'has a Cube geometry, optional corner rounding , with rounding radius parameter, default rounding resolution', ->
@@ -193,7 +193,7 @@ define (require)->
     
     it 'has a Sphere geometry, center as boolean', ->
       sphere = new Sphere({d:25, center:true})
-      expect(sphere.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D(25,12.5,12.5))
+      expect(sphere.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D(12.5,0,0))
     
     it 'has a Sphere geometry, center as vector', ->
       sphere = new Sphere({d:25, center:[100,100,100]})
@@ -234,11 +234,11 @@ define (require)->
     it 'has a Rectangle geometry, default settings', ->
       rectangle = new Rectangle()
       console.log rectangle
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(0,1))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(-0.5,0.5))
       
     it 'has a Rectangle geometry, object as arguments', ->
       rectangle = new Rectangle({size:100})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(0,100))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(-50,50))
       
     it 'has a Rectangle geometry, center as boolean:true', ->
       rectangle = new Rectangle({size:100,center:true})
@@ -250,44 +250,44 @@ define (require)->
     
     it 'has a Rectangle geometry, center as vector', ->
       rectangle = new Rectangle({size:100,center:[100,100]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(100,200))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(50,150))
     
     it 'has a Rectangle geometry, size as vector', ->
-      rectangle = new Rectangle({size:[100,5]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(0,5))
+      rectangle = new Rectangle({size:[100,5],center:true})
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(-50,2.5))
     
     it 'has a Rectangle geometry, optional corner rounding , with rounding radius parameter, default rounding resolution, all corners', ->
       rectangle = new Rectangle({size:10,cr:2,$fn:5})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,2))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(5,-3))
     
     it 'has a Rectangle geometry, optional corner rounding , with rounding radius parameter, default rounding resolution, left corners', ->
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["left"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,2))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(5,-3))
     
     it 'has a Rectangle geometry, corner rounding , various corners', ->
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["right"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,0))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(5,-5))
       
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["left"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,2))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(5,-3))
       
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["front"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,0))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(5,-5))
       
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["back"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,2))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(5,-3))
       
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["front left"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,0))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(5,-5))
       
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["front right"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,0))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(5,-5))
       
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["back left"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,2))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(5,-3))
       
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["back right"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,0))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(5,-5))
       
       
     #CIRCLE
@@ -318,17 +318,17 @@ define (require)->
     it 'can translate a csg object', ->
       cube = new Cube({size:100})
       cube.translate([100,0,0])
-      expect(cube.polygons[0].vertices[0].pos.x).toBe(100)
+      expect(cube.polygons[0].vertices[0].pos.x).toBe(50)
       
     it 'can rotate a csg object', ->
       cube = new Cube({size:100})
       cube.rotate([45,45,45])
-      expect(cube.polygons[0].vertices[1].pos.x).toBe(85.35533905932736)
+      expect(cube.polygons[0].vertices[1].pos.x).toBe(25.000000000000004)
     
     it 'can scale a csg object', ->
       cube = new Cube(size:100)
       cube.scale([100,100,100])
-      expect(cube.polygons[0].vertices[1].pos.z).toBe(10000)
+      expect(cube.polygons[0].vertices[1].pos.z).toBe(5000)
   
   describe "CSG boolean operations", ->
     beforeEach -> 
@@ -376,21 +376,21 @@ define (require)->
           
     it 'can do unions between 2d shapes' , ->
       circle = new Circle({r:25,center:[0,0],$fn:10})
-      rectangle = new Rectangle(size:20).translate([100,0,0])
+      rectangle = new Rectangle({size:20,center:true}).translate([100,0,0])
       circle.union(rectangle)
       expect(circle.sides.length).toBe(14)
     
     it 'can do subtraction between 2d shapes' , ->
       circle = new Circle({r:25,center:[0,0],$fn:10})
-      rectangle = new Rectangle(size:20).translate([100,0,0])
+      rectangle = new Rectangle({size:20,center:true}).translate([100,0,0])
       circle.subtract(rectangle)
       expect(circle.sides.length).toBe(10)
     
     it 'can do intersections between 2d shapes' , ->
       circle = new Circle({r:25,center:[0,0],$fn:10})
-      rectangle = new Rectangle(size:25)
+      rectangle = new Rectangle({size:25,center:true})
       circle.intersect(rectangle)
-      expect(circle.sides.length).toBe(5)
+      expect(circle.sides.length).toBe(4)
     
     it 'can extrude 2d shapes', ->
       circle = new Circle({r:10,center:[0,0],$fn:10})
@@ -399,7 +399,7 @@ define (require)->
     
     it 'can generate a convex hull around 2d shapes', ->
       circle = new Circle({r:25,center:[0,0],$fn:10}).translate([0,-25,0])
-      rectangle = new Rectangle(size:20).translate([100,0,0])
+      rectangle = new Rectangle({size:20,center:true}).translate([100,0,0])
       hulled = hull([circle,rectangle])
       expect(hulled.sides.length).toBe(9)
   
