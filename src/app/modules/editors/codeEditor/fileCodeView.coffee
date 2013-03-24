@@ -65,6 +65,7 @@ define (require)->
         @updateUndoRedo()
         @_updateHints()
         @editor.focus()
+        @editor.refresh()
       else
         @_clearMarkers()
         @$el.removeClass('active')

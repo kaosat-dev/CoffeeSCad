@@ -278,7 +278,8 @@ textarea:focus, input:focus{
 {
 	/*fix for tabs content scrollbar being displayed in the parent div*/
 	overflow: auto;
-	height: 300px;
+	height: 100%;
+	min-height: 300px;
 }
 
 
@@ -468,15 +469,20 @@ ui-icon ui-icon-closethick .ui-state-hover
 	padding-top: 2px;
 }
 
+.tab-content
+{
+	height:100%;
+}
 
 .CodeMirror {
 	/*position:absolute;*/
-	top:0;
-	bottom:0;/*to force fill container*/
+	/*top:0;
+	bottom:0;
   	left: 0;
-  	right: 0;
+  	right: 0;*/
 	/*height: auto;*/
 	width:	100%;
+	height:100%;
 	
 }
 /*
@@ -492,8 +498,6 @@ ui-icon ui-icon-closethick .ui-state-hover
 	overflow-y: auto;
 }
 /*for current full line selection*/
-/*.activeline {background: #e8f2ff !important;}
-.activeline {background: #0AAAF1 !important;}*/
 .activeline {background: #3a3f44 !important;}
 
 
