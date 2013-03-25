@@ -213,7 +213,7 @@ define (require)->
 
     onDomRefresh:=>
       CodeMirror.commands.autocomplete = (cm) ->
-        CodeMirror.showHint(cm, CodeMirror.coffeescriptHint)
+        CodeMirror.showHint(cm, CodeMirror.coffeeSCadHint)
       
       @editor = CodeMirror.fromTextArea @ui.codeBlock.get(0),
         theme: "lesser-dark"

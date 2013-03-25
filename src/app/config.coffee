@@ -53,7 +53,7 @@ require.config
     match_high:       "../assets/js/plugins/codemirror/search/match-highlighter"
     dialog:           "../assets/js/plugins/codemirror/dialog/dialog"
     hint:             "../assets/js/plugins/codemirror/hint/show-hint"
-    jsHint:           "../assets/js/plugins/codemirror/hint/javascript-hint"
+    jsHint:           "../assets/js/plugins/codemirror/hint/coffeescad-hint"
     
     marionette:       "../assets/js/plugins/backbone.marionette.min"
     eventbinder:      "../assets/js/plugins/backbone.eventbinder.min"
