@@ -13,6 +13,86 @@ define (require)->
   
   
   describe "Options parsing utilities (not public api)", ->
+    it 'has a centerParser, no input (should default to false)', ->
+      options = {}
+      size = new csg.Vector3D(10)
+      parsed = utils.parseCenter(options,"center",size.dividedBy(2), [0,0,0], csg.Vector3D)
+      expCenter = new csg.Vector3D(5,5,5)
+      expect(parsed).toEqual(expCenter)
+    
+    it 'has a centerParser, vector input', ->
+      options = {"center":[0,0,5]}
+      size = new csg.Vector3D(10)
+      parsed = utils.parseCenter(options,"center",size.dividedBy(2), [0,0,0], csg.Vector3D)
+      expCenter = new csg.Vector3D(0,0,5)
+      expect(parsed).toEqual(expCenter)
+    
+    it 'has a centerParser, single boolean, false', ->
+      options = {"center":false}
+      size = new csg.Vector3D(10)
+      parsed = utils.parseCenter(options,"center",size.dividedBy(2), [0,0,0], csg.Vector3D)
+      expCenter = new csg.Vector3D(5)
+      expect(parsed).toEqual(expCenter)
+      
+    it 'has a centerParser, single boolean, true', ->
+      options = {"center":true}
+      size = new csg.Vector3D(10)
+      parsed = utils.parseCenter(options,"center",size.dividedBy(2), [0,0,0], csg.Vector3D)
+      expCenter = new csg.Vector3D(0)
+      expect(parsed).toEqual(expCenter)
+    
+      
+    it 'has a centerParser, boolean array , all true', ->
+      options = {"center":[true,true,true]}
+      size = new csg.Vector3D(10)
+      parsed = utils.parseCenter(options,"center",size.dividedBy(2), [0,0,0], csg.Vector3D)
+      expCenter = new csg.Vector3D(0)
+      expect(parsed).toEqual(expCenter)
+    
+    
+    it 'has a centerParser, boolean array , all false', ->
+      options = {"center":[false,false,false]}
+      size = new csg.Vector3D(10)
+      parsed = utils.parseCenter(options,"center",size.dividedBy(2), [0,0,0], csg.Vector3D)
+      expCenter = new csg.Vector3D(5)
+      expect(parsed).toEqual(expCenter)
+      
+    it 'has a centerParser, boolean array , first false', ->
+      options = {"center":[false,true,true]}
+      size = new csg.Vector3D(10)
+      parsed = utils.parseCenter(options,"center",size.dividedBy(2), [0,0,0], csg.Vector3D)
+      expCenter = new csg.Vector3D(5,0,0)
+      expect(parsed).toEqual(expCenter)
+    
+    it 'has a centerParser, boolean array , first & second false', ->
+      options = {"center":[false,false,true]}
+      size = new csg.Vector3D(10)
+      parsed = utils.parseCenter(options,"center",size.dividedBy(2), [0,0,0], csg.Vector3D)
+      expCenter = new csg.Vector3D(5,5,0)
+      expect(parsed).toEqual(expCenter)
+    
+    it 'has a centerParser, boolean array , second & last false', ->
+      options = {"center":[true,false,false]}
+      size = new csg.Vector3D(10)
+      parsed = utils.parseCenter(options,"center",size.dividedBy(2), [0,0,0], csg.Vector3D)
+      expCenter = new csg.Vector3D(0,5,5)
+      expect(parsed).toEqual(expCenter)
+    
+    it 'has a centerParser, boolean and float array var1', ->
+      options = {"center":[3,false,false]}
+      size = new csg.Vector3D(10)
+      parsed = utils.parseCenter(options,"center",size.dividedBy(2), [0,0,0], csg.Vector3D)
+      expCenter = new csg.Vector3D(3,5,5)
+      expect(parsed).toEqual(expCenter)
+      
+    it 'has a centerParser, boolean and float array var2', ->
+      options = {"center":[3,true,2]}
+      size = new csg.Vector3D(10)
+      parsed = utils.parseCenter(options,"center",size.dividedBy(2), [0,0,0], csg.Vector3D)
+      expCenter = new csg.Vector3D(3,0,2)
+      expect(parsed).toEqual(expCenter)  
+
+    
     it 'has a locationsParser', ->
       
       options = {"corners":["left"]}
@@ -144,11 +224,11 @@ define (require)->
     ###
     it 'has a Cube geometry, default settings', ->
       cube = new Cube()
-      expect(cube.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D(-0.5,-0.5,-0.5))
+      expect(cube.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D(0,0,0))
       
     it 'has a Cube geometry, object as arguments', ->
       cube = new Cube({size:100})
-      expect(cube.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D(-50,-50,-50))
+      expect(cube.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D(0,0,0))
       
     it 'has a Cube geometry, center as boolean:true', ->
       cube = new Cube({size:100,center:true})
@@ -164,7 +244,7 @@ define (require)->
     
     it 'has a Cube geometry, size as vector', ->
       cube = new Cube({size:[100,5,50]})
-      expect(cube.polygons[0].vertices[2].pos).toEqual(new csg.Vector3D(-50,2.5,25))
+      expect(cube.polygons[0].vertices[2].pos).toEqual(new csg.Vector3D(0,5,50))
     
     ###
     it 'has a Cube geometry, optional corner rounding , with rounding radius parameter, default rounding resolution', ->
@@ -222,11 +302,11 @@ define (require)->
     
     it 'has a Cylinder geometry, center as vector', ->
       cylinder = new Cylinder({d:25, center:[100,100,100], $fn:5})
-      expect(cylinder.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D(100,100,100))
+      expect(cylinder.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D(100,100,99.5))
       
     it 'has a Cylinder geometry, with optional end rounding', ->
       cylinder = new Cylinder({d:25, center:[100,100,100], $fn:5})
-      expect(cylinder.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D(100,100,100))
+      expect(cylinder.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D(100,100,99.5))
       
       
   describe "CSG: Basic , configurable geometry (2d) ", ->
@@ -234,11 +314,11 @@ define (require)->
     it 'has a Rectangle geometry, default settings', ->
       rectangle = new Rectangle()
       console.log rectangle
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(-0.5,0.5))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(0,1))
       
     it 'has a Rectangle geometry, object as arguments', ->
       rectangle = new Rectangle({size:100})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(-50,50))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(0,100))
       
     it 'has a Rectangle geometry, center as boolean:true', ->
       rectangle = new Rectangle({size:100,center:true})
@@ -258,36 +338,36 @@ define (require)->
     
     it 'has a Rectangle geometry, optional corner rounding , with rounding radius parameter, default rounding resolution, all corners', ->
       rectangle = new Rectangle({size:10,cr:2,$fn:5})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(5,-3))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,2))
     
     it 'has a Rectangle geometry, optional corner rounding , with rounding radius parameter, default rounding resolution, left corners', ->
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["left"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(5,-3))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,2))
     
     it 'has a Rectangle geometry, corner rounding , various corners', ->
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["right"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(5,-5))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,0))
       
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["left"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(5,-3))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,2))
       
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["front"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(5,-5))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,0))
       
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["back"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(5,-3))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,2))
       
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["front left"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(5,-5))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,0))
       
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["front right"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(5,-5))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,0))
       
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["back left"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(5,-3))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,2))
       
       rectangle = new Rectangle({size:10,cr:2,$fn:5, corners:["back right"]})
-      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(5,-5))
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(10,0))
       
       
     #CIRCLE
@@ -316,17 +396,17 @@ define (require)->
   
   describe "CSG transforms", ->
     it 'can translate a csg object', ->
-      cube = new Cube({size:100})
+      cube = new Cube({size:100,center:true})
       cube.translate([100,0,0])
       expect(cube.polygons[0].vertices[0].pos.x).toBe(50)
       
     it 'can rotate a csg object', ->
-      cube = new Cube({size:100})
+      cube = new Cube({size:100,center:true})
       cube.rotate([45,45,45])
       expect(cube.polygons[0].vertices[1].pos.x).toBe(25.000000000000004)
     
     it 'can scale a csg object', ->
-      cube = new Cube(size:100)
+      cube = new Cube({size:100,center:true})
       cube.scale([100,100,100])
       expect(cube.polygons[0].vertices[1].pos.z).toBe(5000)
   
@@ -337,32 +417,32 @@ define (require)->
           _.isEqual @actual, expected
       
     it 'can do unions between two 3d shapes' , ->
-      cube = new Cube(size:100)
+      cube = new Cube({size:100,center:true})
       cube2 = new Cube(size:100,center:[90,90,0])
       cube.union(cube2)
       expect(cube.polygons.length).toBe(14)
     
     it 'can do unions between multiple 3d shapes' , ->
-      cube = new Cube(size:100)
+      cube = new Cube({size:100,center:true})
       cube2 = new Cube(size:100,center:[90,90,0])
       cube3 = new Cube(size:100,center:[90,90,-90])
       cube.union([cube2,cube3])
       expect(cube.polygons.length).toBe(16)
       
     it 'can do substractions between 3d shapes' , ->
-      cube = new Cube(size:100)
+      cube = new Cube({size:100,center:true})
       cube2 = new Cube(size:100,center:[90,90,0])
       cube.subtract(cube2)
       expect(cube.polygons.length).toBe(10)
     
     it 'can do intersection between 3d shapes' , ->
-      cube = new Cube(size:100)
+      cube = new Cube({size:100,center:true})
       cube2 = new Cube(size:100,center:[90,90,0])
       cube.intersect(cube2)
       expect(cube.polygons.length).toBe(6)
     
     it 'can slice a csg object by a plane' , ->
-      cube = new Cube(size:100)
+      cube = new Cube({size:100,center:true})
       cube2 = new Cube(size:100,center:[90,90,0])
       plane = Plane.fromNormalAndPoint([0, 0, 1], [0, 0, 25])
       cube.cutByPlane(plane)
@@ -406,13 +486,13 @@ define (require)->
   describe "Base CSG class utilities", ->
     
     it 'clone csg objects' , ->
-      cube = new Cube({size:100})
+      cube = new Cube({size:100,center:true})
       cube2 = cube.clone()
       expect(cube2.polygons.length).toBe(cube.polygons.length)
   
   describe "CSG object can have 'children' to define object assemblies", ->
     it 'Can add any csg object as child' , ->
-      cube = new Cube({size:100})
+      cube = new Cube({size:100,center:true})
       cube2 = cube.clone()
       sphere = new Sphere({size:20})
       
@@ -423,7 +503,7 @@ define (require)->
       expect(cube.children[1]).toBe(sphere)
       
     it 'Can add a 2d (cag) object as child, extruding it automatically by a height of 1' , ->
-      cube = new Cube({size:100})
+      cube = new Cube({size:100,center:true})
       rectangle = new Rectangle({size:10})
       cube.add(rectangle)
       expect(cube.children.length).toBe(1)
@@ -432,14 +512,14 @@ define (require)->
   describe "Advances 2d & 3d shapes manipulation", ->
     
     it 'can generate valid (stl compatible) data out of 3d geometry' , ->
-      cube = new Cube({size:100})
+      cube = new Cube({size:100,center:true})
       cube2 = new Cube({size:100,center:[20,20,0]})
       cube.subtract(cube2)
       stlCube = cube.fixTJunctions()
       expect(cube.polygons.length).toBe(10)
     
     it 'can generate valid (stl compatible) data out of tranformed 3d geometry' , -> 
-      cube = new Cube({size:100})
+      cube = new Cube({size:100,center:true})
       cube.rotate([25,10,15])
       stlCube = cube.fixTJunctions()
       expect(stlCube.polygons.length).toBe(6)

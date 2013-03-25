@@ -18,6 +18,7 @@ define (require)->
   parseOptionAs2DVector = utils.parseOptionAs2DVector
   parseOptionAsFloat = utils.parseOptionAsFloat
   parseOptionAsInt = utils.parseOptionAsInt
+  parseCenter = utils.parseCenter
   
   extras = require './extras'
   
@@ -34,14 +35,14 @@ define (require)->
       options = options or {}
       if "r" of options then hasRadius = true
       defaults = {r:1,d:2,center:[0,0],$fn:globals.defaultResolution2D}
-      options = utils.parseOptions(options,defaults)
+      #options = utils.parseOptions(options,defaults)
       super options
       
       diameter = parseOptionAsFloat(options, "d",defaults["d"])
       radius = diameter/2 
       if hasRadius
         radius = parseOptionAsFloat(options, "r", radius)
-      center= parseOptionAs2DVector(options, "center", defaults["center"], radius)
+      center= parseCenter(options, "center", defaults["center"], defaults["center"], Vector2D)
       resolution = parseOptionAsInt(options, "$fn", defaults["$fn"])
       sides = []
       prevvertex = undefined
@@ -66,11 +67,13 @@ define (require)->
     constructor: (options) ->
       options = options or {}
       defaults = {size:[1,1],center:[0,0],cr:0,$fn:0,corners:["all"]}
-      options = utils.parseOptions(options,defaults)
+      #options = utils.parseOptions(options,defaults)
       super options
       
       size = parseOptionAs2DVector(options, "size", defaults["size"])
-      center= parseOptionAs2DVector(options,"center",defaults["center"], size.dividedBy(2))
+      #center= parseOptionAs2DVector(options,"center",defaults["center"], size.dividedBy(2))
+      center= parseCenter(options, "center", size.dividedBy(2), defaults["center"], Vector2D)
+
       #rounding
       corners = parseOptionAsLocations(options, "corners",defaults["corners"])
       cornerRadius = parseOptionAsFloat(options,"cr",defaults["cr"])

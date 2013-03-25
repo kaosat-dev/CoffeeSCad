@@ -16,7 +16,7 @@ define (require)->
   parseOptionAsFloat = utils.parseOptionAsFloat
   parseOptionAsInt = utils.parseOptionAsInt
   parseOptionAsBool = utils.parseOptionAsBool
-
+  parseCenter = utils.parseCenter
  
   class Cube extends CSGBase
     # Construct a solid cuboid. with optional corner roundings (making it, you guessed it, a rounded cube)
@@ -35,11 +35,11 @@ define (require)->
       #use splat for options?
       options = options or {}
       defaults = {size:[1,1,1],center:[0,0,0],r:0,$fn:0}
-      options = utils.parseOptions(options,defaults)
+      #options = utils.parseOptions(options, defaults)
       super options
       
       size = parseOptionAs3DVector(options, "size", defaults["size"])
-      center= parseOptionAs3DVector(options,"center",defaults["center"],size.dividedBy(2))
+      center = parseCenter(options,"center",size.dividedBy(2),defaults["center"], Vector3D)
       
       #do params validation
       throw new Error("Cube size should be non-negative") if size.x <0 or size.y <0 or size.z <0
@@ -63,12 +63,11 @@ define (require)->
           )
         new Polygon(vertices, null)
       )
-      #result.properties.cube = new Properties()
-      #result.properties.cube.center = new Vector3D(center)
+      @properties.cube = new Properties()
+      @properties.cube.center = new Vector3D(center)
       # add 6 connectors, at the centers of each face:
-      #result.properties.cube.facecenters = [new Connector(new Vector3D([size.x, 0, 0]).plus(center), [1, 0, 0], [0, 0, 1]), new Connector(new Vector3D([-size.x, 0, 0]).plus(center), [-1, 0, 0], [0, 0, 1]), new Connector(new Vector3D([0, size.y, 0]).plus(center), [0, 1, 0], [0, 0, 1]), new Connector(new Vector3D([0, -size.y, 0]).plus(center), [0, -1, 0], [0, 0, 1]), new Connector(new Vector3D([0, 0, size.z]).plus(center), [0, 0, 1], [1, 0, 0]), new Connector(new Vector3D([0, 0, -size.z]).plus(center), [0, 0, -1], [1, 0, 0])]
-      
-      #@properties= result.properties
+      @properties.cube.facecenters = [new Connector(new Vector3D([size.x, 0, 0]).plus(center), [1, 0, 0], [0, 0, 1]), new Connector(new Vector3D([-size.x, 0, 0]).plus(center), [-1, 0, 0], [0, 0, 1]), new Connector(new Vector3D([0, size.y, 0]).plus(center), [0, 1, 0], [0, 0, 1]), new Connector(new Vector3D([0, -size.y, 0]).plus(center), [0, -1, 0], [0, 0, 1]), new Connector(new Vector3D([0, 0, size.z]).plus(center), [0, 0, 1], [1, 0, 0]), new Connector(new Vector3D([0, 0, -size.z]).plus(center), [0, 0, -1], [1, 0, 0])]
+
       @isCanonicalized = false
       @isRetesselated = false
   
@@ -230,14 +229,14 @@ define (require)->
       options = options or {}
       if "r" of options then hasRadius = true
       defaults = {r:1,d:2,center:[0,0,0],$fn:CSGBase.defaultResolution3D}
-      options = utils.parseOptions(options,defaults)
+      #options = utils.parseOptions(options,defaults)
       super options
       
       diameter = parseOptionAsFloat(options, "d",defaults["d"])
       radius = diameter/2 
       if hasRadius
         radius = parseOptionAsFloat(options, "r", radius)
-      center= parseOptionAs3DVector(options,"center",defaults["center"],radius)
+      center= parseCenter(options,"center",defaults["center"],defaults["center"],Vector3D)
       resolution = parseOptionAsInt(options, "$fn", CSGBase.defaultResolution3D)
       
       #do params validation
@@ -327,7 +326,7 @@ define (require)->
       options = options or {}
       if ("r" of options or "r1" of options) then hasRadius = true
       defaults = {h:1,center:[0,0,0],r:1,d:2,$fn:CSGBase.defaultResolution2D,rounded:false}
-      options = utils.parseOptions(options,defaults)
+      #options = utils.parseOptions(options,defaults)
       super options
       
       point = (stack, slice, radius) ->
@@ -336,9 +335,9 @@ define (require)->
         pos = s.plus(ray.times(stack)).plus(out.times(radius))
         new Vertex(pos)
       
-      h = parseOptionAsFloat(options, "h", defaults[h])
-      s = new Vector3D([0, 0, 0])
-      e = new Vector3D([0, 0, h])
+      h = parseOptionAsFloat(options, "h", defaults["h"])
+      s = new Vector3D([0, 0, -h/2])
+      e = new Vector3D([0, 0, h/2])
       #s = parseOptionAs3DVector(options, "start", [0, -1, 0])
       #e = parseOptionAs3DVector(options, "end", [0, 1, 0])
       radius = parseOptionAsFloat(options, "d", defaults["d"])/2
@@ -349,12 +348,28 @@ define (require)->
         radius = parseOptionAsFloat(options, "r", radius)
         rEnd = parseOptionAsFloat(options, "r2", radius)
         rStart = parseOptionAsFloat(options, "r1", radius)
-        
-      center= parseOptionAs3DVector(options,"center", e.negated().dividedBy(2), defaults["center"])
-      s = s.plus(center) 
-      e = e.plus(center) 
+      
+      min = s.min(e)
+      max = s.max(e)
+      halfHeightVect = max.minus(min).dividedBy(2)
+      
+      center= parseCenter(options,"center", (halfHeightVect),  defaults["center"], Vector3D)
+      
+      s = center.minus(halfHeightVect) 
+      e = center.plus(halfHeightVect) 
       throw new Error("Radius should be non-negative")  if (rEnd < 0) or (rStart < 0)
       throw new Error("Either radiusStart or radiusEnd should be positive")  if (rEnd is 0) and (rStart is 0)
+      
+      roundEnds = parseOptionAsBool(options, "rounded", false)
+      if roundEnds
+        radiusOffset = new Vector3D(0,0,radius)
+        #s = if s.z > center.z then s.minus(radiusOffset) else s.plus(radiusOffset)
+        #e = if e.z > center.z then e.minus(radiusOffset) else e.minus(radiusOffset)
+        reducedEnd = e.minus(radiusOffset)
+        reducedStart = s.plus(radiusOffset)
+        throw new Error("Size with roundings is too small") if reducedEnd.lengthSquared() == 0 and reducedStart.lengthSquared()==0
+        s = reducedStart
+        e = reducedEnd
       
       slices = parseOptionAsFloat(options, "$fn", defaults["$fn"])
       ray = e.minus(s)
@@ -389,11 +404,10 @@ define (require)->
       @properties.cylinder.start = new Connector(s, axisZ.negated(), axisX)
       @properties.cylinder.end = new Connector(e, axisZ, axisX)
       @properties.cylinder.facepoint = s.plus(axisX.times(rStart))
-
-      roundEnds = options["rounded"]
+      
       if roundEnds
-        @union(new Sphere({r:radius,$fn:slices}).translate(end.pos))
-        @union(new Sphere({r:radius,$fn:slices}).translate(start.pos))
+        @union(new Sphere({r:radius,$fn:slices}).translate(e))
+        @union(new Sphere({r:radius,$fn:slices}).translate(s))
       
   return {
     "Cube": Cube

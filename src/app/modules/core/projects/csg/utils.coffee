@@ -141,6 +141,35 @@ define (require)->
       
     stuff.toString(2)
     
+  parseCenter = (options, optionname, defaultValue, defaultValue2, vectorClass) ->
+    # Parse a "center" option and force into a Vector3D. If a scalar is passed it is converted
+    # into a vector with equal x,y,z, if a boolean is passed and is true, take defaultvalue, otherwise defaultvalue2
+    if optionname of options
+      centerOption = options[optionname]
+      if centerOption instanceof Array
+        newDefaultValue = new vectorClass(defaultValue)
+        newDefaultValue2 = new vectorClass(defaultValue2)
+        for component, index  in centerOption
+          if typeof component is 'boolean'
+            if index is 0 
+              centerOption[index] = if component == true then newDefaultValue2.x else if component == false then newDefaultValue.x else centerOption[index]
+            else if index is 1
+              centerOption[index] = if component == true then newDefaultValue2.y else if component == false then newDefaultValue.y  else centerOption[index]
+            else if index is 2
+              centerOption[index] = if component == true then newDefaultValue2.z else if component == false then newDefaultValue.z  else centerOption[index]
+        options[optionname] = centerOption
+      else    
+        if typeof centerOption is 'boolean'
+          doCenter = parseOptionAsBool(options,optionname,false)  
+          if doCenter
+            options[optionname]=defaultValue2
+          else
+            options[optionname]=defaultValue
+    
+    result = parseOption(options, optionname, defaultValue)
+    result = new vectorClass(result)
+    result
+    
   insertSorted = (array, element, comparefunc) ->
     leftbound = 0
     rightbound = array.length
@@ -714,6 +743,7 @@ define (require)->
       "parseOptionAsInt": parseOptionAsInt
       "parseOptionAsBool": parseOptionAsBool
       "parseOptionAsLocations":parseOptionAsLocations
+      "parseCenter":parseCenter
       "insertSorted": insertSorted
       "interpolateBetween2DPointsForY": interpolateBetween2DPointsForY 
       "reTesselateCoplanarPolygons": reTesselateCoplanarPolygons 
