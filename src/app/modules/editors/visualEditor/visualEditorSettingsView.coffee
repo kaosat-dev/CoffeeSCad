@@ -25,7 +25,7 @@ define (require)->
           gridSize     : 'Number'  
           gridStep     : 'Number'
           gridColor    : 'Text'
-          gridOpacity  : 'Number'
+          gridOpacity  : {type:'Number', editorAttrs: { step: 0.1, min: 0, max: 1 } }
           gridText     : 'Checkbox'
           
           showStats    : 'Checkbox'
