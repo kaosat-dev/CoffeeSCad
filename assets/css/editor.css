@@ -3,7 +3,12 @@
  * 
  * #253565
  */
-
+.ui-dialog .ui-dialog-titlebar{
+	padding:0;
+}
+.ui-dialog .ui-dialog-content{
+	padding:0;
+}
 
 .CodeMirror-dialog {
   position: absolute;
@@ -155,7 +160,6 @@ position:absolute;
 }
 
 
-
 .codeEditor
 {
 	/*color:#2db2ea;*/
@@ -272,6 +276,11 @@ textarea:focus, input:focus{
 .icon-extraLarge:before {
   vertical-align: top;
   font-size: 2.3333333333333333em;
+}
+
+#tabContent .tab-content
+{
+	overflow: hidden;
 }
 
 .tab-content > .active, .pill-content > .active
@@ -415,6 +424,7 @@ text-shadow: 0 1px 0 white;
 .ui-widget-content
 {
 	background: #ffffff;
+	padding:0.1em;
 	/*background: #3a3f44;
 	color: #C8C8C8 !important;*/
 }
@@ -476,14 +486,13 @@ ui-icon ui-icon-closethick .ui-state-hover
 
 .CodeMirror {
 	/*position:absolute;*/
-	/*top:0;
+	/*
 	bottom:0;
   	left: 0;
   	right: 0;*/
-	/*height: auto;*/
 	width:	100%;
-	height:100%;
-	
+	height: 90%;
+	font-size: 1em;
 }
 /*
 .CodeMirror-scroll 
@@ -684,6 +693,7 @@ body {
 	background-image: radial-gradient(center center, circle cover, #c0d1b8, #000014 100%);
    	background-repeat: no-repeat;
     background-attachment: fixed;*/
+   font-size:13px;
 }
 
 

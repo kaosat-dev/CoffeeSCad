@@ -56,7 +56,6 @@ define (require)->
       @$el.tab('show')
       @$el.addClass("active")
     
-      
     onRender:=>
       @modelBinder.bind(@model, @el, @bindings)
     

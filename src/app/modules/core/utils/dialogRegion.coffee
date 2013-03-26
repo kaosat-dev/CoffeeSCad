@@ -71,8 +71,8 @@ define (require)->
       view.isVisible=true
       @$el.dialog
         title : "CodeEditor"#view.model.get("name")
-        width: 800
-        height: 350
+        width: @width
+        height: @height
         closeOnEscape: false
         position: 
           my: "left top"

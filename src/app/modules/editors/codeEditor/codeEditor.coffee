@@ -15,6 +15,7 @@ define (require)->
 
   DummyView = require 'modules/core/utils/dummyView'
  
+ 
   class CodeEditor extends Backbone.Marionette.Application
     title: "CodeEditor"
     regions:
@@ -51,7 +52,7 @@ define (require)->
       
     showRegions:=>
       DialogRegion = require 'modules/core/utils/dialogRegion'
-      @diaReg = new DialogRegion({elName:"codeEdit"})
+      @diaReg = new DialogRegion({elName:"codeEdit",width:500,height:350})
       codeEditorView = new CodeEditorView 
         model:    @project
         settings: @settings

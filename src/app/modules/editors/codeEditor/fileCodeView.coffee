@@ -13,7 +13,6 @@ define (require)->
   require 'jsHint'
   require 'indent_fold'
   
-  
   CoffeeScript = require 'CoffeeScript'
   require 'coffeelint'
   
@@ -25,6 +24,7 @@ define (require)->
     className: "tab-pane"
     ui:
       codeBlock : "#codeArea"
+      infoFooter: "#infoFooter"
       
     constructor:(options)->
       super options
@@ -110,6 +110,8 @@ define (require)->
     settingsChanged:(settings, value)=> 
       for key, val of @settings.changedAttributes()
         switch key
+          when "fontSize"
+            $(".CodeMirror").css("font-size","#{val}em")
           when "startLine"
             @editor.setOption("firstLineNumber",val)
             @render()
@@ -208,9 +210,20 @@ define (require)->
         foldFunction(cm,cm.getCursor().line)
       
       @editor.on "cursorActivity", (cm) =>
+        cursor = @editor.getCursor()
         @editor.removeLineClass(@hlLine,"activeline")
-        @hlLine = @editor.addLineClass(@editor.getCursor().line, null, "activeline")
-
+        @hlLine = @editor.addLineClass(cursor.line, null, "activeline")
+        
+        
+        infoText = "Line: #{cursor.line} Column: #{cursor.ch}"
+        @ui.infoFooter.text(infoText)
+        #console.log "blah"
+        #console.log @editor.getCursor()
+    
+    
+    onRender:=>
+      $(".CodeMirror").css("font-size","#{@settings.get('fontSize')}em")
+    
     onDomRefresh:=>
       CodeMirror.commands.autocomplete = (cm) ->
         CodeMirror.showHint(cm, CodeMirror.coffeeSCadHint)
@@ -246,9 +259,10 @@ define (require)->
       @$el.attr('id', @model.name)
       @hlLine=  @editor.addLineClass(0, "activeline")
       @_setupEventHandlers()
-      
+
       setTimeout ( =>
         @editor.refresh()
+        $(".CodeMirror").css("font-size","#{@settings.get('fontSize')}em")
       ), 2 #necessary hack
       
       

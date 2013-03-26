@@ -13,6 +13,7 @@ define (require)->
   FilesTreeView = require "./filesTreeView"
   FilesListView = require "./filesListView"
 
+
   class CodeEditorView extends Backbone.Marionette.Layout
     template: filesCodeTemplate
     className: "codeEditor"
@@ -42,13 +43,15 @@ define (require)->
         applyDefaultStyles: true,
         west__size:         220,
         west__minSize:      220,
+        west__initClosed:   true,
         center__childOptions: {
           center__paneSelector: "#tabContent",
           south__paneSelector: "#console",
           applyDefaultStyles: true,
           #size:"auto"
           north__size: 'auto',
-          south__size: 100
+          south__size: 100,
+          south__initClosed:   true
           
         }
       })

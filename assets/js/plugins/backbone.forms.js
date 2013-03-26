@@ -1209,10 +1209,10 @@ Form.editors = (function() {
     }),
 
     initialize: function(options) {
-      editors.Text.prototype.initialize.call(this, options);
-
-      this.$el.attr('type', 'number');
       this.$el.attr('step', 'any');
+      editors.Text.prototype.initialize.call(this, options);
+      this.$el.attr('type', 'number');
+      
     },
 
     /**

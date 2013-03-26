@@ -16,6 +16,7 @@ define (require)->
       theme        : "default"
       startLine    :  1
       undoDepth    :  40
+      fontSize     :  1
       
       #linting
       linting:
