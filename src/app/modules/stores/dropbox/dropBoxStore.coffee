@@ -37,8 +37,8 @@ define (require)->
     
     idAttribute: 'name'
     defaults:
-      name: "dropBoxStore"
-      storeType: "dropBox"
+      name: "DropboxStore"
+      storeType: "Dropbox"
       tooltip:"Store to the Dropbox Cloud based storage: requires login"
       loggedIn:false
     
@@ -49,8 +49,9 @@ define (require)->
       @store = new backbone_dropbox()
       @isLogginRequired = true
       @vent = vent
-      @vent.on("dropBoxStore:login", @login)
-      @vent.on("dropBoxStore:logout", @logout)
+      
+      @vent.on("DropboxStore:login", @login)
+      @vent.on("DropboxStore:logout", @logout)
       
       #experimental
       @lib = new DropBoxLibrary
@@ -68,7 +69,8 @@ define (require)->
         onLoginSucceeded=()=>
           localStorage.setItem("dropboxCon-auth",true)
           @loggedIn = true
-          @vent.trigger("dropBoxStore:loggedIn")
+          @vent.trigger("DropboxStore:loggedIn")
+          console.lo
           
         onLoginFailed=(error)=>
           throw error
@@ -77,14 +79,14 @@ define (require)->
         $.when(loginPromise).done(onLoginSucceeded)
                             .fail(onLoginFailed)
       catch error
-        @vent.trigger("dropBoxStore:loginFailed")
+        @vent.trigger("DropboxStore:loginFailed")
         
     logout:=>
       try
         onLogoutSucceeded=()=>
           localStorage.removeItem("dropboxCon-auth")
           @loggedIn = false
-          @vent.trigger("dropBoxStore:loggedOut")
+          @vent.trigger("DropboxStore:loggedOut")
         onLoginFailed=(error)=>
           throw error
           
@@ -93,7 +95,7 @@ define (require)->
                             .fail(onLogoutFailed)
       
       catch error
-        @vent.trigger("dropBoxStore:logoutFailed")
+        @vent.trigger("DropboxStore:logoutFailed")
     
     authCheck:()->
       getURLParameter=(paramName)->
@@ -108,14 +110,16 @@ define (require)->
           i++
         null
       urlAuthOk = getURLParameter("_dropboxjs_scope")
-      console.log "dropboxStore got redirect param #{urlAuthOk}"
+      #console.log "dropboxStore got redirect param #{urlAuthOk}"
       
       authOk = localStorage.getItem("dropboxCon-auth")
-      console.log "dropboxStore got localstorage Param #{authOk}"
+      #console.log "dropboxStore got localstorage Param #{authOk}"
+
 
       if urlAuthOk?
         @login()
-        window.history.replaceState('', '', '/')
+        appBaseUrl = window.location.protocol + '//' + window.location.host + window.location.pathname
+        window.history.replaceState('', '', appBaseUrl)     
       else
         if authOk?
           @login()

@@ -50,7 +50,7 @@ define (require)->
       DropBoxStore = require './stores/dropbox/dropBoxStore'
       #GithubStore = require './stores/github/gitHubStore'
       BrowserStore = require './stores/browser/browserStore'
-      @stores["dropBox"] = new DropBoxStore()
+      @stores["Dropbox"] = new DropBoxStore()
       #@stores["gitHub"] = new GithubStore()
       @stores["browser"] = new BrowserStore()
       

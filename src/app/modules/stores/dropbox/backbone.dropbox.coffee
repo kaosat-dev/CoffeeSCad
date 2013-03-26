@@ -40,7 +40,7 @@ define (require)->
           # If you're using dropbox.js, the only cause behind this error is that
           # the user token expired.
           # Get the user through the authentication flow again.
-          error = new Error("DropBox token expired") 
+          error = new Error("Dropbox token expired") 
         when 404 
           # The file or folder you tried to access is not in the user's Dropbox.
           # Handling this error is specific to your application.
