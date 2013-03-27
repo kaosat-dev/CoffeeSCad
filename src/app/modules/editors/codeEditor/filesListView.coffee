@@ -122,7 +122,6 @@ define (require)->
           childView.$el.removeClass('fade')
     
     onFileClosed:(childView, file)=>
-      console.log @children.length
       #if there was only two view open, and the one that got closed was the second one (on the right of the remaining one)
       if @children.length > 0
         @children.each (childView)->
@@ -230,6 +229,7 @@ define (require)->
         try
           @headerView.selectFile(found)
           @codeView.selectFile(found)
+          @model.makeFileActive(found)
         catch error
         
     hideFile:(file)=>

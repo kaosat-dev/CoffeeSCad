@@ -12,6 +12,7 @@ define (require)->
       options = options or {}
       @width = options.width ? 640
       @height = options.height ? 480
+      @title = options.title ? "Title"
       @large = options.large ? false
       elName = options.elName ? "dummyDiv"
       @makeEl(elName)
@@ -70,7 +71,7 @@ define (require)->
       ### 
       view.isVisible=true
       @$el.dialog
-        title : "CodeEditor"#view.model.get("name")
+        title : @title#view.model.get("name")
         width: @width
         height: @height
         closeOnEscape: false

@@ -52,7 +52,7 @@ define (require)->
       
     showRegions:=>
       DialogRegion = require 'modules/core/utils/dialogRegion'
-      @diaReg = new DialogRegion({elName:"codeEdit",width:500,height:350})
+      @diaReg = new DialogRegion({elName:"codeEdit", title: "CodeEditor", width:500, height:350})
       codeEditorView = new CodeEditorView 
         model:    @project
         settings: @settings

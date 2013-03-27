@@ -90,6 +90,7 @@ define (require)->
         file.sync = @sync 
         #file.pathRoot= project.get("name")
    
+   
   class Project extends Backbone.Model
     """Main aspect of coffeescad : contains all the files
     * project is a top level element ("folder"+metadata)

@@ -41,6 +41,8 @@ define (require)->
       
       "click .compileProject"  : ()->vent.trigger("project:compile")
       
+      "click .geometryCreator" : ()->vent.trigger("geometryEditor:show")
+      
       "click .about" : "showAbout"
   
     constructor:(options)->
