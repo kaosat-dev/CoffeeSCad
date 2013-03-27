@@ -2,8 +2,8 @@ define (require)->
   Backbone = require 'backbone'
   LocalStorage = require 'localstorage'
 
-  vent = require 'modules/core/vent'
-  reqRes = require 'modules/core/reqRes'
+  vent = require 'modules/core/messaging/appVent'
+  reqRes = require 'modules/core/messaging/appReqRes'
   
   buildProperties = require 'modules/core/utils/buildProperties'
   utils = require 'modules/core/utils/utils'

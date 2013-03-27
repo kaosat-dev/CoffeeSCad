@@ -4,7 +4,7 @@ define (require)->
   Backbone = require 'backbone'
   marionette = require 'marionette'
   
-  vent = require 'modules/core/vent'
+  vent = require 'modules/core/messaging/appVent'
   
   class VisualEditorRouter extends Backbone.Marionette.AppRouter
     #appRoutes: 

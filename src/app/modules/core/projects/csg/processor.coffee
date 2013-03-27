@@ -1,5 +1,5 @@
 define (require) ->
-  reqRes = require 'modules/core/reqRes'
+  reqRes = require 'modules/core/messaging/appReqRes'
   utils = require "modules/core/utils/utils"
   CoffeeScript = require 'CoffeeScript'
   

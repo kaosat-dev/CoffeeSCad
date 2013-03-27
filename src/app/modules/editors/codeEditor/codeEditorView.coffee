@@ -6,7 +6,7 @@ define (require)->
   jquery_layout = require 'jquery_layout'
   jquery_ui = require 'jquery_ui'
   
-  vent = require 'modules/core/vent'
+  vent = require 'modules/core/messaging/appVent'
   
   filesCodeTemplate =  require "text!./codeEditorView.tmpl"
   

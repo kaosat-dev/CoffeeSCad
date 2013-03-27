@@ -4,7 +4,7 @@ define (require)->
   marionette = require 'marionette'
   require 'jquery_hotkeys'
   
-  vent = require './core/vent'
+  vent = require 'modules/core/messaging/appVent'
   
   MenuView = require './core/menuView'
   ModalRegion = require './core/utils/modalRegion'
@@ -30,7 +30,10 @@ define (require)->
     constructor:(options)->
       super options
       @vent = vent
+      
       @settings = new Settings()
+      @initSettings()
+      
       @projectManager = new ProjectManager
         appSettings: @settings
       
@@ -63,11 +66,12 @@ define (require)->
       #handle exporters initialization
       for name, exporter of @exporters
         @vent.on("#{name}Exporter:start", do(name)=> =>@exporters[name].start({project:@project}))
-        
+      
+      @initPreVisuals()
       @addRegions @regions
       @initData()
       @initLayout()
-     
+      
     initLayout:=>
       @menuView = new MenuView
         stores: @stores
@@ -76,9 +80,17 @@ define (require)->
       @headerRegion.show @menuView
     
     initSettings:->
-      @settings = new Settings()
-      @bindTo(@settings.get("General"), "change", @settingsChanged)
-    
+      setupSettingsBindings= =>
+        @initPreVisuals()
+        mySettings = @settings.getByName("General")
+        mySettings.on("change", @onSettingsChanged)
+      @settings.on("reset",setupSettingsBindings)
+      
+    initPreVisuals:->
+      """Initialize correct theme css"""
+      @theme = @settings.get("General").get("theme")
+      $("#mainTheme").attr("href","assets/css/themes/#{@theme}/bootstrap.css")
+      
     initData:->
       @projectManager.stores = @stores
       @project = @projectManager.createProject()
@@ -125,8 +137,8 @@ define (require)->
       console.log "I see app: #{appName} has started"
     
     onAppClosing:()=>
-      #if @project.isSaveAdvised
-      #  return 'You have unsaved changes!'
+      if @project.isSaveAdvised
+        return 'You have unsaved changes!'
     
     onSettingsShow:()=>
       settingsView = new SettingsView
@@ -134,6 +146,13 @@ define (require)->
       
       modReg = new ModalRegion({elName:"settings",large:true})
       modReg.show settingsView
+    
+    onSettingsChanged:(settings, value)=> 
+      for key, val of @settings.get("General").changedAttributes()
+        switch key
+          when "theme"
+            @theme = val
+            $("#mainTheme").attr("href","assets/css/themes/#{@theme}/bootstrap.css")
     
     onProjectLoaded:(newProject)=>
       console.log "project loaded"
@@ -154,11 +173,13 @@ define (require)->
           mainRegion: "#visual"
         project: @project
         appSettings: @settings
-      
+     
       @settings.fetch()
       
     onInitializeAfter:()=>
       """For exampel here close and 'please wait while app loads' display"""
       console.log "after init"
+      console.log $("#initialLoader")
+      $("#initialLoader").text("")
 
   return CoffeeScadApp   

@@ -2,8 +2,8 @@ define (require)->
   #base64 = require 'base64'
   buildProperties = require 'modules/core/utils/buildProperties'
   backbone_dropbox = require './backbone.dropbox'
-  vent = require 'modules/core/vent'
-  reqRes = require 'modules/core/reqRes'
+  vent = require 'modules/core/messaging/appVent'
+  reqRes = require 'modules/core/messaging/appReqRes'
   
   Project = require 'modules/core/projects/project'
   

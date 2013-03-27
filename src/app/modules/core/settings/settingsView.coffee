@@ -15,7 +15,7 @@ define (require)->
   sc_template = require "text!./settingsContent.tmpl"
   sca_template = require "text!./settingsContentAll.tmpl"
   
-  reqRes = require 'modules/core/reqRes'#request response system , see backbone marionnette docs
+  reqRes = require 'modules/core/messaging/appReqRes'#request response system , see backbone marionnette docs
   
   
   class SettingsView extends Backbone.Marionette.Layout

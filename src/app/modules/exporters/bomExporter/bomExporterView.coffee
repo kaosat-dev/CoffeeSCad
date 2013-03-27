@@ -5,7 +5,7 @@ define (require)->
   marionette = require 'marionette'
   modelBinder = require 'modelbinder'
   
-  reqRes = require 'modules/core/reqRes'
+  reqRes = require 'modules/core/messaging/appReqRes'
   
   bomExporterTemplate =  require "text!./bomExporter.tmpl"
   BomPartListView = require './bomPartsView'

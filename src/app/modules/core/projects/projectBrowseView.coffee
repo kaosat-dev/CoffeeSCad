@@ -8,8 +8,8 @@ define (require)->
   require 'jquery_sscroll'
   
   
-  vent = require 'modules/core/vent'
-  reqRes = require 'modules/core/reqRes'
+  vent = require 'modules/core/messaging/appVent'
+  reqRes = require 'modules/core/messaging/appReqRes'
   
   projectBrowserTemplate = require "text!./projectBrowser.tmpl"
   rootTemplate = $(projectBrowserTemplate).filter('#projectBrowserTmpl')

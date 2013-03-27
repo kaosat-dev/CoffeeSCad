@@ -7,7 +7,7 @@ define (require)->
   require 'pickysitter'
   jquery_layout = require 'jquery_layout'
   
-  vent = require 'modules/core/vent'
+  vent = require 'modules/core/messaging/appVent'
   
   filesTreeTemplate =  require "text!./filesTreeView.tmpl"
   

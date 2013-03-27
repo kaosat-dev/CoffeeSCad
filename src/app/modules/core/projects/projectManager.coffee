@@ -4,8 +4,8 @@ define (require)->
   Backbone = require 'backbone'
   marionette = require 'marionette'
   
-  vent = require 'modules/core/vent'
-  reqRes = require 'modules/core/reqRes'
+  vent = require 'modules/core/messaging/appVent'
+  reqRes = require 'modules/core/messaging/appReqRes'
   ModalRegion = require 'modules/core/utils/modalRegion'
   
   Settings = require 'modules/core/settings/settings'

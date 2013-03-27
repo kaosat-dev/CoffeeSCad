@@ -16,7 +16,7 @@ define (require)->
   CoffeeScript = require 'CoffeeScript'
   require 'coffeelint'
   
-  vent = require 'modules/core/vent'
+  vent = require 'modules/core/messaging/appVent'
   codeEditor_template = require "text!./fileCode.tmpl"
 
   class FileCodeView extends Backbone.Marionette.ItemView

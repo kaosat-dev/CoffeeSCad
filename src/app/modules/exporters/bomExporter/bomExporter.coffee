@@ -2,8 +2,8 @@ define (require) ->
   utils = require "modules/core/utils/utils"
   marionette = require 'marionette'
   
-  vent = require 'modules/core/vent'
-  reqRes = require 'modules/core/reqRes'
+  vent = require 'modules/core/messaging/appVent'
+  reqRes = require 'modules/core/messaging/appReqRes'
   Project = require 'modules/core/projects/project'
   ModalRegion = require 'modules/core/utils/modalRegion' 
   

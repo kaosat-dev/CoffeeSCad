@@ -8,7 +8,7 @@ define (require)->
   require 'jquery_hotkeys'
   modelBinder = require 'modelbinder'
   
-  vent = require 'modules/core/vent'
+  vent = require 'modules/core/messaging/appVent'
   
   fileTabTemplate = require "text!./fileTab.tmpl"
   filesTabTemplate = require "text!./filesTab.tmpl"

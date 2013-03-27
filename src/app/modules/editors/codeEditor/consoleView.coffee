@@ -4,7 +4,7 @@ define (require)->
   require 'bootstrap'
   marionette = require 'marionette'
   
-  vent = require 'modules/core/vent'
+  vent = require 'modules/core/messaging/appVent'
   
   consoleTemplate =  require "text!./console.tmpl"
   

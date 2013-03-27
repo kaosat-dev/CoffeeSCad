@@ -7,7 +7,7 @@ define (require)->
   require 'bootbox'
   require 'notify'
   
-  vent = require './vent'
+  vent = require 'modules/core/messaging/appVent'
   
   mainMenuMasterTemplate = require "text!./mainMenu.tmpl"
   
@@ -175,44 +175,77 @@ define (require)->
     constructor:->
       #examples = require "modules/examples"
       #{Library,Project,ProjectFile} = require "modules/project"
+      @examplesList = {
+        "basics": {
+            "Basic": {
+                "files": [
+                    "basic.coffee"
+                ]
+            },
+            "MultiFile": {
+                "files": [
+                    "MultiFile.coffee",
+                    "config.coffee"
+                ]
+            },
+            "Includes": {
+                "files": [
+                    "Includes.coffee",
+                    "config.coffee"
+                ]
+            }
+        },
+        "geometry": {
+            "2dGeometry": {
+                "files": [
+                    "2dGeometry.coffee"
+                ]
+            },
+            "3dGeometry": {
+                "files": [
+                    "3dGeometry.coffee"
+                ]
+            }
+        },
+        "transforms": {
+            "BasicTransforms": {
+                "files": [
+                    "BasicTransforms.coffee"
+                ]
+            },
+            "BooleanOperations": {
+                "files": [
+                    "BooleanOperations.coffee"
+                ]
+            },
+            "Extras": {
+                "files": [
+                    "Extras.coffee"
+                ]
+            }
+        },
+        "objectOriented":{
+            "Basics": {
+                "files": [
+                    "Basics.coffee"
+                ]
+            }
+        }
+      }
     
     loadExample:(ev)=>
       #TOTAL HACK !! yuck
       index = ev.currentTarget.id
       project = new Project({name:examples[index].name})  
-      mainPart = new ProjectFile
+      for fileName in @examplesList[index]
+        project.addFile
           name: "mainPart"
           ext: "coscad"
           content: examples[index].content    
-      project.add mainPart
-      
-      #VIEW UPDATES
-      if @app.project.isSaveAdvised
-        bootbox.dialog "Project is unsaved, proceed anyway?", [
-          label: "Ok"
-          class: "btn-inverse"
-          callback: =>
-            @app.project = project
-            @app.mainPart= mainPart
-            @app.codeEditorView.switchModel @app.mainPart
-            @app.glThreeView.switchModel @app.mainPart
-            @app.mainMenuView.switchModel @app.project
-        ,
-          label: "Cancel"
-          class: "btn-inverse"
-          callback: ->
-        ]
-      else
-        @app.project = project
-        @app.mainPart= mainPart
-        @app.codeEditorView.switchModel @app.mainPart
-        @app.glThreeView.switchModel @app.mainPart
-        @app.mainMenuView.switchModel @app.project
     
     onRender:()->
       @ui.examplesList.html("")
       for index,example of examples
         @ui.examplesList.append("<li id='#{index}' class='exampleProject'><a href=#> #{example.name}</a> </li>")
-
 
   return MainMenuView

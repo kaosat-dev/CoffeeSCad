@@ -11,8 +11,8 @@ define (require) ->
   CustomOrbitControls = require './customOrbitControls'
   TrackballControls = require './trackballControls'
   
-  reqRes = require 'modules/core/reqRes'
-  vent = require 'modules/core/vent'
+  reqRes = require 'modules/core/messaging/appReqRes'
+  vent = require 'modules/core/messaging/appVent'
   
   threedView_template = require "text!./visualEditorView.tmpl"
   requestAnimationFrame = require 'modules/core/utils/anim'

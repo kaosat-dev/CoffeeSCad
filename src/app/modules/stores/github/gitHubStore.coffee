@@ -1,6 +1,6 @@
 define (require)->
   github = require 'github'
-  vent = require 'modules/core/vent'
+  vent = require 'modules/core/messaging/appVent'
   
   Project = require 'modules/core/projects/project'
   

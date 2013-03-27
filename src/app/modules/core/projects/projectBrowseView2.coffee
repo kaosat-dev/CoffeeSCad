@@ -7,8 +7,8 @@ define (require)->
   require 'modelbinder'
   require 'pickysitter'
   
-  vent = require 'modules/core/vent'
-  reqRes = require 'modules/core/reqRes'
+  vent = require 'modules/core/messaging/appVent'
+  reqRes = require 'modules/core/messaging/appReqRes'
   
   projectBrowserTemplate = require "text!./projectBrowser2.tmpl"
   rootTemplate = $(projectBrowserTemplate).filter('#projectBrowserTmpl')

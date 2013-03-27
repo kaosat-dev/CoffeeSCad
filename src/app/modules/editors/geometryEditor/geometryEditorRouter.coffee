@@ -8,10 +8,7 @@ define (require)->
   reqRes = require 'modules/core/messaging/appReqRes'#request response system , see backbone marionnette docs
   
   
-  class CodeEditorRouter extends Backbone.Marionette.AppRouter
-    #appRoutes: 
-    #    "dummy:list"  : 'listDummies'
-       
+  class GeometryEditorRouter extends Backbone.Marionette.AppRouter
     constructor:(options)->
       super options
       @setController(options.controller)
@@ -21,4 +18,4 @@ define (require)->
       for route, methodName of @appRoutes
         vent.bind(route, @controller[methodName])
             
-  return CodeEditorRouter
+  return GeometryEditorRouter

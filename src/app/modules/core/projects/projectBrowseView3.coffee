@@ -6,8 +6,8 @@ define (require)->
   marionette = require 'marionette'
   modelBinder = require 'modelbinder'
   
-  vent = require 'modules/core/vent'
-  reqRes = require 'modules/core/reqRes'
+  vent = require 'modules/core/messaging/appVent'
+  reqRes = require 'modules/core/messaging/appReqRes'
   dataBoundViews = require 'modules/core/utils/DataBoundViews'
   buildProperties = require 'modules/core/utils/buildProperties'
   
