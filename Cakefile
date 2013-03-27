@@ -176,11 +176,11 @@ task 'release', 'build, minify , prep for release' , (options) ->
   
   #full build conf
   buildConf = {
+    mainConfigFile: "app/config.js",
     baseUrl: "app",
     #dir: "build",
-    mainConfigFile: "app/main.js",
     out:     'build/main.min.js'
-    name:".",
+    name: "main",
     optimize: "uglify",
     #removeCombined:true
   }
@@ -191,6 +191,7 @@ task 'release', 'build, minify , prep for release' , (options) ->
       ,optimize:'uglify'}###
       
   requirejs.optimize(buildConf, console.log)
+
 
 task 'package_alt', 'package project for node-webkit', (options) ->
   zip = new require('node-zip')()
