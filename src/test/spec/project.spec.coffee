@@ -65,7 +65,6 @@ define (require)->
       expect(file.isActive).toBe false
      
       
-      
     it 'compiles the contents of its files into an assembly of parts', ->
       project.addFile
         name:"Project.coffee"
@@ -100,7 +99,6 @@ define (require)->
         testPart = new TestPart()
         assembly.add(testPart)
         """
-      project.compile()
       ###
       expBom = new Backbone.Collection()
       expPart = new Backbone.Model
@@ -114,6 +112,45 @@ define (require)->
       
       checkDeferred $.when(project.compile()), (assembly) =>
         expect(JSON.stringify(project.bom)).toEqual('[{"name":"TestPart","variant":"Default","params":"","quantity":1,"manufactured":true,"included":true},{"name":"SubPart","variant":"Default","params":"","quantity":2,"manufactured":true,"included":true}]')
+    
+    it 'handles variants (different options) for parts in bom data correctly',->
+      project.addFile
+        name:"Project.coffee"
+        content:"""
+        class TestPart extends Part
+          constructor:(options) ->
+            defaults = {thickness:5}
+            {@thickness} = options = merge(defaults, options)
+            super options
+            @union(new Cylinder(h:@thickness, r:20,$fn:3))
+        
+        testPart = new TestPart()
+        testPartVar2 = new TestPart({thickness:15})
+        assembly.add(testPart)
+        assembly.add(testPartVar2)
+        """
+      checkDeferred $.when(project.compile()), (assembly) =>
+        expect(JSON.stringify(project.bom)).toEqual('[{"name":"TestPart","variant":"","params":"{\\"thickness\\":5}","quantity":1,"manufactured":true,"included":true},{"name":"TestPart","variant":"","params":"{\\"thickness\\":15}","quantity":1,"manufactured":true,"included":true}]')
+    
+    
+    it 'handles variants (different options) for parts in bom data correctly (background processing)',->
+      project.addFile
+        name:"Project.coffee"
+        content:"""
+        class TestPart extends Part
+          constructor:(options) ->
+            defaults = {thickness:5}
+            {@thickness} = options = merge(defaults, options)
+            super options
+            @union(new Cylinder(h:@thickness, r:20,$fn:3))
+        
+        testPart = new TestPart()
+        testPartVar2 = new TestPart({thickness:15})
+        assembly.add(testPart)
+        assembly.add(testPartVar2)
+        """
+      checkDeferred $.when(project.compile({backgroundProcessing:true})), (assembly) =>
+        expect(JSON.stringify(project.bom)).toEqual('[{"name":"TestPart","variant":"","params":"{\\"thickness\\":5}","quantity":1,"manufactured":true,"included":true},{"name":"TestPart","variant":"","params":"{\\"thickness\\":15}","quantity":1,"manufactured":true,"included":true}]')
     
       
     it 'is marked as "dirty" when one of its files gets modified', ->

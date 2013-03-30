@@ -22,6 +22,7 @@ define (require)->
   
   ##Additional helpers
   classRegistry = {}
+  classRegistryToId = {}
   otherRegistry = {}
   
   register=(classname, klass, params)=>
@@ -42,10 +43,12 @@ define (require)->
       #classRegistry[classname] = 0
       otherRegistry[classname]= {}
     if not (compressedParams of classRegistry[classname])
-      classRegistry[classname][compressedParams] = 0
+      classRegistry[classname][compressedParams]= {}
+      classRegistry[classname][compressedParams].quantity = 0
+      classRegistry[classname][compressedParams].uids = []
         
-    #classRegistry[classname] += 1
-    classRegistry[classname][compressedParams] += 1
+    classRegistry[classname][compressedParams].quantity += 1
+    classRegistry[classname][compressedParams].uids.push(klass.uid)
     otherRegistry[classname] =  klass  
   
   #FROM COFFEESCRIPT HELPERS

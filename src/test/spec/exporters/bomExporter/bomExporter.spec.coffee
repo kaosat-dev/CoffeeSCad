@@ -8,12 +8,12 @@ define (require)->
     
     beforeEach ->
       project = new Project
-        name:"test_project"
+        name:"testProject"
       bomExporter = new BomExporter()
     
     it 'can export a project to bom (blobUrl)',->
       project.addFile
-        name:"testFileName"
+        name:"testProject.coffee"
         content:"""
         class TestPart extends Part
           constructor:(options) ->
@@ -38,9 +38,9 @@ define (require)->
       expect(errorArgs).toBeDefined()
       expect(errorArgs[0].message).toBe(" ")
       
-    it 'returns null when export fails',->   
+    it 'fail gracefully when export fails',->   
       project.addFile
           name:"testFileName"
       blobUrl = bomExporter.export(project.rootAssembly)
-      expect(blobUrl).toBe(null)
+      expect(blobUrl).toBe("data:text/json;charset=utf-8,undefined")
 

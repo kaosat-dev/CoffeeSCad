@@ -70,38 +70,41 @@ define (require)->
       return result
       
     _generateBomEntries:(rootAssembly, partRegistry)=>
-      availableParts = new Backbone.Collection()
-      for name,params of partRegistry
-          for param, quantity of params
-            variantName = "Default"
-            if param != ""
-              variantName=""
-            @project.bom.add { name: name,variant:variantName, params: param,quantity: quantity, manufactured:true, included:true } 
-      
+      #TODO : clean this up
       partInstances = new Backbone.Collection()
-      
       parts = {}
       
       getChildrenData=(assembly) =>
         for index, part of assembly.children
-          partClassName = part.__proto__.constructor.name
+          if part.realClassName? #necessary workaround for "fake" classes (all of the parts are actually CSGBase instance) returned from web workers
+            partClassName = part.realClassName
+          else
+            partClassName = part.__proto__.constructor.name
           if partClassName of partRegistry
-            params = Object.keys(partRegistry[partClassName])[0]
-            #params = partRegistry[partClassName][index]
-            variantName = "Default"
-            if params != ""
-              variantName=""
+            partClassEntry = partRegistry[partClassName]
+            isInAssembly = false
+            params = ""
+            for params,index of partClassEntry
+              if part.uid in partClassEntry[params].uids
+                isInAssembly =true
+                partIndex = index
+                break
+            if isInAssembly
+              if not (partClassName of parts)
+                parts[partClassName] = {}
+              if not (params of parts[partClassName])
+                 parts[partClassName][params]= 0
+              parts[partClassName][params] += 1
             
-            if not (partClassName of parts)
-              parts[partClassName] = {}
-              parts[partClassName][params] = 0
-            parts[partClassName][params] += 1
           getChildrenData(part)
           
       getChildrenData(rootAssembly)
         
       for name,params of parts
         for param, quantity of params
+          variantName = "Default"
+          if param != ""
+            variantName=""
           partInstances.add({ name: name,variant:variantName, params: param,quantity: quantity, manufactured:true, included:true })
         
       @project.bom = partInstances

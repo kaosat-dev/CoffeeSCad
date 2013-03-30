@@ -71,6 +71,11 @@ define (require)->
     csg.isCanonicalized = true
     csg.isRetesselated = true
     
+    #necessary hack as we lose the actual class/proto information when transfering back from a web worker
+    csg.realClassName = bin.realClass
+    csg.uid = bin.uid
+    #csg.__proto__.constructor.name = bin.realClass
+    
     csg.children = []
     for child in bin.children
       csg.children.push(fromCompactBinary(child))

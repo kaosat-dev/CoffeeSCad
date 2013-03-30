@@ -279,6 +279,8 @@ define (require)->
   
       result =
         class: "CSG"
+        realClass: @__proto__.constructor.name
+        uid: @uid
         numPolygons: numpolygons
         numVerticesPerPolygon: numVerticesPerPolygon
         polygonPlaneIndexes: polygonPlaneIndexes
@@ -288,6 +290,7 @@ define (require)->
         planeData: planeData
         shared: shareds
         children: children
+        
   
       result
   
