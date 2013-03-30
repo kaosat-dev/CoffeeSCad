@@ -69,7 +69,7 @@ define (require)->
       autoReloadLastProject : false
       
       maxRecentFilesDisplay:  5
-      theme: "slate"
+      theme: "default"
       
     constructor:(options)->
       super options

@@ -138,7 +138,7 @@ define (require)->
             
           theme:
             type:'Select'
-            options : ["slate", "spacelab"]
+            options : ["default", "spacelab","slate"]
         options.fieldsets=[
           "legend": "CSG compiling settings"
           "fields": ["csgCompileMode","csgCompileDelay","csgBackgroundProcessing"]

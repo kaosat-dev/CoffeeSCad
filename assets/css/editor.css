@@ -3,6 +3,22 @@
  * 
  * #253565
  */
+
+.examplesTree {
+	list-style: none;
+}
+
+.examplesTree ul{
+	list-style: none;
+	margin: 0 0 0 0;
+}
+
+.example
+{
+	
+}
+
+
 .ui-dialog .ui-dialog-titlebar{
 	padding:0;
 }
