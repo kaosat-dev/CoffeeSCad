@@ -17,6 +17,7 @@ define (require)->
     for key, val of properties
       object[key] = val
     object
+    
   
   parseOptions = (options, defaults)->
     if  Object.getPrototypeOf( options ) == Object.prototype
@@ -750,4 +751,6 @@ define (require)->
       "FuzzyFactory": FuzzyFactory 
       "FuzzyCSGFactory": FuzzyCSGFactory
       "FuzzyCAGFactory": FuzzyCAGFactory 
+      "merge":merge
+      "extend":extend
   }
