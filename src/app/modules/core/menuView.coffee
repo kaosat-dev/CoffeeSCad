@@ -208,8 +208,6 @@ define (require)->
         deferred = $.get(filePath)
         deferredList.push(deferred)
         $.when(deferred).done (fileContent)=>
-          console.log "content recieved"
-          console.log fileContent
           projectFile.content = fileContent
       
       $.when.apply($, deferredList).done ()=>
