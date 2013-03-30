@@ -180,28 +180,9 @@ define (require)->
   class KeybindingsForm extends Backbone.Form
     
     constructor:(options)->
-      bla=(obj)->
-        console.log obj
-        return #{obj}
       if not options.schema
-        options.schema = 
-          #toto: 'CustomEditor'
-          notes:
-            type: "List"
-            listType: 'Text'
-            #itemType: 'Select', options:["toto","tata"]
-            itemToString: (object)-> console.log(object)
-            #listTemplate: 
-          general:
-            type: "Object"
-            title:''
-            subSchema:
-              undo:
-                title:"undo"
-                type:"Text"
-              redo:
-                title:"redo"
-                type:"Text"
+        options.schema = {}
+          
       super options
       
   class KeyBindingsWrapper extends Backbone.Marionette.ItemView

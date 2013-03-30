@@ -44,10 +44,10 @@ define (require)->
       #Exporters
       BomExporter = require './exporters/bomExporter/bomExporter'
       StlExporter = require './exporters/stlExporter/stlExporter'
-      AmfExporter = require './exporters/amfExporter/amfExporter'
+      #AmfExporter = require './exporters/amfExporter/amfExporter'
       @exporters["stl"] = new StlExporter()
       @exporters["bom"] = new BomExporter()
-      @exporters["amf"] = new AmfExporter()
+      #@exporters["amf"] = new AmfExporter()
       
       #stores 
       DropBoxStore = require './stores/dropbox/dropBoxStore'
