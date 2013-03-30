@@ -174,14 +174,14 @@ task 'release', 'build, minify , prep for release' , (options) ->
     optimize: "none"
   }
   
+  console.log "Building, minifying"
   #full build conf
   buildConf = {
     mainConfigFile: "app/config.js",
     baseUrl: "app",
-    #dir: "build",
-    out:     'build/main.min.js'
+    out:     'build/main.min.js',
     name: "main",
-    optimize: "uglify",
+    optimize: "none" #"uglify",
     #removeCombined:true
   }
   ###
@@ -210,6 +210,7 @@ task 'package_alt', 'package project for node-webkit', (options) ->
     console.log "done"  
     data = zip.generate({base64:false,compression:'DEFLATE'})
     fs.writeFile('coffeescad.nw', data, 'binary');
+    
   
 task 'package' , 'package project for node-webkit', (options) ->
   pkgFile = 'CoffeeSCad.nw'
@@ -220,3 +221,105 @@ task 'package' , 'package project for node-webkit', (options) ->
     zip2.on 'exit', (code, signal)->
        zip3 = spawn('zip', ['-9', '-r', '-g',  'toto.zip', 'package.json'])
   ### 
+
+task 'examplesParse' , 'parse the examples folder, generate a json map of the folder structure', (options) ->
+  outputPath = ".examplesMap.json"
+  finder=findit.find("./examples")
+  ### 
+  finder.on 'file', (source, stats) ->
+    source_path = path.dirname(source)
+    source_file = path.basename(source)
+    console.log "Found file #{source} , #{source_path} , #{source_file}"
+  ###
+  finder.on 'directory', (source, stats) ->
+    #console.log "Found directory #{source} "
+    subDirs = false
+    files = false
+    subFinder=findit.find(source)
+    subFinder.on 'file', (source, stats) =>
+      source_path = path.dirname(source)
+      source_file = path.basename(source)
+      #console.log "Found file #{source} , #{source_path} , #{source_file}"
+      files=true
+    subFinder.on 'directory', (source, stats) =>
+      subDirs = true
+    subFinder.on 'end', =>
+      if files
+        console.log "#{source} has files" + if subDirs then " and subfolders" else ""
+      else 
+        console.log "#{source} is empty" + if subDirs then " and subfolders" else ""
+
+task 'examplesParse2' , 'parse the examples folder, generate a json map of the folder structure', (options) ->
+  examplesPath = "./examples"
+  outputPath = ".examplesMap.json"
+  dirTree = (filename) ->
+    stats = fs.lstatSync(filename)
+    info =
+      path: filename
+      name: path.basename(filename)
+  
+    if stats.isDirectory()
+      info.type = "folder"
+      info.children = fs.readdirSync(filename).map((child) ->
+        dirTree filename + "/" + child
+      )
+    else
+      
+      # Assuming it's a file. In real life it could be a symlink or
+      # something else!
+      info.type = "file"
+    info
+  fs = require("fs")
+  path = require("path")
+  
+  console.log util.inspect(dirTree(examplesPath), false, null)
+  dirTree(examplesPath)
+
+ task 'parseExamples' , 'parse the examples folder, generate a json map of the folder structure', (options) ->
+  examplesPath = "./examples"
+  outputPath = "./examples/examples.json"
+    
+  dirTree2 = (filename) ->  
+    stats = fs.lstatSync(filename)
+    info = 
+      path: filename.replace(examplesPath, "")
+      name: path.basename(filename)
+    if stats.isDirectory()
+      isProject = false
+      children = fs.readdirSync(filename)
+      if children.length > 0
+        files = []
+        subDirs = []
+        children.map((child) =>
+          childPath = filename + "/" + child
+          childStats = fs.lstatSync(childPath)
+          if not childStats.isDirectory()
+            if path.extname(childPath) == ".coffee"
+              isProject=true
+              files.push(child)
+          else
+            subDirs.push(childPath)
+        )
+        if files.length > 0
+          info.files = files
+        else if subDirs.length > 0
+          info.categories = subDirs.map((subDir)=>
+            dirTree2 subDir
+          )
+       
+        if isProject
+          info.type = "project"
+        else
+          info.type = "category"
+      info
+  
+  fs = require("fs")
+  path = require("path")
+  
+  
+  #console.log util.inspect(dirTree2(examplesPath), false, null)
+  raw = dirTree2(examplesPath)
+  jsonified = JSON.stringify(raw)
+  console.log raw
+  console.log jsonified
+  fs.writeFile(outputPath,jsonified)
