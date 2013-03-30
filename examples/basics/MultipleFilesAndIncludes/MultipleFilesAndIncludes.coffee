@@ -6,15 +6,15 @@
 #here we include the file "foobar" (check its contents if you want)
 include("fooBar.coffee")
 
-#as you can see we draw the object "myCube"(a gorgeous cube , yes sir!) that was not defined here, but in the fooBar.coffee file
+#as you can see we draw the object "myCube"(a gorgeous pink cube , yes sir!) that was not defined here, but in the fooBar.coffee file
 assembly.add(myCube)
 
 #you can also include files from other projects
 #for that you need to prefix the include statement with the type of storage you want to get the file from:
-#include ("browser:OtherProject/someFile.coffee") this will include the file "someFile" from the project OtherProject that is stored in 
+#includ_e ("browser:OtherProject/someFile.coffee") this will include the file "someFile" from the project OtherProject that is stored in 
 #localstorage (inside your browser)
 
 #if you have a dropbox account , and have logging in via CoffeeSCad you can do:
-#include ("dropbox:OtherProject/someFile.coffee") to load remote files' content into your project
+#includ_e ("dropbox:OtherProject/someFile.coffee") to load remote files' content into your project
 
 

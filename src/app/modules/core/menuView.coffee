@@ -200,17 +200,19 @@ define (require)->
       
       project = new Project({name:exampleName}) 
       for fileName in @examplesHash[exampleFullPath]
-        projectFile = project.addFile
-          name: fileName
-          content: ""
-        #we need to do ajax request to fetch the files, so lets use deferreds, to make it more practical
-        filePath = "#{@appBaseUrl}examples#{exampleFullPath}/#{fileName}"
-        deferred = $.get(filePath)
-        deferredList.push(deferred)
-        $.when(deferred).done (fileContent)=>
-          projectFile.content = fileContent
+        do(fileName)=>
+          projectFile = project.addFile
+            name: fileName
+            content: ""
+          #we need to do ajax request to fetch the files, so lets use deferreds, to make it more practical
+          filePath = "#{@appBaseUrl}examples#{exampleFullPath}/#{fileName}"
+          deferred = $.get(filePath)
+          deferredList.push(deferred)
+          $.when(deferred).done (fileContent)=>
+            projectFile.content = fileContent
       
       $.when.apply($, deferredList).done ()=>
+        console.log project
         vent.trigger("project:loaded",project) 
    
     render:()=>
