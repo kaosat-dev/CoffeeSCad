@@ -107,8 +107,9 @@ define (require) ->
     
     parseScriptASync:(script, params)->
       #Parse the given coffeescad script in a seperate thread (web worker)
-      rootUrl = window.location.protocol + '//' + window.location.host
+      rootUrl = window.location.protocol + '//' + window.location.host+ window.location.pathname
       rootUrl = rootUrl.replace('index.html','')
+      console.log "rootUrl "+rootUrl
       workerScript = """
       var rootUrl = "#{rootUrl}";
       importScripts(rootUrl + '/assets/js/libs/require.min.js');
