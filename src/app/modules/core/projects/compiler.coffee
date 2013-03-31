@@ -54,9 +54,7 @@ define (require)->
         if error?
           deferred.reject([error])
         else          
-          console.log "here"  
           #@_parseLogEntries(logEntries)
-          
           @_generateBomEntries(rootAssembly, partRegistry)
           @project.rootAssembly = rootAssembly
           

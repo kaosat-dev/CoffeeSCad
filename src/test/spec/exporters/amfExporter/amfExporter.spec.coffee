@@ -11,13 +11,13 @@ define (require)->
     beforeEach ->
       projectManager = new ProjectManager()
       project = new Project
-        name:"test_project"
+        name:"AProject"
       amfExporter = new AmfExporter()
       projectManager.project = project
     
     it 'can export a project to amf (blobUrl)',->
       project.addFile
-        name:"test_project"
+        name:"AProject.coffee"
         content:"""
         class TestPart extends Part
           constructor:(options) ->
@@ -37,7 +37,7 @@ define (require)->
     
     it 'triggers an amfExport:error event when export fails',-> 
       project.addFile
-        name:"test_project"
+        name:"AProject.coffee"
       errorCallback = jasmine.createSpy('-error event callback-')
       amfExporter.vent.on("amfExport:error", errorCallback)
       
@@ -48,7 +48,7 @@ define (require)->
       
     it 'returns null when export fails',->   
       project.addFile
-          name:"testFileName"
+          name:"AProject.coffee"
       blobUrl = amfExporter.export(project.rootAssembly)
       expect(blobUrl).toBe(null)
     

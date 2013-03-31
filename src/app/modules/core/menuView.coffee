@@ -212,7 +212,7 @@ define (require)->
             projectFile.content = fileContent
       
       $.when.apply($, deferredList).done ()=>
-        console.log project
+        project._clearFlags()
         vent.trigger("project:loaded",project) 
    
     render:()=>

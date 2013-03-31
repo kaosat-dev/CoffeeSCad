@@ -130,8 +130,8 @@ define (require)->
     addFile:(options)->
       file = new ProjectFile
         name: options.name ? @name+".coffee"
-        content: options.content ? " \n\n"  
-      @_addFile file   
+        content: options.content ? " \n\n"
+      @_addFile(file)   
       return file
       
     removeFile:(file)=>

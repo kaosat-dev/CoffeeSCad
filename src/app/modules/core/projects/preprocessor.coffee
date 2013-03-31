@@ -57,6 +57,22 @@ define (require) ->
       $.when.apply($, @patternReplacers).done ()=>
         if coffeeToJs
           @processedResult = CoffeeScript.compile(@processedResult, {bare: true})
+          
+        #experiment
+        ###
+        tokens = CoffeeScript.tokens(@processedResult)
+        console.log "tokens" 
+        console.log tokens
+        nodes = CoffeeScript.nodes(tokens)
+        console.log "nodes"
+        console.log nodes
+        
+        addReplacementVisitor = onCall: (n, replaceCallback) ->
+          if n.variable.base.value is "ADD"
+            addOp = new nodes.Op("+", n.args[0], n.args[1])
+            replaceCallback addOp
+        console.log JSON.stringify nodes.expressions, null, "  "
+        ###
         ### 
         for include in @resolvedIncludesFull
           @processedResult.replace(include, "")

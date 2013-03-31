@@ -109,8 +109,6 @@ define (require) ->
       #Parse the given coffeescad script in a seperate thread (web worker)
       rootUrl = window.location.protocol + '//' + window.location.host
       rootUrl = rootUrl.replace('index.html','')
-      rootUrlOld = (document.location.href).replace('#','').replace('index.html','')
-      console.log "rootUrlOld #{rootUrlOld}"
       workerScript = """
       var rootUrl = "#{rootUrl}";
       importScripts(rootUrl + '/assets/js/libs/require.min.js');
@@ -166,8 +164,6 @@ define (require) ->
         if e.data
           if e.data.cmd is 'rendered'
             logEntries = e.data.logEntries
-            console.log(logEntries)
-            
             converters = require './converters' 
             rootAssembly = converters.fromCompactBinary(e.data.rootAssembly)
             partRegistry = e.data.partRegistry
@@ -185,19 +181,7 @@ define (require) ->
         errtxt = "Error in line " + error.lineno + ": " + error.message
         @callback(null, null, null, errtxt) 
       worker.postMessage("render")
-    
-            
-    convertToSolid : (obj) ->
-      ###
-      if( (typeof(obj) == "object") and ((obj instanceof CAG)) )
-        # convert a 2D shape to a thin solid:
-        obj=obj.extrude({offset: [0,0,0.1]})
-      else if( (typeof(obj) == "object") and ((obj instanceof CSG)) )
-        # obj already is a solid
-      else
-        throw new Error("Cannot convert to solid");
-      ###
-      return obj
+      return
 
   #######################
   ### 

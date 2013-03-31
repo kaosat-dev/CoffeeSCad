@@ -128,10 +128,6 @@ define (require)->
             type: 'Number'
           csgBackgroundProcessing:
             type: 'Checkbox'
-          maxRecentFilesDisplay: 
-            type:'Number'
-            title: 'Max recent files to display'
-          
           autoReloadLastProject:
             type:'Checkbox'
             title: 'Reload last project on application start'
@@ -147,7 +143,7 @@ define (require)->
           "fields":["autoReloadLastProject"]
         , 
           "legend":"Other settings"
-          "fields": ["maxRecentFilesDisplay","theme"]
+          "fields": ["theme"]
           
         ]
       super options

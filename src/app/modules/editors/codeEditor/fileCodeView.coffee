@@ -250,7 +250,6 @@ define (require)->
               else cm.replaceSelection("  ", "end")
           "Ctrl-Space": "autocomplete"
           "Ctrl-D":(cm)->
-            console.log cm
             doc = cm.getDoc()
             line = doc.sel.anchor.line
             cm.getDoc().removeLine(line)

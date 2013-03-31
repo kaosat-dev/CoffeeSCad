@@ -179,7 +179,6 @@ define (require)->
     onInitializeAfter:()=>
       """For exampel here close and 'please wait while app loads' display"""
       console.log "after init"
-      console.log $("#initialLoader")
       $("#initialLoader").text("")
 
   return CoffeeScadApp   

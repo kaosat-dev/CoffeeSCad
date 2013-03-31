@@ -147,18 +147,22 @@ define (require)->
         backgroundProcessing : @settings.get("csgBackgroundProcessing")
       
     onNewProject:()=>
-      @createProject()
+      console.log @project
       if @project.isSaveAdvised
         bootbox.dialog "Project is unsaved, you will loose your changes, proceed anyway?", [
           label: "Ok"
           class: "btn-inverse"
           callback: =>
+            @createProject()
             @vent.trigger("project:loaded", @project) 
         ,
           label: "Cancel"
           class: "btn-inverse"
           callback: ->
         ]
+      else
+        @createProject()
+        @vent.trigger("project:loaded", @project) 
       
     onSaveAsProject:=>
       projectBrowserView = new ProjectBrowserView
