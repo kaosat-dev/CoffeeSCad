@@ -40,10 +40,8 @@ define (require)->
       @settings.on("change", @_onSettingsChanged)
             
     _onSettingsChanged:(settings, value)=> 
-      console.log "settings changed"
       mode = @settings.get("csgCompileMode")
       if mode is "onCodeChange" or mode is "onCodeChangeDelayed"
-        console.log "blah"
         if @project.isCompileAdvised
             @compileProject()
 
@@ -51,6 +49,7 @@ define (require)->
       @project.on("change",@onProjectChanged)
       @project.on("save",@onProjectSaved)
       @project.on("compiled", @onProjectCompiled)
+      @project.on("compile:error",@onProjectCompileError)
 
     createProject:()->
       @project = new Project
@@ -141,6 +140,8 @@ define (require)->
     
     onProjectCompiled:=>
       @vent.trigger("project:compiled")
+    onProjectCompileError:=>
+      @vent.trigger("project:compile:error")
        
     compileProject:=>
       @project.compile

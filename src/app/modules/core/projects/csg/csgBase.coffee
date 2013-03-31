@@ -66,7 +66,7 @@ define (require)->
       @_material = material
       @color(material.color)
      
-    _InjectOptions:(options,defaults)=>
+    injectOptions:(options,defaults)=>
       #optionsParser = (options,defaults)->
       #this generated this.param entries based on the merge between defaults and options
       fullOptions = utils.merge(options, defaults)

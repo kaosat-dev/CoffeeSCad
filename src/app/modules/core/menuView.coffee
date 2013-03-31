@@ -62,6 +62,7 @@ define (require)->
       @vent.on("project:loaded",()=>@_onNotificationRequested("Project:loaded"))
       @vent.on("project:saved",()=>@_onNotificationRequested("Project:saved"))
       @vent.on("project:compiled",()=>@_onNotificationRequested("Project:compiled"))
+      @vent.on("project:compile:error",()=>@_onNotificationRequested("Project:compile ERROR check console for details!"))
       @vent.on("project:loaded", @onProjectLoaded)
     
     _onNotificationRequested:(message)=>
@@ -137,7 +138,6 @@ define (require)->
         @vent.trigger("file:redoRequest")
     
     onUndoClicked:->
-      console.log $('#undoBtn')
       if not ($('#undoBtn').hasClass("disabled"))
         console.log "triggering undo Request"
         @vent.trigger("file:undoRequest")
