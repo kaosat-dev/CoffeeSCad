@@ -128,7 +128,7 @@ define (require)->
       markerDiv$ = $(markerDiv)
       escape=(s)-> (''+s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
       .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#x27;').replace(/\//g,'&#x2F;')#.replace('"',"'")
-
+      
       if errorLevel == "warn"
         markerDiv$.addClass("CodeWarningMarker") 
         markerMarkup= "<a href='#' rel='tooltip' title=\"#{escape errorMsg}\"> <i class='icon-remove-sign'></i></a>"
@@ -144,15 +144,17 @@ define (require)->
       @_clearMarkers()
       try
         errors = coffeelint.lint(@editor.getValue(), @settings.get("linting"))
-        @vent.trigger("file:errors",errors)
         if errors.length == 0
           @vent.trigger("file:noError")
+        else
+          @vent.trigger("file:errors",errors)
         for i, error of errors
           errorMsg = error.message
           errorLine = error.lineNumber-1
           errorLevel = error.level
-          marker = @_processError(errorMsg, errorLevel, errorLine)
-          @_markers.push(marker)
+          if not isNaN(errorLine)
+            marker = @_processError(errorMsg, errorLevel, errorLine)
+            @_markers.push(marker)
           
       catch error
         #here handle any error not already managed by coffeelint
@@ -160,8 +162,9 @@ define (require)->
         errorLine = parseInt(errorLine[errorLine.length - 1],10)-1
         errorMsg = error.message
         
-        marker = @_processError(errorMsg, "error", errorLine)
-        @_markers.push(marker)  
+        if not isNaN(errorLine)
+          marker = @_processError(errorMsg, "error", errorLine)
+          @_markers.push(marker)  
         ###
         try
         catch error
@@ -203,7 +206,7 @@ define (require)->
       
       @editor.on "change", (cm, change)=>
         @_updateHints()
-        @model.set "content", @editor.getValue()
+        @model.content = @editor.getValue()
         @updateUndoRedo()
       
       @editor.on "gutterClick",(cm, line, gutter, clickEvent)=>
@@ -214,12 +217,10 @@ define (require)->
         @editor.removeLineClass(@hlLine,"activeline")
         @hlLine = @editor.addLineClass(cursor.line, null, "activeline")
         
-        
         infoText = "Line: #{cursor.line} Column: #{cursor.ch}"
         @ui.infoFooter.text(infoText)
         #console.log "blah"
         #console.log @editor.getCursor()
-    
     
     onRender:=>
       $(".CodeMirror").css("font-size","#{@settings.get('fontSize')}em")

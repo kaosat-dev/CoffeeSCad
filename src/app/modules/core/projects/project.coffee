@@ -38,7 +38,7 @@ define (require)->
         @isSaveAdvised = false
       else
         @isSaveAdvised = true
-    
+        
     _onSaved:()=>
       #when save is sucessfull
       @storedContent = @content
@@ -183,7 +183,7 @@ define (require)->
       @isSaveAdvised = true
     
     _setupFileEventHandlers:(file)=>
-      file.on("change",@_onFileChanged)
+      file.on("change:content",@_onFileChanged)
       file.on("save",@_onFileSaved)
       file.on("destroy",@_onFileDestroyed)
       
@@ -204,6 +204,10 @@ define (require)->
       
     _onCompileError:=>
       @compiler.project = null
+      @isCompileAdvised = false
+      for file in @rootFolder.models
+        file.isCompileAdvised = false
+      @isCompiled = true
       
     _onNameChanged:(model, name)=>
       try
