@@ -41,17 +41,27 @@ define (require) ->
     _prepareScriptASync:()=>
       #prepare the source for compiling : convert to coffeescript, inject dependencies etc
       @script = """
-      
-      {rootAssembly, BaseMaterial,CAGBase,CSGBase,Circle,Connector,cube,Cube,Cylinder,extend,Line2D,Line3D,log,Material,Matrix4x4,
-      merge, OrthoNormalBasis,Part,Path2D,Plane,Polygon,PolygonShared,Properties, Rectangle,
-      RoundedCube,RoundedCylinder,RoundedRectangle,Side,Sphere,Vector2D,Vector3D,
+      {rootAssembly, BaseMaterial,CAGBase,CSGBase,circle,Circle,Connector,cube,Cube,cylinder,Cylinder,extend,Line2D,Line3D,log,Material,Matrix4x4,
+      merge, OrthoNormalBasis,Part,Path2D,Plane,Polygon,PolygonShared,Properties, rectangle,Rectangle,
+      Side, sphere, Sphere,Vector2D,Vector3D,
       Vertex,Vertex2D,classRegistry,hull,intersect, otherRegistry,register,rotate,
          scale, solve2Linear,subtract,translate,union}=csg
+      
+      _convertResultsTo3dSolid=(baseAssembly)->
+        for child in baseAssembly.children
+          _convertResultsTo3dSolid(child)
+          if child instanceof CAGBase
+            extruded = child.extrude({offset:[0,0,1]})
+            for oChild in child.children
+              extruded.add(oChild)
+            baseAssembly.add(extruded)
+            baseAssembly.remove(child)
         
       assembly = rootAssembly
         
       #{@script}
       
+      _convertResultsTo3dSolid(assembly)
       """
       @script = CoffeeScript.compile(@script, {bare: true})
       #console.log "JSIFIED script"
@@ -60,11 +70,24 @@ define (require) ->
     _prepareScriptSync:()=>
       #prepare the source for compiling : convert to coffeescript, inject dependencies etc
       @script = """
-      {rootAssembly, BaseMaterial,CAGBase,CSGBase,Circle,Connector,cube,Cube,Cylinder,extend,Line2D,Line3D,log,Material,Matrix4x4,
-      merge, OrthoNormalBasis,Part,Path2D,Plane,Polygon,PolygonShared,Properties, Rectangle,
-      RoundedCube,RoundedCylinder,RoundedRectangle,Side,Sphere,Vector2D,Vector3D,
+      {rootAssembly, BaseMaterial,CAGBase,CSGBase,circle,Circle,Connector,cube,Cube,cylinder,Cylinder,extend,Line2D,Line3D,log,Material,Matrix4x4,
+      merge, OrthoNormalBasis,Part,Path2D,Plane,Polygon,PolygonShared,Properties, rectangle,Rectangle,
+      Side, sphere, Sphere,Vector2D,Vector3D,
       Vertex,Vertex2D,classRegistry,hull,intersect, otherRegistry,register,rotate,
          scale, solve2Linear,subtract,translate,union}=csg
+      
+      _convertResultsTo3dSolid=(baseAssembly)->
+        for child in baseAssembly.children
+          _convertResultsTo3dSolid(child)
+          if child instanceof CAGBase
+            extruded = child.extrude({offset:[0,0,1]})
+            console.log child.children
+            for i in [child.children.length-1...0] by -1
+              oChild = child.children[i]
+              console.log "adding", oChild
+              extruded.add(oChild)
+            baseAssembly.add(extruded)
+            baseAssembly.remove(child)
          
       #clear log entries
       log.entries = []
@@ -83,11 +106,15 @@ define (require) ->
       #export csg result assembly
       for object in rootAssembly.children
         assembly.add(object)
+      
+      _convertResultsTo3dSolid(assembly)
+      console.log assembly
       """
       
       @script = CoffeeScript.compile(@script, {bare: true})
       #console.log "JSIFIED script"
       #console.log @script
+    
     
     parseScriptSync: (script, mainParameters) -> 
       #Parse the given coffeescad script in the UI thread (blocking but simple)
@@ -106,8 +133,6 @@ define (require) ->
       
       f = new Function("assembly","partRegistry", "logEntries","csg",workerscript)
       result = f(rootAssembly,partRegistry,logEntries, csg)
-      
-      console.log rootAssembly
       @callback(rootAssembly,partRegistry,logEntries)
     
     parseScriptASync:(script, params)->

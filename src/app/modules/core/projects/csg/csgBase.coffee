@@ -51,12 +51,12 @@ define (require)->
     
     constructor:(options)->
       super options
-      @uid = guid()
       @polygons = []
       @properties = new Properties()
       @isCanonicalized = true
       @isRetesselated = true
       
+      @uid = guid()
       @parent = null
       @children = [] 
       @_material = new materials.BaseMaterial()
@@ -78,16 +78,16 @@ define (require)->
       return fullOptions
       
     add:(objectsToAdd...)=>
+      #todo fix positioning and rotation
       for obj in objectsToAdd
-        if obj instanceof CAGBase
-          obj = obj.extrude({offset:[0,0,1]})
         obj.position = obj.position.plus(@position)
         if obj.parent?
           obj.parent.remove(obj)
         obj.parent = @
         @children.push(obj)
         
-    remove:(childrenToRemove...)=>   
+    remove:(childrenToRemove...)=>
+      #TODO: reset position & rotation ? 
       for child in childrenToRemove
         index = @children.indexOf(child)
         if (index!=-1)
@@ -128,7 +128,8 @@ define (require)->
       newInstance.isRetesselated = @isRetesselated
       
       for key of @
-        if key != "polygons" and key!= "isCanonicalized" and key != "isRetesselated" and key != "constructor" and key != "children" and key!= "uid"
+        if key not in ["polygons","isCanonicalized","isRetesselated", "constructor", "children", "uid", "parent"]
+        #if key != "polygons" and key!= "isCanonicalized" and key != "isRetesselated" and key != "constructor" and key != "children" and key!= "uid" and key!= "parent"
           #console.log "key #{key}"
           if @hasOwnProperty(key)
               newInstance[key] = _clone @[key]
@@ -1324,9 +1325,29 @@ define (require)->
     # CAG: solid area geometry: like CSG but 2D
     # Each area consists of a number of sides
     # Each side is a line between 2 points
-    constructor: ->
+    constructor:(options) ->
+      super(options)
       @sides = []
       @isCanonicalized=false
+      
+      @uid = guid()
+      @parent = null
+      @children = [] 
+  
+    add:(objectsToAdd...)=>
+      for obj in objectsToAdd
+        obj.position = obj.position.plus(@position)
+        if obj.parent?
+          obj.parent.remove(obj)
+        obj.parent = @
+        @children.push(obj)
+        
+    remove:(childrenToRemove...)=>   
+      for child in childrenToRemove
+        index = @children.indexOf(child)
+        if (index!=-1)
+          child.parent = null
+          @children.splice(index, 1) 
   
     clone:->
       _clone=(obj)->
@@ -1352,7 +1373,8 @@ define (require)->
       #newInstance.properties = Properties.cloneObj()
       newInstance.isCanonicalized = @isCanonicalized
       for key of @
-        if key != "polygons" and key!= "isCanonicalized"
+        if key not in ["polygons","isCanonicalized","isRetesselated", "constructor", "children", "uid", "parent"]
+        #if key != "polygons" and key!= "isCanonicalized"
           if @.hasOwnProperty(key)
               newInstance[key] = _clone @[key]
       return newInstance
