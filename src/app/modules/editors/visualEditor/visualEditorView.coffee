@@ -16,8 +16,6 @@ define (require) ->
   
   threedView_template = require "text!./visualEditorView.tmpl"
   requestAnimationFrame = require 'modules/core/utils/anim'
-  orbit_ctrl = require 'orbit_ctrl'
-  #track_ctrl = require 'track_ctrl'
   THREE.CSG = require 'modules/core/projects/csg/csg.Three'
   
   helpers = require './helpers'

@@ -20,8 +20,6 @@ require.config
     bootstrap:        "../assets/js/libs/bootstrap.min"
     CodeMirror:       "../assets/js/libs/codemirror"
     CoffeeScript:     "../assets/js/libs/CoffeeScript"
-    #csg:              "../assets/js/libs/csg"
-    lightgl:          "../assets/js/libs/lightgl"
     three:            "../assets/js/libs/three"
     detector:         "../assets/js/libs/detector"
     stats:            "../assets/js/libs/Stats"
@@ -74,7 +72,6 @@ require.config
     
     three_csg:        "../assets/js/plugins/ThreeCSG"
     combo_cam:        "../assets/js/plugins/CombinedCamera"
-    orbit_ctrl:       "../assets/js/plugins/OrbitControls"#"../assets/js/plugins/CustomOrbitControls"
     ### 
     track_ctrl :      "../assets/js/plugins/three/TrackBallControls"
     CopyShader:       "../assets/js/plugins/three/CopyShader"
