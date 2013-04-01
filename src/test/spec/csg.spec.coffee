@@ -12,6 +12,39 @@ define (require)->
   utils = require "modules/core/projects/csg/utils"
   
   
+  
+  describe "csg objects as elements of a hierarchy", ->
+    it "csg objects can add  children to themselves", ->
+      parent = new Cube()
+      firstChild = new Sphere()
+      seconChild = new Cylinder()
+      parent.add(firstChild, seconChild)
+      expect(parent.children).toEqual([firstChild,seconChild])
+    
+    it 'csg object can remove children from themselves', ->
+      parent = new Cube()
+      firstChild = new Sphere()
+      seconChild = new Cylinder()
+      parent.add(firstChild)
+      parent.add(seconChild)
+      expect(parent.children).toEqual([firstChild,seconChild])
+      parent.remove(firstChild,seconChild)
+      expect(parent.children).toEqual([])
+    
+    it "can change the hierarchy if added as a child of another object", ->
+      parent = new Cube()
+      otherParent = new Cube()
+      child = new Sphere()
+      
+      parent.add(child)
+      expect(parent.children).toEqual([child])
+      expect(child.parent).toBe(parent)
+      
+      otherParent.add(child)
+      expect(parent.children).toEqual([])
+      expect(otherParent.children).toEqual([child])
+      expect(child.parent).toBe(otherParent)
+  
   describe "Options parsing utilities (not public api)", ->
     it 'has a centerParser, no input (should default to false)', ->
       options = {}

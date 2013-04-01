@@ -98,14 +98,14 @@ define (require)->
         
         chosenIndices = []
         
-        console.log corners.toString(2)
+        #console.log corners.toString(2)
         validCorners = parseInt(corners,2) & (parseInt("001111",2))
-        console.log validCorners.toString(2)
+        #console.log validCorners.toString(2)
         backFlag = 0x1#hex vs bin compare?
         frontFlag = 0x2
         rightFlag = parseInt("100",2)
         leftFlag = parseInt("1000",2)
-        console.log "front: #{frontFlag.toString(2)} left: #{leftFlag.toString(2)} right: #{rightFlag.toString(2)}"
+        #console.log "front: #{frontFlag.toString(2)} left: #{leftFlag.toString(2)} right: #{rightFlag.toString(2)}"
         #FIXME: god awfull hack?
         if (validCorners & frontFlag)
           if (validCorners & leftFlag)
@@ -135,8 +135,8 @@ define (require)->
           
           insetVector = corner.minus(new Vector2D(bX,bY).times(cornerRadius/2))
           r.translate(insetVector)
-          console.log "corner: #{corner.x} #{corner.y}"
-          console.log "cornerElement position: #{insetVector.x} #{insetVector.y}"
+          #console.log "corner: #{corner.x} #{corner.y}"
+          #console.log "cornerElement position: #{insetVector.x} #{insetVector.y}"
           subShapes.push(r)
           
         for index in chosenIndices

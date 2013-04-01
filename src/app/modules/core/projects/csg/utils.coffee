@@ -734,7 +734,7 @@ define (require)->
         _this.getSide side
       )
       newsides
-      
+  
   return {
       "parseOption": parseOption
       "parseOptions":parseOptions

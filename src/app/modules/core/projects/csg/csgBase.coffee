@@ -57,6 +57,7 @@ define (require)->
       @isCanonicalized = true
       @isRetesselated = true
       
+      @parent = null
       @children = [] 
       @_material = new materials.BaseMaterial()
       @color(@_material.color)
@@ -76,12 +77,28 @@ define (require)->
         @[key]=value
       return fullOptions
       
-    add:(objects...)->
-      for obj in objects
+    add:(objectsToAdd...)=>
+      for obj in objectsToAdd
         if obj instanceof CAGBase
           obj = obj.extrude({offset:[0,0,1]})
         obj.position = obj.position.plus(@position)
+        if obj.parent?
+          obj.parent.remove(obj)
+        obj.parent = @
         @children.push(obj)
+        
+    remove:(childrenToRemove...)=>   
+      for child in childrenToRemove
+        index = @children.indexOf(child)
+        if (index!=-1)
+          child.parent = null
+          @children.splice(index, 1) 
+        
+      #@children.splice(index, 1) for index, value of childrenToRemove when value in @children
+      #for index, value of childrenToRemove
+      #  if value in @children
+      #    @children.splice(index, 1)
+      
       
     clone:->
       _clone=(obj)->
@@ -1890,7 +1907,11 @@ define (require)->
       str = "  0\nENDSEC\n  0\nEOF\n"
       blobbuilder.append str
 
+  rootAssembly = new CSGBase()
+ 
+
   return {
     "CSGBase": CSGBase
     "CAGBase": CAGBase
+    "rootAssembly":rootAssembly
   }

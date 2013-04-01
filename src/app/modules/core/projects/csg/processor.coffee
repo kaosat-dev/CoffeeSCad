@@ -35,20 +35,20 @@ define (require) ->
           @parseScriptSync(@script, paramValues)
         @processing = false
       catch error
-        console.log error.stack
         @callback(null,null,null, error)
         @processing = false
       
     _prepareScriptASync:()=>
       #prepare the source for compiling : convert to coffeescript, inject dependencies etc
       @script = """
-      {BaseMaterial,CAGBase,CSGBase,Circle,Connector,Cube,Cylinder,extend,Line2D,Line3D,log,Material,Matrix4x4,
+      
+      {rootAssembly, BaseMaterial,CAGBase,CSGBase,Circle,Connector,cube,Cube,Cylinder,extend,Line2D,Line3D,log,Material,Matrix4x4,
       merge, OrthoNormalBasis,Part,Path2D,Plane,Polygon,PolygonShared,Properties, Rectangle,
       RoundedCube,RoundedCylinder,RoundedRectangle,Side,Sphere,Vector2D,Vector3D,
       Vertex,Vertex2D,classRegistry,hull,intersect, otherRegistry,register,rotate,
          scale, solve2Linear,subtract,translate,union}=csg
         
-      assembly = new CSGBase();
+      assembly = rootAssembly
         
       #{@script}
       
@@ -60,7 +60,7 @@ define (require) ->
     _prepareScriptSync:()=>
       #prepare the source for compiling : convert to coffeescript, inject dependencies etc
       @script = """
-      {BaseMaterial,CAGBase,CSGBase,Circle,Connector,Cube,Cylinder,extend,Line2D,Line3D,log,Material,Matrix4x4,
+      {rootAssembly, BaseMaterial,CAGBase,CSGBase,Circle,Connector,cube,Cube,Cylinder,extend,Line2D,Line3D,log,Material,Matrix4x4,
       merge, OrthoNormalBasis,Part,Path2D,Plane,Polygon,PolygonShared,Properties, Rectangle,
       RoundedCube,RoundedCylinder,RoundedRectangle,Side,Sphere,Vector2D,Vector3D,
       Vertex,Vertex2D,classRegistry,hull,intersect, otherRegistry,register,rotate,
@@ -79,6 +79,10 @@ define (require) ->
       #export log entries to the passed in "logEntries" object
       for entry in log.entries
         logEntries.push(entry)
+      
+      #export csg result assembly
+      for object in rootAssembly.children
+        assembly.add(object)
       """
       
       @script = CoffeeScript.compile(@script, {bare: true})
@@ -103,6 +107,7 @@ define (require) ->
       f = new Function("assembly","partRegistry", "logEntries","csg",workerscript)
       result = f(rootAssembly,partRegistry,logEntries, csg)
       
+      console.log rootAssembly
       @callback(rootAssembly,partRegistry,logEntries)
     
     parseScriptASync:(script, params)->
@@ -120,7 +125,7 @@ define (require) ->
             try
             {
               #{script}
-              var result_compact = assembly.toCompactBinary()
+              var result_compact = rootAssembly.toCompactBinary()
               postMessage({cmd: 'rendered', rootAssembly: result_compact, partRegistry:classRegistry,'logEntries':log.entries});
             }
             catch(error)
