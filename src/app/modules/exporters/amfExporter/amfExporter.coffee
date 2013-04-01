@@ -92,10 +92,10 @@ define (require) ->
       xw.writeStartElement("materials")
       xw.writeEndElement()
       
-      @_preProcessCSG(@csgObject)
+      processedCSG = @_preProcessCSG(@csgObject)
       
       for part,index in @csgObject.children
-        part.fixTJunctions()
+        #part.fixTJunctions()
         #object
         xw.writeStartElement("object")
         xw.writeAttributeString("id",index)
@@ -173,8 +173,10 @@ define (require) ->
           
       parse(csg)
       console.log flatHierarchy
+      return flatHierarchy
           
     _preProcessCSGInner:(csg)->
+      #get faces and vertices from csg
       polygons = csg.toPolygons()
       remapped = {faces:[],vertices:[]}
       verticesIndex= {}
@@ -185,29 +187,30 @@ define (require) ->
         key = "#{x},#{y},#{z}"
         if not (key of verticesIndex)
           sVertex = {x:x,y:y,z:z}
-          result = [index,sVertex]
+          result = [index, sVertex]
           verticesIndex[key]= result
           result = [index,sVertex,false]
           return result
         else
-          [index,v] = verticesIndex[key]
-          return [index,v,true]
+          [index, v] = verticesIndex[key]
+          return [index, v, true]
         
       vertexIndex = 0
       for polygon, polygonIndex in polygons
-        color ={r:1,g:1,b:1,a:1}#= new THREE.Color(0xaaaaaa)
+        color ={r:1,g:1,b:1,a:1}
         try
           color.r = polygon.shared.color[0]
           color.g = polygon.shared.color[1]
           color.b = polygon.shared.color[2]
         polyVertices = []
         for vertex,vindex in polygon.vertices
-          remapped.vertices.push(v)
+          #remapped.vertices.push(vertex)
           [index,v,found] = fetchVertexIndex(vertex,vertexIndex)
           polyVertices.push(index)
           if not found
             remapped.vertices.push(v)
             vertexIndex+=1
+            
         srcNormal = polygon.plane.normal
         faceNormal = {x:srcNormal.x,y:srcNormal.z,z:srcNormal.y}#new THREE.Vector3(srcNormal.x,srcNormal.z,srcNormal.y)
         for i in [2...polyVertices.length]

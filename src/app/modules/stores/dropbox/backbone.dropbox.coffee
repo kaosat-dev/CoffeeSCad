@@ -20,7 +20,7 @@ define (require)->
       d = $.Deferred()
       @client.authenticate (error, client)=>
         if error?
-          d.reject(@formatError(error))
+          @formatError(error,d)
         d.resolve(error)
       return d.promise()
       
@@ -28,13 +28,12 @@ define (require)->
       d = $.Deferred()
       @client.signOut (error)=>
         if error?
-          d.reject(@formatError(error))
+          @formatError(error,d)
         else
           d.resolve(error)
       return d.promise()
       
     formatError:(error, deferred)->
-      error = null
       switch error.status
         when 401
           # If you're using dropbox.js, the only cause behind this error is that

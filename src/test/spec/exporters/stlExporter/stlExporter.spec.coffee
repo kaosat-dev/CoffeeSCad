@@ -13,7 +13,7 @@ define (require)->
     
     it 'can export a project to stl (blobUrl)',->
       project.addFile
-        name:"test_project"
+        name:"test_project.coffee"
         content:"""
         class TestPart extends Part
           constructor:(options) ->
@@ -29,7 +29,7 @@ define (require)->
     
     it 'triggers an stlExport:error event when export fails',-> 
       project.addFile
-        name:"test_project"
+        name:"test_project.coffee"
       errorCallback = jasmine.createSpy('-error event callback-')
       stlExporter.vent.on("stlExport:error", errorCallback)
       
