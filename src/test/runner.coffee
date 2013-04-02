@@ -11,6 +11,8 @@ define (require)->
   specs.push("./spec/csg.spec")
   specs.push("./spec/settings.spec")
   
+  specs.push("./spec/regexExperiments.spec")
+  
   #editors
   
   #exporters
