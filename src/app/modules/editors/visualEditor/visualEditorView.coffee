@@ -626,11 +626,12 @@ define (require) ->
     onResize:()=>
       @width =  window.innerWidth# $("#glArea").width()
       @height = window.innerHeight-10
-      #@camera.aspect = @width / @height
-      #@camera.updateProjectionMatrix()
-      #@camera.setSize(@width,@height)
-      @camera.updateProjectionMatrix()
+      
+      @camera.aspect = @width / @height
+      @camera.setSize(@width,@height)
       @renderer.setSize(@width, @height)
+      @camera.updateProjectionMatrix()
+      
       @_render()
     
     onRender:()=>
@@ -640,13 +641,10 @@ define (require) ->
       @width = $("#visual").width()
       @height = window.innerHeight-10#$("#gl").height()
      
-      #@camera.aspect = @width / @height
-      #@camera.updateProjectionMatrix()
-      
-      #@camera.setSize(@width,@height)
-      
-      @camera.updateProjectionMatrix()
+      @camera.aspect = @width / @height
+      @camera.setSize(@width,@height)
       @renderer.setSize(@width, @height)
+      @camera.updateProjectionMatrix()
             
       @_render()
       
