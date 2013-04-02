@@ -9,6 +9,8 @@ define (require) ->
     constructor:()->
       @debug = null
       @project = null
+      @includePattern = /(?!\s*?#)(?:\s*?include\s*?)(?:\(?\"([\w\//:'%~+#-.*]+)\"\)?)/g
+      @paramsPattern = /^\s*?params\s*?=\s*?(\[(.|[\r\n])*?\])/g
       
       @resolvedIncludes = []
       @unresolvedIncludes = []
@@ -38,6 +40,7 @@ define (require) ->
       
       #if lint
       #  @lintProject(project)
+      
       @project = project
       mainFileName = @project.name+".coffee"
       mainFile = @project.rootFolder.get(mainFileName)
@@ -49,7 +52,6 @@ define (require) ->
       
       @deferred = $.Deferred()
       @patternReplacers= []
-      @includePattern = /(?!\s*?#)(?:\s*?include\s*?)(?:\(?\"([\w\//:'%~+#-.*]+)\"\)?)/g
       @processedResult = mainFileCode
       
       @processIncludes(mainFileName, mainFileCode)
@@ -77,9 +79,33 @@ define (require) ->
         for include in @resolvedIncludesFull
           @processedResult.replace(include, "")
         @processedResult.replace("""include""","toto")###
+        @processedResult = @_findParams(@processedResult) # just a test
+        #console.log "@processedResult",@processedResult
         @deferred.resolve(@processedResult)
       
       return @deferred.promise()
+    
+    
+    _findParams:(source)=>
+      source = source or ""
+      matches = []
+      match = @paramsPattern.exec(source)
+      while match  
+        matches.push(match)
+        match = @paramsPattern.exec(source)
+      
+      @project.meta = {}
+      #console.log "matches", matches
+      if matches.length>0
+        mainMatch = matches[0][0].replace("=",":")
+        params = eval(mainMatch)
+        results = {}
+        for param in params
+          results[param.name]=param.default
+        source = source.replace(matches[0][0], "")
+        @project.meta.params = results
+        
+      return source      
     
     _findMatches:(source)=>
       source = source or ""

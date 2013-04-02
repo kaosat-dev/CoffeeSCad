@@ -6,11 +6,15 @@ define (require)->
   maths = require './maths'
   Plane = maths.Plane
   Vector3D= maths.Vector3D
+  Vector2D= maths.Vector2D
+  
   Vertex= maths.Vertex
+  Vertex2D= maths.Vertex
   Polygon = maths.Polygon
   PolygonShared= maths.PolygonShared
+  Side = maths.Side
   
-  fromCompactBinary = (bin) ->
+  CSGfromCompactBinary = (bin) ->
     # Reconstruct a CSG from the output of toCompactBinary()
     throw new Error("Not a CSG")  unless bin.class is "CSG"
     planes = []
@@ -81,7 +85,51 @@ define (require)->
       csg.children.push(fromCompactBinary(child))
     csg
     
+  CAGfromCompactBinary = (bin) ->
+      # Reconstruct a CAG from the output of toCompactBinary()
+      throw new Error("Not a CAG")  unless bin.class is "CAG"
+      vertices = []
+      vertexData = bin.vertexData
+      numvertices = vertexData.length / 2
+      arrayindex = 0
+      vertexindex = 0
     
+      while vertexindex < numvertices
+        x = vertexData[arrayindex++]
+        y = vertexData[arrayindex++]
+        pos = new Vector2D(x, y)
+        vertex = new Vertex2D(pos)
+        vertices.push vertex
+        vertexindex++
+      sides = []
+      numsides = bin.sideVertexIndices.length / 2
+      arrayindex = 0
+      sideindex = 0
+    
+      while sideindex < numsides
+        vertexindex0 = bin.sideVertexIndices[arrayindex++]
+        vertexindex1 = bin.sideVertexIndices[arrayindex++]
+        side = new Side(vertices[vertexindex0], vertices[vertexindex1])
+        sides.push side
+        sideindex++
+      cag = CAGBase.fromSides(sides)
+      cag.isCanonicalized = true
+      
+      cag.children = []
+      for child in bin.children
+        cag.children.push(fromCompactBinary(child))
+      cag  
+  
+  fromCompactBinary = (bin)-> 
+    if bin.class is "CSG"
+      return CSGfromCompactBinary(bin)
+    else if bin.class is "CAG"
+      return CAGfromCompactBinary(bin)
+    else throw new Error("Not a CSG or a CAG")
+      
+      
   return {
+    "CSGfromCompactBinary":CSGfromCompactBinary
+    "CAGfromCompactBinary":CAGfromCompactBinary
     "fromCompactBinary":fromCompactBinary
   }

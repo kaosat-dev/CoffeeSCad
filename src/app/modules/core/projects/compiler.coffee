@@ -49,7 +49,8 @@ define (require)->
         error = new Error("No project given to the compiler")
         deferred.reject(error)
       
-      @csgProcessor.processScript source,@backgroundProcessing, (rootAssembly, partRegistry, logEntries, error)=>
+      params = @project.meta.params
+      @csgProcessor.processScript source,@backgroundProcessing,params, (rootAssembly, partRegistry, logEntries, error)=>
         @compileResultData["logEntries"] = logEntries or []
         if error?
           deferred.reject([error])

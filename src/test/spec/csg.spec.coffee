@@ -424,6 +424,42 @@ define (require)->
       circle = new Circle({d:25, center:[100,100]})
       expect(circle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(112.5,100))
   
+  describe "there is a simplified , optional api for fast geometry creation and display",->
+    it "has a cube shortcut default parent (rootAssembly)", ->
+      cube = csg.cube({size:100})
+      expect(cube.polygons[5].vertices[2].pos).toEqual(new csg.Vector3D(100,100,100))
+    
+    it "has a cube shortcut, custom parent ", ->
+      parent = new Cube()
+      cube = csg.cube({size:100},parent)
+      expect(cube.polygons[5].vertices[2].pos).toEqual(new csg.Vector3D(100,100,100))
+      expect(cube.parent).toBe(parent)
+      
+    it "has a sphere shortcut", ->
+      #this is the equivalent of
+      # sphere = new Sphere({r:50})
+      # assembly.add(sphere)
+      sphere = csg.sphere({r:50})
+      expect(sphere.polygons[0].vertices[0].pos).toEqual(new csg.Vector3D(50,0,0))
+    
+    it "has a cylinder shortcut", ->
+      #this is the equivalent of
+      # cylinder = new Cylinder({r:50})
+      # assembly.add(cylinder)
+      cylinder = csg.cylinder({r:25,$fn:5})
+      expect(cylinder.polygons[14].vertices[1].pos).toEqual(new csg.Vector3D(25,6.123031769111886e-15,1))
+      
+    it "has a rectangle shortcut", ->
+      rectangle = csg.rectangle({size:100})
+      expect(rectangle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(0,100))
+      
+    it "has a circle shortcut", ->
+      #this is the equivalent of
+      # circle = new circle({r:50})
+      # assembly.add(circle)
+      circle = csg.circle({r:50})
+      expect(circle.sides[0].vertex0.pos).toEqual(new csg.Vector2D(50,0))
+  
   describe "Lines, points, and all shapes can be translated, rotated, scaled ", ->
     #TODO: see when / IF the various transformbase operations actually apply
   

@@ -2,6 +2,8 @@ define (require) ->
   reqRes = require 'modules/core/messaging/appReqRes'
   utils = require "modules/core/utils/utils"
   CoffeeScript = require 'CoffeeScript'
+  csg = require './csg'
+  CAGBase = csg.CAGBase
   
   ##Inner workflow
   #- Compile
@@ -15,28 +17,48 @@ define (require) ->
       @async = false
       @debug = false
       
-    processScript:(script, async=false, callback)-> 
+    processScript:(script, async=false, params, callback)-> 
       @script = script
       @async = async
+      @params = params      
       @callback = callback
-      
       @rebuildSolid()
       
     rebuildSolid:() =>
       console.log "Using background rebuild:#{@async}"
       @processing = true
-      paramValues = null
       try
         if @async
           @_prepareScriptASync()
-          @parseScriptASync(@script, paramValues)
+          @parseScriptASync(@script, @params)
         else
           @_prepareScriptSync()
-          @parseScriptSync(@script, paramValues)
+          @parseScriptSync(@script, @params)
         @processing = false
       catch error
         @callback(null,null,null, error)
         @processing = false
+   
+    _convertResultsTo3dSolid:(baseAssembly)=>
+      newChildren = []
+      for child in baseAssembly.children
+        #console.log "going into", child
+        @_convertResultsTo3dSolid(child)
+        #console.log "treating", child , "in ", baseAssembly
+        if child instanceof CAGBase
+          #console.log "current", child, " type ", type(child)
+          extruded = child.extrude({offset:[0,0,1]})
+          console.log child.children
+          for i in [child.children.length-1..0] by -1
+            oChild = child.children[i]
+            extruded.add(oChild)
+          newChildren.push(extruded)
+        else
+          newChildren.push(child)
+      baseAssembly.clear()
+      for child in newChildren
+        console.log "adding", child , "to end result"
+        baseAssembly.add(child)
       
     _prepareScriptASync:()=>
       #prepare the source for compiling : convert to coffeescript, inject dependencies etc
@@ -47,21 +69,14 @@ define (require) ->
       Vertex,Vertex2D,classRegistry,hull,intersect, otherRegistry,register,rotate,
          scale, solve2Linear,subtract,translate,union}=csg
       
-      _convertResultsTo3dSolid=(baseAssembly)->
-        for child in baseAssembly.children
-          _convertResultsTo3dSolid(child)
-          if child instanceof CAGBase
-            extruded = child.extrude({offset:[0,0,1]})
-            for oChild in child.children
-              extruded.add(oChild)
-            baseAssembly.add(extruded)
-            baseAssembly.remove(child)
-        
+      #clear rootAssembly
+      rootAssembly.clear()
+      
       assembly = rootAssembly
-        
+      
+      #include script
       #{@script}
       
-      _convertResultsTo3dSolid(assembly)
       """
       @script = CoffeeScript.compile(@script, {bare: true})
       #console.log "JSIFIED script"
@@ -75,40 +90,20 @@ define (require) ->
       Side, sphere, Sphere,Vector2D,Vector3D,
       Vertex,Vertex2D,classRegistry,hull,intersect, otherRegistry,register,rotate,
          scale, solve2Linear,subtract,translate,union}=csg
-      
-      _convertResultsTo3dSolid=(baseAssembly)->
-        for child in baseAssembly.children
-          _convertResultsTo3dSolid(child)
-          if child instanceof CAGBase
-            extruded = child.extrude({offset:[0,0,1]})
-            console.log child.children
-            for i in [child.children.length-1...0] by -1
-              oChild = child.children[i]
-              console.log "adding", oChild
-              extruded.add(oChild)
-            baseAssembly.add(extruded)
-            baseAssembly.remove(child)
-         
+
       #clear log entries
       log.entries = []
+      #clear rootAssembly
+      rootAssembly.clear()
+      
+      assembly = rootAssembly
       
       #include script
       #{@script}
       
-      #export data to the passed "partRegistry" object
-      for klass of classRegistry
-        partRegistry[klass] = classRegistry[klass]
+      #return results as an object for cleaness
+      return result = {"rootAssembly":rootAssembly,"partRegistry":classRegistry, "logEntries":log.entries}
       
-      #export log entries to the passed in "logEntries" object
-      for entry in log.entries
-        logEntries.push(entry)
-      
-      #export csg result assembly
-      for object in rootAssembly.children
-        assembly.add(object)
-      
-      _convertResultsTo3dSolid(assembly)
-      console.log assembly
       """
       
       @script = CoffeeScript.compile(@script, {bare: true})
@@ -116,23 +111,22 @@ define (require) ->
       #console.log @script
     
     
-    parseScriptSync: (script, mainParameters) -> 
+    parseScriptSync: (script, params) -> 
       #Parse the given coffeescad script in the UI thread (blocking but simple)
       workerscript = script
       if @debug
         workerscript += "//Debugging;\n"
         workerscript += "debugger;\n"
-
-      csg = require './csg'      
-      class Assembly extends csg.CSGBase
-        constructor:()->
-          super
-      rootAssembly = new Assembly()
+        
       partRegistry = {}
       logEntries = []
       
-      f = new Function("assembly","partRegistry", "logEntries","csg",workerscript)
-      result = f(rootAssembly,partRegistry,logEntries, csg)
+      f = new Function("partRegistry", "logEntries","csg", "params", workerscript)
+      result = f(partRegistry,logEntries, csg, params)
+      {rootAssembly,partRegistry,logEntries} = result
+      console.log "RootAssembly", rootAssembly
+      @_convertResultsTo3dSolid(rootAssembly)
+      
       @callback(rootAssembly,partRegistry,logEntries)
     
     parseScriptASync:(script, params)->
@@ -140,8 +134,10 @@ define (require) ->
       rootUrl = window.location.protocol + '//' + window.location.host+ window.location.pathname
       rootUrl = rootUrl.replace('index.html','')
       console.log "rootUrl "+rootUrl
+      params = JSON.stringify(params);
       workerScript = """
       var rootUrl = "#{rootUrl}";
+      var params = #{params};
       importScripts(rootUrl + '/assets/js/libs/require.min.js');
       csg = null;
       require(
@@ -149,6 +145,7 @@ define (require) ->
         function(require,csg){
             try
             {
+              //params = JSON.parse(params)
               #{script}
               var result_compact = rootAssembly.toCompactBinary()
               postMessage({cmd: 'rendered', rootAssembly: result_compact, partRegistry:classRegistry,'logEntries':log.entries});
@@ -160,7 +157,6 @@ define (require) ->
             
       });
       """
-      
       ###
       onmessage = function(e) 
       { 
@@ -197,6 +193,7 @@ define (require) ->
             logEntries = e.data.logEntries
             converters = require './converters' 
             rootAssembly = converters.fromCompactBinary(e.data.rootAssembly)
+            @_convertResultsTo3dSolid(rootAssembly)
             partRegistry = e.data.partRegistry
             @callback(rootAssembly,partRegistry,logEntries)
           else if e.data.cmd is "error"

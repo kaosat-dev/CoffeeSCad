@@ -49,6 +49,8 @@ define (require)->
       cornerResolution= parseOptionAsFloat(options, "$fn", 0)
       cornerResolution = 4  if cornerResolution < 4
       
+      #Add attributes?
+      
       #polygons = []
       #vertexMultipliers = [[-1,-1,-1],[-1,1,-1],[1,1,-1],[-1,1,-1]]
       #faceNormals = [[-1, 0, 0], [+1, 0, 0], [0, -1, 0], [0, +1, 0], [0, 0, -1], [0, 0, +1]]

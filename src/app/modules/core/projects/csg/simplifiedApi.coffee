@@ -14,7 +14,8 @@ define (require)=>
     #parent is specified
     _cube = new geometry3d.Cube(options)
     if not parent?
-      rootAssembly.add(_cube)
+      parent = rootAssembly
+    parent.add(_cube)
     return _cube
     
   sphere = (options, parent=null)=>
@@ -22,7 +23,8 @@ define (require)=>
     #parent is specified
     _sphere = new geometry3d.Sphere(options)
     if not parent?
-      rootAssembly.add(_sphere)
+      parent = rootAssembly
+    parent.add(_sphere)
     return _sphere
   
   cylinder = (options, parent=null)=>
@@ -30,7 +32,8 @@ define (require)=>
     #parent is specified
     _cylinder = new geometry3d.Cylinder(options)
     if not parent?
-      rootAssembly.add(_cylinder)
+      parent = rootAssembly
+    parent.add(_cylinder)
     return _cylinder
   
   rectangle = (options, parent=null)=>
@@ -38,7 +41,8 @@ define (require)=>
     #parent is specified
     _rectangle = new geometry2d.Rectangle(options)
     if not parent?
-      rootAssembly.add(_rectangle)
+      parent = rootAssembly
+    parent.add(_rectangle)
     return _rectangle
   
   circle = (options, parent=null)=>
@@ -46,7 +50,8 @@ define (require)=>
     #parent is specified
     _circle = new geometry2d.Circle(options)
     if not parent?
-      rootAssembly.add(_circle)
+      parent = rootAssembly
+    parent.add(_circle)
     return _circle
 
   return {

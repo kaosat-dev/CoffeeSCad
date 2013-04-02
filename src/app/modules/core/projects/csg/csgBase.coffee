@@ -76,9 +76,9 @@ define (require)->
         #@::[key] = value
         @[key]=value
       return fullOptions
-      
+    
+    #TODO fix positioning and rotation
     add:(objectsToAdd...)=>
-      #todo fix positioning and rotation
       for obj in objectsToAdd
         obj.position = obj.position.plus(@position)
         if obj.parent?
@@ -93,7 +93,13 @@ define (require)->
         if (index!=-1)
           child.parent = null
           @children.splice(index, 1) 
-        
+          
+    clear:=>
+      #removes all children
+      for i in [@children.length-1..0] by -1
+        child = @children[i]
+        @remove(child)
+      @children = []
       #@children.splice(index, 1) for index, value of childrenToRemove when value in @children
       #for index, value of childrenToRemove
       #  if value in @children
@@ -1348,7 +1354,13 @@ define (require)->
         if (index!=-1)
           child.parent = null
           @children.splice(index, 1) 
-  
+    clear:=>
+      #removes all children
+      for i in [@children.length-1...0] by -1
+        child = @children[i]
+        @remove(child)
+      @children = []
+      
     clone:->
       _clone=(obj)->
         if not obj? or typeof obj isnt 'object'
@@ -1516,16 +1528,23 @@ define (require)->
             vertexindex = vertexmap[vertextag]
           sideVertexIndices[sidevertexindicesindex++] = vertexindex
   
-  
       vertexData = new Float64Array(numvertices * 2)
       verticesArrayIndex = 0
       vertices.map (v) ->
         pos = v.pos
         vertexData[verticesArrayIndex++] = pos._x
         vertexData[verticesArrayIndex++] = pos._y
+        
+      children= []
+      if cag.children?
+        for child in cag.children
+          children.push(child.toCompactBinary()) 
+  
   
       result =
         class: "CAG"
+        realClass: @__proto__.constructor.name
+        children:children
         sideVertexIndices: sideVertexIndices
         vertexData: vertexData
       result
@@ -1930,8 +1949,11 @@ define (require)->
       blobbuilder.append str
 
   rootAssembly = new CSGBase()
- 
-
+  ### 
+  class Assembly extends csg.CSGBase
+        constructor:()->
+          super
+  ###
   return {
     "CSGBase": CSGBase
     "CAGBase": CAGBase

@@ -1,6 +1,9 @@
 define (require)->
   csgMaths = require './maths'
   Vector3D = csgMaths.Vector3D
+  Matrix4x4 = csgMaths.Matrix4x4
+  Plane = csgMaths.Plane
+  OrthoNormalBasis = csgMaths.OrthoNormalBasis
   
   class Properties
     # # Class Properties
@@ -50,7 +53,6 @@ define (require)->
           if propertyvalue instanceof Array
             cloned = []
             i = 0
-    
             while i < propertyvalue.length
               cloned.push propertyvalue[i]
               i++
