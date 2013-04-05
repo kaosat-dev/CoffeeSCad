@@ -14,7 +14,7 @@ Feedback, bug reports, ideas and contributions are welcome !
 
 Like CoffeeSCad ? Buy me a coffee as they say :)
 
-[![Flattr this git repo](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?user_id=kaosat-dev&url=https://github.com/kaosat-dev/CoffeeSCad&title=CoffeeSCad&language=&tags=github&category=software)
+[![Flattr this git repo](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?user_id=ckaos&url=https://github.com/kaosat-dev/CoffeeSCad&title=CoffeeSCad&language=&tags=github&category=software)
 
 
 Contributors
