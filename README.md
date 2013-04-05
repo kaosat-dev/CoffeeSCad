@@ -10,6 +10,13 @@ live demo here : http://kaosat-dev.github.com/CoffeeSCad/
 
 Feedback, bug reports, ideas and contributions are welcome !
 
+
+
+Like CoffeeSCad ? Buy me a coffee as they say :)
+
+[![Flattr this git repo](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?user_id=kaosat-dev&url=https://github.com/kaosat-dev/CoffeeSCad&title=CoffeeSCad&language=&tags=github&category=software)
+
+
 Contributors
 =============
 Derrick Oswald
@@ -34,6 +41,7 @@ Future Features
 - faster visualization and processing 
 - desktop version
 - better ui 
+
 
 Dependencies 
 =============
