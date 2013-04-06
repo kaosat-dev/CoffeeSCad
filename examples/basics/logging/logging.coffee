@@ -13,3 +13,5 @@ log.debug("cubeSize: #{cubeSize}")
 #log.INFO
 #log.WARN
 #log.ERROR
+
+#supported variable types: int, float, string, arrays, but not objects for now
