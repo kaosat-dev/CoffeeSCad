@@ -5,7 +5,7 @@ define (require)->
   marionette = require 'marionette'
   jquery_layout = require 'jquery_layout'
   jquery_ui = require 'jquery_ui'
-  require 'jquery_hotkeys'
+  #require 'jquery_hotkeys'
   modelBinder = require 'modelbinder'
   
   vent = require 'modules/core/messaging/appVent'

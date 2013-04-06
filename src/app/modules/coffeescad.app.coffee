@@ -2,7 +2,7 @@ define (require)->
   $ = require 'jquery'
   _ = require 'underscore'
   marionette = require 'marionette'
-  require 'jquery_hotkeys'
+  #require 'jquery_hotkeys'
   
   vent = require 'modules/core/messaging/appVent'
   
@@ -124,7 +124,7 @@ define (require)->
       
     onStart:()=>
       console.log "app started"
-      @_setupKeyboardBindings()
+      #@_setupKeyboardBindings()
       @codeEditor.start()
       @visualEditor.start()
       #we check if we came back form an oauth redirect/if we have already been authorized
