@@ -57,9 +57,8 @@ define (require)->
       @project.addFile
         name: @project.get("name")+".coffee"
         content:"""
-        #just a comment
-        cube = new Cube({size:20}).color([0.9,0.5,0.1])
-        assembly.add(cube)
+        myCube = new Cube({size:20}).color([0.9,0.5,0.1])
+        assembly.add(myCube)
         """
         content_3:"""
         #just a comment
@@ -117,6 +116,8 @@ define (require)->
         name: "config.coffee"
         content:""" """
       @_setupProjectEventHandlers()
+      
+      @project._clearFlags()
       return @project
     
     onProjectChanged:()=>
