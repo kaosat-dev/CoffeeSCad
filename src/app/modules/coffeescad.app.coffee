@@ -127,6 +127,7 @@ define (require)->
       #@_setupKeyboardBindings()
       @codeEditor.start()
       @visualEditor.start()
+      #@hierarchyEditor.start()
       #we check if we came back form an oauth redirect/if we have already been authorized
       for index, store of @stores
         store.authCheck()
@@ -173,6 +174,12 @@ define (require)->
           mainRegion: "#visual"
         project: @project
         appSettings: @settings
+      
+      ### 
+      HierarchyEditor = require './editors/hierarchyEditor/hierarchyEditor'
+      @hierarchyEditor = new HierarchyEditor
+        project: @project
+        appSettings: @settings ### 
      
       @settings.fetch()
       

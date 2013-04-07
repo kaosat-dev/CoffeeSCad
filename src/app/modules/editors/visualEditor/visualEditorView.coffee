@@ -679,29 +679,8 @@ define (require) ->
       
       
     onDomRefresh:=>
-      #FIXME: this needs to be moved to another view
-      $('.objectCreator').popover
-        #container: ".objectCreator"
-        html : true
-        content: _.template($(contextMenuTemplate).filter('#contextMenuTmpl').html()) 
-        placement:"left"
-        #template:'<div class="popover" style="height:45px"><div class="arrow"></div><div class="popover-inner"><h3 class="popover-title" style="display: none"></h3><div class="popover-content"><p></p></div></div></div>'
-      $('.objectCreator').popover
-        show:true
-      @bindUIElements()
-      
-      $('#shapeCreate').on "click", (event)->
-        ###
-        $('.shapeCreate').popover
-          content: "Square"
-          placement:"left"
-          show:true
-       ###
-      @bindUIElements()
-      console.log $('#shapeCreate')
-      $("#shapeCreate").onclick = (event)->
-        console.log "sdf"
-       
+      #console.log "width", @$el.width()
+      #console.log "height", @el.height()
     
     _render:()=>
       @renderer.render(@scene, @camera)

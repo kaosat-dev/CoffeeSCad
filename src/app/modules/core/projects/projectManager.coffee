@@ -44,6 +44,9 @@ define (require)->
       if mode is "onCodeChange" or mode is "onCodeChangeDelayed"
         if @project.isCompileAdvised
             @compileProject()
+      
+      autoSave = @settings.autoSave
+      @_setupAutoSave()
 
     _setupProjectEventHandlers: =>
       @project.on("change",@onProjectChanged)
@@ -116,6 +119,7 @@ define (require)->
         name: "config.coffee"
         content:""" """
       @_setupProjectEventHandlers()
+      @_setupAutoSave()
       
       @project._clearFlags()
       return @project
@@ -140,7 +144,7 @@ define (require)->
       @memoizeCurrentProject()
     
     onProjectCompiled:=>
-      @vent.trigger("project:compiled")
+      @vent.trigger("project:compiled",@project)
     onProjectCompileError:=>
       @vent.trigger("project:compile:error")
        
@@ -196,11 +200,27 @@ define (require)->
       modReg.show projectBrowserView
       
     onProjectLoaded:(project)=>
-      @project=project
+      @project = project
       @project.compiler = @compiler
       @_setupProjectEventHandlers()
+      @_setupAutoSave()
       @memoizeCurrentProject()
-      
+    
+    _setupAutoSave:=>
+      console.log "setting up autosave"
+      #checks if autosave is enabled, if yes, sets up
+      if @autoSaveTimer?
+        #cancel previously running autosave
+        clearInterval(@autoSaveTimer)
+        
+      if @settings.autoSave
+        saveCallback = =>
+          #FIXME: this brakes modularity (accessing a store directly), this should be done with a command
+          #or something similarly decoupled
+          console.log "autosaving"
+          @stores["browser"].autoSaveProject @project
+        @autoSaveTimer = setInterval saveCallback, @settings.autoSaveFrequency*1000
+    
     memoizeCurrentProject:=>
       #store current project name + storage, to be able to auto reload it
       if @project.dataStore?

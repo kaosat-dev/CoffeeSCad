@@ -3,6 +3,7 @@ define (require)->
   _ = require 'underscore'
   Backbone = require 'backbone'
   LocalStorage = require 'localstorage'
+  buildProperties = require 'modules/core/utils/buildProperties'
   
   
   class Settings extends Backbone.Collection
@@ -57,6 +58,10 @@ define (require)->
       return result[0]
       
   class GeneralSettings extends Backbone.Model
+    attributeNames: ['name', 'csgCompileMode','csgCompileDelay','csgBackgroundProcessing',
+    'autoReloadLastProject','autoSave','autoSaveFrequency']
+    buildProperties @
+    
     idAttribute: 'name'
     defaults:
       name: "General"
@@ -67,6 +72,8 @@ define (require)->
       csgBackgroundProcessing: false
       
       autoReloadLastProject : false
+      autoSave: false
+      autoSaveFrequency: 30
       
       theme: "default"
       

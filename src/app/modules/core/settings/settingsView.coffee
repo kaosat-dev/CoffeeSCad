@@ -131,16 +131,25 @@ define (require)->
           autoReloadLastProject:
             type:'Checkbox'
             title: 'Reload last project on application start'
+          
+          autoSave:
+            type:'Checkbox'
+            title: 'Auto save'
+          
+          autoSaveFrequency:
+            type:'Number', editorAttrs: { step: 5, min: 10}
+            title: 'Auto save frequancy (s)'
             
           theme:
             type:'Select'
             options : ["default", "spacelab","slate"]
+            
         options.fieldsets=[
           "legend": "CSG compiling settings"
           "fields": ["csgCompileMode","csgCompileDelay","csgBackgroundProcessing"]
         ,
           "legend": "Save and load"
-          "fields":["autoReloadLastProject"]
+          "fields":["autoReloadLastProject","autoSave","autoSaveFrequency"]
         , 
           "legend":"Other settings"
           "fields": ["theme"]

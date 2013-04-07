@@ -85,8 +85,8 @@ define (require)->
           
         resize:=>
           view.$el.trigger("resize")
-        open:(event, ui)=>
-          $(".ui-dialog-titlebar-close", ui.dialog or ui).hide()
+        #open:(event, ui)=>
+          #$(".ui-dialog-titlebar-close", ui.dialog or ui).hide()
        
     hideDialog: ->
       @$el.modal 'hide'

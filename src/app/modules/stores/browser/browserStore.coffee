@@ -57,6 +57,7 @@ define (require)->
       
       #TODO: should this be here ? ie this preloads all projects, perhaps we could lazy load?
       @lib.fetch()
+      console.log "fetched lib", @lib
       
       #handler for project/file data fetch requests
       reqRes.addHandler("getbrowserFileOrProjectCode",@_sourceFetchHandler)
@@ -164,8 +165,46 @@ define (require)->
       
       localStorage.setItem(projectURI,strinfigiedProject)
       
-      
       @vent.trigger("project:saved")  
+    
+    autoSaveProject:(srcProject)=>
+      #used for autoSaving projects
+      srcProjectName = srcProject.name
+      project = srcProject.clone()#$.extend(true, {}, srcProject)##
+      project.rootFolder = srcProject.rootFolder.clone()
+      project.name = srcProjectName+"_auto" 
+      projectName = project.name
+      project.id=projectName
+      
+      console.log "autosaving", projectName
+      
+      @lib.add(project)
+      @_addToProjectsList(projectName)
+      
+      projectURI = "#{@storeURI}-#{projectName}"
+      rootStoreURI = "#{projectURI}-files"
+       
+      filesList = []
+      for index, file of project.rootFolder.models
+        name = file.name
+        content =file.content
+        filePath = "#{rootStoreURI}-#{name}"
+        ext = name.split('.').pop()
+        localStorage.setItem(filePath,JSON.stringify(file.toJSON()))
+        filesList.push(file.name)
+        file.trigger("save")
+      
+      localStorage.setItem(rootStoreURI,filesList.join(","))
+      
+      attributes = _.clone(project.attributes)
+      for attrName, attrValue of attributes
+        if attrName not in project.persistedAttributeNames
+          delete attributes[attrName]
+      strinfigiedProject = JSON.stringify(attributes)
+      
+      localStorage.setItem(projectURI,strinfigiedProject)
+      
+      @vent.trigger("project:autoSaved")  
     
     loadProject:(projectName, silent=false)=>
       d = $.Deferred()
@@ -179,7 +218,8 @@ define (require)->
       onProjectLoaded=()=>
         #remove old thumbnail
         thumbNailFile = project.rootFolder.get(".thumbnail.png")
-        project.rootFolder.remove(thumbNailFile)
+        if thumbNailFile?
+          project.rootFolder.remove(thumbNailFile)
         project._clearFlags()
         if not silent
           @vent.trigger("project:loaded",project)
@@ -238,12 +278,12 @@ define (require)->
         index = projects.indexOf(projectName)
         projects.splice(index, 1)
         if projects.length>0 then projects=projects.join(',') else projects = ""
-        localStorage.setItem(storeURI,projects)
+        localStorage.setItem(@storeURI,projects)
         index = @projectsList.indexOf(projectName)
         @projectsList.splice(index, 1)
         
         console.log "projectName"
-        projectURI = "#{storeURI}-#{projectName}"
+        projectURI = "#{@storeURI}-#{projectName}"
         rootStoreURI = "#{projectURI}-files"
         
         localStorage.removeItem(rootStoreURI)

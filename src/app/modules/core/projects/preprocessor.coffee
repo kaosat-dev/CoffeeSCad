@@ -190,7 +190,6 @@ define (require) ->
       console.log @lintErrors
         
     lintFile:(projectName, fileName, source)=>
-
       lintingSettings=
         indentation:
           value: 2

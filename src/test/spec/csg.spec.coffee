@@ -431,7 +431,8 @@ define (require)->
     
     it "has a cube shortcut, custom parent ", ->
       parent = new Cube()
-      cube = csg.cube({size:100},parent)
+      cube = csg.cube
+      cube = cube({size:100},parent)
       expect(cube.polygons[5].vertices[2].pos).toEqual(new csg.Vector3D(100,100,100))
       expect(cube.parent).toBe(parent)
       

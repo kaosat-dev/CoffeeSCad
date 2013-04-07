@@ -6,7 +6,7 @@ define (require)->
   
   maths = require './maths'
   Vertex = maths.Vertex
-  Vertex2D = maths.Vertex
+  Vertex2D = maths.Vertex2D
   Vector2D = maths.Vector2D
   Side = maths.Side
   

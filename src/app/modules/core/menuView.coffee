@@ -61,6 +61,7 @@ define (require)->
       @vent.on("notify",@onNotificationRequested)
       @vent.on("project:loaded",()=>@_onNotificationRequested("Project:loaded"))
       @vent.on("project:saved",()=>@_onNotificationRequested("Project:saved"))
+      @vent.on("project:autoSaved",()=>@_onNotificationRequested("Project:autosave"))
       @vent.on("project:compiled",()=>@_onNotificationRequested("Project:compiled"))
       @vent.on("project:compile:error",()=>@_onNotificationRequested("Project:compile ERROR check console for details!"))
       @vent.on("project:loaded", @onProjectLoaded)
@@ -152,7 +153,7 @@ define (require)->
         console.log data
         
     showAbout:(ev)=>
-      bootbox.dialog """<b>Coffeescad v0.3</b> (pre-alpha)<br/><br/>
+      bootbox.dialog """<b>Coffeescad v0.31</b> (pre-alpha)<br/><br/>
       Licenced under the MIT Licence<br/>
       @2012-2013 by Mark 'kaosat-dev' Moissette
       """, [
