@@ -221,6 +221,10 @@ define (require)->
           @stores["browser"].autoSaveProject @project
         @autoSaveTimer = setInterval saveCallback, @settings.autoSaveFrequency*1000
     
+    _checkAutoSavePresence:=>
+      #check if there is an autosaved project , if there is, ask user if he wants to reload
+      #if @stores["browser"].get("autosave")?
+    
     memoizeCurrentProject:=>
       #store current project name + storage, to be able to auto reload it
       if @project.dataStore?
@@ -229,7 +233,7 @@ define (require)->
         localStorage.setItem("coffeescad_lastProjectName",@project.name)
       
     reloadLast:=>
-      if @settings.get("autoReloadLastProject") is true
+      if @settings.autoReloadLastProject is true
         #attempt to auto reload last project
         lastProjectName = localStorage.getItem("coffeescad_lastProjectName")
         if lastProjectName?
@@ -240,7 +244,22 @@ define (require)->
           @stores[storeName].loadProject(lastProjectName)
           loadProj= =>
             @stores[storeName].loadProject(lastProjectName)
+            
+    start:=>  
+      if @settings.autoReloadLastProject
+        reloadLast()
         
+      #there was an autosave, ie failure
+      bootbox.dialog "An autosave file was detected, do you want to reload it?", [
+        label: "Ok"
+        class: "btn-inverse"
+        callback: =>
+          @stores["browser"].loadProject("autosave")
+      ,
+        label: "Cancel"
+        class: "btn-inverse"
+        callback: ->
+      ]
         
       
   return ProjectManager

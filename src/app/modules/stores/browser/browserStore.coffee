@@ -93,24 +93,21 @@ define (require)->
     getProject:(projectName)=>
       return @lib.get(projectName)
     
-    getProjectFiles:(projectName,callback)=>
+    getProjectFiles:(projectName)=>
       #Get all the file names withing a project : should actually get the file tree? (subdirs support etc)
-      #hack
+      d = $.Deferred()
       files = []
       project = @lib.get(projectName)
-      #TODO: oh the horror: we have to fetch all model data just to look at the files list
       if project?
         projectURI = "#{@storeURI}-#{projectName}"
-        rootStoreURI = "#{projectURI}-files"
+        filesURI = "#{projectURI}-files"
+        
         project.rootFolder.sync = project.sync
-        project.rootFolder.changeStorage("localStorage",new Backbone.LocalStorage(rootStoreURI))
-        
-        onProjectFilesLoaded=()=>
-          for file in project.rootFolder.models
-            files.push(file.name)
-          callback(files)
-        
-        project.rootFolder.fetch().done(onProjectFilesLoaded)
+        project.rootFolder.changeStorage("localStorage",new Backbone.LocalStorage(filesURI))
+        fileNames = localStorage.getItem(filesURI)
+        files = fileNames.split(',')
+      d.resolve(files)
+      return d
         
     saveProject_:(project, newName)=>
       project.collection = null
@@ -170,14 +167,17 @@ define (require)->
     autoSaveProject:(srcProject)=>
       #used for autoSaving projects
       srcProjectName = srcProject.name
-      project = srcProject.clone()#$.extend(true, {}, srcProject)##
-      project.rootFolder = srcProject.rootFolder.clone()
-      project.name = srcProjectName+"_auto" 
-      projectName = project.name
-      project.id=projectName
       
-      console.log "autosaving", projectName
-      
+      fakeClone =(project,newName)=>
+        clonedProject = new Project({name:newName})
+        for pfile in project.rootFolder.models
+          clonedProject.addFile
+            name:pfile.name
+            content:pfile.content
+        return clonedProject
+        
+      projectName = "autosave"#srcProjectName+"_auto" 
+      project = fakeClone(srcProject,projectName)
       @lib.add(project)
       @_addToProjectsList(projectName)
       
@@ -204,6 +204,7 @@ define (require)->
       
       localStorage.setItem(projectURI,strinfigiedProject)
       
+      
       @vent.trigger("project:autoSaved")  
     
     loadProject:(projectName, silent=false)=>
@@ -226,7 +227,15 @@ define (require)->
         d.resolve(project)
       
       project.dataStore = @
-      project.rootFolder.fetch().done(onProjectLoaded)
+      
+      fileNames = @_getProjectFiles(projectName)
+      for fileName in fileNames
+        content = @_readFile(projectName,fileName)
+        project.addFile
+          content : content
+          name : fileName
+      onProjectLoaded()
+      #project.rootFolder.fetch().done(onProjectLoaded)
       return d
    
     deleteProject:(projectName)=>
@@ -317,6 +326,28 @@ define (require)->
       
       fileURI = "#{filesURI}-#{fileName}"
       localStorage.removeItem(fileURI)
+      
+    _getProjectFiles:(projectName)=>
+      projectURI = "#{@storeURI}-#{projectName}"
+      filesURI = "#{projectURI}-files"
+      fileNames = localStorage.getItem(filesURI)
+      fileNames = fileNames.split(',')
+      return fileNames
+      
+    _readFile:(projectName, fileName)=>
+      projectURI = "#{@storeURI}-#{projectName}"
+      filesURI = "#{projectURI}-files"
+      fileNames = localStorage.getItem(filesURI)
+      fileNames = fileNames.split(',')
+      if fileName in fileNames
+        fileUri = "#{filesURI}-#{fileName}"
+        fileData = localStorage.getItem(fileUri)
+        rawData = JSON.parse(fileData)
+        console.log "raw file Data", rawData
+        return rawData["content"]
+      else
+        throw new Error("no such file")
+      
       
     _sourceFetchHandler:([store, projectName, path, deferred])=>
       #This method handles project/file content requests and returns appropriate data

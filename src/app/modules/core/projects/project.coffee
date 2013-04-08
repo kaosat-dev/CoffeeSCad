@@ -7,7 +7,6 @@ define (require)->
   
   debug  = false
   
-  
   class ProjectFile extends Backbone.Model
     idAttribute: 'name'
     defaults:

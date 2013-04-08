@@ -139,7 +139,11 @@ define (require)->
     
     onAppClosing:()=>
       if @project.isSaveAdvised
+        console.log "on close foo"
         return 'You have unsaved changes!'
+      else
+        console.log "on close bar"
+        localStorage.setItem("appCloseOk",true)
     
     onSettingsShow:()=>
       settingsView = new SettingsView

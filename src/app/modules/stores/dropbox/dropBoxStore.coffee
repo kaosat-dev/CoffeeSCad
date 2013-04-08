@@ -143,16 +143,19 @@ define (require)->
       else
         return null
     
-    getProjectFiles:(projectName,callback)=>
-      #console.log "fetching project files for #{projectName}"
+    getProjectFiles:(projectName)=>
+      #returns all files in a project
+      d = $.Deferred()
       if @store.client?
         @store.client.readdir "/#{projectName}/", (error, entries) =>
           if error
-            console.log ("error")
-            console.log error
+            d.reject(error)
           else
-            callback(entries)
-   
+            d.resolve(entries)
+       else
+        d.reject(error)
+      return d
+        
     getProjectFiles2:(projectName)=> 
       return @store.client.readdir "/#{projectName}/"
       

@@ -192,8 +192,7 @@ define (require)->
             fullName = file.split('.')
             ext = fullName.pop()
             $("#projectFilesList").append("<tr><td>#{file}</td><td>#{ext}</td></tr>")
-      
-        @model.getProjectFiles(@selectedModelName, onFilesFetched)
+        @model.getProjectFiles(@selectedModelName).done(onFilesFetched)
       
       onReallyRename=(fileName)=>
         console.log "renaming to #{fileName}"
@@ -246,7 +245,7 @@ define (require)->
           ext = fullName.pop()
           $("#projectFilesList").append("<tr><td>#{file}</td><td>#{ext}</td></tr>")
       
-      @model.getProjectFiles(projectName, onFilesFetched)
+      @model.getProjectFiles(projectName).done(onFilesFetched)
     
     onSaveRequested:(fileName)=>
       if @selected
