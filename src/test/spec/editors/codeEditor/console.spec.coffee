@@ -2,8 +2,8 @@ define (require)->
   $ = require 'jquery'
   _ = require 'underscore'
   
-  vent = require 'modules/core/messaging/appVent'
-  ConsoleView = require 'modules/editors/codeEditor/consoleView'
+  vent = require 'core/messaging/appVent'
+  ConsoleView = require 'editors/codeEditor/consoleView'
   
   describe "console", ->
     consoleView = null

@@ -1,5 +1,5 @@
 define (require)->
-  Settings= require "modules/core/settings/settings"
+  Settings= require "core/settings/settings"
 
   describe "Settings", ->
     settings = null

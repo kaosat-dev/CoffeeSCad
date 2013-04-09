@@ -1,6 +1,6 @@
 define (require)->
-  BomExporter = require "modules/exporters/bomExporter/bomExporter"
-  Project = require "modules/core/projects/project"
+  BomExporter = require "exporters/bomExporter/bomExporter"
+  Project = require "core/projects/project"
 
   describe "BomExporter", ->
     project = null

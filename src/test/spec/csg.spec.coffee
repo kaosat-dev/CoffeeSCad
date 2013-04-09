@@ -1,5 +1,5 @@
 define (require)->
-  csg = require "modules/core/projects/csg/csg"
+  csg = require "core/projects/csg/csg"
   CSGBase = csg.CSGBase
   CAGBase = csg.CAGBase
   Cube = csg.Cube
@@ -9,7 +9,7 @@ define (require)->
   hull = csg.hull
   Rectangle = csg.Rectangle
   Circle = csg.Circle
-  utils = require "modules/core/projects/csg/utils"
+  utils = require "core/projects/csg/utils"
   
   
   

@@ -1,9 +1,9 @@
 define (require)->
   $ = require 'jquery'
   _ = require 'underscore'
-  Project = require "modules/core/projects/project"
-  PreProcessor = require "modules/core/projects/preprocessor"
-  BrowserStore = require "modules/stores/browser/browserStore"
+  Project = require "core/projects/project"
+  PreProcessor = require "core/projects/preprocessor"
+  BrowserStore = require "stores/browser/browserStore"
   
   checkDeferred=(df,fn) ->
     callback = jasmine.createSpy()

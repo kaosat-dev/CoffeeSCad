@@ -1,6 +1,6 @@
 define (require)->
-  Library = require "modules/core/projects/library"
-  Project = require "modules/core/projects/project"
+  Library = require "core/projects/library"
+  Project = require "core/projects/project"
   
   describe "library", ->
     library = null

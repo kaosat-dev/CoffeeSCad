@@ -3,7 +3,7 @@ define (require)->
   _ = require 'underscore'
   Backbone = require 'backbone'
   marionette = require 'marionette'
-  CoffeeScadApp = require 'modules/coffeescad.app'  
+  CoffeeScadApp = require 'coffeescad.app'  
   
   app = new CoffeeScadApp()
   

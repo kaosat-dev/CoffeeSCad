@@ -1,7 +1,7 @@
 define (require)->
   $ = require 'jquery'
   _ = require 'underscore'
-  Project = require "modules/core/projects/project"
+  Project = require "core/projects/project"
   
   
   checkDeferred=(df,fn) ->

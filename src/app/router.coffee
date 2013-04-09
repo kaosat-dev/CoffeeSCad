@@ -3,7 +3,7 @@ define (require) ->
   
   class Controller
     constructor:()->
-      #tMod = require "modules/testMod"
+      #tMod = require "testMod"
       
   class Router extends Backbone.Router
     routes:

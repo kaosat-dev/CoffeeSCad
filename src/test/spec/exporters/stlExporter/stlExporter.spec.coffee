@@ -1,6 +1,6 @@
 define (require)->
-  StlExporter = require "modules/exporters/stlExporter/stlExporter"
-  Project = require "modules/core/projects/project"
+  StlExporter = require "exporters/stlExporter/stlExporter"
+  Project = require "core/projects/project"
 
   describe "StlExporter ", ->
     project = null

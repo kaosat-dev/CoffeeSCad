@@ -1,8 +1,8 @@
 define (require)->
   $ = require 'jquery'
   _ = require 'underscore'
-  CodeEditor = require 'modules/editors/codeEditor/codeEditor'
-  CodeEditorSettings = require 'modules/editors/codeEditor/codeEditorSettings'
+  CodeEditor = require 'editors/codeEditor/codeEditor'
+  CodeEditorSettings = require 'editors/codeEditor/codeEditorSettings'
   
   describe "codeEditor", ->
     project = null

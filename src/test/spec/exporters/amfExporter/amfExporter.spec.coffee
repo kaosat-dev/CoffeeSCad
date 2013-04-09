@@ -1,7 +1,7 @@
 define (require)->
-  AmfExporter = require "modules/exporters/amfExporter/amfExporter"
-  Project = require "modules/core/projects/project"
-  ProjectManager = require "modules/core/projects/projectManager" 
+  AmfExporter = require "exporters/amfExporter/amfExporter"
+  Project = require "core/projects/project"
+  ProjectManager = require "core/projects/projectManager" 
 
   describe "AmfExporter ", ->
     projectManager = null 
