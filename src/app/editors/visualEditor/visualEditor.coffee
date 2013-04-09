@@ -23,6 +23,7 @@ define (require)->
       super options
       @appSettings = options.appSettings ? null
       @settings = options.settings ? new VisualEditorSettings()
+      @visualEditorView = null
       @project= options.project ? new Project()
       @vent = vent
       @router = new VisualEditorRouter
@@ -45,17 +46,19 @@ define (require)->
         
     onStart:()=>
       @settings = @appSettings.getByName("VisualEditor")
-      visualEditorView = new VisualEditorView
+      @visualEditorView = new VisualEditorView
         model:    @project
         settings: @settings
-      @mainRegion.show visualEditorView
+      @mainRegion.show @visualEditorView
         
     resetEditor:(newProject)=>
       @project = newProject
+      @visualEditorView.switchModel(@project)
+      ### 
       @mainRegion.close()
       visualEditorView = new VisualEditorView
         model:    @project
         settings: @settings
-      @mainRegion.show visualEditorView
+      @mainRegion.show visualEditorView###
       
   return VisualEditor

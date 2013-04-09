@@ -15,3 +15,5 @@ define (require) ->
   Backbone.View.include = Backbone.Router.include = include
   Backbone.Marionette.ItemView.include = Backbone.Marionette.CollectionView.include = include
   Backbone.Marionette.CompositeView.include = Backbone.Marionette.View.include = include
+  
+  return include

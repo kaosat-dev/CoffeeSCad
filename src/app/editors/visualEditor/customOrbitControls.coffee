@@ -14,8 +14,6 @@ define (require) ->
     #API additions
     @target = new THREE.Vector3()
     @eye = new THREE.Vector3()
-    _panStart = new THREE.Vector2()
-    _panEnd = new THREE.Vector2()
     
     # API
     @userZoom = true
@@ -39,14 +37,21 @@ define (require) ->
     zoomStart = new THREE.Vector2()
     zoomEnd = new THREE.Vector2()
     zoomDelta = new THREE.Vector2()
+    panStart = new THREE.Vector2()
+    panEnd = new THREE.Vector2()
+    
+    
     phiDelta = 0
     thetaDelta = 0
     scale = 1
+    
     lastPosition = new THREE.Vector3()
+    
     STATE =
       NONE: -1
       ROTATE: 0
       ZOOM: 1
+      PAN: 2
   
     state = STATE.NONE
     
@@ -80,18 +85,16 @@ define (require) ->
     @zoomCamera = ->
       position = @object.position
       offset = position.clone().sub(@target)
-      radius = offset.length() * scale
+      radius = offset.length() * scale #* this.userZoomSpeed
       
       # restrict radius to be between desired limits
       radius = Math.max(@minDistance, Math.min(@maxDistance, radius))
       @eye.multiplyScalar radius
+      
+      #if @object.inOrthographicMode
+      #@object.setZoom(radius)
       scale = 1.0
-    
-    #
-    #       var factor = 1.0 + ( zoomEnd.y - zoomStart.y ) * this.userZoomSpeed;
-    #        if ( factor !== 1.0 && factor > 0.0 ) {
-    #            this.eye.multiplyScalar( factor*2000);
-    #        }
+
     
     @rotateCamera = ->
       position = @object.position
@@ -129,10 +132,10 @@ define (require) ->
       
     
     @panCamera = ->
-      mouseChange = _panEnd.clone().sub(_panStart)
+      mouseChange = panEnd.clone().sub(panStart)
       if mouseChange.lengthSq()
+        #only pan if necessary
         mouseChange.multiplyScalar @panSpeed
-
         #get "eye vector" (ray from cam to target)
         eyeVector = @object.position.clone().sub(@target)
         
@@ -151,14 +154,11 @@ define (require) ->
         
         panVector = new THREE.Vector3().addVectors(vLeft,vUp)
         
-        #console.log("pan vector: ("+panVector.x+", "+panVector.y+", "+panVector.z+")")
-        
         pan = panVector
         @object.position.add pan
         @target.add pan
         
-        #console.log("mouse: ("+mouseChange.x+ ", "+ mouseChange.y +") Pan:("+pan.x+ ", " + pan.y + ", "+pan.z+")");
-        _panStart = _panEnd
+        panStart = panEnd
 
     @update = =>
       if not @noRotate
@@ -179,7 +179,6 @@ define (require) ->
     @zoomInOn=(object) =>
       @target = object.position.clone()
       #@zoomIn(2)
-      
     
     getAutoRotationAngle = ->
       2 * Math.PI / 60 / 60 * scope.autoRotateSpeed
@@ -195,7 +194,7 @@ define (require) ->
         rotateStart.set event.clientX, event.clientY
       else if event.button is 2
         state = STATE.PAN
-        _panStart = _panEnd = new THREE.Vector2(event.clientX, event.clientY)
+        panStart = panEnd = new THREE.Vector2(event.clientX, event.clientY)
       else if event.button is 1 
         state = STATE.ZOOM
         zoomStart.set(event.clientX, event.clientY)
@@ -220,7 +219,7 @@ define (require) ->
           scope.zoomOut()
         zoomStart.copy zoomEnd
       else if state is STATE.PAN
-        _panEnd = new THREE.Vector2(event.clientX, event.clientY)
+        panEnd = new THREE.Vector2(event.clientX, event.clientY)
         
     onMouseUp = (event) ->
       return  unless scope.userRotate

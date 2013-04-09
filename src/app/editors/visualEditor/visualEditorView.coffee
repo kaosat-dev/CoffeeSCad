@@ -22,16 +22,75 @@ define (require) ->
   
   contextMenuTemplate = require "text!./contextMenu.tmpl"
   
-
+  includeMixin = require 'core/utils/mixins/mixins'
+  dndMixin = require 'core/utils/mixins/dragAndDropRecieverMixin'
+  
   class VisualEditorView extends Backbone.Marionette.ItemView
+    @include dndMixin
     template: threedView_template
     ui:
       renderBlock :   "#glArea"
       glOverlayBlock: "#glOverlay" 
       overlayDiv:     "#overlay" 
+      dropOverlay: "#dropOverlay"
       
     events:
       'contextmenu' : 'rightclick'
+      'dragover': 'onDragOver'
+      'dragenter': 'onDragEnter'
+      'dragexit' :'onDragExit'
+      'drop':'onDrop'
+    
+    onDragOver:(e)=>
+      e.preventDefault()
+      e.stopPropagation()
+      #console.log "event", e
+      #console.log "e.dataTransfer",e.dataTransfer
+      #offset = e.dataTransfer.getData("text/plain").split(',');
+      dm = @ui.dropOverlay[0]
+      #console.log "dm", dm
+      dm.style.left = (e.clientX + e.offsetX) + 'px'
+      dm.style.top = (e.clientY + e.offsetY) + 'px'
+      
+      dm.style.left =e.originalEvent.clientX+'px'
+      dm.style.top = e.originalEvent.clientY+'px'
+      
+    onDragEnter:(e)->
+      @ui.dropOverlay.removeClass("hide")
+    
+    onDragExit:(e)=>
+      @ui.dropOverlay.addClass("hide")
+      
+    onDrop:(e)->
+      # this / e.target is current target element.
+      if (e.stopPropagation)
+        e.stopPropagation()
+      e.preventDefault()
+      
+      @ui.dropOverlay.addClass("hide")
+      
+      files = e.originalEvent.dataTransfer.files
+      for file in files
+        console.log "dropped file", file
+        
+        do(file)=>
+          name = file.name
+          ext = name.split(".").pop()
+          if ext == "coffee"
+            
+            reader = new FileReader()
+            reader.onload=(e) =>
+              fileContent = e.target.result
+              console.log "fileContent",fileContent
+            reader.readAsText(file)
+           
+            #reader.onload = ((fileHandler)->
+            
+       
+          
+      
+      # See the section on the DataTransfer object.
+      return false
       
     constructor:(options, settings)->
       super options
@@ -43,9 +102,8 @@ define (require) ->
       @stats.domElement.style.top = '30px'
       @stats.domElement.style.zIndex = 100
       
-      @settings.on( "change", @settingsChanged)
-      @model.on("compiled", @projectCompiled)
-      @model.on("compile:error", @projectCompileFailed)
+      @settings.on("change", @settingsChanged)
+      @_setupEventBindings()
       
       #screenshoting
       reqRes.addHandler "project:getScreenshot", ()=>
@@ -56,6 +114,11 @@ define (require) ->
       @width = window.innerWidth
       @height = window.innerHeight-10
       @init()
+    
+    _setupEventBindings:=>
+      @model.on("compiled", @projectCompiled)
+      @model.on("compile:error", @projectCompileFailed)
+      
       
     makeScreeshot:(width=300, height=300)=>
       # Save screenshot of 3d view
@@ -134,15 +197,15 @@ define (require) ->
     switchModel:(newModel)->
       #replace current model with a new one
       #@unbindAll()
-      @scene.remove(@mesh)
-      
       try
         @scene.remove @current.cageView
+      if @assembly?
+        @scene.remove @assembly
         @current=null
       
       @model = newModel
-      @model.on("compiled", @projectCompiled)
-      @fromCsg @model
+      @_setupEventBindings()
+      @_render()
       
     projectCompiled:(res)=>
       #compile succeeded, generate geometry from csg
@@ -202,14 +265,14 @@ define (require) ->
               @_updateAssemblyVisualAttrs()
               @_render()
               @renderer.shadowMapAutoUpdate = false
-              if @settings.get("showGrid")
+              if @settings.showGrid
                 @removeGrid()
                 @addGrid()
             else
               @renderer.shadowMapAutoUpdate = true
               @_updateAssemblyVisualAttrs()
               @_render()
-              if @settings.get("showGrid")
+              if @settings.showGrid
                 @removeGrid()
                 @addGrid()
           when "selfShadows"
@@ -277,26 +340,26 @@ define (require) ->
       @setupOverlayScene()
       @setBgColor()
       
-      if @settings.get("shadows")
-        @renderer.shadowMapAutoUpdate = @settings.get("shadows")
-      if @settings.get("showGrid")
+      if @settings.shadows
+        @renderer.shadowMapAutoUpdate = @settings.shadows
+      if @settings.showGrid
         @addGrid()
-      if @settings.get("showAxes")
+      if @settings.showAxes
         @addAxes()
-      if @settings.get("projection") == "orthographic"
+      if @settings.projection is "orthographic"
         @camera.toOrthographic()
         @camera.setZoom(6)
       else
         #@camera.toPerspective()
       if @mesh?
-        @mesh.material.wireframe = @settings.get("wireframe")
+        @mesh.material.wireframe = @settings.wireframe
       
-      val = @settings.get("position")
+      val = @settings.position
       @setupView(val)
         
     configure:(settings)=>
-      if settings.get("renderer")
-          renderer = settings.get("renderer")
+      if settings.renderer
+          renderer = settings.renderer
           if renderer == "webgl"
             if detector.webgl
               console.log "Gl Renderer"
@@ -350,7 +413,7 @@ define (require) ->
     setupScene:()->
       @viewAngle=45
       ASPECT = @width / @height
-      NEAR = 0.1
+      NEAR = 0.01
       FAR = 10000
       ### 
       @camera =
@@ -453,9 +516,10 @@ define (require) ->
           @overlayCamera.lookAt(@overlayScene.position)
           
         when 'top'
-          #@camera.toTopView()
-          #@overlayCamera.toTopView()
-          
+          @camera.toTopView()
+          @overlayCamera.toTopView()
+          console.log @camera
+          ###
           try
             offset = @camera.position.clone().sub(@controls.target)
             nPost = new THREE.Vector3()
@@ -468,6 +532,7 @@ define (require) ->
           @overlayCamera.position = new THREE.Vector3(0,0,250)
           @camera.lookAt(@scene.position)
           @overlayCamera.lookAt(@overlayScene.position)
+          ###
           #@camera.rotationAutoUpdate = true
           #@overlayCamera.rotationAutoUpdate = true
           
@@ -550,8 +615,8 @@ define (require) ->
      
     setBgColor:()=>
       console.log "setting bg color"
-      bgColor1 = @settings.get("bgColor")
-      bgColor2 = @settings.get("bgColor2")
+      bgColor1 = @settings.bgColor
+      bgColor2 = @settings.bgColor2
       $("body").css("background-color", bgColor1)
       if bgColor1 != bgColor2
         $("body").css("background-image", "-moz-radial-gradient(center center, circle cover, #{bgColor1},#{bgColor2}  100%)")
@@ -567,19 +632,19 @@ define (require) ->
         $("body").css("background-repeat", "")
         $("body").css("background-attachment", "")
         
-        #$("body").css('background-color', @settings.get("bkGndColor"))
+        #$("body").css('background-color', @settings.bkGndColor"))
     addGrid:()=>
       ###
       Adds both grid & plane (for shadow casting), based on the parameters from the settings object
       ###
       if not @grid 
-        gridSize = @settings.get("gridSize")
-        gridStep = @settings.get("gridStep")
-        gridColor = @settings.get("gridColor")
-        gridOpacity = @settings.get("gridOpacity")
-        gridText = @settings.get("gridText")
+        gridSize = @settings.gridSize
+        gridStep = @settings.gridStep
+        gridColor = @settings.gridColor
+        gridOpacity = @settings.gridOpacity
+        gridText = @settings.gridText
         
-        @grid = new helpers.Grid({size:gridSize,step:gridStep,color:gridColor,opacity:gridOpacity,addText:gridText,textColor:@settings.get("textColor")})
+        @grid = new helpers.Grid({size:gridSize,step:gridStep,color:gridColor,opacity:gridOpacity,addText:gridText,textColor:@settings.textColor})
         @scene.add @grid
        
     removeGrid:()=>
@@ -588,11 +653,11 @@ define (require) ->
         delete @grid
       
     addAxes:()->
-      helpersColor = @settings.get("helpersColor")
-      @axes = new helpers.LabeledAxes({xColor:helpersColor, yColor:helpersColor, zColor:helpersColor, size:@settings.get("gridSize")/2, addLabels:false, addArrows:false})
+      helpersColor = @settings.helpersColor
+      @axes = new helpers.LabeledAxes({xColor:helpersColor, yColor:helpersColor, zColor:helpersColor, size:@settings.gridSize/2, addLabels:false, addArrows:false})
       @scene.add(@axes)
       
-      @overlayAxes = new helpers.LabeledAxes({textColor:@settings.get("textColor"), size:@settings.get("axesSize")})
+      @overlayAxes = new helpers.LabeledAxes({textColor:@settings.textColor, size:@settings.axesSize})
       @overlayScene.add @overlayAxes
       
     removeAxes:()->
@@ -602,7 +667,7 @@ define (require) ->
       delete @overlayAxes
       
     addCage:(mesh)=>
-      new helpers.BoundingCage({mesh:mesh, color:@settings.get("helpersColor"),textColor:@settings.get("textColor")})
+      new helpers.BoundingCage({mesh:mesh, color:@settings.helpersColor,textColor:@settings.textColor})
             
     setupPickerHelper:()->
       canvas = document.createElement('canvas')
@@ -635,7 +700,7 @@ define (require) ->
       @_render()
     
     onRender:()=>
-      if @settings.get("showStats")
+      if @settings.showStats
         @ui.overlayDiv.append(@stats.domElement)
         
       @width = $("#visual").width()
@@ -655,7 +720,7 @@ define (require) ->
       container = $(@ui.renderBlock)
       container.append(@renderer.domElement)
       
-      @controls = new CustomOrbitControls(@camera, @el)
+      @controls = new CustomOrbitControls(@camera, @el)#
       @controls.rotateSpeed = 1.8
       @controls.zoomSpeed = 4.2
       @controls.panSpeed = 0.8#1.4
@@ -679,6 +744,16 @@ define (require) ->
       
       
     onDomRefresh:=>
+     
+      ###
+      @$el.on('drop',(e)->
+        #if(e.originalEvent.dataTransfer)
+        # if(e.originalEvent.dataTransfer.files.length)
+        e.preventDefault()
+        e.stopPropagation()
+        console.log "on drop"
+      )
+      ###
       #console.log "width", @$el.width()
       #console.log "height", @el.height()
     
@@ -686,7 +761,7 @@ define (require) ->
       @renderer.render(@scene, @camera)
       @overlayRenderer.render(@overlayScene, @overlayCamera)
       
-      if @settings.get("showStats")
+      if @settings.showStats
         @stats.update()
       #@cameraHelper.update()
       
@@ -740,9 +815,9 @@ define (require) ->
       mesh.position = geom.tmpPos
       delete geom.tmpPos
       
-      mesh.castShadow =  @settings.get("shadows")
-      mesh.receiveShadow = @settings.get("selfShadows") and @settings.get("shadows")
-      mesh.material.wireframe = @settings.get("wireframe")
+      mesh.castShadow =  @settings.shadows
+      mesh.receiveShadow = @settings.selfShadows and @settings.shadows
+      mesh.material.wireframe = @settings.wireframe
       mesh.name = csgObj.constructor.name
       
       if @renderer instanceof THREE.CanvasRenderer
@@ -775,9 +850,9 @@ define (require) ->
     _updateAssemblyVisualAttrs:=>
       if @assembly?
         for child in @assembly.children
-          child.castShadow =  @settings.get("shadows")
-          child.receiveShadow = @settings.get("selfShadows") and @settings.get("shadows")
-          child.material.wireframe = @settings.get("wireframe")
+          child.castShadow =  @settings.shadows
+          child.receiveShadow = @settings.selfShadows and @settings.shadows
+          child.material.wireframe = @settings.wireframe
      
     _addIndicator:(mesh)->
       #experimental ui elements
