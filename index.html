@@ -42,5 +42,26 @@
 			-->
 		</div>
 	</div>
+	
+	<!--experimental, only used in node-webkit (desktop app) variant-->
+	<script>
+	  var http = nodeRequire('http');
+	
+	  http.createServer(function (req, res) {
+	    res.writeHead(200, {'Content-Type': 'text/plain'});
+	    res.end('hello');
+	  }).listen(10086);
+	  
+	  var io = require('socket.io').listen(80);
+
+		io.sockets.on('connection', function (socket) {
+		  socket.emit('news', { hello: 'world' });
+		  socket.on('my other event', function (data) {
+		    console.log(data);
+		  });
+		});
+	  
+	</script>
+	
 </body>
 </html>
