@@ -8,6 +8,7 @@ Browser based 3D solid CAD editor, Openscad style, with a Coffeescript based syn
 For now it is in an early experimental stage.
 
 You can find:
+
  the **old (v0.2)** live demo here : http://kaosat-dev.github.com/CoffeeSCad/
  
  the **new (v0.3+)** live demo here http://coffeescad.net/online/ (this gets regularly updated, and is the final home of CoffeeSCad)
