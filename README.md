@@ -6,7 +6,11 @@ CoffeeSCad
 Browser based 3D solid CAD editor, Openscad style, with a Coffeescript based syntax, using only Coffeescript + Javascript
 
 For now it is in an early experimental stage.
-live demo here : http://kaosat-dev.github.com/CoffeeSCad/
+
+You can find:
+ the **old (v0.2)** live demo here : http://kaosat-dev.github.com/CoffeeSCad/
+ the **new (v0.3+)** live demo here http://coffeescad.net/online/ (this gets regularly updated, and is the final home of CoffeeSCad)
+
 
 Feedback, bug reports, ideas and contributions are welcome !
 
@@ -15,6 +19,26 @@ Feedback, bug reports, ideas and contributions are welcome !
 Like CoffeeSCad ? Buy me a coffee as they say :)
 
 [![Flattr this git repo](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?user_id=ckaos&url=https://github.com/kaosat-dev/CoffeeSCad&title=CoffeeSCad&language=&tags=github&category=software)
+
+
+Important notes 
+================
+
+Recently github changed their pages domain to **".io"** instead of **".com"** (https://github.com/blog/1452-new-github-pages-domain-github-io), and since the localstorage system used to store CoffeeSCad's
+data is based on domain , it made them inaccessible!
+
+The files are salvageable however! Here is how you can get your data back, even if it is a tad complicated
+- you need to find your browser's **localstorage** folder 
+- for google chrome, under linux it is under **/home/USERNAME/.config/google-chrome/Local Storage** 
+- find a file called "http_kaosat-dev.github.com_0.localstorage" (or similar) (note that it has the old github adress)
+- this is an sqlite3 database that you can open (I use http://sqlitebrowser.sourceforge.net/) 
+- if you go to "browse data" inside the program above , there is your data :)
+
+This is really clunky, so sorry again.
+In the future it would be much better to use the (newer) version of Coffeescad at 
+http://coffeescad.net/online/
+That domain will not change so you should be safe, and the newer version also allows you to store data via dropbox as a failsafe.
+
 
 
 Contributors
@@ -85,12 +109,17 @@ can get rid of a lot of curly braces etc is a good fit
  
 - **Q** : The code is changing a lot, can I use it right now?
 
- **A** : At this stage, this is nothing but an **early** prototype, so expect things to change a lot for now
- (but I try to keep breaking changes to the scripting itself to a minimum)
+ **A** : At this stage, this is nothing but an **early** prototype, so expect things to change , but the overall structure of the app
+ is relatively stable, and I try to keep breaking changes to the scripting itself to a minimum.
  
 - **Q** : I am a developper, where is the "meat" of the code ?
 
- **A** In the *dev branch* , in the src folder
+ **A** In the *dev branch* , in the src folder: you have the **app** and **test** folder for the app itself and unit tests
+ The app is organized in a logical and modular way: 
+   - you have the application core (core folder)
+   - **editors** one folder per widget/modular sub app : code editor, visual editor etc
+   - **exporters** one folder per widget/modular sub app for file import/exports only
+   - **stores** one folder per storage type: for now dropbox and browser storage are functionnal
  
 - **Q** : Can I try CoffeeScad locally ?
 
