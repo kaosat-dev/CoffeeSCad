@@ -9,6 +9,7 @@ For now it is in an early experimental stage.
 
 You can find:
  the **old (v0.2)** live demo here : http://kaosat-dev.github.com/CoffeeSCad/
+ 
  the **new (v0.3+)** live demo here http://coffeescad.net/online/ (this gets regularly updated, and is the final home of CoffeeSCad)
 
 
@@ -35,8 +36,10 @@ The files are salvageable however! Here is how you can get your data back, even 
 - if you go to "browse data" inside the program above , there is your data :)
 
 This is really clunky, so sorry again.
+
 In the future it would be much better to use the (newer) version of Coffeescad at 
 http://coffeescad.net/online/
+
 That domain will not change so you should be safe, and the newer version also allows you to store data via dropbox as a failsafe.
 
 
