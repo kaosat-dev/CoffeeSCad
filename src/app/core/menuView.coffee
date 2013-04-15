@@ -16,6 +16,7 @@ define (require)->
   
   
   class MainMenuView extends Backbone.Marionette.Layout
+    el: $("#header")
     template: mainMenuTemplate
     regions:
       recentProjects:   "#recentProjects"

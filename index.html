@@ -9,7 +9,6 @@
 	<script data-main="app/config" src="assets/js/libs/require.min.js"></script>
 	<!--<script data-main="build/main.min.js" src="assets/js/libs/require.min.js"></script>-->
 	<!--<script src="build/main.min.js"></script>-->
-	<!--<link id="mainTheme" rel="stylesheet" href="assets/css/themes/slate/bootstrap.css">-->
 	<link id="mainTheme" rel="stylesheet" href="assets/css/themes/default/bootstrap.css">
 	<link rel="stylesheet" href="assets/css/font-awesome.css">
 	<link rel="stylesheet" href="assets/css/codemirror.css">
@@ -24,25 +23,30 @@
 </head>
 
 <body>
+	<div id="header"> </div>
+	<div class="container-fluid fullHeight" id="mainContent">
+		<!--<div id="dockLeft" class="pull-left">AA</div>
+		<div id="dockRight" class="pull-right">BB</div>-->
+		<div id="visual"></div>
+		<!--<div id="initialLoader" class="initalLoaderOverlay">
+			<h3>Loading CoffeeSCad, please wait...</h3> <img src="assets/img/logo.png"/>
+		</div>-->
+	</div>
+	<!--
+	-->
+	<!-- old
 	<div class="wrapper">
 		<div id="initialLoader" class="initalLoaderOverlay">
 			<h3>Loading CoffeeSCad, please wait...</h3> <img src="assets/img/logo.png"/>
 		</div>
-		<div class="container-fluid">
-			<header id="header"></header>
+			
 			<div class="row mainContent">
 				<div id="code"></div>	
 				<div id="visual"></div>
 			</div>
-			<!--
-			<div class="loaderContentOverlay">
-				Please wait, loading project...
-			</div>
-			<div class="loaderMenuOverlay"></div>
-			-->
-		</div>
+		
 	</div>
-	
+	-->
 	<!--experimental, only used in node-webkit (desktop app) variant-->
 	<script>
 	  var http = nodeRequire('http');

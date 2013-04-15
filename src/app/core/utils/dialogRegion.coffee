@@ -20,6 +20,8 @@ define (require)->
       
       super options
       _.bindAll(this)
+      
+      @docked = false
     
     onShow:(view)=>
       @showDialog(view)
@@ -63,11 +65,6 @@ define (require)->
         view.$el.trigger("resize:start")
       @$el.on 'resizestop' , (event,ui)=>
         view.$el.trigger("resize:stop")
-        
-      #console.log @$el.parent().size()
-      @$el.offset({ top: -500, left: 30 })
-      #@$el.position({collision:"none"})
-      #@$el.position({my:"right bottom",at:"center bottom", of: "#toto"})
       ### 
       view.isVisible=true
       @$el.dialog
@@ -77,8 +74,8 @@ define (require)->
         closeOnEscape: false
         position: 
           my: "left top"
-          at: "left top+50"
-          #of: @el
+          at: "left top+100"
+          of: "#mainContent"
         beforeClose: =>
           view.isVisible=false
           view.close()
@@ -87,6 +84,65 @@ define (require)->
           view.$el.trigger("resize")
         #open:(event, ui)=>
           #$(".ui-dialog-titlebar-close", ui.dialog or ui).hide()
+      .parent().resizable({
+        containment: "#mainContent"
+      }).draggable({
+        containment: "#mainContent", 
+        opacity: 0.70 
+      }); 
+      
+    
+    _touchingNorth:(elem)->
+      return (elem.offsetTop <= 1);
+
+    _touchingWest:(elem)->
+      return (elem.offsetLeft <= 1);
+
+    _touchingEast:(elem)->
+      rm = $(elem).parent().width() - (elem.offsetLeft + $(elem).outerWidth());
+      return (rm <= 1);
+
+    _touchingSouth:(elem)->
+      bm = $(elem).parent().height() - (elem.offsetTop + $(elem).outerHeight());
+      return (bm <= 1);
+    
+    touchingBoundary:(p)->
+      bTouching = true
+      if @touchingNorth(p)
+        $('#_umsg').text('Snapping North!')
+        snapNorth(p, $('#_dockZoneNorth'))
+      else if touchingWest(p)
+        $('#_umsg').text('Snapping West!')
+        snapWest(p, $('#_dockZoneWest'))
+      else if touchingEast(p)
+        $('#_umsg').text('Snapping East!')
+        snapEast(p, $('#_dockZoneEast'))
+      else if touchingSouth(p)
+        $('#_umsg').text('Snapping South!')
+        snapSouth(p, $('#_dockZoneSouth'))
+      else 
+        bTouching = false
+      return bTouching
+    
+    _snapNorth:(elem, zone)->
+      $(elem).addClass('dockableDraggable')
+      $(zone).addClass('dockZoneHighlight')
+
+    _snapWest:(elem, zone)->
+      $(elem).addClass('dockableDraggable')
+      $(zone).addClass('dockZoneHighlight')
+
+    _snapEast:(elem, zone)->
+      $(elem).addClass('dockableDraggable')
+      $(zone).addClass('dockZoneHighlight')
+      
+    _snapSouth:(elem, zone)->
+      $(elem).addClass('dockableDraggable')
+      $(zone).addClass('dockZoneHighlight')
+      
+    _unsnapAll:(elem, zones)->
+      $(elem).removeClass('dockableDraggable')
+      $(zones).removeClass('dockZoneHighlight')
        
     hideDialog: ->
       @$el.modal 'hide'

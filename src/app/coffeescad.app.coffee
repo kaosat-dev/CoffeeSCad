@@ -24,8 +24,8 @@ define (require)->
     ###
     root: "/CoffeeSCad/index.html/"
     title: "Coffeescad"
-    regions:
-      headerRegion: "#header"
+    #regions:
+     # headerRegion: "#header"
       
     constructor:(options)->
       super options
@@ -68,7 +68,6 @@ define (require)->
         @vent.on("#{name}Exporter:start", do(name)=> =>@exporters[name].start({project:@project}))
       
       @initPreVisuals()
-      @addRegions @regions
       @initData()
       @initLayout()
       
@@ -77,7 +76,9 @@ define (require)->
         stores: @stores
         exporters: @exporters
         model : @project
-      @headerRegion.show @menuView
+      #@headerRegion.show @menuView
+      @menuView.render()
+      console.log @menuView
     
     initSettings:->
       setupSettingsBindings= =>
