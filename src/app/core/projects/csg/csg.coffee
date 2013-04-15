@@ -20,6 +20,10 @@ define (require)->
   
   materials = require './materials'
   log = require './logging'
+  utils = require './utils'
+  merge = utils.merge
+  extend = utils.extend
+  
   simplifiedApi = require './simplifiedApi'
   
   ##Additional helpers
@@ -53,16 +57,8 @@ define (require)->
     classRegistry[classname][compressedParams].uids.push(klass.uid)
     otherRegistry[classname] =  klass  
   
-  #FROM COFFEESCRIPT HELPERS
-  merge = (options, overrides) ->
-    extend (extend {}, options), overrides
-
-  extend = (object, properties) ->
-    for key, val of properties
-      object[key] = val
-    object
-  
   ####
+  
   class Part extends CSGBase
     constructor:(options)->
       super options
@@ -77,10 +73,7 @@ define (require)->
     "Part":Part,
     "register":register,
     "classRegistry":classRegistry,
-    "otherRegistry":otherRegistry,
-    "merge":merge,
-    "extend":extend,
-    
+    "otherRegistry":otherRegistry
   }
   
   exports = merge(shapes2d,shapes3d)
@@ -92,4 +85,5 @@ define (require)->
   exports = merge(exports,materials)
   exports = merge(exports, simplifiedApi)
   exports = merge(exports, log)
+  exports = merge(exports, utils)
   return exports

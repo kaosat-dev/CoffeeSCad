@@ -67,10 +67,10 @@ define (require)->
       @_material = material
       @color(material.color)
      
-    injectOptions:(options,defaults)=>
+    injectOptions:(defaults, options)=>
       #optionsParser = (options,defaults)->
       #this generated this.param entries based on the merge between defaults and options
-      fullOptions = utils.merge(options, defaults)
+      fullOptions = utils.merge(defaults, options)
       for key, value of fullOptions when not @hasOwnProperty(key) #key not in moduleKeywords
         # Assign properties to the prototype
         #@::[key] = value
@@ -1947,6 +1947,7 @@ define (require)->
     
       str = "  0\nENDSEC\n  0\nEOF\n"
       blobbuilder.append str
+
 
   rootAssembly = new CSGBase()
   ### 
