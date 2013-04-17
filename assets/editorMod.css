@@ -2,26 +2,25 @@
  *Nice grid color #00DDDD
  * 
  * #253565
- * 
- * rgb(255, 194, 0)
  */
 
-
-/*Transparency for code editor*/
-.translucent
+#test
 {
+	display:block;
+	color:white;
 }
-
 
 /*based on bootstrap modal*/
 
 .dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
   height:auto;
   z-index: 1050;
   overflow: hidden;
   width: 560px;
   margin: 0px;
-  background-color: #ffffff;
   border: 1px solid #999;
   border: 1px solid rgba(0, 0, 0, 0.3);
   *border: 1px solid #999;
@@ -32,13 +31,11 @@
   -webkit-background-clip: padding-box;
   -moz-background-clip: padding-box;
   background-clip: padding-box;
-  
-  border-color:rgb(255, 194, 0);
 }
 
 
 .dialog-header {
-  padding: 5px;
+  padding: 0px;
   border-bottom: 1px solid #eee;
 }
 .dialog-header .close {
@@ -70,9 +67,8 @@
   font-size: 20px;
   font-weight: bold;
   line-height: 20px;
-  color: #000000;
+  color: rgb(255, 214, 0);
   text-shadow: 0 1px 0 #ffffff;
-  opacity: 0.2;
   filter: alpha(opacity=20);
 }
 .minimize:hover {
@@ -84,33 +80,6 @@
 }
 
 button.minimize {
-  padding: 0;
-  cursor: pointer;
-  background: transparent;
-  border: 0;
-  -webkit-appearance: none;
-}
-
-
-.config {
-  float: right;
-  font-size: 20px;
-  font-weight: bold;
-  line-height: 20px;
-  color: #000000;
-  text-shadow: 0 1px 0 #ffffff;
-  opacity: 0.2;
-  filter: alpha(opacity=20);
-}
-.config:hover {
-  color: #000000;
-  text-decoration: none;
-  cursor: pointer;
-  opacity: 0.4;
-  filter: alpha(opacity=40);
-}
-
-button.config {
   padding: 0;
   cursor: pointer;
   background: transparent;
@@ -166,7 +135,7 @@ user-select: none;
     top: 0;
     left: 0;
     bottom: 0;
-    width: 10px;
+    width: 10%;
     float:left;
 }
 
@@ -177,7 +146,7 @@ user-select: none;
     top: 0;
     right: 0;
     bottom: 0;
-    width: 10px;
+    width: 10%;
     border: 0px dashed grey;
 }
 
@@ -193,7 +162,7 @@ user-select: none;
     text-align: center;*/
     cursor: move;
     
-    border: 4px dashed rgb(255, 194, 0);
+    border: 4px dashed red;
     color: Red;
     opacity: 0.5;
 }
@@ -220,7 +189,8 @@ user-select: none;
     bottom: 2px;
 }
 .floatpanel {
-    color: Black;
+    border: 2px solid grey;
+    color: rgb(255, 224, 0);
     cursor: move;
 }
 
@@ -572,7 +542,6 @@ textarea:focus, input:focus{
 .navbar-inner
 {
 	background-image:none;
-	background-color:#FFFFFF;
 	height:15px;
 	
 }
@@ -657,7 +626,7 @@ text-shadow: 0 1px 0 white;
 
 .navbar .divider-vertical
 {
-	height:30px;
+	height: 15px;
 }
 
 #content{
@@ -773,7 +742,7 @@ ui-icon ui-icon-closethick .ui-state-hover
 {
 	/*background-color: #FF0000 !important;*/
 	/*overflow-y: hidden !important;*/
-	padding:4px !important;
+	padding: 0px !important;
 }
 
 /*-------------------------------------*/		
@@ -781,13 +750,11 @@ ui-icon ui-icon-closethick .ui-state-hover
 
 .nav
 {
-	margin-bottom: 2px;
 }
 
 .nav-tabs > li > a
 {
-	padding-bottom: 2px;
-	padding-top: 2px;
+	padding-top: 0px;
 }
 
 .tab-content
@@ -1009,7 +976,8 @@ body {
 	background-image: radial-gradient(center center, circle cover, #c0d1b8, #000014 100%);
    	background-repeat: no-repeat;
     background-attachment: fixed;*/
-   font-size:13px;
+   
+		font-size:13px;
 }
 
 

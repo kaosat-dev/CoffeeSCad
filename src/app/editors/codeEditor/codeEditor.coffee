@@ -52,11 +52,27 @@ define (require)->
       
     showRegions:=>
       DialogRegion = require 'core/utils/dialogRegion'
-      @diaReg = new DialogRegion({elName:"codeEdit", title: "CodeEditor", width:500, height:350})
+      DialogLayout = require 'core/utils/dialogLayout'
+      
       codeEditorView = new CodeEditorView 
         model:    @project
         settings: @settings
-      @diaReg.show codeEditorView
+      
+      #@diaReg = new DialogRegion({elName:"codeEdit", title: "CodeEditor", width:500, height:350})
+      
+      #@dialLayout = new DialogLayout()
+      #@dialLayout.render()
+      #@dialLayout.contentRegion.show(codeEditorView)
+      
+      #@diaReg.show(@dialLayout)
+      #@diaReg.show codeEditorView
+      
+      
+      #other attempt
+      DialogView = require 'core/utils/dialogView'
+      @dia = new DialogView({elName:"codeEdit", title: "CodeEditor", width:500, height:350})
+      @dia.render()
+      @dia.show(codeEditorView)
       
       #Setup keyBindings
       ### 
