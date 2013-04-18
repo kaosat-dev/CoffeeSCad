@@ -78,6 +78,7 @@ define (require)->
         model : @project
       #@headerRegion.show @menuView
       @menuView.render()
+      @menuView.onDomRefresh()
       console.log @menuView
     
     initSettings:->

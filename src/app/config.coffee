@@ -41,6 +41,7 @@ require.config
     bootbox:          "../assets/js/plugins/bootbox.min"
     contextMenu:      "../assets/js/plugins/bootstrap-contextmenu"
     notify:           "../assets/js/plugins/bootstrap-notify"
+    slider:           "../assets/js/plugins/bootstrap-slider"
     
     coffeelint:       "../assets/js/plugins/coffeelint"
     coffee_synhigh:   "../assets/js/libs/codeMirror/mode/coffeescript/coffeescript"
@@ -88,6 +89,9 @@ require.config
       dep: ["bootstrap"]
     notify:
       dep:["bootstrap"]
+    slider:
+      dep:["bootstrap"]  
+      
     'backbone':
       deps:    ["jquery","underscore"]
       exports:  "Backbone"

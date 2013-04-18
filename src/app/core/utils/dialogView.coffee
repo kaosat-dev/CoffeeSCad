@@ -4,14 +4,13 @@ define (require)->
   boostrap = require 'bootstrap'
   marionette = require 'marionette'
 
+  require 'slider'
+
   dialogTemplate =  require "text!./dialog.tmpl"
 
   class DialogView extends Backbone.Marionette.ItemView
     template: dialogTemplate
     el: "#none"
-
-    #events:
-    #  "click .minimize": "minimize"
 
     constructor:(options) ->
       options = options or {}
@@ -25,11 +24,8 @@ define (require)->
       
       super options
       _.bindAll(this)
-      
       @docked = false
     
-    #onShow:(view)=>
-    #  @showDialog(view)
     
     makeEl:(elName)->
       if ($("#" + elName).length == 0)
@@ -45,9 +41,6 @@ define (require)->
     serializeData:->
       console.log "here"
       return {"title":@title}
-    
-    minimize:->
-      $('#contentContainer').collapse('hide')
       
     _setResizeable:=>
       if @resizeable
@@ -57,7 +50,12 @@ define (require)->
           stop:(event,ui)=>
             @currentView.$el.trigger("resize")
             @$el.css("height","auto")
-      
+    
+    _setDragable:=>
+      @$el.draggable
+        containment: '#mainContent'
+        handle: '.dialog-header'
+        scroll: false
     
     render:()=>
       @isClosed = false
@@ -81,8 +79,16 @@ define (require)->
       
       #additional
       @$el.addClass("dialog floatpanel")
-      
+      @$el.css("width",@width)
+      @$el.css("height",@height)
+      triggerResize= =>
+        @currentView.$el.trigger("resize")
+        @$el.css("height","auto")
+        $('#visual').trigger("resize")
         
+      setTimeout triggerResize, 5
+      
+      @_setDragable() 
       @_setResizeable()
       @_setupBindings()
       @_setupDockZones()
@@ -92,7 +98,7 @@ define (require)->
       #should be done once, on start
       that = @
       $('.dockZone').droppable
-        tolerance: 'pointer',
+        tolerance: 'touch',
         drop: (event, ui)->
           that._dockDraggable(this, ui.draggable)
           
@@ -105,19 +111,20 @@ define (require)->
       else if (dockzone.id.indexOf("West") != -1)
         @_dockWest(dockzone, draggable)
       else if (dockzone.id.indexOf("East") != -1)
-        @_dockEast(dockzone, draggable);
+        @_dockEast(dockzone, draggable)
       else if (dockzone.id.indexOf("South") != -1)
-        @_dockSouth(dockzone, draggable);
+        @_dockSouth(dockzone, draggable)
+        
       $(draggable).removeClass('floatpanel dockableDraggable')
       $('.dockZoneHighlight').removeClass('dockZoneHighlight') 
       
     _setupBindings:()=>
       that = @
-      @$el.draggable
-        containment: '#mainContent'
-        handle: '.dialog-header'
-        scroll: false
-         
+      $('.slider').slider()
+      #workaround for twitter bootstrap collapse limitations
+      $('#contentContainer').on 'show hide', ()->
+        $(this).css('height', 'auto')
+      
       @$el.bind "dragstart", (e, ui)=>
         if @$el.hasClass('floatpanel')
           @$el.addClass('draggingpanel')
@@ -135,16 +142,16 @@ define (require)->
     _touchingBoundary:(p)->
       bTouching = true
       if @_touchingNorth(p)
-        console.log('Snapping North!')
+        #console.log('Snapping North!')
         @_snapNorth(p, $('#_dockZoneNorth'))
       else if @_touchingWest(p)
-        console.log('Snapping West!')
+        #console.log('Snapping West!')
         @_snapWest(p, $('#_dockZoneWest'))
       else if @_touchingEast(p)
-        console.log('Snapping East!')
+        #console.log('Snapping East!')
         @_snapEast(p, $('#_dockZoneEast'))
       else if @_touchingSouth(p)
-        console.log('Snapping South!')
+        #console.log('Snapping South!')
         @_snapSouth(p, $('#_dockZoneSouth'))
       else 
         bTouching = false
@@ -191,12 +198,37 @@ define (require)->
         handles: 's'
         
     _dockEast:(elem, draggable)->
+      dockZone = elem
+      @docked = true
+      @dock = elem
+      #save dockable's current attributes
+      @savedWidth = draggable.width()
+      @savedHeight = draggable.height()
+      #fill container: 30 is the navbar size...should be dynamic
+      $(draggable).height($(dockZone).height()-32)
+      $(draggable).css("right","0px")
+      $(draggable).css("top",30)
       $(draggable).addClass('dockEast')
-      $(draggable).removeAttr('style')
+      
+      $('#_dockZoneEast').width(draggable.width())
       $(".dockEast").resizable
-        handles: 'w'
-      console.log "docked at east"
-        
+        containment: "#mainContent"
+        handles: "w"
+        stop:(event,ui)=>
+          @currentView.$el.trigger("resize")
+          $('#_dockZoneEast').width( $(".dockEast").width())
+          #hack
+          $('#visual').trigger("resize")
+          
+      #workaround for positioning
+      $(".dockEast").css("position","absolute") 
+      triggerResize= =>
+        @currentView.$el.trigger("resize")
+      setTimeout triggerResize, 5
+      
+      $('#visual').trigger("resize")
+      
+      
     _dockWest:(elem, draggable)=>
       dockZone = elem
       @docked = true
@@ -204,30 +236,30 @@ define (require)->
       #save dockable's current attributes
       @savedWidth = draggable.width()
       @savedHeight = draggable.height()
-      
       #fill container: 30 is the navbar size...should be dynamic
       $(draggable).height($(dockZone).height()-32)
       $(draggable).css("left",0)
       $(draggable).css("top",30)
       $(draggable).addClass('dockWest')
       
-      #$(draggable).removeAttr('style')
-      
       $('#_dockZoneWest').width(draggable.width())
       $(".dockWest").resizable
         containment: "#mainContent"
         handles: "e"
         stop:(event,ui)=>
-          console.log "bla stop"
           @currentView.$el.trigger("resize")
-          @$el.css("height","auto") 
-      #workaround
+          $('#_dockZoneWest').width( $(".dockWest").width())
+          #hack
+          $('#visual').trigger("resize")
+          
+          
+      #workaround for positioning
       $(".dockWest").css("position","absolute") 
-      bla= =>
+      triggerResize= =>
         @currentView.$el.trigger("resize")
-      setTimeout bla, 5
+      setTimeout triggerResize, 5
       
-      
+      $('#visual').trigger("resize")
 
     _dockSouth:(elem, draggable)->
       $(draggable).addClass('dockSouth')
@@ -241,14 +273,12 @@ define (require)->
       
       if @dock?
         $(@dock).css('width', 10)
+        
+      console.log "recalling saved dims: width/height", @savedWidth, @savedHeight
       if @savedHeight?
         $(p).css("height",@savedHeight)
-      
       if @savedWidth?
         $(p).css("wdith",@savedWidth)
-      
-      
-      $(p).css("height","auto")
       
       $(p).removeClass('docked dockNorth dockEast dockWest dockSouth')
       $(p).addClass('floatpanel draggingpanel')
@@ -264,35 +294,39 @@ define (require)->
       $(p).css('left', e.pageX + 2)
       ###
       $(p).css('top', 100)
+      $(p).resizable('destroy')#destroy previous , constrained resize
       
-      $(p).resizable('destroy')
-      
-      @$el.draggable
-        #containment: '#mainContent'
-        handle: '.modal-header'
-        scroll: false
-      
+      @_setDragable()
       @_setResizeable()
       
       bla= =>
+        #resize the pannels etc (inner elements first)
+         $('#visual').trigger("resize")
         @currentView.$el.trigger("resize")
+        #now that the inner elements, have the right size, switch back to auto height to enable correct collapsing
+        @$el.css("height","auto")
       setTimeout bla, 5
       
       return (true)
-
+    
+    ### 
     hide: ->
       @$el.modal 'hide'
       @$el.remove()
       @trigger("closed")
-      
+    ###  
     show:(view)->
       view.render()
       injectTarget = @$el.find("#contentContainer")
-      console.log "injectTarget",injectTarget
       injectTarget.append(view.el)
       Marionette.triggerMethod.call(view, "show")
       Marionette.triggerMethod.call(this, "show", view)
-
       this.currentView = view
+      
+    hide:(view)->
+      this.currentView.close()
+      injectTarget = @$el.find("#contentContainer")
+      injectTarget.html("")
+      this.currentView = null
         
   return DialogView

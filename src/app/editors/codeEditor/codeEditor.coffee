@@ -54,7 +54,7 @@ define (require)->
       DialogRegion = require 'core/utils/dialogRegion'
       DialogLayout = require 'core/utils/dialogLayout'
       
-      codeEditorView = new CodeEditorView 
+      @codeEditorView = new CodeEditorView 
         model:    @project
         settings: @settings
       
@@ -63,16 +63,14 @@ define (require)->
       #@dialLayout = new DialogLayout()
       #@dialLayout.render()
       #@dialLayout.contentRegion.show(codeEditorView)
-      
       #@diaReg.show(@dialLayout)
       #@diaReg.show codeEditorView
       
-      
       #other attempt
       DialogView = require 'core/utils/dialogView'
-      @dia = new DialogView({elName:"codeEdit", title: "CodeEditor", width:500, height:350})
+      @dia = new DialogView({elName:"codeEdit", title: "CodeEditor", width:400, height:250})
       @dia.render()
-      @dia.show(codeEditorView)
+      @dia.show(@codeEditorView)
       
       #Setup keyBindings
       ### 
@@ -83,10 +81,17 @@ define (require)->
     resetEditor:(newProject)=>
       console.log "resetting code editor"
       @project = newProject
+      @codeEditorView = new CodeEditorView 
+        model:    @project
+        settings: @settings
+      @dia.hide()
+      @dia.show(@codeEditorView)
+      ### 
       if @diaReg?
         console.log "closing current code editor"
         @diaReg.close()
       @showRegions()
+      ###
       #@mainRegion.close()
   
   return CodeEditor

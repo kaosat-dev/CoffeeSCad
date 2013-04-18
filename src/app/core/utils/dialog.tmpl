@@ -1,9 +1,29 @@
 <script id="dialogTmpl" type="text/x-underscore-template">
     <div class="dialog-header unselectable">
     	<i class="icon-edit pull-left">&nbsp;</i>
-    	<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+    	<!--<button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
     	<button type="button" class="minimize" data-toggle="collapse" data-target="#contentContainer" aria-hidden="true" >-</button>
-    	<button type="button" class="config" aria-hidden="true" ><i class="icon-cog"></i>&nbsp;</button>
+    	<button type="button" class="config" aria-hidden="true" ><i class="icon-cog"></i>&nbsp;</button>-->
+    	<div class="btn-group pull-right">
+    		<a class="dialog-header-icon" data-dismiss="dialog"  href="#">
+		    	<i class="icon-remove"></i>
+		  	</a>
+    		<a class="dialog-header-icon" data-toggle="collapse" data-target="#contentContainer"  href="#">
+		    	<i class="icon-minus"></i>
+		  	</a>
+		  	<a class="dropdown-toggle dialog-header-icon" data-toggle="dropdown" href="#">
+		    	<i class="icon-cog"></i>
+		  	</a>
+		  	<ul class="dropdown-menu">
+		    	<li><a href="#">Opacity</a>
+		    		<!--
+		    		<input id="testSlider" type="text" class="span2" value="5" data-slider-min="-20" data-slider-max="20" data-slider-step="1" data-slider-value="-14" data-slider-orientation="vertical" data-slider-selection="after"data-slider-tooltip="hide">
+		    		-->
+		    	</li>
+		  	</ul>
+		</div>
+    	
+    	
       <h5><%=title%></h5>
     </div>
     <div class="unselectable collapse in" id="contentContainer">

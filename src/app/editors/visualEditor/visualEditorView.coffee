@@ -25,7 +25,9 @@ define (require) ->
   includeMixin = require 'core/utils/mixins/mixins'
   dndMixin = require 'core/utils/mixins/dragAndDropRecieverMixin'
   
+  
   class VisualEditorView extends Backbone.Marionette.ItemView
+    el: $("#visual")
     @include dndMixin
     template: threedView_template
     ui:
@@ -40,6 +42,13 @@ define (require) ->
       'dragenter': 'onDragEnter'
       'dragexit' :'onDragExit'
       'drop':'onDrop'
+      
+      "resize:stop": "onResizeStop"
+      "resize":"onResizeStop"
+      "dummy":"onDummy"
+    
+    onDummy:(e)=>
+      console.log "dummy event fired"
     
     onDragOver:(e)=>
       e.preventDefault()
@@ -111,8 +120,8 @@ define (require) ->
       
       ##########
       @defaultCameraPosition = new THREE.Vector3(100,100,200)
-      @width = window.innerWidth
-      @height = window.innerHeight-10
+      @width = 100#window.innerWidth
+      @height = 100#window.innerHeight-10
       @init()
     
     _setupEventBindings:=>
@@ -688,9 +697,35 @@ define (require) ->
       @particleTexture.needsUpdate = true
       @particleMaterial = new THREE.MeshBasicMaterial( { map: texture, transparent: true ,color: 0x000000} )
     
-    onResize:()=>
+    _computeViewSize:=>
       @width =  window.innerWidth# $("#glArea").width()
       @height = window.innerHeight-10
+      
+      @width = @$el.parent().width()
+      @height = @$el.parent().height()
+      
+      @width = @$el.width()
+      @height = @$el.height()
+      
+      ###
+      console.log "westWidth", westWidth
+      console.log "eastWidth", eastWidth
+      
+      @width = 1680 - (westWidth + eastWidth )###
+      if not @initialized?
+        @initialized = true
+        @width = window.innerWidth
+      else
+      westWidth = $("#_dockZoneWest").width()
+      eastWidth = $("#_dockZoneEast").width()
+      @width = window.innerWidth - (westWidth + eastWidth)
+      @height = window.innerHeight-30
+      
+      console.log "width", @width
+      console.log "height", @height
+    
+    onResize:()=>
+      @_computeViewSize()
       
       @camera.aspect = @width / @height
       @camera.setSize(@width,@height)
@@ -699,13 +734,17 @@ define (require) ->
       
       @_render()
     
-    onRender:()=>
+    onResizeStop:=>
+      console.log "onResizeStop"
+      
+      @onResize()
+    
+    onDomRefresh:()=>
       if @settings.showStats
         @ui.overlayDiv.append(@stats.domElement)
         
-      @width = $("#visual").width()
-      @height = window.innerHeight-10#$("#gl").height()
-     
+      @_computeViewSize()
+      
       @camera.aspect = @width / @height
       @camera.setSize(@width,@height)
       @renderer.setSize(@width, @height)
@@ -719,6 +758,8 @@ define (require) ->
       
       container = $(@ui.renderBlock)
       container.append(@renderer.domElement)
+      @renderer.domElement.setAttribute("id","3dView")
+      console.log @renderer.domElement.id
       
       @controls = new CustomOrbitControls(@camera, @el)#
       @controls.rotateSpeed = 1.8
@@ -742,9 +783,11 @@ define (require) ->
       
       @animate()
       
-      
-    onDomRefresh:=>
-     
+    _onDomRefresh:=>
+      console.log "width", @$el.width()
+      console.log "height", @$el.height()
+      @width = @$el.parent().width()
+      @height = @$el.parent().height()
       ###
       @$el.on('drop',(e)->
         #if(e.originalEvent.dataTransfer)
@@ -754,8 +797,7 @@ define (require) ->
         console.log "on drop"
       )
       ###
-      #console.log "width", @$el.width()
-      #console.log "height", @el.height()
+      
     
     _render:()=>
       @renderer.render(@scene, @camera)

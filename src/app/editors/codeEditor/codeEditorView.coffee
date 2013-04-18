@@ -66,17 +66,13 @@ define (require)->
       console.log @$el.parent()
       
     onResizeStop:=>
-      console.log "resizestop"
+      #console.log "resizestop"
+      #console.log @$el.parent()
       elHeight = @$el.parent().height()
-      elHeight = $("#codeEdit").height()
-      console.log "elHeight", elHeight
+      elHeight = $("#codeEdit").outerHeight(true)-33 #what the heck ?#FIXME:horrible hackery to get the different elements to resize correctly
+      #console.log "elHeight", elHeight
       @$el.height(elHeight)
       @myLayout.resizeAll()
-      
-      #FIXME:horrible hackery to get the different elements to resize correctly
-      #elHeight= elHeight-150
-      #$(".tab-pane active").height("100%")
-      #$(".tab-pane").height(elHeight)
       
       #hack
       #vent.trigger("codeMirror:refresh",elHeight)

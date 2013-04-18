@@ -7,17 +7,60 @@
  */
 
 
+/*modern centering attempt*/
+.box-wrap-inner {
+	display: -webkit-box;
+	display: -moz-box;
+	display: box;
+
+	-webkit-box-align: center;
+	-moz-box-align: center;
+	box-align: center;
+}
+
+
+/*3d viewer*/
+#visual
+{
+	-webkit-box-flex: 1;
+	-moz-box-flex: 1;
+	box-flex: 1;
+	/*display: inline-block;
+	top:30px;*/
+}
+
+#glArea
+{
+	/*margin-left: auto ; margin-right: auto ;
+	position: absolute;
+	top:0px;*/
+}
+
+#3dView
+{
+	/*margin-left: auto ; margin-right: auto ;*/
+}
+
+
 /*Transparency for code editor*/
 .translucent
 {
 }
 
+#mainContent
+{
+	position: relative;
+}
 
 /*based on bootstrap modal*/
 
 .dialog {
+	
+	position:absolute;
+	/*top:-350px;*/
+ left:-150px;
   height:auto;
-  z-index: 1050;
+  z-index: 200;
   overflow: hidden;
   width: 560px;
   margin: 0px;
@@ -34,6 +77,7 @@
   background-clip: padding-box;
   
   border-color:rgb(255, 194, 0);
+  
 }
 
 
@@ -118,13 +162,37 @@ button.config {
   -webkit-appearance: none;
 }
 
-
-.myDialog
+.dialog-header-icon
 {
-	margin:0px;
-	position: absolute;
-	height:auto!important;
+	padding-right: 5px;
+	padding-left: 2px;
+	float: right;
+	  font-size: 13px;
+	  font-weight: bold;
+	  line-height: 20px;
+	  color: #000000;
+	  text-shadow: 0 1px 0 #ffffff;
+	  opacity: 0.2;
+	  filter: alpha(opacity=20);
 }
+.dialog-header-icon:hover {
+  color: #000000;
+  text-decoration: none;
+  cursor: pointer;
+  opacity: 0.4;
+  filter: alpha(opacity=40);
+}
+
+button.dialog-header-icon {
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  -webkit-appearance: none;
+}
+
+
+
 
 .unselectable
 {
@@ -139,7 +207,7 @@ user-select: none;
 /*DOCKING*/
 .docked
 {
-	border: 2px dashed red!important;
+	/*border: 2px dashed red!important;*/
 }
 
 .dockWest
@@ -149,17 +217,27 @@ user-select: none;
     top: 0;
     left: 0;
     bottom: 0;
-    width: 20%;    
     cursor: move;
-    border: 2px solid grey;
+    border: 1px solid grey;
+}
+
+.dockEast
+{
+    position: absolute;
+    display: block;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    cursor: move;
+    border: 1px solid grey;
 }
 
 .dockableDraggable
 {
-	border: 2px solid red!important;
+	/*border: 2px solid red!important;*/
 }
 
-.dockZoneWest
+.dockZoneWest_old
 {
     position: absolute;
     display: block;
@@ -167,23 +245,46 @@ user-select: none;
     left: 0;
     bottom: 0;
     width: 10px;
-    float:left;
+    /*float:left;*/
 }
 
-.dockZoneEast
+.dockZoneWest
+{
+    /*display: inline-block;*/
+   	-webkit-box-flex: 0;
+	-moz-box-flex: 0;
+	box-flex: 0;
+    width: 10px;
+    /*position: absolute;*/
+}
+
+.dockZoneEast_old
 {
     position: absolute;
     display: block;
     top: 0;
     right: 0;
     bottom: 0;
+    width: 15px;
+}
+
+.dockZoneEast
+{
+    /*display: inline-block;
+    position:absolute;
+    right: 0;*/
+   	-webkit-box-flex: 0;
+	-moz-box-flex: 0;
+	box-flex: 0;
     width: 10px;
-    border: 0px dashed grey;
+    /*
+    position: absolute;
+    right:0px;*/
 }
 
 .dockZoneHighlight
 {
-    border: 2px dashed blue;
+    border: 1px dashed #0099dd;
 }
 
 .draggingpanel
@@ -192,20 +293,20 @@ user-select: none;
     display: block;
     text-align: center;*/
     cursor: move;
-    
-    border: 4px dashed rgb(255, 194, 0);
+    border: 2px dashed rgb(255, 194, 0);
     color: Red;
     opacity: 0.5;
 }
 .dockedpanel
 {
+	
     position: relative;
     display: block;
     text-align: center;
     cursor: move;
-    border: 2px solid black;
+    /*border: 2px solid black;
     color: Black;
-    background-color: #AAAAAA;
+    background-color: #AAAAAA;*/
 }
 
 .dockcontainer{
@@ -226,14 +327,10 @@ user-select: none;
 
 #_dockZoneEast{
 	height:100%;
-	/*background-color:#CCCCCC;
-	background-color: #0099DD;*/
 }
-
 
 #_dockZoneWest{
 	height:100%;
-	/*float:left;*/
 }
 
 /*---------------------*/
@@ -998,6 +1095,7 @@ html, body {
 body {
 		min-height:100%;
         height:100%;
+        overflow:hidden;
        /* padding-top: 40px;*/
 	/*background-color:#222222;#39464e;*/
 	/*

@@ -49,7 +49,9 @@ define (require)->
       @visualEditorView = new VisualEditorView
         model:    @project
         settings: @settings
-      @mainRegion.show @visualEditorView
+      @visualEditorView.render()
+      @visualEditorView.onDomRefresh()
+      #@mainRegion.show @visualEditorView
         
     resetEditor:(newProject)=>
       @project = newProject
