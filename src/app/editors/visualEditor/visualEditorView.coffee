@@ -714,13 +714,21 @@ define (require) ->
       @width = 1680 - (westWidth + eastWidth )###
       if not @initialized?
         @initialized = true
-        @width = window.innerWidth
+        console.log "initial view size setting"
+        #@width = window.innerWidth
+        westWidth = $("#_dockZoneWest").width()
+        eastWidth = $("#_dockZoneEast").width()
+        @width = window.innerWidth - (westWidth + eastWidth)
       else
-      westWidth = $("#_dockZoneWest").width()
-      eastWidth = $("#_dockZoneEast").width()
-      @width = window.innerWidth - (westWidth + eastWidth)
-      @height = window.innerHeight-30
+        westWidth = $("#_dockZoneWest").width()
+        eastWidth = $("#_dockZoneEast").width()
+        @width = window.innerWidth - (westWidth + eastWidth)
+        
+      #console.log "window.innerWidth", window.getCoordinates().width#window.outerWidth
       
+      
+      @height = window.innerHeight-30
+      #@$el.width(@width)
       console.log "width", @width
       console.log "height", @height
     
@@ -882,6 +890,20 @@ define (require) ->
         mesh.add connectorMesh   
        
       rootObj.add mesh
+      
+      
+      cubeMaterial1 = new THREE.MeshBasicMaterial( { color: 0xccccdd, side: THREE.DoubleSide, depthTest: true, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 } );
+      dashMaterial = new THREE.LineDashedMaterial( { color: 0x000000, dashSize: 2, gapSize: 3, depthTest: false, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1  } );
+      cubeMaterial3 = new THREE.MeshBasicMaterial( { color: 0x000000, depthTest: true, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1, wireframe: true } );
+  
+      obj2 = new THREE.Mesh( geom.clone(), cubeMaterial1 )
+      obj3 = new THREE.Line( @geo2line(geom.clone()), dashMaterial, THREE.LinePieces )
+      obj4 = new THREE.Mesh( geom.clone(), cubeMaterial3)
+      
+      rootObj.add(obj2)
+      rootObj.add(obj3)
+      rootObj.add(obj4)
+      
       #@_addIndicator2(mesh)
       
       #recursive, for sub objects
@@ -896,6 +918,29 @@ define (require) ->
           child.receiveShadow = @settings.selfShadows and @settings.shadows
           child.material.wireframe = @settings.wireframe
      
+     
+    geo2line:( geo )->
+      # credit to WestLangley!
+      geometry = new THREE.Geometry()
+      vertices = geometry.vertices;
+  
+      for i in [0...geo.faces.length]
+        face = geo.faces[i]
+        if face instanceof THREE.Face3
+          a = geo.vertices[ face.a ].clone()
+          b = geo.vertices[ face.b ].clone()
+          c = geo.vertices[ face.c ].clone()
+          vertices.push( a,b, b,c, c,a )
+        else if face instanceof THREE.Face4
+          a = geo.vertices[ face.a ].clone()
+          b = geo.vertices[ face.b ].clone()
+          c = geo.vertices[ face.c ].clone()
+          d = geo.vertices[ face.d ].clone()
+          vertices.push( a,b, b,c, c,d, d,a )
+
+      geometry.computeLineDistances()
+      return geometry
+
     _addIndicator:(mesh)->
       #experimental ui elements
       

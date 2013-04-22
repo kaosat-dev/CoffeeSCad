@@ -50,6 +50,7 @@ define (require)->
           stop:(event,ui)=>
             @currentView.$el.trigger("resize")
             @$el.css("height","auto")
+        @$el.css("position","absolute")
     
     _setDragable:=>
       @$el.draggable
@@ -207,7 +208,7 @@ define (require)->
       #fill container: 30 is the navbar size...should be dynamic
       $(draggable).height($(dockZone).height()-32)
       $(draggable).css("right","0px")
-      $(draggable).css("top",30)
+      $(draggable).css("top",32)
       $(draggable).addClass('dockEast')
       
       $('#_dockZoneEast').width(draggable.width())
@@ -237,9 +238,9 @@ define (require)->
       @savedWidth = draggable.width()
       @savedHeight = draggable.height()
       #fill container: 30 is the navbar size...should be dynamic
-      $(draggable).height($(dockZone).height()-32)
+      $(draggable).height($(dockZone).height())
       $(draggable).css("left",0)
-      $(draggable).css("top",30)
+      $(draggable).css("top",0)
       $(draggable).addClass('dockWest')
       
       $('#_dockZoneWest').width(draggable.width())
@@ -262,10 +263,36 @@ define (require)->
       $('#visual').trigger("resize")
 
     _dockSouth:(elem, draggable)->
+      dockZone = elem
+      @docked = true
+      @dock = elem
+      #save dockable's current attributes
+      @savedWidth = draggable.width()
+      @savedHeight = draggable.height()
+      $(draggable).width($(dockZone).width())
+      $(draggable).css("left",0)
+      #$(draggable).css("top",32)
+      
       $(draggable).addClass('dockSouth')
-      $(draggable).removeAttr('style')
+      
+      $('#_dockZoneSouth').height(draggable.height())
       $(".dockSouth").resizable
-          handles: 'n'
+        containment: "#mainContent"
+        handles: "n"
+        stop:(event,ui)=>
+          @currentView.$el.trigger("resize")
+          $('#_dockZoneSouth').width( $(".dockSouth").width())
+          #hack
+          $('#visual').trigger("resize")
+      
+      
+      #workaround for positioning
+      $(".dockSouth").css("position","absolute") 
+      triggerResize= =>
+        @currentView.$el.trigger("resize")
+      setTimeout triggerResize, 5
+      
+      $('#visual').trigger("resize")
       
     _undoc:(p, e, ui)=>
       console.log "undocking"
