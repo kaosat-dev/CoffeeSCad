@@ -57,6 +57,51 @@ define (require)->
         containment: '#mainContent'
         handle: '.dialog-header'
         scroll: false
+   
+    _setTransparency:=>
+      $(".dialog").css("opacity",0.8)
+      ###
+      elements = [".dialog",".dialog-body", "#tabContent","#filesList",".CodeMirror cm-s-lesser-dark CodeMirror-focused",".cm-s-lesser-dark.CodeMirror"]
+      for elem in elements
+        rawBgRgba = $(elem).css("background-color")
+        if not rawBgRgba?
+          rawBgRgba = $(elem).css("background")
+          
+        rgbvals = /rgb\((.+),(.+),(.+)\)/i.exec(rawBgRgba)
+        a = 0.5
+        if rgbvals?
+          r = parseInt(rgbvals[1])
+          g = parseInt(rgbvals[2])
+          b = parseInt(rgbvals[3])
+          newColor = "rgba(#{r},#{g},#{b},#{a})"
+          $(elem).css("background-color",newColor)
+          $(elem).css("background",newColor)
+      ###  
+        
+      ###
+      rawBgRgba = $(".dialog").css("background-color")
+      rgbvals = /rgb\((.+),(.+),(.+)\)/i.exec(rawBgRgba)
+      if rgbvals?
+        r = parseInt(rgbvals[1])
+        g = parseInt(rgbvals[2])
+        b = parseInt(rgbvals[3])
+      else
+        r = 255
+        g = 255
+        b = 255
+      a = 0.2
+      newColor = "rgba(#{r},#{g},#{b},#{a})"
+      console.log "new bg color",newColor 
+      
+      $(".dialog").css("background-color",newColor)
+      #$(".dialog-body").css("background-color",newColor)
+      
+      $("#tabContent").css("background-color",newColor)
+      $(".filesListContainer").css("background-color",newColor)
+      
+      $(".cm-s-lesser-dark.CodeMirror").css("background-color",newColor)
+      #$(".CodeMirror cm-s-lesser-dark CodeMirror-focused").css("background-color",newColor)
+      ###
     
     render:()=>
       @isClosed = false
@@ -91,6 +136,7 @@ define (require)->
       
       @_setDragable() 
       @_setResizeable()
+      @_setTransparency()
       @_setupBindings()
       @_setupDockZones()
       return @
@@ -349,6 +395,8 @@ define (require)->
       Marionette.triggerMethod.call(view, "show")
       Marionette.triggerMethod.call(this, "show", view)
       this.currentView = view
+      
+      @_setTransparency()
       
     hide:(view)->
       this.currentView.close()
