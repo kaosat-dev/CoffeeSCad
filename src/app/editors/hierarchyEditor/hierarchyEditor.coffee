@@ -47,12 +47,14 @@ define (require)->
       @showRegions()
       
     showRegions:=>
-      DialogRegion = require 'core/utils/dialogRegion'
-      @diaReg = new DialogRegion({elName:"geometryEdit", title: "Assembly", width:200, height:150})
       hierarchyEditorView = new HierarchyEditorView 
         model:    @project
         settings: @settings
-      @diaReg.show hierarchyEditorView
+      
+      DialogView = require 'core/utils/dialogView'
+      @dia = new DialogView({elName:"hiearchyEdit", title: "Assembly", width:200, height:150,position:[25,25]})
+      @dia.render()
+      @dia.show(hierarchyEditorView)
       
     resetEditor:(newProject)=>
       console.log "resetting hiearchy editor"

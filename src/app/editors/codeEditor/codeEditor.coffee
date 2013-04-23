@@ -51,24 +51,12 @@ define (require)->
       @showRegions()
       
     showRegions:=>
-      DialogRegion = require 'core/utils/dialogRegion'
-      DialogLayout = require 'core/utils/dialogLayout'
-      
       @codeEditorView = new CodeEditorView 
         model:    @project
         settings: @settings
       
-      #@diaReg = new DialogRegion({elName:"codeEdit", title: "CodeEditor", width:500, height:350})
-      
-      #@dialLayout = new DialogLayout()
-      #@dialLayout.render()
-      #@dialLayout.contentRegion.show(codeEditorView)
-      #@diaReg.show(@dialLayout)
-      #@diaReg.show codeEditorView
-      
-      #other attempt
       DialogView = require 'core/utils/dialogView'
-      @dia = new DialogView({elName:"codeEdit", title: "CodeEditor", width:400, height:250})
+      @dia = new DialogView({elName:"codeEdit", title: "CodeEditor", width:450, height:250,position:[25,125],dockable:true})
       @dia.render()
       @dia.show(@codeEditorView)
       

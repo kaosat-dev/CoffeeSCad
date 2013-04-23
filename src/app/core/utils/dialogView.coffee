@@ -3,9 +3,7 @@ define (require)->
   $ui = require 'jquery_ui'
   boostrap = require 'bootstrap'
   marionette = require 'marionette'
-
   require 'slider'
-
   dialogTemplate =  require "text!./dialog.tmpl"
 
   class DialogView extends Backbone.Marionette.ItemView
@@ -16,7 +14,9 @@ define (require)->
       options = options or {}
       @width = options.width ? 640
       @height = options.height ? 480
+      @position = options.position ? [100,100]
       @resizeable = options.resizeable ? true
+      @dockable = options.dockable ? false
       @title = options.title ? "Title"
       elName = options.elName ? "dummyDiv"
       @makeEl(elName)
@@ -127,6 +127,10 @@ define (require)->
       @$el.addClass("dialog floatpanel")
       @$el.css("width",@width)
       @$el.css("height",@height)
+      
+      @$el.css("left",@position[0])
+      @$el.css("top",@position[1])
+      
       triggerResize= =>
         @currentView.$el.trigger("resize")
         @$el.css("height","auto")
@@ -143,11 +147,12 @@ define (require)->
    
     _setupDockZones:()->
       #should be done once, on start
-      that = @
-      $('.dockZone').droppable
-        tolerance: 'touch',
-        drop: (event, ui)->
-          that._dockDraggable(this, ui.draggable)
+      if @dockable 
+        that = @
+        $('.dockZone').droppable
+          tolerance: 'touch',
+          drop: (event, ui)->
+            that._dockDraggable(this, ui.draggable)
           
     _dockDraggable:(dockzone, draggable)=>
       console.log "docking attempt"
@@ -167,24 +172,46 @@ define (require)->
       
     _setupBindings:()=>
       that = @
-      $('.slider').slider()
       #workaround for twitter bootstrap collapse limitations
       $('#contentContainer').on 'show hide', ()->
         $(this).css('height', 'auto')
       
-      @$el.bind "dragstart", (e, ui)=>
-        if @$el.hasClass('floatpanel')
-          @$el.addClass('draggingpanel')
-      
-      @$el.bind "drag", (e, ui)=>
-        if @$el.hasClass('floatpanel')
-          if not @_touchingBoundary(@$el)
-            @_unsnapAll(@$el, $('.dockZone'))
-        else if (@$el.hasClass('docked'))
-          that._undoc(@$el, e, ui)
+      #TODO: move this to a plugin
+      @$el.on('click.collapse-next.data-api', '[data-toggle=collapse-next]', (e)->
+          $target = $(this).parent().parent().next()
+          if $target.data('collapse')? 
+            $target.collapse('toggle')
+          else $target.collapse()
+        )
+      @$el.on('click.data-dismiss.data-api', '[data-dismiss=dialog]', (e)=>
+          that = @
+          $target = $(this).parent().parent().parent()
+          #this.$element
+          #.removeClass('in')
+          #.attr('aria-hidden', true)
           
-      @$el.bind "dragstop", (e)=>
-          @$el.removeClass('draggingpanel')
+          console.log "hiding bla"
+          $target.addClass("hide")
+          @$el.remove()
+        )
+      
+      
+      if @dockable 
+        @$el.bind "dragstart", (e, ui)=>
+          if @$el.hasClass('floatpanel')
+            @$el.addClass('draggingpanel')
+        
+        @$el.bind "drag", (e, ui)=>
+          if @$el.hasClass('floatpanel')
+            if not @_touchingBoundary(@$el)
+              @_unsnapAll(@$el, $('.dockZone'))
+          else if (@$el.hasClass('docked'))
+            that._undoc(@$el, e, ui)
+            
+        @$el.bind "dragstop", (e)=>
+            @$el.removeClass('draggingpanel')
+            
+        
     
     _touchingBoundary:(p)->
       bTouching = true
@@ -336,9 +363,11 @@ define (require)->
       
     _undoc:(p, e, ui)=>
       console.log "undocking"
-      
+      console.log @
       if @dock?
+        console.log "setting dock width"
         $(@dock).css('width', 10)
+        
       console.log "recalling saved dims: width/height", @savedWidth, @savedHeight
       if @savedHeight?
         $(p).css("height",@savedHeight)
@@ -357,7 +386,7 @@ define (require)->
         $('#visual').trigger("resize")
         @currentView.$el.trigger("resize")
         
-      setTimeout triggerResize, 5
+      setTimeout triggerResize, 15
       return true
     
     ### 
@@ -381,5 +410,7 @@ define (require)->
       injectTarget = @$el.find("#contentContainer")
       injectTarget.html("")
       this.currentView = null
+      
+    close:()->
         
   return DialogView

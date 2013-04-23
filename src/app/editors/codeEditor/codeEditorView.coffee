@@ -66,9 +66,6 @@ define (require)->
       console.log @$el.parent()
       
     onResizeStop:=>
-      #console.log "resizestop"
-      #console.log @$el.parent()
-      elHeight = @$el.parent().height()
       elHeight = $("#codeEdit").outerHeight(false) #what the heck ?#FIXME:horrible hackery to get the different elements to resize correctly
       elHeight = $("#codeEdit").height()-60
       #console.log "elHeight", elHeight
