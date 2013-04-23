@@ -13,8 +13,8 @@
 	display: -moz-box;
 	display: box;
 
-	-webkit-box-align: center;
-	/*Weird bug: does not fill 100% height
+	/*-webkit-box-align: center;
+	Weird bug: does not fill 100% height
 	-moz-box-align: center;*/
 	box-align: center;
 }
@@ -104,6 +104,15 @@
   margin-left:2px;
   line-height: 20px;
 }
+
+.dialog-header a:hover
+{
+	outline: none;
+	/*outline: 5px auto -webkit-focus-ring-color;*/
+	outline-offset: 0px;
+}
+
+
 .dialog-body {
   overflow-y: auto;
 }
@@ -211,22 +220,28 @@ user-select: none;
 
 .dockWest
 {
-    position: absolute;
+    /*position: absolute;
     display: block;
-    top: 0;
+    top: 0px!important;
     left: 0;
-    bottom: 0;
+    bottom: 0;*/
+    
+    top: 0px!important;
+    left: 0px!important;
+    height:100%!important;
     cursor: move;
     border: 1px solid grey;
 }
 
 .dockEast
 {
-    position: absolute;
+    /*position: absolute;
     display: block;
     top: 0;
     right: 0;
-    bottom: 0;
+    bottom: 0;*/
+   	top: 0px!important;
+    height:100%!important;
     cursor: move;
     border: 1px solid grey;
 }
@@ -266,9 +281,6 @@ user-select: none;
 
 .draggingpanel
 {
-    /*position: relative;
-    display: block;
-    text-align: center;*/
     cursor: move;
     border: 2px dashed rgb(255, 194, 0);
     color: Red;
@@ -279,7 +291,6 @@ user-select: none;
 	
     position: relative;
     display: block;
-    text-align: center;
     cursor: move;
     /*border: 2px solid black;
     color: Black;
@@ -325,6 +336,7 @@ user-select: none;
 .fullHeight{
 min-height: 100%;
     height: 100%;
+	margin-top: 30px;
 }
 #toto
 {

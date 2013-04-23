@@ -245,6 +245,7 @@ define (require)->
         handles: 's'
         
     _dockEast:(elem, draggable)->
+      console.log "docking east"
       dockZone = elem
       @docked = true
       @dock = elem
@@ -252,9 +253,10 @@ define (require)->
       @savedWidth = draggable.width()
       @savedHeight = draggable.height()
       #fill container: 30 is the navbar size...should be dynamic
-      $(draggable).height($(dockZone).height()-32)
+      ###$(draggable).height($(dockZone).height()-30)
       $(draggable).css("right","0px")
-      $(draggable).css("top",32)
+      $(draggable).css("top",0)###
+      
       $(draggable).addClass('dockEast')
       
       $('#_dockZoneEast').width(draggable.width())
@@ -271,10 +273,8 @@ define (require)->
       $(".dockEast").css("position","absolute") 
       triggerResize= =>
         @currentView.$el.trigger("resize")
+        $('#visual').trigger("resize")
       setTimeout triggerResize, 5
-      
-      $('#visual').trigger("resize")
-      
       
     _dockWest:(elem, draggable)=>
       dockZone = elem
@@ -283,11 +283,9 @@ define (require)->
       #save dockable's current attributes
       @savedWidth = draggable.width()
       @savedHeight = draggable.height()
-      #fill container: 30 is the navbar size...should be dynamic
-      $(draggable).height($(dockZone).height())
-      $(draggable).css("left",0)
-      $(draggable).css("top",0)
-      $(draggable).addClass('dockWest')
+      #$(draggable).height($(dockZone).height()-30)#fill container: 30 is the navbar size...should be dynamic
+      
+      $(draggable).addClass('dockWest')  
       
       $('#_dockZoneWest').width(draggable.width())
       $(".dockWest").resizable
@@ -295,18 +293,14 @@ define (require)->
         handles: "e"
         stop:(event,ui)=>
           @currentView.$el.trigger("resize")
-          $('#_dockZoneWest').width( $(".dockWest").width())
+          $('#_dockZoneWest').width(@$el.width())
           #hack
           $('#visual').trigger("resize")
           
-          
-      #workaround for positioning
-      $(".dockWest").css("position","absolute") 
       triggerResize= =>
         @currentView.$el.trigger("resize")
+        $('#visual').trigger("resize")
       setTimeout triggerResize, 5
-      
-      $('#visual').trigger("resize")
 
     _dockSouth:(elem, draggable)->
       dockZone = elem
@@ -342,45 +336,29 @@ define (require)->
       
     _undoc:(p, e, ui)=>
       console.log "undocking"
-      console.log @
       
       if @dock?
         $(@dock).css('width', 10)
-        
       console.log "recalling saved dims: width/height", @savedWidth, @savedHeight
       if @savedHeight?
         $(p).css("height",@savedHeight)
       if @savedWidth?
-        $(p).css("wdith",@savedWidth)
+        $(p).css("width",@savedWidth)
       
       $(p).removeClass('docked dockNorth dockEast dockWest dockSouth')
       $(p).addClass('floatpanel draggingpanel')
       
-      ### 
-      ui.position.left = e.pageX
-      ui.position.top = e.pageY
-      ui.originalPosition.left = e.pageX
-      ui.originalPosition.top = e.pageY
-      ui.offset.top = 0
-      ui.offset.left = 0
-      $(p).css('top', e.pageY + 2)
-      $(p).css('left', e.pageX + 2)
-      ###
-      $(p).css('top', 100)
       $(p).resizable('destroy')#destroy previous , constrained resize
-      
-      @_setDragable()
       @_setResizeable()
+      @_setDragable()
       
-      bla= =>
+      triggerResize= =>
         #resize the pannels etc (inner elements first)
-         $('#visual').trigger("resize")
+        $('#visual').trigger("resize")
         @currentView.$el.trigger("resize")
-        #now that the inner elements, have the right size, switch back to auto height to enable correct collapsing
-        @$el.css("height","auto")
-      setTimeout bla, 5
-      
-      return (true)
+        
+      setTimeout triggerResize, 5
+      return true
     
     ### 
     hide: ->

@@ -69,9 +69,11 @@ define (require)->
       #console.log "resizestop"
       #console.log @$el.parent()
       elHeight = @$el.parent().height()
-      elHeight = $("#codeEdit").outerHeight(true)-33 #what the heck ?#FIXME:horrible hackery to get the different elements to resize correctly
+      elHeight = $("#codeEdit").outerHeight(false) #what the heck ?#FIXME:horrible hackery to get the different elements to resize correctly
+      elHeight = $("#codeEdit").height()-60
       #console.log "elHeight", elHeight
       @$el.height(elHeight)
+      #@$el.height("100")
       @myLayout.resizeAll()
       
       #hack
