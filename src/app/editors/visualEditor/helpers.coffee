@@ -168,9 +168,9 @@ define (require) ->
     constructor:(options)->
       super options
       
-      defaults = {size:1000, step:100, color:0xFFFFFF, opacity:0.1, addText:true, textColor:"#FFFFFF"}
+      defaults = {size:1000, step:100, color:0xFFFFFF, opacity:0.1, addText:true, textColor:"#FFFFFF", textLocation:"f"}
       options = merge defaults, options
-      {@size, @step, @color, @opacity, @addText, @textColor} = options
+      {@size, @step, @color, @opacity, @addText, @textColor, @textLocation} = options
       
       gridGeometry = new THREE.Geometry()
       gridMaterial = new THREE.LineBasicMaterial
@@ -179,8 +179,6 @@ define (require) ->
         linewidth:2
         transparent:true
       
-      @labels = new THREE.Object3D()
-      
       for i in [-@size/2..@size/2] by @step
         gridGeometry.vertices.push(new THREE.Vector3(-@size/2, i, 0))
         gridGeometry.vertices.push(new THREE.Vector3(@size/2, i, 0))
@@ -188,25 +186,7 @@ define (require) ->
         gridGeometry.vertices.push(new THREE.Vector3(i, -@size/2, 0))
         gridGeometry.vertices.push(new THREE.Vector3(i, @size/2, 0))
         
-        #Add size labeling
-        sizeLabel=@drawTextOnPlane("#{i}",32)
-        sizeLabel2 =sizeLabel.clone() #for other direction labeling
-        sizeLabel.rotation.z=Math.PI/2
-        sizeLabel.position.set(i,0,0.1)
-        @labels.add(sizeLabel)
-        
-        if i != 0 
-          #don't draw 0 twice
-          sizeLabel2.position.set(0,i,0.1)
-          sizeLabel2.rotation.z=Math.PI/2
-          @labels.add(sizeLabel2)
-          
-        
       @mainGrid = new THREE.Line(gridGeometry, gridMaterial, THREE.LinePieces)
-      
-      @mainGrid.add(@labels)
-      for label in @labels.children
-        label.visible = @addText
       
       subGridGeometry = new THREE.Geometry()
       subGridMaterial = new THREE.LineBasicMaterial({ color: new THREE.Color().setHex(@color), opacity: @opacity/2 ,transparent:true})
@@ -222,6 +202,7 @@ define (require) ->
       
       #######
       planeGeometry = new THREE.PlaneGeometry(-@size, @size, 5, 5)
+      #new THREE.PlaneGeometry(1000, 1000, 100, 100);
       #taken from http://stackoverflow.com/questions/12876854/three-js-casting-a-shadow-onto-a-webpage
       planeFragmentShader = [
           "uniform vec3 diffuse;",
@@ -254,38 +235,93 @@ define (require) ->
           "}"
 
       ].join("\n")
-
+      
       planeMaterial = new THREE.ShaderMaterial
           uniforms: THREE.ShaderLib['basic'].uniforms,
           vertexShader: THREE.ShaderLib['basic'].vertexShader,
           fragmentShader: planeFragmentShader,
           color: 0x0000FF
           transparent:true
-      
+      ###
+      planeMaterial = new THREE.MeshLambertMaterial
+        color: 0xFFFFFF
+        side: THREE.DoubleSide 
+      ###
       @plane = new THREE.Mesh(planeGeometry, planeMaterial)
       @plane.rotation.x = Math.PI
-      @plane.position.z = -2
+      @plane.position.z = -0.5
       @plane.name = "workplane"
       @plane.receiveShadow = true
       
       @add @mainGrid
       @add @subGrid
       @add @plane
+      @_drawNumbering()
      
-     setOpacity:(opacity)=>
-       @opacity = opacity
-       @mainGrid.material.opacity = opacity
-       @subGrid.material.opacity = opacity
+    _drawNumbering:->
+      if @labels?
+        @mainGrid.remove(@labels)
+      
+      @labels = new THREE.Object3D()
+      xLabelsLeft = new THREE.Object3D()
+      yLabelsFront = new THREE.Object3D()
+      
+      for i in [-@size/2..@size/2] by @step
+        #Add size labeling
+        sizeLabel=@drawTextOnPlane("#{i}",32)
+        sizeLabel2 =sizeLabel.clone() #for other direction labeling
+        sizeLabel.rotation.z=Math.PI/2
+        sizeLabel.position.set(i,@size/2,0.1)
+        xLabelsLeft.add(sizeLabel)
+        
+        if @textLocation is "center"
+          if i!=0
+            #don't draw 0 twice
+            sizeLabel2.position.set(@size/2,i,0.1)
+            sizeLabel2.rotation.z=Math.PI/2
+            yLabelsFront.add(sizeLabel2)
+        else 
+          if i!=@size/2 and i!= -@size/2
+            #don't draw max values twice
+            sizeLabel2.position.set(@size/2,i,0.1)
+            sizeLabel2.rotation.z=Math.PI/2
+            yLabelsFront.add(sizeLabel2)
+      
+      if @textLocation is "center"
+        xLabelsLeft.translateY(-@size/2)
+        yLabelsFront.translateX(-@size/2)
+      else
+        xLabelsRight = xLabelsLeft.clone().translateY(-@size)
+        yLabelsBack  = yLabelsFront.clone().translateX(-@size)
+        @labels.add(xLabelsRight) 
+        @labels.add(yLabelsBack)
+      
+      @labels.add(xLabelsLeft)  
+      @labels.add(yLabelsFront)
+      
+      for label in @labels.children
+        label.visible = @addText
+      
+      @mainGrid.add(@labels)
+     
+    setOpacity:(opacity)=>
+      @opacity = opacity
+      @mainGrid.material.opacity = opacity
+      @subGrid.material.opacity = opacity
        
-     setColor:(color)=>
-       @color = color 
-       @mainGrid.material.color = new THREE.Color().setHex(@color)
-       @subGrid.material.color = new THREE.Color().setHex(@color)
+    setColor:(color)=>
+      @color = color 
+      @mainGrid.material.color = new THREE.Color().setHex(@color)
+      @subGrid.material.color = new THREE.Color().setHex(@color)
      
-     toggleText:(toggle)=>
-       @addText = toggle
-       for label in @labels.children
+    toggleText:(toggle)=>
+      @addText = toggle
+      for label in @labels.children
         label.visible = toggle
+        
+    setTextLocation:(location)=>
+      @textLocation = location
+      @_drawNumbering()
       
       
   class BoundingCage extends BaseHelper

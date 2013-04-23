@@ -27,6 +27,10 @@ define (require)->
           gridColor    : 'Text'
           gridOpacity  : {type:'Number', editorAttrs: { step: 0.1, min: 0, max: 1 } }
           gridText     : 'Checkbox'
+          gridNumberingPosition :
+            title : 'Grid numbering position'
+            type:'Select'
+            options:['center','border']
           
           showStats    : 'Checkbox'
           position     :
@@ -39,7 +43,10 @@ define (require)->
           
           center: 'Checkbox'
           
-          wireframe    : 'Checkbox'
+          objectViewMode :
+            title : 'object rendering'
+            type:'Select'
+            options:['shaded','wireframe','structural']
           
           helpersColor :  'Text'
           bgColor : 
@@ -55,13 +62,13 @@ define (require)->
             
         options.fieldsets=[
           "legend":"Render settings"
-          "fields": ["renderer","antialiasing","shadows","selfShadows"]
+          "fields": ["renderer","antialiasing","shadows","selfShadows","objectViewMode"]
         , 
           "legend":"View settings"
-          "fields": ["position","projection","center","wireframe"]
+          "fields": ["position","projection","center"]
         ,
           "legend":"Axes and Grid settings"
-          "fields": ["showAxes","helpersColor","showConnectors", "showGrid","gridSize","gridStep","gridColor","gridOpacity","gridText"]
+          "fields": ["showAxes","helpersColor","showConnectors", "showGrid","gridSize","gridStep","gridColor","gridOpacity","gridText","gridNumberingPosition"]
         , 
           "legend":"Extra settings"
           "fields": ["bgColor","bgColor2", "textColor", "axesSize", "showStats"]

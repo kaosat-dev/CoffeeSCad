@@ -6,7 +6,7 @@ define (require)->
   class VisualEditorSettings extends Backbone.Model
     attributeNames: ['name','renderer','antialiasing','shadows','selfShadows',
     'showAxes','showConnectors','showGrid','gridSize','gridStep','gridColor','gridOpacity','gridText',
-    'showStats','position','projection','wireframe','helpersColor','textColor','bgColor','bgColor2','axesSize']
+    'showStats','position','projection','objectViewMode','helpersColor','textColor','bgColor','bgColor2','axesSize']
     
     buildProperties @
     
@@ -31,13 +31,15 @@ define (require)->
       gridColor    : "0xFFFFFF"
       gridOpacity  : 0.1
       gridText     : true
+      gridNumberingPosition: 'center'
       
       showStats    : false
       
       position     : "diagonal"
       projection   : "perspective" #orthogonal
-            
-      wireframe    : false
+      
+      objectViewMode : 'shaded'    
+      
       
       helpersColor : "0xFFFFFF"
       textColor    : "#FFFFFF"     
