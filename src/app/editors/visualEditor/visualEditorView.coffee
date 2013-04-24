@@ -206,6 +206,8 @@ define (require) ->
     switchModel:(newModel)->
       #replace current model with a new one
       #@unbindAll()
+      @model.off("compiled", @projectCompiled)
+      @model.off("compile:error", @projectCompileFailed)
       try
         @scene.remove @current.cageView
       if @assembly?

@@ -7,18 +7,23 @@ define (require) ->
   log.ERROR = 3
   log.entries = []
   
+  #TODO: fix line number : currently this returns the line number in THIS file, not the caller
   
   log.debug = (message)=>
     if log.level <= log.DEBUG
-      log.entries.push({lvl:"DEBUG",msg:"#{message}"})
+      lineNumber = (new Error()).lineNumber
+      log.entries.push({lvl:"DEBUG",msg:"#{message}",line:lineNumber})
   log.info = (message)=>
     if log.level <= log.INFO
-      log.entries.push({lvl:"INFO",msg:"#{message}"})
+      lineNumber = (new Error()).lineNumber
+      log.entries.push({lvl:"INFO",msg:"#{message}",line:lineNumber})
   log.warn = (message)=>
     if log.level <= log.WARN
-      log.entries.push({lvl:"WARN",msg:"#{message}"})
-  log.error = (message)=>
+      lineNumber = (new Error()).lineNumber
+      log.entries.push({lvl:"WARN",msg:"#{message}",line:lineNumber})
+  log.error = (message,)=>
     if log.level <= log.ERROR
-      log.entries.push({lvl:"ERROR",msg:"#{message}"})
+      lineNumber = (new Error()).lineNumber
+      log.entries.push({lvl:"ERROR",msg:"#{message}",line:lineNumber})
   
   return {"log":log}

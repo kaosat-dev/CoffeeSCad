@@ -27,6 +27,7 @@ define (require)->
       #  controller: @
         
       @vent.on("project:loaded",@resetEditor)
+      @vent.on("project:created",@resetEditor)
       @init()
 
       #@addRegions @regions

@@ -6,6 +6,10 @@
  * rgb(255, 194, 0)
  */
 
+.console-entry
+{
+	margin-bottom: 3px;
+}
 
 /*modern centering attempt*/
 .box-wrap-inner {

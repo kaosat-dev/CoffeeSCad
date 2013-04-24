@@ -31,6 +31,7 @@ define (require)->
         controller: @
         
       @vent.on("project:loaded",@resetEditor)
+      @vent.on("project:created",@resetEditor)
       @init()
 
       @addRegions @regions
@@ -68,18 +69,14 @@ define (require)->
       ###
     resetEditor:(newProject)=>
       console.log "resetting code editor"
+      @dia.hide()
+      @codeEditorView.close()
+      
       @project = newProject
       @codeEditorView = new CodeEditorView 
         model:    @project
         settings: @settings
-      @dia.hide()
+      
       @dia.show(@codeEditorView)
-      ### 
-      if @diaReg?
-        console.log "closing current code editor"
-        @diaReg.close()
-      @showRegions()
-      ###
-      #@mainRegion.close()
   
   return CodeEditor

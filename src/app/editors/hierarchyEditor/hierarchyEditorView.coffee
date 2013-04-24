@@ -24,14 +24,19 @@ define (require)->
     constructor:(options)->
       super options
       @settings = options.settings
+      @_setupEventHandlers()
+    
+    _setupEventHandlers: =>
       appVent.on("project:compiled",@onProjectCompiled)
     
+    _tearDownEventHandlers:=>
+      appVent.off("project:compiled",@onProjectCompiled)
+      
     onProjectCompiled:(project)=>
       @project = project
       @render()
     
     onDomRefresh:()=>
-      console.log "applying jstree"
       @$el.jstree
         "plugins" : ["themes","html_data","ui","crrm"],
         #"core" : { "initially_open" : [ "parts_1" ] }
@@ -75,10 +80,13 @@ define (require)->
             rootEl.append(createItem(part,elem))
           return rootEl
         @$el.append(createItem(@project.rootAssembly,treeRoot))
-      console.log "finished"
       @bindUIElements()
       @triggerMethod("render", @)
       @triggerMethod("item:rendered", @)
       return @
+      
+    onClose:=>
+      @_tearDownEventHandlers()
+      @project = null
       
   return HierarchyEditorView

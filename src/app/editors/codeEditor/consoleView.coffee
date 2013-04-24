@@ -16,12 +16,23 @@ define (require)->
     constructor:(options)->
       super options
       @vent = vent
+      @_setupEventHandlers()
+    
+    _setupEventHandlers: =>
       @model.on("compiled",@onErrors)
       @model.on("compile:error", @onErrors)
       @vent.on("file:errors",   @onLintErrors)
-      @vent.on("file:noError", @clearConsole)
+      #@vent.on("file:noError", @clearConsole)
       @vent.on("file:selected", @onFileSelected)
       @model.on("log:messages",@onLogEntries)
+    
+    _tearDownEventHandlers:=>
+      @model.off("compiled",@onErrors)
+      @model.off("compile:error", @onErrors)
+      @vent.off("file:errors",   @onLintErrors)
+      #@vent.off("file:noError", @clearConsole)
+      @vent.off("file:selected", @onFileSelected)
+      @model.off("log:messages",@onLogEntries)
       
     serializeData: ()->
       null
@@ -39,16 +50,27 @@ define (require)->
       try
         @$el.removeClass("well")
         @$el.html("")
-        @$el.addClass("alert alert-error")
         for error in compileResultData.errors
-          errLine = error.lineNumber
+          errLine = if error.lineNumber? then error.lineNumber else if error.location? then error.location.first_line
           errMsg = error.message
           errStack= error.stack
-          @$el.append("<div><b>File: line #{errLine}:</b>  #{errMsg}<br/>#{errStack}<br/>===============================================<br/><br/></div>")
+          @$el.append("<div class='alert alert-error'><b>File: line #{errLine}:</b>  #{errMsg}<br/>===============================================<br/><br/></div>")
         for entry in compileResultData.logEntries
           level = entry.lvl
           msg = entry.msg
-          @$el.append("<div><b>#{level}:</b> #{msg}</div>")
+          #line = entry.line
+          cssClass = ""
+          switch level.toLowerCase()
+            when "warn"
+              cssClass= "alert alert-warning"
+            when "info"
+              cssClass= "alert alert-info"
+            when "error"
+              cssClass= "alert alert-error"
+            when "debug"
+              cssClass = "alert alert-success"
+          msgDiv = "<div class='#{cssClass} console-entry'><b>#{level}:</b>#{msg}</div>"
+          @$el.append(msgDiv)
         
       catch err
         console.log("Inner err: "+ err)
@@ -56,22 +78,23 @@ define (require)->
      
     onLintErrors:(errors)=>
       try
-        @$el.removeClass("well")
-        @$el.html("")
-        @$el.addClass("alert alert-error")
+        #@$el.removeClass("well")
+        #@$el.html("")
         for error in errors
           errLine = error.message.split("line ")
           errLine = errLine[errLine.length - 1]
           errLine = error.lineNumber
           errMsg = error.message
           errStack= error.stack
-          @$el.append("<div><b>File: line #{errLine}:</b>  #{errMsg}<br/>#{errStack}<br/>===============================================<br/><br/></div>")
+          @$el.append("<div class='alert alert-error'><b>File: line #{errLine}:</b>  #{errMsg}<br/>#{errStack}<br/>===============================================<br/><br/></div>")
         
       catch err
         console.log("Inner err: "+ err)
         @$el.text("Yikes! Error displaying error:#{err}")
        
-     onFileSelected:(model)=>
-       @clearConsole()
+     #onFileSelected:(model)=>
+     #  @clearConsole()
+     onClose:=>
+       @_tearDownEventHandlers()
         
   return ConsoleView

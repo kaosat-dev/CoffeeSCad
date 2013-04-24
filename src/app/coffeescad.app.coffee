@@ -127,8 +127,8 @@ define (require)->
     onStart:()=>
       console.log "app started"
       #@_setupKeyboardBindings()
-      @codeEditor.start()
       @visualEditor.start()
+      @codeEditor.start()
       @hierarchyEditor.start()
       #we check if we came back form an oauth redirect/if we have already been authorized
       for index, store of @stores
@@ -167,17 +167,17 @@ define (require)->
       
     onInitializeBefore:()->
       console.log "before init"
-      CodeEditor = require './editors/codeEditor/codeEditor'
-      @codeEditor = new CodeEditor
-        regions: 
-          mainRegion: "#code"
-        project: @project
-        appSettings: @settings
-      
       VisualEditor = require './editors/visualEditor/visualEditor'
       @visualEditor = new VisualEditor
         regions: 
           mainRegion: "#visual"
+        project: @project
+        appSettings: @settings
+        
+      CodeEditor = require './editors/codeEditor/codeEditor'
+      @codeEditor = new CodeEditor
+        regions: 
+          mainRegion: "#code"
         project: @project
         appSettings: @settings
       

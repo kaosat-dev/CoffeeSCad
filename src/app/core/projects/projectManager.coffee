@@ -53,8 +53,19 @@ define (require)->
       @project.on("save",@onProjectSaved)
       @project.on("compiled", @onProjectCompiled)
       @project.on("compile:error",@onProjectCompileError)
+    
+    _tearDownProjectEventHandlers:=>
+      @project.off("change",@onProjectChanged)
+      @project.off("save",@onProjectSaved)
+      @project.off("compiled", @onProjectCompiled)
+      @project.off("compile:error",@onProjectCompileError)
 
     createProject:()->
+      if @project?
+        @_tearDownProjectEventHandlers()
+        @project.compiler.project=null
+        @project = null
+        
       @project = new Project
         compiler:@compiler
       @project.addFile
@@ -144,23 +155,25 @@ define (require)->
       @memoizeCurrentProject()
     
     onProjectCompiled:=>
+      console.log "project compile event dispatch"
       @vent.trigger("project:compiled",@project)
-    onProjectCompileError:=>
-      @vent.trigger("project:compile:error")
+      
+    onProjectCompileError:(compileResult)=>
+      @vent.trigger("project:compile:error",compileResult)
        
     compileProject:=>
+      console.log "compile project"
       @project.compile
         backgroundProcessing : @settings.get("csgBackgroundProcessing")
       
     onNewProject:()=>
-      console.log @project
       if @project.isSaveAdvised
         bootbox.dialog "Project is unsaved, you will loose your changes, proceed anyway?", [
           label: "Ok"
           class: "btn-inverse"
           callback: =>
             @createProject()
-            @vent.trigger("project:loaded", @project) 
+            @vent.trigger("project:created", @project)
         ,
           label: "Cancel"
           class: "btn-inverse"
@@ -168,7 +181,7 @@ define (require)->
         ]
       else
         @createProject()
-        @vent.trigger("project:loaded", @project) 
+        @vent.trigger("project:created", @project) 
       
     onSaveAsProject:=>
       projectBrowserView = new ProjectBrowserView
@@ -200,6 +213,9 @@ define (require)->
       modReg.show projectBrowserView
       
     onProjectLoaded:(project)=>
+      if @project?
+        @_tearDownProjectEventHandlers()
+        @project = null
       @project = project
       @project.compiler = @compiler
       @_setupProjectEventHandlers()

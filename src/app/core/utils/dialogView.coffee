@@ -3,7 +3,6 @@ define (require)->
   $ui = require 'jquery_ui'
   boostrap = require 'bootstrap'
   marionette = require 'marionette'
-  require 'slider'
   dialogTemplate =  require "text!./dialog.tmpl"
 
   class DialogView extends Backbone.Marionette.ItemView

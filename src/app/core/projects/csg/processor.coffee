@@ -5,6 +5,7 @@ define (require) ->
   csg = require './csg'
   CAGBase = csg.CAGBase
   
+  
   ##Inner workflow
   #- Compile
   #   - Preprocess (resolve includes, parameters (defines))
@@ -36,6 +37,18 @@ define (require) ->
           @parseScriptSync(@script, @params)
         @processing = false
       catch error
+        #correct the line number to account for all the pre-injected code
+        if error.location?
+          if @async
+            lineOffset = -11
+          else
+            lineOffset = -15
+          error.location.first_line = (error.location.first_line + lineOffset)
+      
+        #console.log "raw error", error
+        #console.log error.stack
+        #trace = printStackTrace({e: error})
+        #console.log trace
         @callback(null,null,null, error)
         @processing = false
    
@@ -100,12 +113,10 @@ define (require) ->
       
       #include script
       #{@script}
-      
       #return results as an object for cleaness
       return result = {"rootAssembly":rootAssembly,"partRegistry":classRegistry, "logEntries":log.entries}
       
       """
-      
       @script = CoffeeScript.compile(@script, {bare: true})
       #console.log "JSIFIED script"
       #console.log @script

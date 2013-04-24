@@ -28,8 +28,8 @@ require.config
     dropbox:          "../assets/js/libs/dropbox"
     github:           "../assets/js/libs/github"
     
-    #base64:           "../assets/js/libs/base64"
     XMLWriter:        "../assets/js/libs/XMLWriter-1.0.0"
+    
     
     #plugins
     #jquery_hotkeys:   "../assets/js/plugins/jquery.hotkeys"
@@ -41,7 +41,6 @@ require.config
     bootbox:          "../assets/js/plugins/bootbox.min"
     contextMenu:      "../assets/js/plugins/bootstrap-contextmenu"
     notify:           "../assets/js/plugins/bootstrap-notify"
-    slider:           "../assets/js/plugins/bootstrap-slider"
     
     coffeelint:       "../assets/js/plugins/coffeelint"
     coffee_synhigh:   "../assets/js/libs/codeMirror/mode/coffeescript/coffeescript"
@@ -89,8 +88,6 @@ require.config
       dep: ["bootstrap"]
     notify:
       dep:["bootstrap"]
-    slider:
-      dep:["bootstrap"]  
       
     'backbone':
       deps:    ["jquery","underscore"]
@@ -119,7 +116,7 @@ require.config
     #  exports:  "CoffeeScript"
     coffeelint:
       deps:    ["CoffeeScript"]
-      #exports:  "coffeelint"
+          
     CodeMirror:
       exports:  "CodeMirror"
     foldcode:
@@ -180,4 +177,4 @@ require.config
       deps:    ["jquery"]
       exports : "Github"
     XMLWriter:
-       exports: "XMLWriter"
+      exports: "XMLWriter"

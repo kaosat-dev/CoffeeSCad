@@ -20,7 +20,6 @@ define (require)->
     regions: 
       filesList:  "#filesList"
       filesTree:  "#filesTree"
-      toolBar  :  "#toolBar"
     
     events:
       "resize:start": "onResizeStart"
@@ -89,5 +88,8 @@ define (require)->
         model: @model
         settings: @settings
       @filesList.show(filesListView)
+    
+    onClose:=>
+      console.log "closing code editor"
       
   return CodeEditorView
