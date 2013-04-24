@@ -12,6 +12,7 @@ define (require)->
   #HierarchyEditorSettingsView = require './hierarchyEditorSettingsView'
   #HierarchyEditorRouter = require "./hierarchyEditorRouter"
   HierarchyEditorView = require './hierarchyEditorView'
+  DialogView = require 'core/utils/dialogView'
 
  
   class HierarchyEditor extends Backbone.Marionette.Application
@@ -25,9 +26,11 @@ define (require)->
       @vent = vent
       #@router = new HierarchyEditorRouter
       #  controller: @
-        
+      @icon = "icon-list"
+      
       @vent.on("project:loaded",@resetEditor)
       @vent.on("project:created",@resetEditor)
+      @vent.on("HierarchyEditor:show",@showView)
       @init()
 
       #@addRegions @regions
@@ -37,7 +40,7 @@ define (require)->
         @appSettings.registerSettingClass("HierarchyEditor", HierarchyEditorSettings)
         
       @addInitializer ->
-        @vent.trigger "app:started", "#{@title}"
+        @vent.trigger "app:started", "#{@title}",@
       
       #if requested we send back the type of SettingsView to use for this specific sub app
       reqRes.addHandler "HierarchyEditorSettingsView", ()->
@@ -45,25 +48,30 @@ define (require)->
         
     onStart:()=>
       @settings = @appSettings.get("HierarchyEditor")
-      @showRegions()
+      @showView()
       
-    showRegions:=>
-      hierarchyEditorView = new HierarchyEditorView 
-        model:    @project
-        settings: @settings
-      
-      DialogView = require 'core/utils/dialogView'
+    showView:=>
+      if @dia?
+        @dia.close()
       @dia = new DialogView({elName:"hiearchyEdit", title: "Assembly", width:200, height:150,position:[25,25]})
       @dia.render()
-      @dia.show(hierarchyEditorView)
+      
+      if not @hierarchyEditorView?
+        @hierarchyEditorView = new HierarchyEditorView 
+          model:    @project
+          settings: @settings
+      
+      @dia.show(@hierarchyEditorView)
       
     resetEditor:(newProject)=>
       console.log "resetting hiearchy editor"
       @project = newProject
-      if @diaReg?
+      if @dia?
         console.log "closing current hiearchy editor"
-        @diaReg.close()
-      @showRegions()
-      #@mainRegion.close()
+        @dia.close()
+        @hierarchyEditorView.close()
+        @hierarchyEditorView = null
+        
+      @showView()
   
   return HierarchyEditor

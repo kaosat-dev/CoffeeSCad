@@ -12,9 +12,7 @@ define (require)->
   CodeEditorSettingsView = require './codeEditorSettingsView'
   CodeEditorRouter = require "./codeEditorRouter"
   CodeEditorView = require './codeEditorView'
-
-  DummyView = require 'core/utils/dummyView'
- 
+  DialogView = require 'core/utils/dialogView'
  
   class CodeEditor extends Backbone.Marionette.Application
     title: "CodeEditor"
@@ -29,19 +27,20 @@ define (require)->
       @vent = vent
       @router = new CodeEditorRouter
         controller: @
+      
+      @icon = "icon-text-width" #TODO: should this be here? in the settings?
         
       @vent.on("project:loaded",@resetEditor)
       @vent.on("project:created",@resetEditor)
+      @vent.on("CodeEditor:show",@showView)
       @init()
-
-      @addRegions @regions
       
     init:=>
       if @appSettings?
         @appSettings.registerSettingClass("CodeEditor", CodeEditorSettings)
         
       @addInitializer ->
-        @vent.trigger "app:started", "#{@title}"
+        @vent.trigger "app:started", "#{@title}", @
       
       #if requested we send back the type of SettingsView to use for this specific sub app
       reqRes.addHandler "CodeEditorSettingsView", ()->
@@ -49,16 +48,18 @@ define (require)->
         
     onStart:()=>
       @settings = @appSettings.get("CodeEditor")
-      @showRegions()
+      @showView()
       
-    showRegions:=>
+    showView:=>
+      if @dia?
+        @dia.close()
+      @dia = new DialogView({elName:"codeEdit", title: "CodeEditor", width:450, height:250,position:[25,125],dockable:true})
+      @dia.render()
+      
       @codeEditorView = new CodeEditorView 
         model:    @project
         settings: @settings
       
-      DialogView = require 'core/utils/dialogView'
-      @dia = new DialogView({elName:"codeEdit", title: "CodeEditor", width:450, height:250,position:[25,125],dockable:true})
-      @dia.render()
       @dia.show(@codeEditorView)
       
       #Setup keyBindings

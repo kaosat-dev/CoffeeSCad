@@ -38,7 +38,6 @@ define (require)->
       return $el
     
     serializeData:->
-      console.log "here"
       return {"title":@title}
       
     _setResizeable:=>
@@ -191,6 +190,7 @@ define (require)->
           
           console.log "hiding bla"
           $target.addClass("hide")
+          @close()
           @$el.remove()
         )
       
@@ -411,5 +411,8 @@ define (require)->
       this.currentView = null
       
     close:()->
+      console.log "closed"
+      @_isShown = false
+      @isClosed = true
         
   return DialogView

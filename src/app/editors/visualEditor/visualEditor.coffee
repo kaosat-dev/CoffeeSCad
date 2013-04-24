@@ -40,7 +40,7 @@ define (require)->
         @appSettings.registerSettingClass("VisualEditor", VisualEditorSettings)
       
       @addInitializer ->
-        @vent.trigger "app:started", "#{@title}"
+        @vent.trigger "app:started", "#{@title}", @
         
       reqRes.addHandler "VisualEditorSettingsView", ()->
         return VisualEditorSettingsView

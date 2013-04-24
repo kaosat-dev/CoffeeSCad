@@ -49,6 +49,8 @@ define (require)->
     constructor:(options)->
       super options
       @vent = vent
+      
+      @editors = {}
       @stores= options.stores ? {}
       @exporters= options.exporters ? {}
       
@@ -66,6 +68,8 @@ define (require)->
       @vent.on("project:compiled",()=>@_onNotificationRequested("Project:compiled"))
       @vent.on("project:compile:error",()=>@_onNotificationRequested("Project:compile ERROR check console for details!"))
       @vent.on("project:loaded", @onProjectLoaded)
+      
+      @vent.on("app:started",@_onSubAppStarted)
     
     _onNotificationRequested:(message)=>
       $('.notifications').notify(message: { text:message },fadeOut:{enabled:true, delay: 1000 }).show()
@@ -81,6 +85,26 @@ define (require)->
       $('#undoBtn').addClass("disabled")
     _onNoRedoAvailable:=>
       $('#redoBtn').addClass("disabled")
+    
+    
+    _onSubAppStarted:(title,subApp)=>
+      console.log "#{title} started",subApp
+      title = subApp.title
+      if not title of @editors
+        @editors[title]=subApp
+      console.log @$el
+      icon = subApp.icon
+      
+      className = "open#{title[0].toUpperCase() + title[1..-1]}"
+      subAppEl = """<li><a id="#{title}Btn" href="#" rel="tooltip" title="Open #{title}" class=#{className}><i class="#{icon}"></i></a></li>"""
+      $(subAppEl).insertAfter('#editorsMarker')
+      
+      event = "#{title}:show"
+      console.log event
+      @events["click .#{className}"] = do(event)-> ->@vent.trigger(event)
+      
+      @delegateEvents()
+      
     
     _addExporterEntries:=>
       #add exporter entries to menu, and their event handlers
