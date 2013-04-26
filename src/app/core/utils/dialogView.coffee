@@ -9,6 +9,10 @@ define (require)->
     template: dialogTemplate
     el: "#none"
 
+    events:
+      "change .opacitySetter" : "onOpacityChanged"
+      "keyup .opacitySetter" : "onOpacityChanged"
+
     constructor:(options) ->
       options = options or {}
       @width = options.width ? 640
@@ -57,7 +61,7 @@ define (require)->
         scroll: false
    
     _setTransparency:=>
-      $(".dialog").css("opacity",0.8)
+      $(".dialog").css("opacity",0.9)
       ###
       elements = [".dialog",".dialog-body", "#tabContent","#filesList",".CodeMirror cm-s-lesser-dark CodeMirror-focused",".cm-s-lesser-dark.CodeMirror"]
       for elem in elements
@@ -101,6 +105,13 @@ define (require)->
       #$(".CodeMirror cm-s-lesser-dark CodeMirror-focused").css("background-color",newColor)
       ###
     
+    onOpacityChanged:(e)->
+      opacity = parseFloat(e.currentTarget.value)/100
+      console.log opacity
+      if opacity >= 0.25 and opacity <= 1
+        @$el.css("opacity",opacity)
+      
+    
     render:()=>
       @isClosed = false
       @triggerMethod("before:render", @)
@@ -143,7 +154,7 @@ define (require)->
       @_setupDockZones()
       return @
    
-    _setupDockZones:()->
+    _setupDockZones:()=>
       #should be done once, on start
       if @dockable 
         that = @
@@ -152,21 +163,22 @@ define (require)->
           drop: (event, ui)->
             that._dockDraggable(this, ui.draggable)
           
-    _dockDraggable:(dockzone, draggable)=>
-      console.log "docking attempt"
-      $(draggable).resizable('destroy')
-      $(draggable).addClass('docked')
-      if (dockzone.id.indexOf("North") != -1)
-        @_dockNorth(dockzone, draggable)
-      else if (dockzone.id.indexOf("West") != -1)
-        @_dockWest(dockzone, draggable)
-      else if (dockzone.id.indexOf("East") != -1)
-        @_dockEast(dockzone, draggable)
-      else if (dockzone.id.indexOf("South") != -1)
-        @_dockSouth(dockzone, draggable)
-        
-      $(draggable).removeClass('floatpanel dockableDraggable')
-      $('.dockZoneHighlight').removeClass('dockZoneHighlight') 
+    _dockDraggable:(dockzone, draggable)->
+      if @dockable 
+        console.log "docking attempt because I am dockable #{@dockable}"
+        $(draggable).resizable('destroy')
+        $(draggable).addClass('docked')
+        if (dockzone.id.indexOf("North") != -1)
+          @_dockNorth(dockzone, draggable)
+        else if (dockzone.id.indexOf("West") != -1)
+          @_dockWest(dockzone, draggable)
+        else if (dockzone.id.indexOf("East") != -1)
+          @_dockEast(dockzone, draggable)
+        else if (dockzone.id.indexOf("South") != -1)
+          @_dockSouth(dockzone, draggable)
+          
+        $(draggable).removeClass('floatpanel dockableDraggable')
+        $('.dockZoneHighlight').removeClass('dockZoneHighlight') 
       
     _setupBindings:()=>
       that = @
@@ -181,6 +193,12 @@ define (require)->
             $target.collapse('toggle')
           else $target.collapse()
         )
+      $("ul.dropdown-menu").on "click", "[data-stopPropagation]", (e)->
+        e.stopPropagation()
+        
+      #@$el.on "change.opacitySetter", @onOpacityChanged
+      #"onkeyup opacitySetter" : "onOpacityChanged"
+        
       @$el.on('click.data-dismiss.data-api', '[data-dismiss=dialog]', (e)=>
           that = @
           $target = $(this).parent().parent().parent()
@@ -193,6 +211,7 @@ define (require)->
           @close()
           @$el.remove()
         )
+      
       
       
       if @dockable 
@@ -411,7 +430,6 @@ define (require)->
       this.currentView = null
       
     close:()->
-      console.log "closed"
       @_isShown = false
       @isClosed = true
         
