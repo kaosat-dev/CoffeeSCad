@@ -140,9 +140,8 @@ define (require)->
     save: (attributes, options)=>
       #project is only a container, if really necessary data could be stored inside the metadata file (.project)
       @dataStore.saveProject(@)
-      @isSaveAdvised = false
-      @isCompileAdvised = false  
-      @trigger("save",@)
+      @_clearFlags()
+      @trigger("save", @)
       
     compile:(options)=>
       if not @compiler?

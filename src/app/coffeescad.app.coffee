@@ -79,7 +79,6 @@ define (require)->
       #@headerRegion.show @menuView
       @menuView.render()
       @menuView.onDomRefresh()
-      console.log @menuView
     
     initSettings:->
       setupSettingsBindings= =>
@@ -96,6 +95,10 @@ define (require)->
     initData:->
       @projectManager.stores = @stores
       @project = @projectManager.createProject()
+      
+      #we check if we came back form an oauth redirect/if we have already been authorized
+      for index, store of @stores
+        store.authCheck()
     
     _setupKeyboardBindings:=>
       #Setup keyBindings
@@ -130,21 +133,16 @@ define (require)->
       @visualEditor.start()
       @codeEditor.start()
       @hierarchyEditor.start()
-      #we check if we came back form an oauth redirect/if we have already been authorized
-      for index, store of @stores
-        store.authCheck()
-     
-      @projectManager.reloadLast()
+      @projectManager.start()
       
     onAppStarted:(appName)->
       console.log "I see app: #{appName} has started"
     
     onAppClosing:()=>
       if @project.isSaveAdvised
-        console.log "on close foo"
         return 'You have unsaved changes!'
       else
-        console.log "on close bar"
+        @stores["browser"].deleteProject("autosave")
         localStorage.setItem("appCloseOk",true)
     
     onSettingsShow:()=>
@@ -185,12 +183,14 @@ define (require)->
       @hierarchyEditor = new HierarchyEditor
         project: @project
         appSettings: @settings
-     
+        
       @settings.fetch()
       
     onInitializeAfter:()=>
       """For exampel here close and 'please wait while app loads' display"""
       console.log "after init"
       $("#initialLoader").text("")
+      $("#initialLoader").remove()
+      
 
   return CoffeeScadApp   

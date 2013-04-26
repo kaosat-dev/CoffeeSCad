@@ -49,8 +49,8 @@ define (require)->
       @_setupAutoSave()
 
     _setupProjectEventHandlers: =>
-      @project.on("change",@onProjectChanged)
-      @project.on("save",@onProjectSaved)
+      @project.on("change", @onProjectChanged)
+      @project.on("save", @onProjectSaved)
       @project.on("compiled", @onProjectCompiled)
       @project.on("compile:error",@onProjectCompileError)
     
@@ -74,65 +74,13 @@ define (require)->
         myCube = new Cube({size:20}).color([0.9,0.5,0.1])
         assembly.add(myCube)
         """
-        content_3:"""
-        #just a comment
-        sphere = new Sphere({r:100,$fn:15}) 
-        sphere2 = new Sphere({r:100,$fn:15}).translate([50,0,0])
-        
-        sphere.subtract(sphere2)
-        assembly.add(sphere)
-        """
-        
-        content_2:"""
-        #just a comment
-        class Body extends Part
-          constructor:(options)->
-            super options
-            
-            outShellRes = 15
-            @union new Sphere({r:50,$fn:outShellRes}).color([0.9,0.5,0.1]).rotate([90,0,0])
-        body = new Body()  
-        assembly.add(body)
-        """
-        
-        content_:"""
-      #just a comment
-      class Body extends Part
-        constructor:(options)->
-          super options
-          
-          outShellRes = 15
-          @union new Sphere({r:50,$fn:outShellRes}).color([0.9,0.5,0.1]).rotate([90,0,0])
-          
-          sideIndent = new Sphere({r:30,$fn:15}).rotate([90,0,0])
-          @subtract sideIndent.clone().translate([0,65,0])
-          @subtract sideIndent.translate([0,-65,0])
-          
-          innerSphere = new Sphere({r:45,$fn:outShellRes}).color([0.3,0.5,0.8]).rotate([90,0,0])
-          @subtract innerSphere
-          
-          c = new Circle({r:25,center:[10,50,20]})
-          r = new Rectangle({size:10})
-          hulled = hull(c,r).extrude({offset:[0,0,100],steps:25,twist:180}).color([0.8,0.3,0.1])
-          hulled.rotate([0,90,90]).translate([35,-12,0])
-          #
-          @union hulled.clone()
-          @union hulled.mirroredY()
-      
-      body = new Body()
-      
-      plane = Plane.fromNormalAndPoint([0, 1, 0], [0, 0, 0])
-      #body.cutByPlane(plane)
-      
-      assembly.add(body)
-        """
       @project.addFile
         name: "config.coffee"
         content:""" """
+      @project._clearFlags()
       @_setupProjectEventHandlers()
       @_setupAutoSave()
       
-      @project._clearFlags()
       return @project
     
     onProjectChanged:()=>
@@ -149,11 +97,6 @@ define (require)->
               @compileProject()
             @CodeChangeTimer = setTimeout callback, @settings.get("csgCompileDelay")*1000
             
-    onProjectSaved:()=>
-      if @settings.get("csgCompileMode") is "onSave"
-        @compileProject()
-      @memoizeCurrentProject()
-    
     onProjectCompiled:=>
       console.log "project compile event dispatch"
       @vent.trigger("project:compiled",@project)
@@ -219,36 +162,72 @@ define (require)->
       @project = project
       @project.compiler = @compiler
       @_setupProjectEventHandlers()
-      @_setupAutoSave()
-      @memoizeCurrentProject()
+      
+      if project.name != "autosave"
+        @_setupAutoSave()
+        @_memoizeCurrentProject()
+      else
+        project.dataStore=null
+        project.rootFolder.sync=null
+        originalName = localStorage.getItem("autosaveOriginalProjectName")
+        console.log "setting autosavedProject name to original (#{originalName})"
+        project.name = originalName
+        @_setupAutoSave()
+        @_memoizeCurrentProject()
+        
+      
+    onProjectSaved:()=>
+      if @settings.get("csgCompileMode") is "onSave"
+        @compileProject()
+      @_memoizeCurrentProject()
     
     _setupAutoSave:=>
-      console.log "setting up autosave"
       #checks if autosave is enabled, if yes, sets up
       if @autoSaveTimer?
         #cancel previously running autosave
         clearInterval(@autoSaveTimer)
         
       if @settings.autoSave
+        console.log "setting up autosave"
         saveCallback = =>
           #FIXME: this brakes modularity (accessing a store directly), this should be done with a command
           #or something similarly decoupled
           console.log "autosaving"
+          localStorage.setItem("autosaveOriginalProjectName",@project.name)
           @stores["browser"].autoSaveProject @project
         @autoSaveTimer = setInterval saveCallback, @settings.autoSaveFrequency*1000
     
-    _checkAutoSavePresence:=>
+    _handleAutoSave:=>
       #check if there is an autosaved project , if there is, ask user if he wants to reload
-      #if @stores["browser"].get("autosave")?
+      autosavedProject = @stores["browser"].getProject("autosave")
+      if autosavedProject?
+        #there was an autosave, ie failure?
+        showDialog = =>
+          bootbox.dialog "An autosave file was detected, do you want to reload it?", [
+            label: "Ok"
+            class: "btn-inverse"
+            callback: =>
+              @stores["browser"].loadProject("autosave").done ()=>
+                try
+                  @stores["browser"].deleteProject("autosave")
+                catch error
+          ,
+            label: "Cancel"
+            class: "btn-inverse"
+            callback: ->
+          ]
+        setTimeout showDialog, 800
+        return true
+      return false
     
-    memoizeCurrentProject:=>
+    _memoizeCurrentProject:=>
       #store current project name + storage, to be able to auto reload it
       if @project.dataStore?
-        console.log "Saving project"
+        console.log "Saving project #{@project.name}"
         localStorage.setItem("coffeescad_lastProjectStore",@project.dataStore.name)  
         localStorage.setItem("coffeescad_lastProjectName",@project.name)
       
-    reloadLast:=>
+    _handleReloadLast:=>
       if @settings.autoReloadLastProject is true
         #attempt to auto reload last project
         lastProjectName = localStorage.getItem("coffeescad_lastProjectName")
@@ -262,20 +241,15 @@ define (require)->
             @stores[storeName].loadProject(lastProjectName)
             
     start:=>  
-      if @settings.autoReloadLastProject
-        reloadLast()
-        
-      #there was an autosave, ie failure
-      bootbox.dialog "An autosave file was detected, do you want to reload it?", [
-        label: "Ok"
-        class: "btn-inverse"
-        callback: =>
-          @stores["browser"].loadProject("autosave")
-      ,
-        label: "Cancel"
-        class: "btn-inverse"
-        callback: ->
-      ]
+      console.log "starting project manager"
+      #first check if there are autosaves
+      if @_handleAutoSave()
+        return
+      #no autosaves where found or user did not wish to reload them
+      #next step: check if autoreload is true, and reload
+      if @_handleReloadLast()
+        return
+     
         
       
   return ProjectManager

@@ -88,19 +88,18 @@ define (require)->
     
     
     _onSubAppStarted:(title,subApp)=>
-      console.log "#{title} started",subApp
+      #console.log "#{title} started",subApp
       title = subApp.title
+      icon = subApp.icon
+      
       if not title of @editors
         @editors[title]=subApp
-      console.log @$el
-      icon = subApp.icon
       
       className = "open#{title[0].toUpperCase() + title[1..-1]}"
       subAppEl = """<li><a id="#{title}Btn" href="#" rel="tooltip" title="Open #{title}" class=#{className}><i class="#{icon}"></i></a></li>"""
       $(subAppEl).insertAfter('#editorsMarker')
       
       event = "#{title}:show"
-      console.log event
       @events["click .#{className}"] = do(event)-> ->@vent.trigger(event)
       
       @delegateEvents()
@@ -178,7 +177,7 @@ define (require)->
         console.log data
         
     showAbout:(ev)=>
-      bootbox.dialog """<b>Coffeescad v0.31</b> (pre-alpha)<br/><br/>
+      bootbox.dialog """<b>Coffeescad v0.32</b> (pre-alpha)<br/><br/>
       Licenced under the MIT Licence<br/>
       @2012-2013 by Mark 'kaosat-dev' Moissette
       """, [

@@ -38,23 +38,28 @@ define (require) ->
       @resolvedIncludesFull = []
       @unresolvedIncludes = []
       
-      #if lint
-      #  @lintProject(project)
-      
-      @project = project
-      mainFileName = @project.name+".coffee"
-      mainFile = @project.rootFolder.get(mainFileName)
-      if not mainFile?
-        throw new Error("Missing main file (needs to have the same name as the project containing it)")
-      mainFileCode = mainFile.content
-      
-      reqRes.addHandler("getlocalFileOrProjectCode",@_localSourceFetchHandler)
-      
       @deferred = $.Deferred()
-      @patternReplacers= []
-      @processedResult = mainFileCode
-      
-      @processIncludes(mainFileName, mainFileCode)
+      try
+        #if lint
+        #  @lintProject(project)
+        
+        @project = project
+        mainFileName = @project.name+".coffee"
+        mainFile = @project.rootFolder.get(mainFileName)
+        if not mainFile?
+          throw new Error("Missing main file (needs to have the same name as the project containing it)")
+          
+        mainFileCode = mainFile.content
+        
+        reqRes.addHandler("getlocalFileOrProjectCode",@_localSourceFetchHandler)
+        
+        
+        @patternReplacers= []
+        @processedResult = mainFileCode
+        
+        @processIncludes(mainFileName, mainFileCode)
+      catch error
+        @deferred.reject(error)
       
       $.when.apply($, @patternReplacers).done ()=>
         if coffeeToJs

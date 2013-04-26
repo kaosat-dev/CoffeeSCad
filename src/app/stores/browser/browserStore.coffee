@@ -96,17 +96,17 @@ define (require)->
     getProjectFiles:(projectName)=>
       #Get all the file names withing a project : should actually get the file tree? (subdirs support etc)
       d = $.Deferred()
-      files = []
-      project = @lib.get(projectName)
-      if project?
-        projectURI = "#{@storeURI}-#{projectName}"
-        filesURI = "#{projectURI}-files"
-        
-        project.rootFolder.sync = project.sync
-        project.rootFolder.changeStorage("localStorage",new Backbone.LocalStorage(filesURI))
-        fileNames = localStorage.getItem(filesURI)
-        files = fileNames.split(',')
-      d.resolve(files)
+      fileNames = []
+      #project = @lib.get(projectName)
+      if projectName in @projectsList
+        fileNames = @_getProjectFiles(projectName)
+        #projectURI = "#{@storeURI}-#{projectName}"
+        #filesURI = "#{projectURI}-files"
+        #project.rootFolder.sync = project.sync
+        #project.rootFolder.changeStorage("localStorage",new Backbone.LocalStorage(filesURI))
+        #fileNames = localStorage.getItem(filesURI)
+        #files = fileNames.split(',')
+      d.resolve(fileNames)
       return d
         
     saveProject_:(project, newName)=>
@@ -124,8 +124,19 @@ define (require)->
       #experiment of saving projects withouth using backbone localstorage
       project.collection = null
       @lib.add(project)
+      
+      nameChange = false
+      if project.name != newName
+        nameChange = true
+        
       if newName?
         project.name = newName
+        
+      firstSave = false
+      if not project.dataStore?
+        firstSave = true
+      else if project.dataStore != @ or nameChange
+        firstSave = true
       project.dataStore = @
       
       projectName = project.name 
@@ -162,7 +173,11 @@ define (require)->
       
       localStorage.setItem(projectURI,strinfigiedProject)
       
-      @vent.trigger("project:saved")  
+      @vent.trigger("project:saved")
+      if firstSave
+        project._clearFlags()
+      project.trigger("save", project)
+      
     
     autoSaveProject:(srcProject)=>
       #used for autoSaving projects
@@ -209,7 +224,8 @@ define (require)->
     
     loadProject:(projectName, silent=false)=>
       d = $.Deferred()
-      project =  @lib.get(projectName)
+      project =  new Project
+        name : projectName #@lib.get(projectName)
       project.collection = @lib
       projectURI = "#{@storeURI}-#{projectName}"
       rootStoreURI = "#{projectURI}-files"

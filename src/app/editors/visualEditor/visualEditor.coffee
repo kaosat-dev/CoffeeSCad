@@ -56,7 +56,8 @@ define (require)->
         
     resetEditor:(newProject)=>
       @project = newProject
-      @visualEditorView.switchModel(@project)
+      if @visualEditorView?
+        @visualEditorView.switchModel(@project)
       ### 
       @mainRegion.close()
       visualEditorView = new VisualEditorView

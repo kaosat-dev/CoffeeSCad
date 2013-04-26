@@ -39,6 +39,8 @@ define (require)->
           #@project.trigger("log:messages",logEntries)
           return
         .fail (errors) =>
+          if errors not instanceof Array
+            errors = [errors]
           @compileResultData["errors"] = errors
           @project.trigger("compile:error",@compileResultData)
       

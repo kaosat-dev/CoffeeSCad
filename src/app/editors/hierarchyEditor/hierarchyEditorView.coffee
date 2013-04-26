@@ -70,9 +70,9 @@ define (require)->
             partHide = $('<span>')
             partEntry.append partHide
             
-            partHide.css('right',"-50px")
-            partHide.append($('<i>').addClass("icon-eye-open"))
-            partHide.addClass("pull-right")
+            #partHide.css('right',"-50px")
+            #partHide.append($('<i>').addClass("icon-eye-open"))
+            #partHide.addClass("pull-right")
             
             elem.append(partEntry)
             #rootEl.append(elem)

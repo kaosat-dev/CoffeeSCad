@@ -103,11 +103,18 @@ define (require)->
       @on("itemview:file:delete", @onFileDeleteRequest)
       @on("itemview:file:rename", @onFileRenameRequest)
       @on("itemview:selected" ,  @onFileViewSelected)
-      #FIXME: weird, this hack is needed, because no auto re-render is taking place
-      #@model.on 'change', ()=>@render()
       
       singleSelect = new Backbone.PickySitter.SingleSelect(@itemViewContainer)
       _.extend(this, singleSelect)
+      
+      #FIXME: weird, this hack is needed, because no auto re-render is taking place
+      #@model.on 'change', ()=>@render()
+      @modelBinder = new Backbone.ModelBinder()
+      @bindings = 
+        name: [{selector: "[name=projectName]"}]
+        
+    onRender:->
+      @modelBinder.bind(@model, @el, @bindings)
       
     #onFileOpenClicked:(ev)=>
     #  vent.trigger("file:OpenRequest",@model)
