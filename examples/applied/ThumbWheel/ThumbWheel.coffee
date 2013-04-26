@@ -5,7 +5,7 @@ class ThumbWheel extends Part
     @defaults = {total_radius : 30, base_height : 4, knobbles_num : 5,
     knobbles_radius : 5, knobbles_height : 5, centerhole_radius : 1.55,
     centerhex_radus : 3.1, centerhex_height : 2, centerhub_height : 4, centerhub_radius : 4}
-    options = @injectOptions(options, @defaults)
+    options = @injectOptions(@defaults, options)
     super options
     
     distance_to_knobbles = @total_radius - @knobbles_radius
@@ -72,6 +72,6 @@ class ThumbWheel extends Part
     
     @union(base).color([0.7,0.2,0.1])
     
-thumbWheel = new ThumbWheel()
+thumbWheel = new ThumbWheel({knobbles_num:6})
 assembly.add(thumbWheel)
 

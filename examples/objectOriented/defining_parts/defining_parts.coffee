@@ -25,10 +25,24 @@ class CoolHardware extends Part
     @cb.translate(@position)
     @union(@cb)
 
+# an more compact alternitive to the above:
+class CoolHardware2 extends Part
+  constructor:(options)->
+    @defaults = {position:[0,0,0],thickness:5,servoType:"HXT900"}    
+    options = @injectOptions(@defaults, options)
+    super options   
+    @cb = new Cube({size:[5,10,@thickness]})
+    @cb.color([0.1,0.5,0.8])
+    @cb.translate(@position)
+    @union(@cb)
+    
 coolHardware = new CoolHardware({thickness:10})
 #another instance with default parameters
-coolHardware2 = new CoolHardware()
+coolHardware1 = new CoolHardware()
+
+coolHardware2 = new CoolHardware2(thickness:15)
 
 assembly.add(coolHardware)
-assembly.add(coolHardware2.translate([20,20,0]))
+assembly.add(coolHardware1.translate([20,20,0]))
+assembly.add(coolHardware2.translate([-20,20,0]))
 #now if you compile this project and go to the bom view, you will see what classes and parameters the system picked up
