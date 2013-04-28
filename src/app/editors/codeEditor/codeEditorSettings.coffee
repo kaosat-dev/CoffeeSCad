@@ -17,6 +17,7 @@ define (require)->
       startLine    :  1
       undoDepth    :  40
       fontSize     :  1
+      smartIndent    :  true
       
       #linting
       linting:

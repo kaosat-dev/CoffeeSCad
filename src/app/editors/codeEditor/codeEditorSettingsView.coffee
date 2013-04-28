@@ -11,7 +11,9 @@ define (require)->
         options.schema=
           startLine    : 'Number'
           undoDepth    : {type:'Number', editorAttrs: { step: 1, min: 1, max: 100 } }
+          smartIndent : {type:'Checkbox'}
           fontSize    : {type:'Number', editorAttrs: { step: 0.1, min: 0.5, max: 1.5 } }
+          
           linting      :
             type: "Object"
             title:''
@@ -60,7 +62,7 @@ define (require)->
                 
         options.fieldsets=[
           "legend": "General settings"
-          "fields": ["startLine","undoDepth","fontSize"]
+          "fields": ["startLine","undoDepth","smartIndent","fontSize"]
         ,
           "legend":"Linting"
           "fields": ["linting.indentation","linting.max_line_length","linting.no_tabs","linting.no_trailing_whitespace","linting.no_trailing_semicolons"]

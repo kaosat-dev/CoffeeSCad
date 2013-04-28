@@ -53,6 +53,8 @@ require.config
     dialog:           "../assets/js/plugins/codemirror/dialog/dialog"
     hint:             "../assets/js/plugins/codemirror/hint/show-hint"
     jsHint:           "../assets/js/plugins/codemirror/hint/coffeescad-hint"
+    closeBrackets:    "../assets/js/plugins/codemirror/edit/closeBrackets/closeBrackets"
+    matchBrackets:    "../assets/js/plugins/codemirror/edit/matchBrackets/matchBrackets"
     
     marionette:       "../assets/js/plugins/backbone.marionette.min"
     eventbinder:      "../assets/js/plugins/backbone.eventbinder.min"
@@ -136,6 +138,10 @@ require.config
     match_high:
       deps:    ["CodeMirror","search","search_cursor"]
     hint:
+      deps:    ["CodeMirror"]
+    closeBrackets: 
+      deps:    ["CodeMirror"]
+    matchBrackets:
       deps:    ["CodeMirror"]
 
     three: 

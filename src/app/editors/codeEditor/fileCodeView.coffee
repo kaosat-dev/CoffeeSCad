@@ -12,6 +12,8 @@ define (require)->
   require 'hint'
   require 'jsHint'
   require 'indent_fold'
+  require 'closeBrackets'
+  require 'matchBrackets'
   
   CoffeeScript = require 'CoffeeScript'
   require 'coffeelint'
@@ -139,8 +141,11 @@ define (require)->
           when "startLine"
             @editor.setOption("firstLineNumber",val)
             @render()
+          when "smartIndent"
+            @editor.setOption("smartIndent",val)
           when "linting"
             @_updateHints()
+         
     
     _onProjectCompiled:=>
       console.log "pouic"
@@ -289,10 +294,11 @@ define (require)->
         lineNumbers:true
         gutter: true
         matchBrackets:true
+        autoCloseBrackets: true
         undoDepth: @settings.get("undoDepth")
         firstLineNumber:@settings.get("startLine")
         highlightSelectionMatches: true
-      
+        smartIndent:@settings.get("smartIndent")
         gutters: ["lintAndErrorsGutter", "CodeMirror-linenumbers"]
         extraKeys: 
           Tab:(cm)->
