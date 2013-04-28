@@ -144,9 +144,14 @@ define (require)->
       super options
       @settings = options.settings
       
+      
+      
+      @activeFile = if @model.activeFile? then @model.activeFile else @collection.first()
+      #@activeFile = @collection.first()
+      console.log "setting active file",@activeFile
+      
       @openFiles = new Backbone.Collection()
-      @openFiles.add @collection.first()
-      @activeFile = @collection.first()
+      @openFiles.add @activeFile
       
       @collection.on('remove',(item)=>@openFiles.remove(item) )
       

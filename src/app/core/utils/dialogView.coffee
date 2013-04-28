@@ -378,7 +378,36 @@ define (require)->
       setTimeout triggerResize, 5
       
       $('#visual').trigger("resize")
+    
+    _undoc:=>
+      console.log "undocking"
+      console.log @
+      if @dock?
+        console.log "setting dock width"
+        $(@dock).css('width', 10)
+        
+      #console.log "recalling saved dims: width/height", @savedWidth, @savedHeight
+      if @savedHeight?
+        @$el.css("height",@savedHeight)
+      if @savedWidth?
+        @$el.css("width",@savedWidth)
       
+      @$el.removeClass('docked dockNorth dockEast dockWest dockSouth')
+      @$el.addClass('floatpanel draggingpanel')
+      
+      @$el.resizable('destroy')#destroy previous , constrained resize
+      @_setResizeable()
+      @_setDragable()
+      
+      triggerResize= =>
+        #resize the pannels etc (inner elements first)
+        $('#visual').trigger("resize")
+        @currentView.$el.trigger("resize")
+        
+      setTimeout triggerResize, 15
+      return true
+    
+    ### 
     _undoc:(p, e, ui)=>
       console.log "undocking"
       console.log @
@@ -406,7 +435,7 @@ define (require)->
         
       setTimeout triggerResize, 15
       return true
-    
+    ###
     ### 
     hide: ->
       @$el.modal 'hide'
@@ -432,5 +461,7 @@ define (require)->
     close:()->
       @_isShown = false
       @isClosed = true
+      console.log "fdgd"
+      @_undoc()
         
   return DialogView

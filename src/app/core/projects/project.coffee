@@ -125,6 +125,7 @@ define (require)->
       @on("change:name", @_onNameChanged)
       @on("compiled",@_onCompiled)
       @on("compile:error",@_onCompileError)
+      @on("loaded",@_onFilesReset)
       
     addFile:(options)->
       file = new ProjectFile
@@ -219,6 +220,7 @@ define (require)->
     _onFilesReset:()=>
       #add various event bindings, reorder certain specific files
       mainFileName ="#{@name}.coffee"
+      ### 
       mainFile = @rootFolder.get(mainFileName)
       @rootFolder.remove(mainFileName)
       @rootFolder.add(mainFile, {at:0})
@@ -227,6 +229,9 @@ define (require)->
       configFile = @rootFolder.get(configFileName)
       @rootFolder.remove(configFileName)
       @rootFolder.add(configFile, {at:1})
+      ###
+      console.log "files reset, setting active file to",mainFileName
+      @makeFileActive({fileName:mainFileName})
       
       for file in @rootFolder.models
         @_setupFileEventHandlers(file)

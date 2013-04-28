@@ -238,6 +238,7 @@ define (require)->
       
       $.when.apply($, deferredList).done ()=>
         project._clearFlags()
+        project.trigger("loaded")
         vent.trigger("project:loaded",project) 
    
     render:()=>

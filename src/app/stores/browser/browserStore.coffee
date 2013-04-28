@@ -238,8 +238,11 @@ define (require)->
         if thumbNailFile?
           project.rootFolder.remove(thumbNailFile)
         project._clearFlags()
+        project.trigger("loaded")
+        #project.rootFolder.trigger("reset")
         if not silent
           @vent.trigger("project:loaded",project)
+        
         d.resolve(project)
       
       project.dataStore = @
