@@ -1,9 +1,9 @@
-app
-!app/disable_require.js
-!app/requireLib.js
-!app/text.js
-test
-!test/vendor
-!test/index.html
+/app
+!/app/disable_require.js
+!/app/requireLib.js
+!/app/text.js
+/test
+!/test/vendor
+!/test/index.html
 .project
-node_modules/
+/node_modules/

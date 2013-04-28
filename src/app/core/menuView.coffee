@@ -177,7 +177,7 @@ define (require)->
         console.log data
         
     showAbout:(ev)=>
-      bootbox.dialog """<b>Coffeescad v0.32</b> (pre-alpha)<br/><br/>
+      bootbox.dialog """<b>Coffeescad v0.321</b> (pre-alpha)<br/><br/>
       Licenced under the MIT Licence<br/>
       @2012-2013 by Mark 'kaosat-dev' Moissette
       """, [
