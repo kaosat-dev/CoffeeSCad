@@ -94,10 +94,6 @@ define (require) ->
             reader.readAsText(file)
            
             #reader.onload = ((fileHandler)->
-            
-       
-          
-      
       # See the section on the DataTransfer object.
       return false
       
@@ -120,8 +116,8 @@ define (require) ->
       
       ##########
       @defaultCameraPosition = new THREE.Vector3(100,100,200)
-      @width = 100#window.innerWidth
-      @height = 100#window.innerHeight-10
+      @width = 100
+      @height = 100
       @init()
     
     _setupEventBindings:=>
@@ -426,16 +422,8 @@ define (require) ->
     setupScene:()->
       @viewAngle=45
       ASPECT = @width / @height
-      NEAR = 0.01
+      NEAR = 1
       FAR = 10000
-      ### 
-      @camera =
-      new THREE.PerspectiveCamera(
-          @viewAngle,
-          ASPECT,
-          NEAR,
-          FAR)
-      ###
       @camera =
        new THREE.CombinedCamera(
           @width,
@@ -703,20 +691,9 @@ define (require) ->
       @particleMaterial = new THREE.MeshBasicMaterial( { map: texture, transparent: true ,color: 0x000000} )
     
     _computeViewSize:=>
-      @width =  window.innerWidth# $("#glArea").width()
       @height = window.innerHeight-10
-      
-      @width = @$el.parent().width()
-      @height = @$el.parent().height()
-      
-      @width = @$el.width()
       @height = @$el.height()
-      
-      ###
-      console.log "westWidth", westWidth
-      console.log "eastWidth", eastWidth
-      
-      @width = 1680 - (westWidth + eastWidth )###
+
       if not @initialized?
         @initialized = true
         console.log "initial view size setting"
@@ -728,14 +705,8 @@ define (require) ->
         westWidth = $("#_dockZoneWest").width()
         eastWidth = $("#_dockZoneEast").width()
         @width = window.innerWidth - (westWidth + eastWidth)
-        
       #console.log "window.innerWidth", window.getCoordinates().width#window.outerWidth
-      
-      
       @height = window.innerHeight-30
-      #@$el.width(@width)
-      #console.log "width", @width
-      #console.log "height", @height
     
     onResize:()=>
       @_computeViewSize()
@@ -748,8 +719,6 @@ define (require) ->
       @_render()
     
     onResizeStop:=>
-      console.log "onResizeStop"
-      
       @onResize()
     
     onDomRefresh:()=>
@@ -795,7 +764,6 @@ define (require) ->
       @overlayControls.userZoomSpeed=0
       
       @animate()
-      
     
     _render:()=>
       @renderer.render(@scene, @camera)
@@ -896,38 +864,47 @@ define (require) ->
           child.remove(child.renderSubElementsHelper)
           child.renderSubElementsHelper = null
       
-      if @assembly?
-        for child in @assembly.children
-          child.castShadow =  @settings.shadows
-          child.receiveShadow = @settings.selfShadows and @settings.shadows
-          switch @settings.objectViewMode
-            when "shaded"
-              removeRenderHelpers(child)
+      applyStyle=(child)=>
+        child.castShadow =  @settings.shadows
+        child.receiveShadow = @settings.selfShadows and @settings.shadows
+        switch @settings.objectViewMode
+          when "shaded"
+            removeRenderHelpers(child)
+            if child.material?
               child.material.wireframe = false
-            when "wireframe"
-              removeRenderHelpers(child)
+          when "wireframe"
+            removeRenderHelpers(child)
+            if child.material?
               child.material.wireframe = true
-            when "structural"
+          when "structural"
+            if child.material?
               child.material.wireframe = false
-              if child.geometry?
-                removeRenderHelpers(child)
-                cubeMaterial1 = new THREE.MeshBasicMaterial( { color: 0xccccdd, side: THREE.DoubleSide, depthTest: true, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 } )
-                dashMaterial = new THREE.LineDashedMaterial( { color: 0x000000, dashSize: 2, gapSize: 3, depthTest: false, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1  } )
-                cubeMaterial3 = new THREE.MeshBasicMaterial( { color: 0x000000, depthTest: true, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1, wireframe: true } )
-                renderSubElementsHelper  = new THREE.Object3D()
-                renderSubElementsHelper.name ="renderSubs"
-                
-                geom = child.geometry
-                obj2 = new THREE.Mesh( geom.clone(), cubeMaterial1 )
-                obj3 = new THREE.Line( @geo2line(geom.clone()), dashMaterial, THREE.LinePieces )
-                obj4 = new THREE.Mesh( geom.clone(), cubeMaterial3)
-        
-                renderSubElementsHelper.add(obj2)
-                renderSubElementsHelper.add(obj3)
-                renderSubElementsHelper.add(obj4)
-                child.add(renderSubElementsHelper)
-                child.renderSubElementsHelper = renderSubElementsHelper
-     
+            if child.geometry?
+              removeRenderHelpers(child)
+              basicMaterial1 = new THREE.MeshBasicMaterial( { color: 0xccccdd, side: THREE.DoubleSide, depthTest: true, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 } )
+              dashMaterial = new THREE.LineDashedMaterial( { color: 0x000000, dashSize: 2, gapSize: 3, depthTest: false, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1  } )
+              wireFrameMaterial = new THREE.MeshBasicMaterial( { color: 0x000000, depthTest: true, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1, wireframe: true } )
+              renderSubElementsHelper  = new THREE.Object3D()
+              renderSubElementsHelper.name = "renderSubs"
+              
+              geom = child.geometry
+              obj2 = new THREE.Mesh( geom.clone(), basicMaterial1 )
+              obj3 = new THREE.Line( @geo2line(geom.clone()), dashMaterial, THREE.LinePieces )
+              obj4 = new THREE.Mesh( geom.clone(), wireFrameMaterial)
+      
+              renderSubElementsHelper.add(obj2)
+              renderSubElementsHelper.add(obj3)
+              renderSubElementsHelper.add(obj4)
+              child.add(renderSubElementsHelper)
+              child.renderSubElementsHelper = renderSubElementsHelper
+              
+        for subchild in child.children
+          if subchild.name != "renderSubs" and subchild.name !="connectors"
+            applyStyle(subchild)
+          
+      if @assembly?
+        for child in @assembly.children  
+          applyStyle(child)
      
     geo2line:( geo )->
       # credit to WestLangley!
@@ -1037,5 +1014,26 @@ define (require) ->
       
       mesh.add(cube)
       mesh.add(spline)
+      
+    informationOverlay:(object3d)=>
+      #this will give us position relative to the world
+      p = object3d.matrixWorld.getPosition().clone()
+
+      # projectVector will translate position to 2d
+      v = projector.projectVector(p, @camera)
+      
+      #translate our vector so that percX=0 represents
+      #the left edge, percX=1 is the right edge,
+      #percY=0 is the top edge, and percY=1 is the bottom edge.
+      percX = (v.x + 1) / 2
+      percY = (-v.y + 1) / 2
+      
+      #scale these values to our viewport size
+      left = percX * @width
+      top = percY * @height
+
+      #position the overlay so that it's center is on top of
+      $trackingOverlay.css('left', (left - $trackingOverlay.width() / 2) + 'px')
+      .css('top', (top - $trackingOverlay.height() / 2) + 'px')
 
   return VisualEditorView

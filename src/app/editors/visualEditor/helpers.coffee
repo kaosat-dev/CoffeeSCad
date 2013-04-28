@@ -55,10 +55,14 @@ define (require) ->
       
       texture = new THREE.Texture(canvas)
       texture.needsUpdate = true
+      texture.generateMipmaps = false
+      texture.magFilter = THREE.LinearFilter
+      texture.minFilter = THREE.LinearFilter
       
       material = new THREE.MeshBasicMaterial
         map: texture
         transparent: true 
+        color: 0xffffff
       
       plane = new THREE.Mesh(new THREE.PlaneGeometry(size/8, size/8),material)
       plane.doubleSided = true
@@ -172,6 +176,7 @@ define (require) ->
       options = merge defaults, options
       {@size, @step, @color, @opacity, @addText, @textColor, @textLocation} = options
       
+      mainGridZ = -0.05
       gridGeometry = new THREE.Geometry()
       gridMaterial = new THREE.LineBasicMaterial
         color: new THREE.Color().setHex(@color)
@@ -180,29 +185,29 @@ define (require) ->
         transparent:true
       
       for i in [-@size/2..@size/2] by @step
-        gridGeometry.vertices.push(new THREE.Vector3(-@size/2, i, 0))
-        gridGeometry.vertices.push(new THREE.Vector3(@size/2, i, 0))
+        gridGeometry.vertices.push(new THREE.Vector3(-@size/2, i, mainGridZ))
+        gridGeometry.vertices.push(new THREE.Vector3(@size/2, i, mainGridZ))
         
-        gridGeometry.vertices.push(new THREE.Vector3(i, -@size/2, 0))
-        gridGeometry.vertices.push(new THREE.Vector3(i, @size/2, 0))
+        gridGeometry.vertices.push(new THREE.Vector3(i, -@size/2, mainGridZ))
+        gridGeometry.vertices.push(new THREE.Vector3(i, @size/2, mainGridZ))
         
       @mainGrid = new THREE.Line(gridGeometry, gridMaterial, THREE.LinePieces)
       
+      subGridZ = -0.05
       subGridGeometry = new THREE.Geometry()
       subGridMaterial = new THREE.LineBasicMaterial({ color: new THREE.Color().setHex(@color), opacity: @opacity/2 ,transparent:true})
       
       for i in [-@size/2..@size/2] by @step/10
-        subGridGeometry.vertices.push(new THREE.Vector3(-@size/2, i, 0))
-        subGridGeometry.vertices.push(new THREE.Vector3(@size/2, i, 0))
+        subGridGeometry.vertices.push(new THREE.Vector3(-@size/2, i, subGridZ))
+        subGridGeometry.vertices.push(new THREE.Vector3(@size/2, i, subGridZ))
         
-        subGridGeometry.vertices.push(new THREE.Vector3(i, -@size/2, 0))
-        subGridGeometry.vertices.push(new THREE.Vector3(i, @size/2, 0))
+        subGridGeometry.vertices.push(new THREE.Vector3(i, -@size/2, subGridZ))
+        subGridGeometry.vertices.push(new THREE.Vector3(i, @size/2, subGridZ))
       @subGrid = new THREE.Line(subGridGeometry, subGridMaterial, THREE.LinePieces)
       
       
       #######
       planeGeometry = new THREE.PlaneGeometry(-@size, @size, 5, 5)
-      #new THREE.PlaneGeometry(1000, 1000, 100, 100);
       #taken from http://stackoverflow.com/questions/12876854/three-js-casting-a-shadow-onto-a-webpage
       planeFragmentShader = [
           "uniform vec3 diffuse;",
@@ -242,14 +247,10 @@ define (require) ->
           fragmentShader: planeFragmentShader,
           color: 0x0000FF
           transparent:true
-      ###
-      planeMaterial = new THREE.MeshLambertMaterial
-        color: 0xFFFFFF
-        side: THREE.DoubleSide 
-      ###
+
       @plane = new THREE.Mesh(planeGeometry, planeMaterial)
       @plane.rotation.x = Math.PI
-      @plane.position.z = -0.5
+      @plane.position.z = -0.3
       @plane.name = "workplane"
       @plane.receiveShadow = true
       
@@ -367,7 +368,7 @@ define (require) ->
         cage.position = delta
         
         if @addLabels
-          labelSize = 60
+          labelSize = 64
           widthLabel=@drawText("w: #{width.toFixed(2)}",labelSize)
           widthLabel.position.set(-length/2-10,0,height/2)
           
