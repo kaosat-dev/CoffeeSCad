@@ -6,7 +6,8 @@ define (require) ->
   
   class PreProcessor
     #dependency resolving solved with the help of http://www.electricmonk.nl/docs/dependency_resolving_algorithm/dependency_resolving_algorithm.html
-    constructor:()->
+    constructor:(dataStores)->
+      @dataStores = dataStores or {}
       @debug = null
       @project = null
       @includePattern = /(?!\s*?#)(?:\s*?include\s*?)(?:\(?\"([\w\//:'%~+#-.*]+)\"\)?)/g
@@ -176,7 +177,15 @@ define (require) ->
       try
         fileOrProjectRequest = "#{store}/#{project}/#{path}"
         if store is null then prefix = "local" else prefix = store
-        reqRes.request("get#{prefix}FileOrProjectCode",[store, project, path, deferred])
+        if store is "local"
+          @_localSourceFetchHandler([store, project, path, deferred])
+        else
+          if store of @dataStores
+            @dataStores[store].getFileOrProjectCode([store, project, path, deferred])
+            #reqRes.request("get#{prefix}FileOrProjectCode",[store, project, path, deferred])
+          else
+            throw new Error("No such data store #{store}")
+        
         result = deferred.promise()
         return result
       catch error
