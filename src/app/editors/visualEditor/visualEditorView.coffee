@@ -45,7 +45,7 @@ define (require) ->
       
       "resize:stop": "onResizeStop"
       "resize":"onResizeStop"
-      "dummy":"onDummy"
+      "mousemove": "onMouseMove"
     
     onDummy:(e)=>
       console.log "dummy event fired"
@@ -119,85 +119,40 @@ define (require) ->
       @width = 100
       @height = 100
       @init()
+      
+      @selectionHelper = new helpers.SelectionHelper({renderCallback:@_render, camera:@camera,color:0x000000,textColor:@settings.textColor})
     
     _setupEventBindings:=>
       @model.on("compiled", @projectCompiled)
       @model.on("compile:error", @projectCompileFailed)
       
-      
     makeScreeshot:(width=300, height=300)=>
-      # Save screenshot of 3d view
-      #resizing
-      srcImg = @renderer.domElement.toDataURL("image/png")
-      canvas = document.createElement("canvas")
-      canvas.width = width
-      canvas.height = height
-      ctx = canvas.getContext('2d')
-      #ctx.fillStyle = "red"
-      #ctx.fillRect(0, 0, canvas.width, canvas.height)
-      d = $.Deferred()
-      imgAsDataURL =null 
-      img = new Image()
-      img.onload = ()=> 
-        ctx.drawImage(img, 0,0,width, height)
-        imgAsDataURL = canvas.toDataURL("image/png")
-        d.resolve(imgAsDataURL)
-      img.src = srcImg
-      return d
+      return helpers.captureScreen(@renderer.domElement,width,height)
     
     rightclick:(ev)=>
       """used either for selection or context menu"""
       normalizeEvent(ev)
       x = ev.offsetX
       y = ev.offsetY
-      @selectObj(x,y)
-      #context-menu
-      # = require "core/utils/contextMenu"
-      #@contextMenu = new ContextMenu()
-      #@contextMenu.show()
+      hiearchyRoot = if @assembly? then @assembly.children else @scene.children
+      @selectionHelper.hiearchyRoot=hiearchyRoot
+      @selectionHelper.viewWidth=@width
+      @selectionHelper.viewHeight=@height
+      @selectionHelper.selectObjectAt(x,y)
       
-      #Contextmenu
-      ###
-      {ContextMenuRegion,ContextMenu} = require "views/contextMenuView"
-      @contextMenu = new ContextMenu()
-      @contextMenuRegion.show @contextMenu
-      ###
       ev.preventDefault()
       return false
-             
-    selectObj:(mouseX,mouseY)=>
-      v = new THREE.Vector3((mouseX/@width)*2-1, -(mouseY/@height)*2+1, 0.5)
-      @projector.unprojectVector(v, @camera)
-      raycaster = new THREE.Raycaster(@camera.position, v.sub(@camera.position).normalize())
-      intersects = raycaster.intersectObjects(@scene.children, true )
+    
+    onMouseMove:(ev)->
+      normalizeEvent(ev)
+      x = ev.offsetX
+      y = ev.offsetY
       
-      unselect=()=>
-        if @current?
-          @current.selected=false
-          @current.material = @current.origMaterial
-          if @current.cage?
-            @current.remove @current.cage
-            @current.cage = null
-          @current=null
-      
-      if @current?
-        unselect()
-      if intersects? 
-        if intersects.length > 0
-          if intersects[0].object.name != "workplane"
-              @current = intersects[0].object
-              newMat = new  THREE.MeshLambertMaterial
-                color: 0xCC0000
-              @current.origMaterial = @current.material
-              @current.material = newMat
-              @addCage @current
-              #center cam on object
-              @camera.lookAt(@current.position.clone())
-              @controls.zoomInOn(@current)
-              
-              @_render()
-              
-      @_render()
+      hiearchyRoot = if @assembly? then @assembly.children else @scene.children
+      @selectionHelper.hiearchyRoot=hiearchyRoot
+      @selectionHelper.viewWidth=@width
+      @selectionHelper.viewHeight=@height
+      @selectionHelper.highlightObjectAt(x,y)
     
     switchModel:(newModel)->
       #replace current model with a new one
@@ -229,8 +184,6 @@ define (require) ->
       for key, val of @settings.changedAttributes()
         switch key
           when "bgColor"
-            @setBgColor()
-          when "bgColor2"
             @setBgColor()
           when "renderer"
             delete @renderer
@@ -461,8 +414,6 @@ define (require) ->
           FAR)
       @overlayCamera.up = new THREE.Vector3( 0, 0, 1 )
       
-      #@overlayCamera.toOrthographic()
-      #@overlayCamera.setZoom(0.05)
       @overlayScene = new THREE.Scene()
       @overlayScene.add(@overlayCamera)
 
@@ -620,21 +571,7 @@ define (require) ->
       bgColor1 = @settings.bgColor
       bgColor2 = @settings.bgColor2
       $("body").css("background-color", bgColor1)
-      if bgColor1 != bgColor2
-        $("body").css("background-image", "-moz-radial-gradient(center center, circle cover, #{bgColor1},#{bgColor2}  100%)")
-        $("body").css("background-image", "-webkit-radial-gradient(center center, circle cover, #{bgColor1},#{bgColor2}  100%)")
-        $("body").css("background-image", "-o-radial-gradient(center center, circle cover, #{bgColor1},#{bgColor2}  100%)")
-        $("body").css("background-image", "-ms-radial-gradient(center center, circle cover, #{bgColor1},#{bgColor2}  100%)")
-        $("body").css("background-image", "radial-gradient(center center, circle cover, #{bgColor1},#{bgColor2}  100%)")
-        $("body").css("background-repeat", "no-repeat")
-        $("body").css("background-attachment", "fixed")
-      else
-        $("body").css("background-image", "")
-        $("body").css("background-image", "")
-        $("body").css("background-repeat", "")
-        $("body").css("background-attachment", "")
-        
-        #$("body").css('background-color', @settings.bkGndColor"))
+      
     addGrid:()=>
       ###
       Adds both grid & plane (for shadow casting), based on the parameters from the settings object
@@ -667,37 +604,13 @@ define (require) ->
       @overlayScene.remove @overlayAxes
       delete @axes
       delete @overlayAxes
-      
-    addCage:(mesh)=>
-      new helpers.BoundingCage({mesh:mesh, color:@settings.helpersColor,textColor:@settings.textColor})
             
-    setupPickerHelper:()->
-      canvas = document.createElement('canvas')
-      canvas.width = 100
-      canvas.height = 100
-      context = canvas.getContext('2d')
-  
-      PI2 = Math.PI * 2
-      context.beginPath()
-      context.arc( 0, 0, 1, 0, PI2, true )
-      context.closePath()
-      context.fill()
-      context.fillText("X", 40, 40)
-
-      texture = new THREE.Texture( canvas )
-      texture.needsUpdate = true
-      @particleTexture = new THREE.Texture(canvas)
-      @particleTexture.needsUpdate = true
-      @particleMaterial = new THREE.MeshBasicMaterial( { map: texture, transparent: true ,color: 0x000000} )
-    
     _computeViewSize:=>
       @height = window.innerHeight-10
       @height = @$el.height()
 
       if not @initialized?
         @initialized = true
-        console.log "initial view size setting"
-        #@width = window.innerWidth
         westWidth = $("#_dockZoneWest").width()
         eastWidth = $("#_dockZoneEast").width()
         @width = window.innerWidth - (westWidth + eastWidth)
@@ -757,7 +670,7 @@ define (require) ->
       
       @overlayControls = new CustomOrbitControls(@overlayCamera, @el)#Custom
       @overlayControls.noPan = true
-      #@overlayControls.noZoom = true
+      @overlayControls.noZoom = true
       @overlayControls.rotateSpeed = 1.8
       @overlayControls.zoomSpeed = 0
       @overlayControls.panSpeed = 0
@@ -766,6 +679,23 @@ define (require) ->
       @animate()
     
     _render:()=>
+      ###
+      #experimental 2d overlay for projected min max values of the objects 3d bounding box
+      if @selectionHelper?
+        if @selectionHelper.currentSelect?
+          [minLeft,minTop,maxLeft,maxTop]=@selectionHelper.get2DBB(@selectionHelper.currentSelect,@width, @height)
+          
+          $("#testOverlay").css("top",minTop)
+          $("#testOverlay").css("left",minLeft+@$el.offset().left)
+          
+          
+          $("#testOverlay2").css("left",maxLeft+@$el.offset().left)
+          #$("#testOverlay2").css("top",@$el.offset().top-maxTop)
+          $("#testOverlay2").css('top', (maxTop - $("#testOverlay2").height() / 2))
+          
+          $("#testOverlay2").text(@selectionHelper.currentSelect.name)
+      ###
+      
       @renderer.render(@scene, @camera)
       @overlayRenderer.render(@overlayScene, @overlayCamera)
       
@@ -778,11 +708,6 @@ define (require) ->
       @overlayControls.update()
       requestAnimationFrame(@animate)
     
-    toCsgTest:(mesh)->
-      csgResult = THREE.CSG.toCSG(mesh)
-      if csgResult?
-        console.log "CSG conversion result ok:"
-      
     fromCsg:()=>
       #try
       start = new Date().getTime()
@@ -889,7 +814,7 @@ define (require) ->
               
               geom = child.geometry
               obj2 = new THREE.Mesh( geom.clone(), basicMaterial1 )
-              obj3 = new THREE.Line( @geo2line(geom.clone()), dashMaterial, THREE.LinePieces )
+              obj3 = new THREE.Line( helpers.geometryToline(geom.clone()), dashMaterial, THREE.LinePieces )
               obj4 = new THREE.Mesh( geom.clone(), wireFrameMaterial)
       
               renderSubElementsHelper.add(obj2)
@@ -905,135 +830,6 @@ define (require) ->
       if @assembly?
         for child in @assembly.children  
           applyStyle(child)
-     
-    geo2line:( geo )->
-      # credit to WestLangley!
-      geometry = new THREE.Geometry()
-      vertices = geometry.vertices;
-  
-      for i in [0...geo.faces.length]
-        face = geo.faces[i]
-        if face instanceof THREE.Face3
-          a = geo.vertices[ face.a ].clone()
-          b = geo.vertices[ face.b ].clone()
-          c = geo.vertices[ face.c ].clone()
-          vertices.push( a,b, b,c, c,a )
-        else if face instanceof THREE.Face4
-          a = geo.vertices[ face.a ].clone()
-          b = geo.vertices[ face.b ].clone()
-          c = geo.vertices[ face.c ].clone()
-          d = geo.vertices[ face.d ].clone()
-          vertices.push( a,b, b,c, c,d, d,a )
-
-      geometry.computeLineDistances()
-      return geometry
-
-    _addIndicator:(mesh)->
-      #experimental ui elements
-      
-      #material = new THREE.LineBasicMaterial({color: 0x000000})#
-      #material = new THREE.LineDashedMaterial({color: 0x0000CC, dashSize: 5, gapSize: 2.5 })
-      #object = new THREE.Line( geometrySpline, new THREE.LineDashedMaterial( { color: 0xffffff, dashSize: 1, gapSize: 0.5 } ), THREE.LineStrip );
-      material = new THREE.LineDashedMaterial( {color: 0xffaa00, dashSize: 3, gapSize: 1, linewidth: 2 } )
-      geometry = new THREE.Geometry()
-      geometry.vertices.push(new THREE.Vector3(mesh.position.x, mesh.position.y, mesh.position.z))
-      geometry.vertices.push(new THREE.Vector3(150, 0, 150))
-      geometry.vertices.push(new THREE.Vector3(150, 0, 157))
-      geometry.vertices.push(new THREE.Vector3(150, 0, 160))
-      
-      line = new THREE.Line(geometry, material, THREE.LineStrip)
-      mesh.add(line)
-   
-    _addIndicator2:(mesh)->
-      hilbert3D = (center, side, iterations, v0, v1, v2, v3, v4, v5, v6, v7) ->
-        half = side / 2
-        vec_s = [new THREE.Vector3(center.x - half, center.y + half, center.z - half), new THREE.Vector3(center.x - half, center.y + half, center.z + half), new THREE.Vector3(center.x - half, center.y - half, center.z + half), new THREE.Vector3(center.x - half, center.y - half, center.z - half), new THREE.Vector3(center.x + half, center.y - half, center.z - half), new THREE.Vector3(center.x + half, center.y - half, center.z + half), new THREE.Vector3(center.x + half, center.y + half, center.z + half), new THREE.Vector3(center.x + half, center.y + half, center.z - half)]
-        vec = [vec_s[v0], vec_s[v1], vec_s[v2], vec_s[v3], vec_s[v4], vec_s[v5], vec_s[v6], vec_s[v7]]
-        if --iterations >= 0
-          tmp = []
-          Array::push.apply tmp, hilbert3D(vec[0], half, iterations, v0, v3, v4, v7, v6, v5, v2, v1)
-          Array::push.apply tmp, hilbert3D(vec[1], half, iterations, v0, v7, v6, v1, v2, v5, v4, v3)
-          Array::push.apply tmp, hilbert3D(vec[2], half, iterations, v0, v7, v6, v1, v2, v5, v4, v3)
-          Array::push.apply tmp, hilbert3D(vec[3], half, iterations, v2, v3, v0, v1, v6, v7, v4, v5)
-          Array::push.apply tmp, hilbert3D(vec[4], half, iterations, v2, v3, v0, v1, v6, v7, v4, v5)
-          Array::push.apply tmp, hilbert3D(vec[5], half, iterations, v4, v3, v2, v5, v6, v1, v0, v7)
-          Array::push.apply tmp, hilbert3D(vec[6], half, iterations, v4, v3, v2, v5, v6, v1, v0, v7)
-          Array::push.apply tmp, hilbert3D(vec[7], half, iterations, v6, v5, v2, v1, v0, v3, v4, v7)
-          return tmp
-        vec
-      cube = (size) ->
-        h = size * 0.5
-        geometry = new THREE.Geometry()
-        geometry.vertices.push new THREE.Vector3(-h, -h, -h)
-        geometry.vertices.push new THREE.Vector3(-h, h, -h)
-        geometry.vertices.push new THREE.Vector3(-h, h, -h)
-        geometry.vertices.push new THREE.Vector3(h, h, -h)
-        geometry.vertices.push new THREE.Vector3(h, h, -h)
-        geometry.vertices.push new THREE.Vector3(h, -h, -h)
-        geometry.vertices.push new THREE.Vector3(h, -h, -h)
-        geometry.vertices.push new THREE.Vector3(-h, -h, -h)
-        geometry.vertices.push new THREE.Vector3(-h, -h, h)
-        geometry.vertices.push new THREE.Vector3(-h, h, h)
-        geometry.vertices.push new THREE.Vector3(-h, h, h)
-        geometry.vertices.push new THREE.Vector3(h, h, h)
-        geometry.vertices.push new THREE.Vector3(h, h, h)
-        geometry.vertices.push new THREE.Vector3(h, -h, h)
-        geometry.vertices.push new THREE.Vector3(h, -h, h)
-        geometry.vertices.push new THREE.Vector3(-h, -h, h)
-        geometry.vertices.push new THREE.Vector3(-h, -h, -h)
-        geometry.vertices.push new THREE.Vector3(-h, -h, h)
-        geometry.vertices.push new THREE.Vector3(-h, h, -h)
-        geometry.vertices.push new THREE.Vector3(-h, h, h)
-        geometry.vertices.push new THREE.Vector3(h, h, -h)
-        geometry.vertices.push new THREE.Vector3(h, h, h)
-        geometry.vertices.push new THREE.Vector3(h, -h, -h)
-        geometry.vertices.push new THREE.Vector3(h, -h, h)
-        geometry
-
-      subdivisions = 6
-      recursion = 1
-      
-      points = hilbert3D( new THREE.Vector3( 0,0,0 ), 25.0, recursion, 0, 1, 2, 3, 4, 5, 6, 7 )
-  
-      spline = new THREE.Spline( points )
-      geometrySpline = new THREE.Geometry()
-  
-      for i in [0..points.length * subdivisions]
-        index = i / ( points.length * subdivisions )
-        position = spline.getPoint( index )
-        geometrySpline.vertices[i] = new THREE.Vector3( position.x, position.y, position.z )
-      
-      geometryCube = cube( 350 )
-      geometryCube.computeLineDistances()
-      geometrySpline.computeLineDistances()
-      
-      #material = new THREE.LineBasicMaterial( { color: 0xffaa00,linewidth: 10 })
-      material = new THREE.LineDashedMaterial( { color: 0xffaa00, dashSize: 3, gapSize: 1, linewidth: 2 } )
-      cube = new THREE.Line( geometryCube, material, THREE.LinePieces)
-      spline = new THREE.Line( geometrySpline, material, THREE.LinePieces)
-      
-      mesh.add(cube)
-      mesh.add(spline)
-      
-    informationOverlay:(object3d)=>
-      #this will give us position relative to the world
-      p = object3d.matrixWorld.getPosition().clone()
-
-      # projectVector will translate position to 2d
-      v = projector.projectVector(p, @camera)
-      
-      #translate our vector so that percX=0 represents
-      #the left edge, percX=1 is the right edge,
-      #percY=0 is the top edge, and percY=1 is the bottom edge.
-      percX = (v.x + 1) / 2
-      percY = (-v.y + 1) / 2
-      
-      #scale these values to our viewport size
-      left = percX * @width
-      top = percY * @height
-
-      #position the overlay so that it's center is on top of
-      $trackingOverlay.css('left', (left - $trackingOverlay.width() / 2) + 'px')
-      .css('top', (top - $trackingOverlay.height() / 2) + 'px')
+    
 
   return VisualEditorView
