@@ -3,9 +3,10 @@ CodeMirror.indentRangeFinder = function(cm, start) {
   var myIndent = CodeMirror.countColumn(firstLine, null, tabSize);
   for (var i = start.line + 1, end = cm.lineCount(); i < end; ++i) {
     var curLine = cm.getLine(i);
-    if (CodeMirror.countColumn(curLine, null, tabSize) < myIndent &&
-        CodeMirror.countColumn(cm.getLine(i-1), null, tabSize) > myIndent)
-      return {from: CodeMirror.Pos(start.line, firstLine.length),
-              to: CodeMirror.Pos(i, curLine.length)};
+    if ((CodeMirror.countColumn(curLine, null, tabSize) == myIndent)&&
+          (CodeMirror.countColumn(cm.getLine(i-1), null, tabSize) > myIndent)){
+      return {from: {line: start.line, ch: firstLine.length},
+              to: {line: i, ch: curLine.length}};
+    }
   }
 };

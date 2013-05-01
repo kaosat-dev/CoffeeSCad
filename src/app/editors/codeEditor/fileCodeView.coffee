@@ -268,6 +268,7 @@ define (require)->
       
       @editor.on "gutterClick",(cm, line, gutter, clickEvent)=>
         foldFunction(cm,cm.getCursor().line)
+        console.log "attempting to fold", cm.getCursor().line
       
       @editor.on "cursorActivity", (cm) =>
         cursor = @editor.getCursor()
