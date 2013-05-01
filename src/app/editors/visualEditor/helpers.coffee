@@ -415,13 +415,14 @@ define (require) ->
       @options = options
       @currentHover = null
       @currentSelect = null
+      @selectionColor = 0xCC8888
       @projector = new THREE.Projector()
     
     _onHover:(selection)=>
-      console.log "currentHover", selection
+      #console.log "currentHover", selection
       @currentHover = selection
       selection.currentHoverHex = selection.material.color.getHex()
-      selection.material.color.setHex( 0xff0000 )
+      selection.material.color.setHex( @selectionColor )
       @renderCallback()
       
     _unHover:=>
@@ -431,12 +432,12 @@ define (require) ->
         @renderCallback()
     
     _onSelect:(selection)=>
-      console.log "currentSelect", selection
+      #console.log "currentSelect", selection
       @_unHover()
       @currentSelect = selection
       new BoundingCage({mesh:selection,color:@options.color,textColor:@options.textColor})
       selection.currentSelectHex = selection.material.color.getHex()
-      selection.material.color.setHex( 0xff0000 )
+      selection.material.color.setHex( @selectionColor )
       @renderCallback()
       
     _unSelect:=>

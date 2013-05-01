@@ -9,7 +9,8 @@ define (require) ->
   utils = require 'utils'
   OrbitControls = require './orbitControls'
   CustomOrbitControls = require './customOrbitControls'
-  TrackballControls = require './trackballControls'
+  
+  Shaders = require './shaders'
   
   reqRes = require 'core/messaging/appReqRes'
   vent = require 'core/messaging/appVent'
@@ -26,6 +27,8 @@ define (require) ->
   dndMixin = require 'core/utils/mixins/dragAndDropRecieverMixin'
   
   
+  
+  
   class VisualEditorView extends Backbone.Marionette.ItemView
     el: $("#visual")
     @include dndMixin
@@ -34,102 +37,375 @@ define (require) ->
       renderBlock :   "#glArea"
       glOverlayBlock: "#glOverlay" 
       overlayDiv:     "#overlay" 
-      dropOverlay: "#dropOverlay"
       
     events:
-      'contextmenu' : 'rightclick'
-      'dragover': 'onDragOver'
-      'dragenter': 'onDragEnter'
-      'dragexit' :'onDragExit'
-      'drop':'onDrop'
-      
-      "resize:stop": "onResizeStop"
-      "resize":"onResizeStop"
-      "mousemove": "onMouseMove"
-    
-    onDummy:(e)=>
-      console.log "dummy event fired"
-    
-    onDragOver:(e)=>
-      e.preventDefault()
-      e.stopPropagation()
-      #console.log "event", e
-      #console.log "e.dataTransfer",e.dataTransfer
-      #offset = e.dataTransfer.getData("text/plain").split(',');
-      dm = @ui.dropOverlay[0]
-      #console.log "dm", dm
-      dm.style.left = (e.clientX + e.offsetX) + 'px'
-      dm.style.top = (e.clientY + e.offsetY) + 'px'
-      
-      dm.style.left =e.originalEvent.clientX+'px'
-      dm.style.top = e.originalEvent.clientY+'px'
-      
-    onDragEnter:(e)->
-      @ui.dropOverlay.removeClass("hide")
-    
-    onDragExit:(e)=>
-      @ui.dropOverlay.addClass("hide")
-      
-    onDrop:(e)->
-      # this / e.target is current target element.
-      if (e.stopPropagation)
-        e.stopPropagation()
-      e.preventDefault()
-      
-      @ui.dropOverlay.addClass("hide")
-      
-      files = e.originalEvent.dataTransfer.files
-      for file in files
-        console.log "dropped file", file
-        
-        do(file)=>
-          name = file.name
-          ext = name.split(".").pop()
-          if ext == "coffee"
-            
-            reader = new FileReader()
-            reader.onload=(e) =>
-              fileContent = e.target.result
-              console.log "fileContent",fileContent
-            reader.readAsText(file)
-           
-            #reader.onload = ((fileHandler)->
-      # See the section on the DataTransfer object.
-      return false
+      'contextmenu' : '_onRightclick'
+      "mousemove"   : "_onMouseMove"
+      "resize:stop" : "onResizeStop"
+      "resize"      : "onResizeStop"
       
     constructor:(options, settings)->
       super options
       @vent = vent 
       @settings = options.settings
-        
-      @stats = new stats()
-      @stats.domElement.style.position = 'absolute'
-      @stats.domElement.style.top = '30px'
-      @stats.domElement.style.zIndex = 100
       
       @settings.on("change", @settingsChanged)
       @_setupEventBindings()
       
       #screenshoting
       reqRes.addHandler "project:getScreenshot", ()=>
-        return @makeScreeshot()
+        return @makeScreenshot()
       
       ##########
+      @stats = new stats()
+      
+      @renderer=null
+      @overlayRenderer = null
+      
       @defaultCameraPosition = new THREE.Vector3(100,100,200)
       @width = 100
       @height = 100
-      @init()
+      @dpr = 1
       
+      @init()
       @selectionHelper = new helpers.SelectionHelper({renderCallback:@_render, camera:@camera,color:0x000000,textColor:@settings.textColor})
+    
+    
+    init:()=>
+      EffectComposer = require 'EffectComposer'
+      DotScreenPass = require 'DotScreenPass'
+      FXAAShader = require 'FXAAShader'
+      EdgeShader2 = require 'EdgeShader2'
+      EdgeShader = require 'EdgeShader'
+      VignetteShader = require 'VignetteShader'
+      BlendShader = require 'BlendShader'
+      
+      @stats.domElement.style.position = 'absolute'
+      @stats.domElement.style.top = '30px'
+      @stats.domElement.style.zIndex = 100
+      
+      
+      @setupRenderers(@settings)
+      @setupScene()
+      @setupOverlayScene()
+      @setupPostProcess()
+      
+      
+      if @settings.shadows then @renderer.shadowMapAutoUpdate = @settings.shadows
+      if @settings.showGrid then @addGrid()
+      if @settings.showAxes then @addAxes()
+      
+      @setBgColor()
+      @setupView(@settings.position)
+      
+        
+    setupRenderers:(settings)=>
+      getValidRenderer=(settings)->
+        renderer = settings.renderer
+        if not detector.webgl and not detector.canvas
+          throw new Error("No Webgl and no canvas (fallback) support, cannot render")
+        if renderer == "webgl"
+          if detector.webgl
+            return renderer
+          else if not detector.webgl and detector.canvas
+            return "canvas"
+        if renderer == "canvas"
+          if detector.canvas
+            return renderer
+      
+      renderer = getValidRenderer(settings)
+      console.log "#{renderer} renderer"
+      if renderer is "webgl"
+        @renderer = new THREE.WebGLRenderer 
+          clearColor: 0x00000000
+          clearAlpha: 0
+          antialias: true
+          preserveDrawingBuffer   : true
+        @renderer.clear() 
+        
+        
+        #@renderer.autoClear = false
+        @renderer.setSize(@width, @height)
+        
+        @overlayRenderer = new THREE.WebGLRenderer 
+          clearColor: 0x000000
+          clearAlpha: 0
+          antialias: true
+        @overlayRenderer.setSize(350, 250)
+        @renderer.shadowMapEnabled = true
+        @renderer.shadowMapAutoUpdate = true
+        
+      else if renderer is "canvas"
+        @renderer = new THREE.CanvasRenderer 
+          clearColor: 0x00000000
+          clearAlpha: 0
+          antialias: true
+        @renderer.clear() 
+        @overlayRenderer = new THREE.CanvasRenderer 
+          clearColor: 0x000000
+          clearAlpha: 0
+          antialias: true
+        @overlayRenderer.setSize(350, 250)
+        @renderer.setSize(@width, @height)
+    
+    setupScene:()->
+      @viewAngle=45
+      ASPECT = @width / @height
+      @NEAR = 1
+      @FAR = 1000
+      @camera =
+       new THREE.CombinedCamera(
+          @width,
+          @height,
+          @viewAngle,
+          @NEAR,
+          @FAR,
+          @NEAR,
+          @FAR)
+
+      #function ( width, height, fov, near, far, orthoNear, orthoFar )
+      @camera.up = new THREE.Vector3( 0, 0, 1 )
+      @camera.position = @defaultCameraPosition
+          
+      @scene = new THREE.Scene()
+      @scene.add(@camera)
+      @setupLights()
+      
+      @cameraHelper = new THREE.CameraHelper(@camera)
+      
+    setupOverlayScene:()->
+      #Experimental overlay
+      ASPECT = 350 / 250
+      NEAR = 1
+      FAR = 10000
+      @overlayCamera =
+        #new THREE.PerspectiveCamera(@viewAngle,ASPECT, NEAR, FAR)
+        new THREE.CombinedCamera(
+          350,
+          250,
+          @viewAngle,
+          NEAR,
+          FAR,
+          NEAR,
+          FAR)
+      @overlayCamera.up = new THREE.Vector3( 0, 0, 1 )
+      
+      @overlayScene = new THREE.Scene()
+      @overlayScene.add(@overlayCamera)
+
+    setupLights:()=>
+      #console.log "Setting up lights"
+      pointLight =
+        new THREE.PointLight(0x333333,4)
+      pointLight.position.x = -2500
+      pointLight.position.y = -2500
+      pointLight.position.z = 2200
+      
+      pointLight2 =
+        new THREE.PointLight(0x333333,3)
+      pointLight2.position.x = 2500
+      pointLight2.position.y = 2500
+      pointLight2.position.z = -5200
+
+      @ambientColor = 0x253565
+      @ambientColor = 0x354575
+      @ambientColor = 0x455585
+      @ambientColor = 0x565595
+      ambientLight = new THREE.AmbientLight(@ambientColor)
+      
+      spotLight = new THREE.SpotLight( 0xbbbbbb, 1.5)    
+      spotLight.position.x = 0
+      spotLight.position.y = 0
+      spotLight.position.z = 300
+      #spotLight.shadowCameraVisible = true
+      spotLight.castShadow = true
+      @light= spotLight 
+      
+      @scene.add(ambientLight)
+      @scene.add(pointLight)
+      @scene.add(pointLight2)
+      @scene.add(spotLight)
+      
+      @camera.add(pointLight)
+    
+    
+    setupPostProcess:=>
+      #shaders, post processing etc
+      #TODO:move this to view resize method
+      if (window.devicePixelRatio is not undefined)
+        @dpr = window.devicePixelRatio
+      
+      # depth
+      depthShader = THREE.ShaderLib[ "depthRGBA" ]
+      depthUniforms = THREE.UniformsUtils.clone( depthShader.uniforms )
+      @depthMaterial = new THREE.ShaderMaterial( { fragmentShader: depthShader.fragmentShader, vertexShader: depthShader.vertexShader, uniforms: depthUniforms } )
+      @depthMaterial.blending = THREE.NoBlending
+      
+      @depthTarget = new THREE.WebGLRenderTarget(@width, @height, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat } )
+
+      # postprocessing
+      renderPass = new THREE.RenderPass(@scene, @camera)
+      overlayRenderPass = new THREE.RenderPass(@overlayScene, @overlayCamera)
+      
+      @depthTarget = new THREE.WebGLRenderTarget(@width, @height, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat } )
+      @depthMaterial = new THREE.MeshDepthMaterial()
+      depthPass = new THREE.RenderPass(@scene, @camera, @depthMaterial)
+      
+      
+      copyPass = new THREE.ShaderPass( THREE.CopyShader )
+      dotScreenPass = new THREE.ShaderPass( THREE.DotScreenShader )
+      
+      @fxAAPass = new THREE.ShaderPass(THREE.FXAAShader)
+      @fxAAPass.uniforms['resolution'].value.set(1 / (@width * @dpr), 1 / (@height * @dpr))
+      
+      edgeDetectPass = new THREE.ShaderPass(THREE.EdgeShader)
+      edgeDetectPass2 = new THREE.ShaderPass(THREE.EdgeShader2)
+      vignettePass = new THREE.ShaderPass(THREE.VignetteShader)
+      
+      @depthExtractPass = new THREE.ShaderPass(Shaders.depthExtractShader)
+       
+
+      @composer = new THREE.EffectComposer( @renderer )
+      @composer.setSize(@width * @dpr, @height * @dpr)
+      @composer.addPass(renderPass)
+      #@composer.addPass(depthPass)
+      #@composer.addPass(@depthExtractPass)
+      @composer.addPass(@fxAAPass)
+      #@composer.addPass(edgeDetectPass)
+      #@composer.addPass(edgeDetectPass2)
+      #@composer.addPass(copyPass)
+      #@composer.addPass(dotScreenPass)
+      #@composer.addPass(vignettePass)
+      #make sure the last in line renders to screen
+      @composer.passes[@composer.passes.length-1].renderToScreen = true
+
+      
+    setupView:(val)=>
+      if @settings.projection is "orthographic"
+        @camera.toOrthographic()
+        @camera.setZoom(6)
+      
+      resetCam=()=>
+        @camera.position.z = 0
+        @camera.position.y = 0
+        @camera.position.x = 0
+      switch val
+        when 'diagonal'
+          @camera.position = @defaultCameraPosition
+          
+          @overlayCamera.position.x = 150
+          @overlayCamera.position.y = 150
+          @overlayCamera.position.z = 250
+          
+          @camera.lookAt(@scene.position)
+          @overlayCamera.lookAt(@overlayScene.position)
+          
+        when 'top'
+          @camera.toTopView()
+          @overlayCamera.toTopView()
+          console.log @camera
+          ###
+          try
+            offset = @camera.position.clone().sub(@controls.target)
+            nPost = new THREE.Vector3()
+            nPost.z = offset.length()
+            @camera.position = nPost
+            
+          catch error
+            @camera.position = new THREE.Vector3(0,0,@defaultCameraPosition.z)
+            
+          @overlayCamera.position = new THREE.Vector3(0,0,250)
+          @camera.lookAt(@scene.position)
+          @overlayCamera.lookAt(@overlayScene.position)
+          ###
+          #@camera.rotationAutoUpdate = true
+          #@overlayCamera.rotationAutoUpdate = true
+          
+        when 'bottom'
+          #@camera.toBottomView()
+          #@overlayCamera.toBottomView()
+          try
+            offset = @camera.position.clone().sub(@controls.target)
+            nPost = new  THREE.Vector3()
+            nPost.z = -offset.length()
+            @camera.position = nPost
+          catch error
+            @camera.position = new THREE.Vector3(0,0,-@defaultCameraPosition.z)
+            
+          @overlayCamera.position = new THREE.Vector3(0,0,-250)
+          @camera.lookAt(@scene.position)
+          @overlayCamera.lookAt(@overlayScene.position)
+          #@camera.rotationAutoUpdate = true
+          
+        when 'front'
+          #@camera.toFrontView()
+          #@overlayCamera.toFrontView()
+          try
+            offset = @camera.position.clone().sub(@controls.target)
+            nPost = new  THREE.Vector3()
+            nPost.y = -offset.length()
+            @camera.position = nPost
+          catch error
+            @camera.position = new THREE.Vector3(0,-@defaultCameraPosition.y,0)
+            
+          @overlayCamera.position = new THREE.Vector3(0,-250,0)
+          @camera.lookAt(@scene.position)
+          @overlayCamera.lookAt(@overlayScene.position)
+          #@camera.rotationAutoUpdate = true
+          
+        when 'back'
+          #@camera.toBackView()
+          #@overlayCamera.toBackView()
+          try
+            offset = @camera.position.clone().sub(@controls.target)
+            nPost = new  THREE.Vector3()
+            nPost.y = offset.length()
+            @camera.position = nPost
+          catch error
+            @camera.position = new THREE.Vector3(0,@defaultCameraPosition.y,0)
+          #@camera.rotationAutoUpdate = true
+          @overlayCamera.position = new THREE.Vector3(0,250,0)
+          @camera.lookAt(@scene.position)
+          @overlayCamera.lookAt(@overlayScene.position)
+          
+        when 'left'
+          #@camera.toLeftView()
+          try
+            offset = @camera.position.clone().sub(@controls.target)
+            nPost = new  THREE.Vector3()
+            nPost.x = offset.length()
+            @camera.position = nPost
+          catch error
+            @camera.position = new THREE.Vector3(@defaultCameraPosition.x,0,0)
+          #@camera.rotationAutoUpdate = true
+          @overlayCamera.position = new THREE.Vector3(250,0,0)
+          @camera.lookAt(@scene.position)
+          @overlayCamera.lookAt(@overlayScene.position)
+          
+        when 'right'
+          #@camera.toRightView()
+          try
+            offset = @camera.position.clone().sub(@controls.target)
+            nPost = new  THREE.Vector3()
+            nPost.x = -offset.length()
+            @camera.position = nPost
+          catch error
+            @camera.position = new THREE.Vector3(-@defaultCameraPosition.x,0,0)
+          #@camera.rotationAutoUpdate = true
+          @overlayCamera.position = new THREE.Vector3(-250,0,0)
+          @camera.lookAt(@scene.position)
+          @overlayCamera.lookAt(@overlayScene.position)
+         
+      @_render()
     
     _setupEventBindings:=>
       @model.on("compiled", @projectCompiled)
       @model.on("compile:error", @projectCompileFailed)
       
-    makeScreeshot:(width=300, height=300)=>
+    makeScreenshot:(width=300, height=300)=>
       return helpers.captureScreen(@renderer.domElement,width,height)
     
-    rightclick:(ev)=>
+    _onRightclick:(ev)=>
       """used either for selection or context menu"""
       normalizeEvent(ev)
       x = ev.offsetX
@@ -143,7 +419,7 @@ define (require) ->
       ev.preventDefault()
       return false
     
-    onMouseMove:(ev)->
+    _onMouseMove:(ev)->
       normalizeEvent(ev)
       x = ev.offsetX
       y = ev.offsetY
@@ -278,8 +554,6 @@ define (require) ->
           when 'showConnectors'
             if val
               @assembly.traverse (object)->
-                console.log "pouet"
-                console.log object
                 if object.name is "connectors"
                   object.visible = true 
             else
@@ -289,288 +563,26 @@ define (require) ->
                 if object.name is "connectors"
                   object.visible = false 
       @_render()  
-       
-    init:()=>
-      @renderer=null
-      #TODO: do this properly
-      @configure(@settings)
-      @renderer.shadowMapEnabled = true
-      @renderer.shadowMapAutoUpdate = true
-      
-      @projector = new THREE.Projector()
-      @setupScene()
-      @setupOverlayScene()
-      @setBgColor()
-      
-      if @settings.shadows
-        @renderer.shadowMapAutoUpdate = @settings.shadows
-      if @settings.showGrid
-        @addGrid()
-      if @settings.showAxes
-        @addAxes()
-      if @settings.projection is "orthographic"
-        @camera.toOrthographic()
-        @camera.setZoom(6)
-      else
-        #@camera.toPerspective()
-      if @mesh?
-        @mesh.material.wireframe = @settings.wireframe
-      
-      val = @settings.position
-      @setupView(val)
-        
-    configure:(settings)=>
-      if settings.renderer
-          renderer = settings.renderer
-          if renderer == "webgl"
-            if detector.webgl
-              console.log "Gl Renderer"
-              @renderer = new THREE.WebGLRenderer 
-                clearColor: 0x00000000
-                clearAlpha: 0
-                antialias: true
-                preserveDrawingBuffer   : true
-              @renderer.clear() 
-              @renderer.setSize(@width, @height)
-              
-              @overlayRenderer = new THREE.WebGLRenderer 
-                clearColor: 0x000000
-                clearAlpha: 0
-                antialias: true
-              @overlayRenderer.setSize(350, 250)
-            else if not detector.webgl and not detector.canvas
-              #TODO: handle this correctly
-              console.log("No Webgl and no canvas (fallback) support, cannot render")
-            else if not detector.webgl and detector.canvas
-              @renderer = new THREE.CanvasRenderer 
-                clearColor: 0x00000000
-                clearAlpha: 0
-                antialias: true
-              @renderer.clear() 
-              @overlayRenderer = new THREE.CanvasRenderer 
-                clearColor: 0x000000
-                clearAlpha: 0
-                antialias: true
-              @overlayRenderer.setSize(350, 250)
-              @renderer.setSize(@width, @height)
-            else
-              console.log("No Webgl and no canvas (fallback) support, cannot render")
-          else if renderer =="canvas"
-            if detector.canvas
-              @renderer = new THREE.CanvasRenderer 
-                clearColor: 0x00000000
-                clearAlpha: 0
-                antialias: true
-              @renderer.clear() 
-              @overlayRenderer = new THREE.CanvasRenderer 
-                clearColor: 0x000000
-                clearAlpha: 0
-                antialias: true
-              @overlayRenderer.setSize(350, 250)
-              @renderer.setSize(@width, @height)
-            else if not detector.canvas
-              #TODO: handle this correctly
-              console.log("No canvas support, cannot render")
     
-    setupScene:()->
-      @viewAngle=45
-      ASPECT = @width / @height
-      NEAR = 1
-      FAR = 10000
-      @camera =
-       new THREE.CombinedCamera(
-          @width,
-          @height,
-          @viewAngle,
-          NEAR,
-          FAR,
-          NEAR,
-          FAR)
-
-      #function ( width, height, fov, near, far, orthoNear, orthoFar )
-      @camera.up = new THREE.Vector3( 0, 0, 1 )
-      @camera.position = @defaultCameraPosition
-          
-      @scene = new THREE.Scene()
-      @scene.add(@camera)
-      @setupLights()
-      
-      @cameraHelper = new THREE.CameraHelper(@camera)
-      
-    setupOverlayScene:()->
-      #Experimental overlay
-      ASPECT = 350 / 250
-      NEAR = 1
-      FAR = 10000
-      @overlayCamera =
-        #new THREE.PerspectiveCamera(@viewAngle,ASPECT, NEAR, FAR)
-        new THREE.CombinedCamera(
-          350,
-          250,
-          @viewAngle,
-          NEAR,
-          FAR,
-          NEAR,
-          FAR)
-      @overlayCamera.up = new THREE.Vector3( 0, 0, 1 )
-      
-      @overlayScene = new THREE.Scene()
-      @overlayScene.add(@overlayCamera)
-
-    setupLights:()=>
-      #console.log "Setting up lights"
-      pointLight =
-        new THREE.PointLight(0x333333,4)
-      pointLight.position.x = -2500
-      pointLight.position.y = -2500
-      pointLight.position.z = 2200
-      
-      pointLight2 =
-        new THREE.PointLight(0x333333,3)
-      pointLight2.position.x = 2500
-      pointLight2.position.y = 2500
-      pointLight2.position.z = -5200
-
-      @ambientColor = 0x253565
-      @ambientColor = 0x354575
-      @ambientColor = 0x455585
-      @ambientColor = 0x565595
-      ambientLight = new THREE.AmbientLight(@ambientColor)
-      
-      spotLight = new THREE.SpotLight( 0xbbbbbb, 1.5)    
-      spotLight.position.x = 0
-      spotLight.position.y = 0
-      spotLight.position.z = 300
-      #spotLight.shadowCameraVisible = true
-      spotLight.castShadow = true
-      @light= spotLight 
-      
-      @scene.add(ambientLight)
-      @scene.add(pointLight)
-      @scene.add(pointLight2)
-      @scene.add(spotLight)
-      
-      @camera.add(pointLight)
-      
-    setupView:(val)=>
-      resetCam=()=>
-        @camera.position.z = 0
-        @camera.position.y = 0
-        @camera.position.x = 0
-      switch val
-        when 'diagonal'
-          @camera.position = @defaultCameraPosition
-          
-          @overlayCamera.position.x = 150
-          @overlayCamera.position.y = 150
-          @overlayCamera.position.z = 250
-          
-          @camera.lookAt(@scene.position)
-          @overlayCamera.lookAt(@overlayScene.position)
-          
-        when 'top'
-          @camera.toTopView()
-          @overlayCamera.toTopView()
-          console.log @camera
-          ###
-          try
-            offset = @camera.position.clone().sub(@controls.target)
-            nPost = new THREE.Vector3()
-            nPost.z = offset.length()
-            @camera.position = nPost
-            
-          catch error
-            @camera.position = new THREE.Vector3(0,0,@defaultCameraPosition.z)
-            
-          @overlayCamera.position = new THREE.Vector3(0,0,250)
-          @camera.lookAt(@scene.position)
-          @overlayCamera.lookAt(@overlayScene.position)
-          ###
-          #@camera.rotationAutoUpdate = true
-          #@overlayCamera.rotationAutoUpdate = true
-          
-        when 'bottom'
-          #@camera.toBottomView()
-          #@overlayCamera.toBottomView()
-          try
-            offset = @camera.position.clone().sub(@controls.target)
-            nPost = new  THREE.Vector3()
-            nPost.z = -offset.length()
-            @camera.position = nPost
-          catch error
-            @camera.position = new THREE.Vector3(0,0,-@defaultCameraPosition.z)
-            
-          @overlayCamera.position = new THREE.Vector3(0,0,-250)
-          @camera.lookAt(@scene.position)
-          @overlayCamera.lookAt(@overlayScene.position)
-          #@camera.rotationAutoUpdate = true
-          
-        when 'front'
-          #@camera.toFrontView()
-          #@overlayCamera.toFrontView()
-          try
-            offset = @camera.position.clone().sub(@controls.target)
-            nPost = new  THREE.Vector3()
-            nPost.y = -offset.length()
-            @camera.position = nPost
-          catch error
-            @camera.position = new THREE.Vector3(0,-@defaultCameraPosition.y,0)
-            
-          @overlayCamera.position = new THREE.Vector3(0,-250,0)
-          @camera.lookAt(@scene.position)
-          @overlayCamera.lookAt(@overlayScene.position)
-          #@camera.rotationAutoUpdate = true
-          
-        when 'back'
-          #@camera.toBackView()
-          #@overlayCamera.toBackView()
-          try
-            offset = @camera.position.clone().sub(@controls.target)
-            nPost = new  THREE.Vector3()
-            nPost.y = offset.length()
-            @camera.position = nPost
-          catch error
-            @camera.position = new THREE.Vector3(0,@defaultCameraPosition.y,0)
-          #@camera.rotationAutoUpdate = true
-          @overlayCamera.position = new THREE.Vector3(0,250,0)
-          @camera.lookAt(@scene.position)
-          @overlayCamera.lookAt(@overlayScene.position)
-          
-        when 'left'
-          #@camera.toLeftView()
-          try
-            offset = @camera.position.clone().sub(@controls.target)
-            nPost = new  THREE.Vector3()
-            nPost.x = offset.length()
-            @camera.position = nPost
-          catch error
-            @camera.position = new THREE.Vector3(@defaultCameraPosition.x,0,0)
-          #@camera.rotationAutoUpdate = true
-          @overlayCamera.position = new THREE.Vector3(250,0,0)
-          @camera.lookAt(@scene.position)
-          @overlayCamera.lookAt(@overlayScene.position)
-          
-        when 'right'
-          #@camera.toRightView()
-          try
-            offset = @camera.position.clone().sub(@controls.target)
-            nPost = new  THREE.Vector3()
-            nPost.x = -offset.length()
-            @camera.position = nPost
-          catch error
-            @camera.position = new THREE.Vector3(-@defaultCameraPosition.x,0,0)
-          #@camera.rotationAutoUpdate = true
-          @overlayCamera.position = new THREE.Vector3(-250,0,0)
-          @camera.lookAt(@scene.position)
-          @overlayCamera.lookAt(@overlayScene.position)
-         
-      @_render()
-     
     setBgColor:()=>
-      console.log "setting bg color"
       bgColor1 = @settings.bgColor
       bgColor2 = @settings.bgColor2
       $("body").css("background-color", bgColor1)
+      
+      console.log @settings.bgColor
+      bgColor = @settings.bgColor.split('#').pop()
+      
+      ###
+      bgColor = a.map((x) -> #For each array element
+        x = parseInt(x).toString(16) #Convert to a base16 string
+        (if (x.length is 1) then "0" + x else x) #Add zero if we get only one character
+      )     
+      
+      b = "0x"+b.join("");###
+      ###      
+      @renderer.clearColor=0x363335
+      console.log @renderer
+      @renderer.setClearColorHex( 0xFFFFFF, @renderer.getClearAlpha() )###
       
     addGrid:()=>
       ###
@@ -623,6 +635,17 @@ define (require) ->
     
     onResize:()=>
       @_computeViewSize()
+      
+      if window.devicePixelRatio?
+        @dpr = window.devicePixelRatio
+      
+      #shader uniforms updates
+      @fxAAPass.uniforms['resolution'].value.set(1 / (@width * @dpr), 1 / (@height * @dpr))
+      @composer.setSize(@width * @dpr, @height * @dpr)
+      
+      @depthExtractPass.uniforms[ 'size' ].value.set( @width, @height )
+      @depthExtractPass.uniforms[ 'cameraNear' ].value = 0.1 #@NEAR
+      @depthExtractPass.uniforms[ 'cameraFar' ].value = 100 #@FAR
       
       @camera.aspect = @width / @height
       @camera.setSize(@width,@height)
@@ -696,12 +719,29 @@ define (require) ->
           $("#testOverlay2").text(@selectionHelper.currentSelect.name)
       ###
       
+      #necessary hack
+      THREE.EffectComposer.camera = new THREE.OrthographicCamera( -1, 1, 1, -1, 0, 1 )
+      THREE.EffectComposer.quad = new THREE.Mesh( new THREE.PlaneGeometry( 2, 2 ), null )
+      THREE.EffectComposer.scene = new THREE.Scene()
+      THREE.EffectComposer.scene.add( THREE.EffectComposer.quad )
+      
+      ###
+      @scene.overrideMaterial = @depthMaterial
+      @renderer.render( @scene, @camera, @depthTarget )
+      ###
+      
+      if @assembly?
+        for child in @assembly.children
+          child.material = @depthMaterial
       @renderer.render(@scene, @camera)
-      @overlayRenderer.render(@overlayScene, @overlayCamera)
+      #@scene.overrideMaterial = null
+      #@renderer.render(@scene, @camera)
+      #@overlayRenderer.render(@overlayScene, @overlayCamera)
+      
+      #@composer.render()
       
       if @settings.showStats
         @stats.update()
-      #@cameraHelper.update()
       
     animate:()=>
       @controls.update()
