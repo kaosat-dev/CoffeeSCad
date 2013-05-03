@@ -199,11 +199,12 @@ define (require)->
     
     
   class ExamplesView extends Backbone.Marionette.ItemView
-    tagName:  "li"
-    className: "dropdown-submenu examplesTree"
+    tagName:  "ul"
+    className: "dropdown-menu examplesTree"
       
     events:
       "click .example":          "onLoadExampleClicked"
+      "click":          "onLoadExampleClicked"
       
     constructor:(options)->
       super options
@@ -217,6 +218,7 @@ define (require)->
         @render()
     
     onLoadExampleClicked:(e)=>
+      console.log "example clicked"
       exampleFullPath = $(e.currentTarget).data("id")
       Project = require "core/projects/project"
       
@@ -247,8 +249,12 @@ define (require)->
       @triggerMethod("item:before:render", @)
   
       rootEl = @_generateExamplesTree()
-      @$el.html("")
-      @$el.append(rootEl)
+      @$el.parent().append("""<a tabindex="-1" href="#"><i class="icon-list-ul"></i>Examples</a>""")
+      
+      insertRoot = @$el
+      $(rootEl).children("li").each (i) ->
+        console.log $(this)
+        insertRoot.append($(this))
       
       @bindUIElements()
       @triggerMethod("render", @)
