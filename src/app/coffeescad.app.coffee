@@ -90,7 +90,8 @@ define (require)->
     initPreVisuals:->
       """Initialize correct theme css"""
       @theme = @settings.get("General").get("theme")
-      $("#mainTheme").attr("href","assets/css/themes/#{@theme}/bootstrap.css")
+      #$("#mainTheme").attr("href","assets/css/themes/#{@theme}/bootstrap.css")
+      $("#mainTheme").attr("href","assets/css/style/coffeescad/bootstrap.css")
       
     initData:->
       @projectManager.stores = @stores

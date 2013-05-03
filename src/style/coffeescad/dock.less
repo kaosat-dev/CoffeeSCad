@@ -1,0 +1,108 @@
+/*DOCKING*/
+.docked
+{
+  /*border: 2px dashed red!important;*/
+}
+
+.dockWest
+{
+    /*position: absolute;
+    display: block;
+    top: 0px!important;
+    left: 0;
+    bottom: 0;*/
+    
+    top: 0px!important;
+    left: 0px!important;
+    height:100%!important;
+    cursor: move;
+    border: 1px solid grey;
+}
+
+.dockEast
+{
+    /*position: absolute;
+    display: block;
+    top: 0;
+    right: 0;
+    bottom: 0;*/
+    top: 0px!important;
+    height:100%!important;
+    cursor: move;
+    border: 1px solid grey;
+}
+
+.dockableDraggable
+{
+  /*border: 2px solid red!important;*/
+}
+
+.dockZoneWest
+{
+    -webkit-box-flex: 0;
+  -moz-box-flex: 0;
+  box-flex: 0;
+    width: 10px;
+}
+.dockZoneEast
+{
+    -webkit-box-flex: 0;
+  -moz-box-flex: 0;
+  box-flex: 0;
+    width: 10px;
+}
+
+.dockZoneSouth
+{
+  /*position:absolute;*/
+    height: 10px;
+    bottom: 10px;
+    z-index: 99999;
+}
+
+.dockZoneHighlight
+{
+    border: 1px dashed #0099dd;
+}
+
+.draggingpanel
+{
+    cursor: move;
+    border: 2px dashed rgb(255, 194, 0);
+    color: Red;
+    opacity: 0.5;
+}
+.dockedpanel
+{
+    position: relative;
+    display: block;
+    cursor: move;
+}
+
+.dockcontainer{
+    position: absolute;
+    display: block;
+    border-left: 1px solid #999999;
+    border-radius: 4px 4px 4px 4px;
+    border-top: 1px solid #999999;
+    top: 20px;
+    left: 2px;
+    right: 2px;
+    bottom: 2px;
+}
+.floatpanel {
+    color: Black;
+    cursor: move;
+}
+
+#_dockZoneEast{
+  height:100%;
+}
+
+#_dockZoneWest{
+  height:100%;
+}
+
+#_dockZoneSouth{
+  width:100%;
+}

@@ -1,0 +1,297 @@
+/*Code Editor*/
+
+.codeEditor
+{
+  /*color:#2db2ea;*/
+}
+.codeEditorContainer
+{
+  border-radius:0px;
+  /*box-shadow: 0 2px 2px rgba(0, 0, 0, 0.3);*/
+  border:none;
+  height:100%;
+  width:100%;
+  overflow-y: hidden !important;
+  max-height:100%;
+}
+
+.nav
+{
+  margin-bottom: 2px;
+}
+
+.nav-tabs > li > a
+{
+  padding-bottom: 2px;
+  padding-top: 2px;
+}
+
+.tab-content
+{
+  height:100%;
+}
+
+#mainStuff
+{
+  padding:10px;
+  padding-bottom:100px;
+}
+
+#tabContent
+{
+  top:30px !important;
+  min-height:300px;
+  border: none !important;
+}
+
+
+
+.CodeMirror-scrollbar
+{
+  overflow-y: auto;
+}
+/*for current full line selection*/
+.activeline {background: #3a3f44 !important;}
+
+
+span.CodeMirror-matchhighlight { background: #00438A }
+.CodeMirror-focused span.CodeMirror-matchhighlight { background: #00438A !important; }
+
+
+.CodeMirror {
+  /*position:absolute;*/
+  /*
+  bottom:0;
+    left: 0;
+    right: 0;*/
+  width:  100%;
+  height: 90%;
+  font-size: 1em;
+}
+/*
+.CodeMirror-scroll 
+{
+        height: 100%;
+        min-height:300px;
+        overflow-y: auto;
+        overflow-x: auto;
+}*/
+
+/*
+.CodeMirror-dialog {
+  position: relative;
+}
+
+.CodeMirror-dialog > div {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  background: white;
+  border-bottom: 1px solid #eee;
+  z-index: 15;
+  padding: .1em .8em;
+  overflow: hidden;
+  color: #333;
+}
+
+.CodeMirror-dialog input {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 20em;
+  color: inherit;
+  font-family: monospace;
+}
+
+.CodeMirror-dialog button {
+  font-size: 70%;
+}*/
+
+.CodeErrorMarker
+{
+  color: #EE3333 ;
+  float:left;
+  margin: 0;
+    padding: 0;
+}
+.CodeErrorMarker a
+{
+  color:inherit;
+  text-decoration:  none;
+}
+
+.CodeWarningMarker
+{
+  color: #EE9933 ;
+  float:left;
+}
+.CodeWarningMarker a
+{
+  color:inherit;
+  text-decoration:  none;
+}
+.console
+{
+  overflow:auto;
+  height:100%;
+}
+
+#errorConsole
+{
+  position:absolute;
+    bottom:0;
+    width:90%;
+}
+#codeView
+{
+  min-height:100%;
+    position:relative;
+    padding-bottom: 60px;
+}
+
+.CodeMirror-dialog {
+  position: absolute;
+  left: 0; right: 0;
+  background: white;
+  z-index: 15;
+  padding: .1em .8em;
+  overflow: hidden;
+  color: #333;
+}
+
+.CodeMirror-dialog-top {
+  border-bottom: 1px solid #eee;
+  top: 0;
+}
+
+.CodeMirror-dialog-bottom {
+  border-top: 1px solid #eee;
+  bottom: 0;
+}
+
+.CodeMirror-dialog input {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 20em;
+  color: inherit;
+  font-family: monospace;
+}
+
+.CodeMirror-dialog button {
+  font-size: 70%;
+}
+
+.CodeMirror-hints {
+  position: absolute;
+  z-index: 9999;
+  overflow: hidden;
+  list-style: none;
+
+  margin: 0;
+  padding: 2px;
+
+  -webkit-box-shadow: 2px 3px 5px rgba(0,0,0,.2);
+  -moz-box-shadow: 2px 3px 5px rgba(0,0,0,.2);
+  box-shadow: 2px 3px 5px rgba(0,0,0,.2);
+  border-radius: 3px;
+  border: 1px solid silver;
+
+  background: white;
+  font-size: 90%;
+  font-family: monospace;
+
+  max-height: 20em;
+  overflow-y: auto;
+}
+
+.CodeMirror-hint {
+  margin: 0;
+  padding: 0 4px;
+  border-radius: 2px;
+  max-width: 19em;
+  overflow: hidden;
+  white-space: pre;
+  color: black;
+  cursor: pointer;
+}
+
+.CodeMirror-hint-active {
+  background: #08f;
+  color: white;
+}
+
+.console-entry
+{
+  margin-bottom: 3px;
+}
+
+.lintAndErrorsGutter { width: 1em;}
+
+.CodeMirror-focused .cm-matchhighlight {
+    background-color:#00438A;
+        background-position: bottom;
+        background-repeat: repeat-x;
+      }
+      
+
+/*for file browser*/
+.ui-state-default
+{
+  background-color:  #262626;
+  background-image: none;
+}
+
+.ui-state-default, .ui-widget-content .ui-state-default, .ui-widget-header .ui-state-default
+{
+  background-color:  #3a3f44;
+  background-image: none;
+  color:#C8C8C8;
+  border-color: transparent;
+}
+
+.filesTreeContainer
+{
+  /*color:#2db2ea;*/
+  border:none !important;
+}
+.filesTree 
+{
+  list-style: none;
+  
+}
+.filesTree li
+{
+  cursor: hand; cursor: pointer;
+  padding: 0.2em 0 0 0;
+}
+.filesTree a
+{
+  cursor: hand; cursor: pointer;
+}
+
+.filesListContainer
+{
+  border:none!important;
+  overflow:auto;
+  left:0px;
+}
+
+.fileListEditable
+{
+  cursor: text !important;
+  border: 2px; 
+  border-color: #000000;
+  /*padding: 0 50px 0px 0;*/
+  background-color:#f3f3f3;
+}
+
+.closeFile:hover
+{
+  color:#2db2ea;
+}
+
+#newFileInput
+{
+  line-height: 10px;
+  height: 1em;
+}
