@@ -127,7 +127,16 @@ define (require)->
       $(document).bind "keydown", "f4", =>
         @vent.trigger("project:compile")
         return false
-      
+        
+    _setupLanguage:()=>
+      langCodeMap =
+        english:'EN_EN'
+        dutch:'NL_NL'
+        german:'DE_DE'
+      re = /l=([^&]*)/g
+      urlLang = ""
+       
+        
     onStart:()=>
       console.log "app started"
       #@_setupKeyboardBindings()

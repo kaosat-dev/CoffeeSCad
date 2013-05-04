@@ -75,7 +75,9 @@ define (require)->
       autoSave: false
       autoSaveFrequency: 30
       
+      language: "english"
       theme: "default"
+      
       
     constructor:(options)->
       super options
