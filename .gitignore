@@ -6,4 +6,5 @@
 !/test/vendor
 !/test/index.html
 .project
+.settings/
 /node_modules/
