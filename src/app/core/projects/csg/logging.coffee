@@ -21,7 +21,7 @@ define (require) ->
     if log.level <= log.WARN
       lineNumber = (new Error()).lineNumber
       log.entries.push({lvl:"WARN",msg:"#{message}",line:lineNumber})
-  log.error = (message,)=>
+  log.error = (message)=>
     if log.level <= log.ERROR
       lineNumber = (new Error()).lineNumber
       log.entries.push({lvl:"ERROR",msg:"#{message}",line:lineNumber})
