@@ -253,7 +253,6 @@ define (require)->
       
       insertRoot = @$el
       $(rootEl).children("li").each (i) ->
-        console.log $(this)
         insertRoot.append($(this))
       
       @bindUIElements()

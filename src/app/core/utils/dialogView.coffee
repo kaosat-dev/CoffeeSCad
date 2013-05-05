@@ -62,55 +62,12 @@ define (require)->
    
     _setTransparency:=>
       $(".dialog").css("opacity",0.9)
-      ###
-      elements = [".dialog",".dialog-body", "#tabContent","#filesList",".CodeMirror cm-s-lesser-dark CodeMirror-focused",".cm-s-lesser-dark.CodeMirror"]
-      for elem in elements
-        rawBgRgba = $(elem).css("background-color")
-        if not rawBgRgba?
-          rawBgRgba = $(elem).css("background")
-          
-        rgbvals = /rgb\((.+),(.+),(.+)\)/i.exec(rawBgRgba)
-        a = 0.5
-        if rgbvals?
-          r = parseInt(rgbvals[1])
-          g = parseInt(rgbvals[2])
-          b = parseInt(rgbvals[3])
-          newColor = "rgba(#{r},#{g},#{b},#{a})"
-          $(elem).css("background-color",newColor)
-          $(elem).css("background",newColor)
-      ###  
-        
-      ###
-      rawBgRgba = $(".dialog").css("background-color")
-      rgbvals = /rgb\((.+),(.+),(.+)\)/i.exec(rawBgRgba)
-      if rgbvals?
-        r = parseInt(rgbvals[1])
-        g = parseInt(rgbvals[2])
-        b = parseInt(rgbvals[3])
-      else
-        r = 255
-        g = 255
-        b = 255
-      a = 0.2
-      newColor = "rgba(#{r},#{g},#{b},#{a})"
-      console.log "new bg color",newColor 
-      
-      $(".dialog").css("background-color",newColor)
-      #$(".dialog-body").css("background-color",newColor)
-      
-      $("#tabContent").css("background-color",newColor)
-      $(".filesListContainer").css("background-color",newColor)
-      
-      $(".cm-s-lesser-dark.CodeMirror").css("background-color",newColor)
-      #$(".CodeMirror cm-s-lesser-dark CodeMirror-focused").css("background-color",newColor)
-      ###
     
     onOpacityChanged:(e)->
       opacity = parseFloat(e.currentTarget.value)/100
       console.log opacity
       if opacity >= 0.25 and opacity <= 1
         @$el.css("opacity",opacity)
-      
     
     render:()=>
       @isClosed = false
@@ -202,17 +159,10 @@ define (require)->
       @$el.on('click.data-dismiss.data-api', '[data-dismiss=dialog]', (e)=>
           that = @
           $target = $(this).parent().parent().parent()
-          #this.$element
-          #.removeClass('in')
-          #.attr('aria-hidden', true)
-          
-          console.log "hiding bla"
           $target.addClass("hide")
-          @close()
-          @$el.remove()
+          @hideDialog()
+          #@$el.remove()
         )
-      
-      
       
       if @dockable 
         @$el.bind "dragstart", (e, ui)=>
@@ -395,7 +345,9 @@ define (require)->
       @$el.removeClass('docked dockNorth dockEast dockWest dockSouth')
       @$el.addClass('floatpanel draggingpanel')
       
-      @$el.resizable('destroy')#destroy previous , constrained resize
+      try
+        @$el.resizable('destroy')#destroy previous , constrained resize
+      catch error
       @_setResizeable()
       @_setDragable()
       
@@ -451,17 +403,25 @@ define (require)->
       this.currentView = view
       
       @_setTransparency()
+      @showDialog()
       
     hide:(view)->
-      this.currentView.close()
+      if @currentView
+        @currentView.close()
+        @currentView = null
       injectTarget = @$el.find("#contentContainer")
       injectTarget.html("")
-      this.currentView = null
       
     close:()->
       @_isShown = false
       @isClosed = true
-      console.log "fdgd"
       @_undoc()
+      @hide(@currentView) if @currentView?
+    
+    hideDialog: ->
+      @$el.addClass('hide')
+      
+    showDialog: ->
+      @$el.removeClass('hide')
         
   return DialogView

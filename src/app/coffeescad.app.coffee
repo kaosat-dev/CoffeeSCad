@@ -37,6 +37,7 @@ define (require)->
       @projectManager = new ProjectManager
         appSettings: @settings
       
+      @editorsList = ["code","hierarchy"]
       @editors = {}
       @exporters = {}
       @stores = {}
@@ -51,10 +52,8 @@ define (require)->
       
       #stores 
       DropBoxStore = require './stores/dropbox/dropBoxStore'
-      #GithubStore = require './stores/github/gitHubStore'
       BrowserStore = require './stores/browser/browserStore'
       @stores["Dropbox"] = new DropBoxStore()
-      #@stores["gitHub"] = new GithubStore()
       @stores["browser"] = new BrowserStore()
       
       #events
@@ -91,7 +90,7 @@ define (require)->
       """Initialize correct theme css"""
       @theme = @settings.get("General").get("theme")
       #$("#mainTheme").attr("href","assets/css/themes/#{@theme}/bootstrap.css")
-      $("#mainTheme").attr("href","assets/css/style/coffeescad/bootstrap.css")
+      #$("#mainTheme").attr("href","assets/css/style/coffeescad/bootstrap.css")
       
     initData:->
       @projectManager.stores = @stores
@@ -107,7 +106,7 @@ define (require)->
       @$el.bind 'keydown', 'ctrl+s', ->
         console.log "i want to save a FILE"
         return false
-      ###
+      
       $(document).bind "keydown", "alt+n", =>
         @vent.trigger("project:new")
         return false
@@ -127,6 +126,7 @@ define (require)->
       $(document).bind "keydown", "f4", =>
         @vent.trigger("project:compile")
         return false
+      ###
         
     _setupLanguage:()=>
       langCodeMap =
@@ -141,8 +141,9 @@ define (require)->
       console.log "app started"
       #@_setupKeyboardBindings()
       @visualEditor.start()
-      @codeEditor.start()
-      @hierarchyEditor.start()
+      for editorName,editorInst of @editors
+        console.log "starting #{editorName}Editor"
+        editorInst.start()
       @projectManager.start()
       
     onAppStarted:(appName)->
@@ -162,38 +163,53 @@ define (require)->
       modReg = new ModalRegion({elName:"settings",large:true})
       modReg.show settingsView
     
+    ### 
     onSettingsChanged:(settings, value)=> 
       for key, val of @settings.get("General").changedAttributes()
         switch key
           when "theme"
             @theme = val
             $("#mainTheme").attr("href","assets/css/themes/#{@theme}/bootstrap.css")
+    ###
     
     onProjectLoaded:(newProject)=>
       console.log "project loaded"
       @project = newProject
       
-    onInitializeBefore:()->
+    onInitializeBefore:()=>
       console.log "before init"
+      #always present
       VisualEditor = require './editors/visualEditor/visualEditor'
       @visualEditor = new VisualEditor
         regions: 
           mainRegion: "#visual"
         project: @project
         appSettings: @settings
-        
+      
+      ### 
+      deferredList = []
+      #dynamic load, problematic
+
+          console.log "editorName",editorName
+          editorPath = "./editors/#{editorName}Editor/#{editorName}Editor"
+          console.log "editorPath: #{editorPath}"
+          require [editorPath], (editorClass)=>
+            @editors[editorName] = new editorClass
+              project: @project
+              appSettings: @settings
+          
+      ###    
       CodeEditor = require './editors/codeEditor/codeEditor'
-      @codeEditor = new CodeEditor
-        regions: 
-          mainRegion: "#code"
+      @editors['code'] = new CodeEditor
+        project: @project
+        appSetting
+      
+      HierarchyEditor = require './editors/hierarchyEditor/hierarchyEditor'
+      @editors['hierarchy'] = new HierarchyEditor
         project: @project
         appSettings: @settings
       
-      HierarchyEditor = require './editors/hierarchyEditor/hierarchyEditor'
-      @hierarchyEditor = new HierarchyEditor
-        project: @project
-        appSettings: @settings
-        
+                 
       @settings.fetch()
       
     onInitializeAfter:()=>

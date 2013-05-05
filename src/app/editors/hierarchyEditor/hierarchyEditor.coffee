@@ -51,17 +51,21 @@ define (require)->
       @showView()
       
     showView:=>
-      if @dia?
-        @dia.close()
-      @dia = new DialogView({elName:"hiearchyEdit", title: "Assembly", width:200, height:150,position:[25,25]})
-      @dia.render()
+      if not @dia?
+        @dia = new DialogView({elName:"hiearchyEdit", title: "Assembly", width:200, height:150,position:[25,25]})
+        @dia.render()
       
       if not @hierarchyEditorView?
         @hierarchyEditorView = new HierarchyEditorView 
           model:    @project
           settings: @settings
+      if not @dia.currentView?    
+        @dia.show(@hierarchyEditorView)
+      else
+        @dia.showDialog()
       
-      @dia.show(@hierarchyEditorView)
+    hideView:=>
+      @dia.hideDialog()
       
     resetEditor:(newProject)=>
       console.log "resetting hiearchy editor"
@@ -69,7 +73,6 @@ define (require)->
       if @dia?
         console.log "closing current hiearchy editor"
         @dia.close()
-        @hierarchyEditorView.close()
         @hierarchyEditorView = null
         
       @showView()
