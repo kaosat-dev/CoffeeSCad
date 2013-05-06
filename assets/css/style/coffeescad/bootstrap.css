@@ -6035,6 +6035,13 @@ ui-icon ui-icon-closethick .ui-state-hover {
   padding: 4px !important;
 }
 /*Code Editor*/
+#codeArea {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+}
 .codeEditor {
   /*color:#2db2ea;*/
 

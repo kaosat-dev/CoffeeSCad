@@ -273,6 +273,7 @@ define (require)->
         @model.loadProject(fileName)
     
     onRender:->
+      console.log "getting projects from #{@model.name}"
       @model.getProjectsName(@onProjectsFetched)
       #modelBinding
       @modelBinder.bind(@model, @el, @bindings)

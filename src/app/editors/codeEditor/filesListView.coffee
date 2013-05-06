@@ -13,7 +13,7 @@ define (require)->
   fileTabTemplate = require "text!./fileTab.tmpl"
   filesTabTemplate = require "text!./filesTab.tmpl"
   filesListTemplate = require "text!./filesList.tmpl"
-  FileCodeView = require "./fileCodeView"
+  FileCodeView = require "./fileCodeViewAce"
   ConsoleView =  require "./consoleView"
 
   DummyView = require 'core/utils/dummyView'
@@ -206,23 +206,7 @@ define (require)->
       consoleView = new ConsoleView
         model:@model
       @console.show consoleView
-      
-      #$(@tabContent.el).css("overflow-y": "hidden")
-      #$(@tabHeaders.el).css("overflow-y": "hidden")
-      
-      ### 
-      #activate first tab      
-      #firstFile = @tabHeaders.$el.find('a:first')
-      try
-        @tabHeaders.$el.find('a:first').tab('show')
-        defaultItem = @tabContent.$el.find('div .tab-pane:first')
-        defaultItem.addClass('active')
-        defaultItem.removeClass('fade')
-        #vent.trigger("file:selected", @activeFile)
-      catch error
-      ###
-      
-      
+ 
     showFile:(file)=>
       found = @openFiles.find (item)=>
         return (item.get('name') == file.get('name'))# and item.get('ext') == file.get('ext'))

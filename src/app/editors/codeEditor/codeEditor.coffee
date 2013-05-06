@@ -79,15 +79,5 @@ define (require)->
         @dia.close()
         @codeEditorView = null
       @showView()
-      ###else
-        
-        @dia = new DialogView({elName:"codeEdit", title: "CodeEditor", width:450, height:250,position:[25,125],dockable:true})
-        @dia.render()
-        @codeEditorView = new CodeEditorView 
-          model:    @project
-          settings: @settings
-        
-        @dia.show(@codeEditorView)
-        ###
   
   return CodeEditor

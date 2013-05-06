@@ -6,7 +6,9 @@ require.config
       #env:'node'
       env: 'xhr'
   waitSeconds:200
-
+  
+  
+  #baseUrl: window.location.protocol + "//" + window.location.host + window.location.pathname.split("/").slice(0, -1).join("/")
   paths:
     #JavaScript folders.
     libs:             "../assets/js/libs"
@@ -19,6 +21,7 @@ require.config
     backbone:         "../assets/js/libs/backbone"
     bootstrap:        "../assets/js/libs/bootstrap.min"
     CodeMirror:       "../assets/js/libs/codemirror"
+    ace:              "../assets/js/libs/ace"
     CoffeeScript:     "../assets/js/libs/CoffeeScript"
     three:            "../assets/js/libs/three"
     detector:         "../assets/js/libs/detector"
@@ -184,3 +187,4 @@ require.config
       exports : "Github"
     XMLWriter:
       exports: "XMLWriter"
+      

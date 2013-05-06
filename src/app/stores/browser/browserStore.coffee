@@ -74,6 +74,7 @@ define (require)->
     getProjectsName:(callback)=>
       try
         projectsList = localStorage.getItem("#{@storeURI}")
+        console.log "browser store projects", projectsList,"storeURI", "#{@storeURI}"
         if projectsList
           projectsList = projectsList.split(',')
         else
@@ -86,6 +87,7 @@ define (require)->
           projectNames.push(model.id)
           @projectsList.push(model.id) 
         ### 
+        
         callback(@projectsList)
       catch error
         console.log "could not fetch projectsName from #{@name} because of error #{error}"
