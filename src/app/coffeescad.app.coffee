@@ -199,16 +199,16 @@ define (require)->
               appSettings: @settings
           
       ###    
+      
       CodeEditor = require './editors/codeEditor/codeEditor'
       @editors['code'] = new CodeEditor
         project: @project
-        appSetting
+        appSettings: @settings
       
       HierarchyEditor = require './editors/hierarchyEditor/hierarchyEditor'
       @editors['hierarchy'] = new HierarchyEditor
         project: @project
         appSettings: @settings
-      
                  
       @settings.fetch()
       
