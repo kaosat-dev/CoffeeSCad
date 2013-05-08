@@ -36,16 +36,18 @@ define (require)->
       #@addRegions @regions
       
     init:=>
+      ### 
       if @appSettings?
         @appSettings.registerSettingClass("HierarchyEditor", HierarchyEditorSettings)
-        
+      ###  
       @addInitializer ->
         @vent.trigger "app:started", "#{@title}",@
       
       #if requested we send back the type of SettingsView to use for this specific sub app
-      reqRes.addHandler "HierarchyEditorSettingsView", ()->
+      ###reqRes.addHandler "HierarchyEditorSettingsView", ()->
         return HierarchyEditorSettingsView
-        
+      ###  
+      
     onStart:()=>
       @settings = @appSettings.get("HierarchyEditor")
       @showView()
