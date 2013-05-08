@@ -20,10 +20,10 @@ require.config
     underscore:       "../assets/js/libs/underscore-min"
     backbone:         "../assets/js/libs/backbone"
     bootstrap:        "../assets/js/libs/bootstrap.min"
-    CodeMirror:       "../assets/js/libs/codemirror"
-    ace:              "../assets/js/libs/ace"
+    #ace:              "../assets/js/libs/ace"
+    
     CoffeeScript:     "../assets/js/libs/CoffeeScript"
-    three:            "../assets/js/libs/three"
+    three:            "../assets/js/libs/three.min"
     detector:         "../assets/js/libs/detector"
     stats:            "../assets/js/libs/Stats"
     utils:            "../assets/js/libs/utils"
@@ -46,6 +46,8 @@ require.config
     notify:           "../assets/js/plugins/bootstrap-notify"
     
     coffeelint:       "../assets/js/plugins/coffeelint"
+    
+    ### 
     coffee_synhigh:   "../assets/js/libs/codeMirror/mode/coffeescript/coffeescript"
     
     foldcode:         "../assets/js/plugins/codemirror/fold/foldcode"
@@ -57,7 +59,7 @@ require.config
     hint:             "../assets/js/plugins/codemirror/hint/show-hint"
     jsHint:           "../assets/js/plugins/codemirror/hint/coffeescad-hint"
     closeBrackets:    "../assets/js/plugins/codemirror/edit/closeBrackets/closeBrackets"
-    matchBrackets:    "../assets/js/plugins/codemirror/edit/matchBrackets/matchBrackets"
+    matchBrackets:    "../assets/js/plugins/codemirror/edit/matchBrackets/matchBrackets"###
     
     marionette:       "../assets/js/plugins/backbone.marionette.min"
     eventbinder:      "../assets/js/plugins/backbone.eventbinder.min"
@@ -121,7 +123,8 @@ require.config
     #  exports:  "CoffeeScript"
     coffeelint:
       deps:    ["CoffeeScript"]
-          
+    
+    ###    
     CodeMirror:
       exports:  "CodeMirror"
     foldcode:
@@ -145,7 +148,7 @@ require.config
     closeBrackets: 
       deps:    ["CodeMirror"]
     matchBrackets:
-      deps:    ["CodeMirror"]
+      deps:    ["CodeMirror"]###
 
     three: 
       exports : "THREE"

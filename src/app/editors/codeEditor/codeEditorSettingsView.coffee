@@ -10,11 +10,35 @@ define (require)->
       if not options.schema
         options.schema=
           startLine    : 'Number'
-          undoDepth    : {type:'Number', editorAttrs: { step: 1, min: 1, max: 100 } }
-          smartIndent : {type:'Checkbox'}
           fontSize    : {type:'Number', editorAttrs: { step: 0.1, min: 0.5, max: 1.5 } }
+          undoDepth    : {type:'Number', editorAttrs: { step: 1, min: 1, max: 100 } }
           
-          linting      :
+          autoClose : {type:'Checkbox'}
+          highlightLine: {type:'Checkbox'}
+          showInvisibles:{type:'Checkbox'}
+          showIndentGuides:{type:'Checkbox'}
+          showGutter:{type:'Checkbox'}
+          
+          theme: 
+            type:'Select'
+            options: ["monokai","vibrant_ink","tomorrow_night_eighties","terminal","chaos","solarized_dark","solarized_light","clouds","eclipse","github"]
+          
+          
+          doLint: {type:'Checkbox',title: 'Lint code'}
+          
+        options.fieldsets=[
+          "legend": "General settings"
+          "fields": ["fontSize","autoClose","highlightLine","showInvisibles","showIndentGuides","showGutter","theme"]
+        ,
+          "legend":"Linting"
+          "fields": ["doLint"]
+          #"fields": ["linting.indentation","linting.max_line_length","linting.no_tabs","linting.no_trailing_whitespace","linting.no_trailing_semicolons"]
+        ]
+      super options
+      
+      #TODO: re add "startLine","undoDepth",
+      #SmartIndent, not so sure "smartIndent"
+      ### linting      :
             type: "Object"
             title:''
             subSchema:
@@ -59,16 +83,7 @@ define (require)->
                     type: 'Select'
                     options : ["ignore","warn", "error"]
                 
-                
-        options.fieldsets=[
-          "legend": "General settings"
-          "fields": ["startLine","undoDepth","smartIndent","fontSize"]
-        ,
-          "legend":"Linting"
-          "fields": ["linting.indentation","linting.max_line_length","linting.no_tabs","linting.no_trailing_whitespace","linting.no_trailing_semicolons"]
-        ]
-      super options
-      
+          ###   
       
   class CodeEditorSettingsView extends Backbone.Marionette.ItemView
     constructor:(options)->

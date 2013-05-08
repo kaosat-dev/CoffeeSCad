@@ -130,14 +130,31 @@ define (require)->
           when "fontSize"
             #.style.fontSize='12px';
             $(".codeEditorBlock").css("font-size","#{val}em")
-            #$(".CodeMirror").css("font-size","#{val}em")
-          when "startLine"
-            @editor.setOption("firstLineNumber",val)
-            @render()
-          when "smartIndent"
-            @editor.setOption("smartIndent",val)
-          when "linting"
-            @_updateHints()
+          when "theme" 
+            themePath = "./theme/#{val}"
+            @editor.setTheme(themePath)
+          when "autoClose"
+            @editor.setBehavioursEnabled(val)
+          when "hightlightLine"
+            @editor.setHighlightActiveLine(val)
+          when "showInvisibles"
+            @editor.setShowInvisibles(val)
+          when "showIndentGuides"
+            @editor.setDisplayIndentGuides(val)
+          when "showGutter"
+            @editor.renderer.setShowGutter(val)
+          when "doLint"
+            @editor.getSession().setUseWorker(val)
+      
+            
+          #when "startLine"
+          #  @editor.setOption("firstLineNumber",val)
+          #  @render()
+          #when "smartIndent"
+          #  @editor.setOption("smartIndent",val)
+          #when "linting"
+          #  @_updateHints()
+          
          
     
     _onProjectCompiled:=>
@@ -267,10 +284,16 @@ define (require)->
     onDomRefresh:=>
       ace = require 'ace/ace'
       @editor = ace.edit(@ui.codeBlock.get(0))
-      @editor.setTheme("./theme/monokai")
+      themePath = "./theme/#{@settings.theme}"
+      @editor.setTheme(themePath)
       @editor.getSession().setMode("./mode/coffee")
       @editor.getSession().setTabSize(2)
-      @editor.setBehavioursEnabled(true)
+      @editor.setBehavioursEnabled(@settings.autoClose)
+      @editor.setHighlightActiveLine(@settings.hightlightLine)
+      @editor.setShowInvisibles(@settings.showInvisibles)
+      @editor.setDisplayIndentGuides(@settings.showIndentGuides)
+      @editor.renderer.setShowGutter(@settings.showGutter)
+      @editor.getSession().setUseWorker(@settings.doLint)
       
       UndoManager = require("ace/undomanager").UndoManager
       @editor.getSession().setUndoManager(new UndoManager())
@@ -278,6 +301,7 @@ define (require)->
       
       @editor.resize()    
       
+
       
       
       #undo_manager = ace.getSession().getUndoManager();

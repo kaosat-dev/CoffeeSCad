@@ -1,39 +1,35 @@
 define (require)->
   Backbone = require 'backbone'
   backbone_nested = require 'backbone_nested'
-  
+  buildProperties = require 'core/utils/buildProperties' #helper for dotted attribute access instead of "get/Set"
         
   class CodeEditorSettings extends Backbone.NestedModel
     ###
     All settings for the code editor are stored within this class
     ###
+    attributeNames: ['theme','startLine','undoDepth','fontSize','autoClose','highlightLine','showInvisibles','showIndentGuides','showGutter','doLint']
+    buildProperties @
+    
     idAttribute: 'name'
     defaults:
       name: "CodeEditor"
       title: "Code editor"
       
       #general
-      theme        : "default"
+      theme        : "solarized_dark"
       startLine    :  1
       undoDepth    :  40
       fontSize     :  1
-      smartIndent    :  true
+      autoClose     : true
+      highlightLine: true
+      showInvisibles:true
+      showIndentGuides:false
+      showGutter:true
       
       #linting
-      linting:
-        indentation:
-          value: 2
-          level: "error"
-        max_line_length:
-          value: 80
-          level: "warn"
-        no_tabs:
-          level: "warn"
-        no_trailing_whitespace:
-          level: "warn"
-        no_trailing_semicolons:
-          level: "warn"         
-          
+      doLint: true
+      
+    
       
     constructor:(options)->
       super options
