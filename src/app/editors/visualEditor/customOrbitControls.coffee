@@ -7,7 +7,7 @@ define (require) ->
   @author WestLangley / https://github.com/WestLangley
   ###
   OrbitControls = (object, domElement) ->
-    THREE.EventDispatcher.call @   
+    #THREE.EventDispatcher.call @   
     @object = object
     @domElement = (if (domElement isnt `undefined`) then domElement else document)
     
@@ -244,5 +244,6 @@ define (require) ->
     @domElement.addEventListener "mousedown", onMouseDown, false
     @domElement.addEventListener "mousewheel", onMouseWheel, false
     @domElement.addEventListener "DOMMouseScroll", onMouseWheel, false # firefox
-
+  
+  OrbitControls.prototype = Object.create( THREE.EventDispatcher.prototype );
   return OrbitControls

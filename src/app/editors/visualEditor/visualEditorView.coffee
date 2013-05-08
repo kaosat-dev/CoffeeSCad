@@ -284,6 +284,19 @@ define (require) ->
               if @settings.showGrid
                 @removeGrid()
                 @addGrid()
+          when "shadowResolution"
+            #TODO: this does not seem to get applied
+            shadowResolution = parseInt(val.split("x")[0])
+            @light.shadowMapWidth = shadowResolution
+            @light.shadowMapHeight = shadowResolution
+            if @settings.shadows
+              @renderer.shadowMapAutoUpdate = true
+              @_updateAssemblyVisualAttrs()
+              @_render()
+              if @settings.showGrid
+                @removeGrid()
+                @addGrid()
+          
           when "selfShadows"
             @_updateAssemblyVisualAttrs()
             @_render()
@@ -373,32 +386,28 @@ define (require) ->
             if detector.webgl
               console.log "Gl Renderer"
               @renderer = new THREE.WebGLRenderer 
-                clearColor: 0x00000000
-                clearAlpha: 0
                 antialias: true
                 preserveDrawingBuffer   : true
               @renderer.clear() 
+              @renderer.setClearColor(0x00000000,0)
               @renderer.setSize(@width, @height)
               
               @overlayRenderer = new THREE.WebGLRenderer 
-                clearColor: 0x000000
-                clearAlpha: 0
                 antialias: true
+              @overlayRenderer.setClearColor(0x00000000,0)
               @overlayRenderer.setSize(350, 250)
             else if not detector.webgl and not detector.canvas
               #TODO: handle this correctly
               console.log("No Webgl and no canvas (fallback) support, cannot render")
             else if not detector.webgl and detector.canvas
               @renderer = new THREE.CanvasRenderer 
-                clearColor: 0x00000000
-                clearAlpha: 0
                 antialias: true
               @renderer.clear() 
+              @renderer.setClearColor(0x00000000,0)
               @overlayRenderer = new THREE.CanvasRenderer 
-                clearColor: 0x000000
-                clearAlpha: 0
                 antialias: true
               @overlayRenderer.setSize(350, 250)
+              @overlayRenderer.setClearColor(0x00000000,0)
               @renderer.setSize(@width, @height)
             else
               console.log("No Webgl and no canvas (fallback) support, cannot render")
@@ -487,11 +496,27 @@ define (require) ->
       ambientLight = new THREE.AmbientLight(@ambientColor)
       
       spotLight = new THREE.SpotLight( 0xbbbbbb, 1.5)    
-      spotLight.position.x = 0
-      spotLight.position.y = 0
+      spotLight.position.x = 50
+      spotLight.position.y = 50
       spotLight.position.z = 300
+      
+      #spotLight.shadowBias = 0.001
       #spotLight.shadowCameraVisible = true
+      
+      @renderer.shadowMapSoft = true
+      spotLight.shadowCameraNear = 1
+      spotLight.shadowCameraFar = 500
+      spotLight.shadowCameraFov = 50
+      
+      spotLight.shadowMapBias = 0.000039
+      spotLight.shadowMapDarkness = 0.5
+      shadowResolution = parseInt(@settings.shadowResolution.split("x")[0])
+      spotLight.shadowMapWidth = shadowResolution
+      spotLight.shadowMapHeight = shadowResolution
+      
       spotLight.castShadow = true
+      
+      
       @light= spotLight 
       
       @scene.add(ambientLight)

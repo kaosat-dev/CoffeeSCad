@@ -15,6 +15,11 @@ define (require)->
             options : ["webgl", "canvas"]
           antialiasing : 'Checkbox'
           shadows      : 'Checkbox'
+          shadowResolution: 
+            title: 'Shadow resolution (restart required)'
+            type: 'Select'
+            options : ["256x256", "512x512","1024x1024","2048x2048","4096x4096"]
+            
           selfShadows  : 
             type:       'Checkbox'
             title:      'Object self shadowing'
@@ -62,7 +67,7 @@ define (require)->
             
         options.fieldsets=[
           "legend":"Render settings"
-          "fields": ["renderer","antialiasing","shadows","selfShadows","objectViewMode"]
+          "fields": ["renderer","antialiasing","shadows","shadowResolution","selfShadows","objectViewMode"]
         , 
           "legend":"View settings"
           "fields": ["position","projection","center"]

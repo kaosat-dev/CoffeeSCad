@@ -4,7 +4,7 @@ define (require)->
 
 
   class VisualEditorSettings extends Backbone.Model
-    attributeNames: ['name','renderer','antialiasing','shadows','selfShadows',
+    attributeNames: ['name','renderer','antialiasing','shadows','shadowResolution','selfShadows',
     'showAxes','showConnectors','showGrid','gridSize','gridStep','gridColor','gridOpacity','gridText',
     'showStats','position','projection','objectViewMode','helpersColor','textColor','bgColor','bgColor2','axesSize']
     
@@ -19,6 +19,7 @@ define (require)->
       antialiasing : true
       
       shadows      : true
+      shadowResolution: "256x256"
       selfShadows  : false
       
       showAxes     : true
