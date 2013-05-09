@@ -80,6 +80,19 @@ require.config
     three_csg:        "../assets/js/plugins/ThreeCSG"
     combo_cam:        "../assets/js/plugins/CombinedCamera"
     
+    CopyShader:       "../assets/js/plugins/three/CopyShader"
+    EffectComposer:   "../assets/js/plugins/three/EffectComposer"
+    RenderPass:       "../assets/js/plugins/three/RenderPass"
+    ShaderPass:       "../assets/js/plugins/three/ShaderPass"
+    DotScreenShader :   "../assets/js/plugins/three/DotScreenShader"
+    DotScreenPass :   "../assets/js/plugins/three/DotScreenPass"
+    FXAAShader: "../assets/js/plugins/three/FXAAShader"
+    EdgeShader: "../assets/js/plugins/three/EdgeShader"
+    EdgeShader2: "../assets/js/plugins/three/EdgeShader2"
+    VignetteShader: "../assets/js/plugins/three/VignetteShader"
+    BlendShader : "../assets/js/plugins/three/BlendShader"
+    AdditiveBlendShader : "../assets/js/plugins/three/AdditiveBlendShader"
+    
     
   shim:
     #any AMD compliant lib should NOT need shims
@@ -168,6 +181,32 @@ require.config
     utils: 
       deps:    ["jquery"]
       exports : "normalizeEvent"
+    CopyShader:
+      deps:    ["three"]
+    EffectComposer:
+      deps:    ["CopyShader","ShaderPass","RenderPass"]
+    RenderPass:
+      deps:    ["CopyShader"]
+    ShaderPass:
+      deps:    ["CopyShader"]
+    DotScreenShader:
+      deps:    ["CopyShader"]
+    DotScreenPass :
+      deps:    ["CopyShader","DotScreenShader"]
+    FXAAShader :
+      deps:["CopyShader"] 
+    EdgeShader:
+      deps:["CopyShader"] 
+    EdgeShader2:
+      deps:["CopyShader"] 
+    VignetteShader:
+      deps:["CopyShader"]
+    BlendShader:
+      deps:["three"]
+    AdditiveBlendShader:
+      deps:["three"]
+      
+      
     jquery_ui:
       deps:    ["jquery"]
       exports : "jquery_ui"   

@@ -332,8 +332,6 @@ define (require) ->
       defaults = {mesh:null,color:0xFFFFFF,textColor:"#FFFFFF",addLabels:true}
       options = merge defaults, options
       {mesh, @color, @textColor,@addLabels} = options
-      console.log @size, @step, @color, @opacity
-      
       color = new THREE.Color().setHex(@color)
       #attempt to draw bounding box
       try
@@ -405,5 +403,167 @@ define (require) ->
         mesh.cage = cage
         mesh.add cage
       catch error
+  
+  
+  class SelectionHelper extends BaseHelper
+    #Helper to detect intersection with mouse /touch position (hover and click) and apply effect  
+    constructor:(options)->
+      super options
+      defaults = {hiearchyRoot:null,renderCallback:null, camera :null ,viewWidth:640, viewHeight:480}
+      options = merge defaults, options
+      {@hiearchyRoot, @renderCallback, @camera, @viewWidth, @viewHeight} = options
+      @options = options
+      @currentHover = null
+      @currentSelect = null
+      @selectionColor = 0xCC8888
+      @projector = new THREE.Projector()
+    
+    _onHover:(selection)=>
+      #console.log "currentHover", selection
+      @currentHover = selection
+      selection.currentHoverHex = selection.material.color.getHex()
+      selection.material.color.setHex( @selectionColor )
+      @renderCallback()
+      
+    _unHover:=>
+      if @currentHover
+        @currentHover.material.color.setHex( @currentHover.currentHoverHex )
+        @currentHover = null
+        @renderCallback()
+    
+    _onSelect:(selection)=>
+      #console.log "currentSelect", selection
+      @_unHover()
+      @currentSelect = selection
+      new BoundingCage({mesh:selection,color:@options.color,textColor:@options.textColor})
+      selection.currentSelectHex = selection.material.color.getHex()
+      selection.material.color.setHex( @selectionColor )
+      @renderCallback()
+      
+    _unSelect:=>
+      if @currentSelect
+        selection = @currentSelect
+        selection.material.color.setHex( selection.currentSelectHex )
+        selection.remove(selection.cage)
+        selection.cage = null
+        @currentSelect = null
+        @renderCallback()
+      #@currentHover.material = @currentHover.origMaterial if @currentHover.origMaterial
+      #@currentHover.material = @currentHover.origMaterial if @currentHover.origMaterial
+      ###
+            newMat = new  THREE.MeshLambertMaterial
+                color: 0xCC0000
+            @currentHover.origMaterial = @currentHover.material
+            @currentHover.material = newMat
+            ###
+            
+    _get3DBB:(object)=>
+      #shorthand to get object bounding box
+      if object?
+        if object.geometry?
+          if object.geometry.boundingBox?
+            return object.geometry.boundingBox
+          else
+            object.geometry.computeBoundingBox()
+            return object.geometry.boundingBox
+      return null
+              
+    get2DBB:(object,width,height)=>
+      #get the 2d (screen) bounding box of 3d object
+      if object?
+        boundingBox3d = @_get3DBB(object)
+        min3d = boundingBox3d.min.clone()
+        max3d = boundingBox3d.max.clone()
+        
+        pMin = @projector.projectVector(min3d, @camera) #projectedMin
+        pMax = @projector.projectVector(max3d, @camera) #projectedMax
+      
+        minPercX = (pMin.x + 1) / 2
+        minPercY = (-pMin.y + 1) / 2
+        # scale these values to our viewport size
+        minLeft = minPercX * width
+        minTop = minPercY * height
+        
+        maxPercX = (pMax.x + 1) / 2
+        maxPercY = (-pMax.y + 1) / 2
+        # scale these values to our viewport size
+        maxLeft = maxPercX * width
+        maxTop = maxPercY * height
+        
+        #console.log "min3d",min3d,"pMin",pMin,"max3d", max3d,"pMax" ,pMax
+        
+        return [minLeft, minTop, maxLeft, maxTop]
+        
+   
+    selectObjectAt:(x,y)=>
+      v = new THREE.Vector3((x/@viewWidth)*2-1, -(y/@viewHeight)*2+1, 0.5)
+      @projector.unprojectVector(v, @camera)
+      raycaster = new THREE.Raycaster(@camera.position, v.sub(@camera.position).normalize())
+      intersects = raycaster.intersectObjects(@hiearchyRoot, true )
+      
+      if intersects.length > 0
+        if intersects[0].object != @currentSelect
+          @_unSelect()
+          @_onSelect(intersects[0].object)
+      else
+        @_unSelect()
+    
+    highlightObjectAt:(x,y)=>
+      v = new THREE.Vector3((x/@viewWidth)*2-1, -(y/@viewHeight)*2+1, 0.5)
+      @projector.unprojectVector(v, @camera)
+      raycaster = new THREE.Raycaster(@camera.position, v.sub(@camera.position).normalize())
+      intersects = raycaster.intersectObjects(@hiearchyRoot, true )
+      
+      if intersects.length > 0
+        if intersects[0].object != @currentHover
+          if intersects[0].object.name != "workplane"
+            @_unHover()
+            @_onHover(intersects[0].object)
+      else
+        @_unHover()
+    
+   
+  captureScreen=(domElement, width=300, height=300)->
+    # Save screenshot of 3d view
+    if not domElement
+      throw new Error("Cannot Do screeshot without canvas domElement")
+    #resizing
+    srcImg = domElement.toDataURL("image/png")
+    canvas = document.createElement("canvas")
+    canvas.width = width
+    canvas.height = height
+    ctx = canvas.getContext('2d')
+    d = $.Deferred()
+    imgAsDataURL =null 
+    img = new Image()
+    img.onload = ()=> 
+      ctx.drawImage(img, 0,0,width, height)
+      imgAsDataURL = canvas.toDataURL("image/png")
+      d.resolve(imgAsDataURL)
+    img.src = srcImg
+    return d
+  
+  geometryToline=( geo )->
+    # credit to WestLangley!
+    geometry = new THREE.Geometry()
+    vertices = geometry.vertices;
 
-  return {"LabeledAxes":LabeledAxes, "Arrow":Arrow, "Grid":Grid, "BoundingCage":BoundingCage}
+    for i in [0...geo.faces.length]
+      face = geo.faces[i]
+      if face instanceof THREE.Face3
+        a = geo.vertices[ face.a ].clone()
+        b = geo.vertices[ face.b ].clone()
+        c = geo.vertices[ face.c ].clone()
+        vertices.push( a,b, b,c, c,a )
+      else if face instanceof THREE.Face4
+        a = geo.vertices[ face.a ].clone()
+        b = geo.vertices[ face.b ].clone()
+        c = geo.vertices[ face.c ].clone()
+        d = geo.vertices[ face.d ].clone()
+        vertices.push( a,b, b,c, c,d, d,a )
+
+    geometry.computeLineDistances()
+    return geometry
+      
+
+  return {"LabeledAxes":LabeledAxes, "Arrow":Arrow, "Grid":Grid, "BoundingCage":BoundingCage, "SelectionHelper":SelectionHelper, "captureScreen":captureScreen, "geometryToline":geometryToline}
