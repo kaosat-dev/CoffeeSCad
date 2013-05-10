@@ -180,8 +180,9 @@ define (require)->
       @editor.getSession().clearAnnotations()
       
     _clearErrorMarkers:=>
+      ###
       for marker in @_compileErrorsMarkers
-        @editor.setGutterMarker(marker.line,"lintAndErrorsGutter",  null)
+        @editor.setGutterMarker(marker.line,"lintAndErrorsGutter",  null)###
       @_compileErrorsMarkers = []
       
     _clearLintMarkers:=>
