@@ -5,9 +5,11 @@ define (require)->
   marionette = require 'marionette'
   dialogTemplate =  require "text!./dialog.tmpl"
 
+
   class DialogView extends Backbone.Marionette.ItemView
     template: dialogTemplate
     el: "#none"
+    className:"unselectable"
 
     events:
       "change .opacitySetter" : "onOpacityChanged"
@@ -90,7 +92,7 @@ define (require)->
       @triggerMethod("item:rendered", @)
       
       #additional
-      @$el.addClass("dialog floatpanel")
+      @$el.addClass("dialog floatpanel unselectable")
       @$el.css("width",@width)
       @$el.css("height",@height)
       

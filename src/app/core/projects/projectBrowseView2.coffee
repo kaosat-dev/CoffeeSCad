@@ -286,7 +286,7 @@ define (require)->
           
       @delegateEvents()
       @ui.projects.slimScroll({size:"10px";height:"100px",alwaysVisible: true})
-      @$el.find('[rel=tooltip]').tooltip({'placement': 'right'})
+      #@$el.find('[rel=tooltip]').tooltip({'placement': 'right'})
     
     onClose:->
       #clean up events
