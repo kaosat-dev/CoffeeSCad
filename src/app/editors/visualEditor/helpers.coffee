@@ -420,10 +420,12 @@ define (require) ->
     
     _onHover:(selection)=>
       #console.log "currentHover", selection
-      @currentHover = selection
-      selection.currentHoverHex = selection.material.color.getHex()
-      selection.material.color.setHex( @selectionColor )
-      @renderCallback()
+      if selection?
+        @currentHover = selection
+        console.log @currentHover
+        selection.currentHoverHex = selection.material.color.getHex()
+        selection.material.color.setHex( @selectionColor )
+        @renderCallback()
       
     _unHover:=>
       if @currentHover
@@ -505,6 +507,9 @@ define (require) ->
         if intersects[0].object != @currentSelect
           @_unSelect()
           @_onSelect(intersects[0].object)
+          return @currentSelect
+      else if @currentSelect?
+        return @currentSelect
       else
         @_unSelect()
     

@@ -9,6 +9,7 @@ define (require) ->
   utils = require 'utils'
   OrbitControls = require './orbitControls'
   CustomOrbitControls = require './customOrbitControls'
+  transformControls = require 'transformControls'
   
   Shaders = require './shaders'
   
@@ -21,7 +22,6 @@ define (require) ->
   
   helpers = require './helpers'
   
-  contextMenuTemplate = require "text!./contextMenu.tmpl"
   
   includeMixin = require 'core/utils/mixins/mixins'
   dndMixin = require 'core/utils/mixins/dragAndDropRecieverMixin'
@@ -37,7 +37,8 @@ define (require) ->
       overlayDiv:     "#overlay" 
       
     events:
-      'contextmenu' : '_onRightclick'
+      "mousedown"   : "_onSelectAttempt"
+      "contextmenu" : "_onRightclick"
       "mousemove"   : "_onMouseMove"
       "resize:stop" : "onResizeStop"
       "resize"      : "onResizeStop"
@@ -81,18 +82,7 @@ define (require) ->
       @stats.domElement.style.position = 'absolute'
       @stats.domElement.style.top = '30px'
       @stats.domElement.style.zIndex = 100
-      
-<<<<<<< HEAD
-    projectCompiled:(res)=>
-      #compile succeeded, generate geometry from csg
-      @fromCsg res
-    
-    projectCompileFailed:()=>
-      #in case project compilation failed, remove previously generated geometry
-      if @assembly?
-        @scene.remove @assembly
-        @assembly = null
-      @_render()
+
               
     settingsChanged:(settings, value)=> 
       for key, val of @settings.changedAttributes()
@@ -220,19 +210,9 @@ define (require) ->
       @_render()  
        
     init:()=>
-      @renderer=null
-      #TODO: do this properly
-      @configure(@settings)
-      @renderer.shadowMapEnabled = true
-      @renderer.shadowMapAutoUpdate = true
-=======
->>>>>>> quickViz
-      
       @setupRenderers(@settings)
-      @setupScene()
-      @setupOverlayScene()
+      @setupScenes()
       @setupPostProcess()
-      
       
       if @settings.shadows then @renderer.shadowMapAutoUpdate = @settings.shadows
       if @settings.showGrid then @addGrid()
@@ -241,57 +221,6 @@ define (require) ->
       @setBgColor()
       @setupView(@settings.position)
       
-        
-<<<<<<< HEAD
-    configure:(settings)=>
-      if settings.renderer
-          renderer = settings.renderer
-          if renderer == "webgl"
-            if detector.webgl
-              console.log "Gl Renderer"
-              @renderer = new THREE.WebGLRenderer 
-                antialias: true
-                preserveDrawingBuffer   : true
-              @renderer.clear() 
-              @renderer.setClearColor(0x00000000,0)
-              @renderer.setSize(@width, @height)
-              
-              @overlayRenderer = new THREE.WebGLRenderer 
-                antialias: true
-              @overlayRenderer.setClearColor(0x00000000,0)
-              @overlayRenderer.setSize(350, 250)
-            else if not detector.webgl and not detector.canvas
-              #TODO: handle this correctly
-              console.log("No Webgl and no canvas (fallback) support, cannot render")
-            else if not detector.webgl and detector.canvas
-              @renderer = new THREE.CanvasRenderer 
-                antialias: true
-              @renderer.clear() 
-              @renderer.setClearColor(0x00000000,0)
-              @overlayRenderer = new THREE.CanvasRenderer 
-                antialias: true
-              @overlayRenderer.setSize(350, 250)
-              @overlayRenderer.setClearColor(0x00000000,0)
-              @renderer.setSize(@width, @height)
-            else
-              console.log("No Webgl and no canvas (fallback) support, cannot render")
-          else if renderer =="canvas"
-            if detector.canvas
-              @renderer = new THREE.CanvasRenderer 
-                clearColor: 0x00000000
-                clearAlpha: 0
-                antialias: true
-              @renderer.clear() 
-              @overlayRenderer = new THREE.CanvasRenderer 
-                clearColor: 0x000000
-                clearAlpha: 0
-                antialias: true
-              @overlayRenderer.setSize(350, 250)
-              @renderer.setSize(@width, @height)
-            else if not detector.canvas
-              #TODO: handle this correctly
-              console.log("No canvas support, cannot render")
-=======
     setupRenderers:(settings)=>
       getValidRenderer=(settings)->
         renderer = settings.renderer
@@ -310,38 +239,38 @@ define (require) ->
       console.log "#{renderer} renderer"
       if renderer is "webgl"
         @renderer = new THREE.WebGLRenderer 
-          clearColor: 0x00000000
-          clearAlpha: 0
           antialias: true
           preserveDrawingBuffer   : true
-        @renderer.clear() 
-        
-        
-        #@renderer.autoClear = false
         @renderer.setSize(@width, @height)
-        
-        @overlayRenderer = new THREE.WebGLRenderer 
-          clearColor: 0x000000
-          clearAlpha: 0
-          antialias: true
-        @overlayRenderer.setSize(350, 250)
+        @renderer.clear() 
+        @renderer.setClearColor(0x00000000,0)
         @renderer.shadowMapEnabled = true
         @renderer.shadowMapAutoUpdate = true
+        @renderer.shadowMapSoft = true
+        
+        @overlayRenderer = new THREE.WebGLRenderer 
+          antialias: true
+        @overlayRenderer.setSize(350, 250)
+        @overlayRenderer.setClearColor(0x00000000,0)
+        
         
       else if renderer is "canvas"
         @renderer = new THREE.CanvasRenderer 
-          clearColor: 0x00000000
-          clearAlpha: 0
           antialias: true
-        @renderer.clear() 
+        @renderer.setSize(@width, @height)
+        @renderer.clear()
+        
         @overlayRenderer = new THREE.CanvasRenderer 
           clearColor: 0x000000
           clearAlpha: 0
           antialias: true
         @overlayRenderer.setSize(350, 250)
-        @renderer.setSize(@width, @height)
->>>>>>> quickViz
-    
+        @overlayRenderer.setClearColor(0x00000000,0)
+
+    setupScenes:()->
+      @setupScene()
+      @setupOverlayScene() 
+             
     setupScene:()->
       @viewAngle=45
       ASPECT = @width / @height
@@ -412,10 +341,8 @@ define (require) ->
       spotLight.position.y = 50
       spotLight.position.z = 300
       
-      #spotLight.shadowBias = 0.001
       #spotLight.shadowCameraVisible = true
       
-      @renderer.shadowMapSoft = true
       spotLight.shadowCameraNear = 1
       spotLight.shadowCameraFar = 500
       spotLight.shadowCameraFov = 50
@@ -427,7 +354,6 @@ define (require) ->
       spotLight.shadowMapHeight = shadowResolution
       
       spotLight.castShadow = true
-      
       
       @light= spotLight 
       
@@ -609,13 +535,13 @@ define (require) ->
       @_render()
     
     _setupEventBindings:=>
-      @model.on("compiled", @projectCompiled)
-      @model.on("compile:error", @projectCompileFailed)
+      @model.on("compiled", @_onProjectCompiled)
+      @model.on("compile:error", @_onProjectCompileFailed)
       
     makeScreenshot:(width=300, height=300)=>
       return helpers.captureScreen(@renderer.domElement,width,height)
     
-    _onRightclick:(ev)=>
+    _onSelectAttempt:(ev)=>
       """used either for selection or context menu"""
       normalizeEvent(ev)
       x = ev.offsetX
@@ -624,10 +550,46 @@ define (require) ->
       @selectionHelper.hiearchyRoot=hiearchyRoot
       @selectionHelper.viewWidth=@width
       @selectionHelper.viewHeight=@height
-      @selectionHelper.selectObjectAt(x,y)
+      
+      selected = @selectionHelper.selectObjectAt(x,y)
+      
+      ###
+      selectionChange = false
+      if selected?
+        if @currentSelection?
+          if @currentSelection != selected
+            selectionChange = true
+        else 
+          selectionChange = true
+     
+      if selectionChange
+        if @currentSelection?
+          controls = @currentSelection.controls
+          if controls?
+            controls.detatch(@currentSelection)
+            controls.removeEventListener( 'change', @_render)
+            @scene.remove(controls.gizmo)
+            controls = null
+            @currentSelection = null
+        
+        @currentSelection = selected        
+        controls = new THREE.TransformControls(@camera, @renderer.domElement)
+        console.log controls
+        controls.addEventListener( 'change', @_render );
+        controls.attatch( selected );
+        controls.scale = 0.65;
+        @scene.add( controls.gizmo );
+        selected.controls = controls
+      
+      @_render()
+      ###      
       
       ev.preventDefault()
       return false
+      
+    _onRightclick:(ev)=>
+      @selectionHelper._unSelect()
+      
     
     _onMouseMove:(ev)->
       normalizeEvent(ev)
@@ -643,8 +605,8 @@ define (require) ->
     switchModel:(newModel)->
       #replace current model with a new one
       #@unbindAll()
-      @model.off("compiled", @projectCompiled)
-      @model.off("compile:error", @projectCompileFailed)
+      @model.off("compiled", @_onProjectCompiled)
+      @model.off("compile:error", @_onProjectCompileFailed)
       try
         @scene.remove @current.cageView
       if @assembly?
@@ -655,11 +617,11 @@ define (require) ->
       @_setupEventBindings()
       @_render()
       
-    projectCompiled:(res)=>
+    _onProjectCompiled:(res)=>
       #compile succeeded, generate geometry from csg
       @fromCsg res
     
-    projectCompileFailed:()=>
+    _onProjectCompileFailed:()=>
       #in case project compilation failed, remove previously generated geometry
       if @assembly?
         @scene.remove @assembly
@@ -940,9 +902,12 @@ define (require) ->
       @renderer.render( @scene, @camera, @depthTarget )
       ###
       
+      #depth rendering experiment
+      ###
       if @assembly?
         for child in @assembly.children
           child.material = @depthMaterial
+      ###    
       @renderer.render(@scene, @camera)
       #@scene.overrideMaterial = null
       #@renderer.render(@scene, @camera)

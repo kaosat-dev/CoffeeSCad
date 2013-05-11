@@ -79,6 +79,7 @@ require.config
     
     three_csg:        "../assets/js/plugins/ThreeCSG"
     combo_cam:        "../assets/js/plugins/CombinedCamera"
+    transformControls:"../assets/js/plugins/three/controls/transformControls"
     
     CopyShader:       "../assets/js/plugins/three/CopyShader"
     EffectComposer:   "../assets/js/plugins/three/EffectComposer"
@@ -171,9 +172,8 @@ require.config
     combo_cam: 
       deps:    ["three"]
       exports : "combo_cam"
-    orbit_ctrl:
-      deps:    ["three"]
-      exports : "orbit_ctrl"
+    transformControls:
+      deps: ["three"]
     detector: 
       exports : "Detector"
     stats:
