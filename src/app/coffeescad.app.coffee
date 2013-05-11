@@ -75,6 +75,7 @@ define (require)->
         stores: @stores
         exporters: @exporters
         model : @project
+        settings: @settings
       #@headerRegion.show @menuView
       @menuView.render()
       @menuView.onDomRefresh()

@@ -53,6 +53,7 @@ define (require)->
       @editors = {}
       @stores= options.stores ? {}
       @exporters= options.exporters ? {}
+      @settings = options.settings
       
       #TODO: move this to data binding
       @vent.on("file:undoAvailable", @_onUndoAvailable)
@@ -72,7 +73,9 @@ define (require)->
       @vent.on("app:started",@_onSubAppStarted)
     
     _onNotificationRequested:(message)=>
-      $('.notifications').notify(message: { text:message },fadeOut:{enabled:true, delay: 1000 }).show()
+      console.log "bla",@settings.get("General").displayEventNotifications
+      if @settings.get("General").displayEventNotifications
+        $('.notifications').notify(message: { text:message },fadeOut:{enabled:true, delay: 1000 }).show()
       
     _clearUndoRedo:=>
       $('#undoBtn').addClass("disabled")

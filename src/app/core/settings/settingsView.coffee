@@ -128,6 +128,9 @@ define (require)->
             type: 'Number'
           csgBackgroundProcessing:
             type: 'Checkbox'
+          displayEventNotifications:
+            type: 'Checkbox'
+            title: 'Display event notifications'
           autoReloadLastProject:
             type:'Checkbox'
             title: 'Reload last project on application start'
@@ -152,7 +155,7 @@ define (require)->
           "fields":["autoReloadLastProject","autoSave","autoSaveFrequency"]
         , 
           "legend":"Other settings"
-          "fields": ["theme"]
+          "fields": ["theme","displayEventNotifications"]
           
         ]
       super options
