@@ -190,8 +190,7 @@ define (require)->
       
       ### 
       deferredList = []
-      #dynamic load, problematic
-
+      #dynamic load, problematic ...not useable for now
           console.log "editorName",editorName
           editorPath = "./editors/#{editorName}Editor/#{editorName}Editor"
           console.log "editorPath: #{editorPath}"
@@ -199,7 +198,6 @@ define (require)->
             @editors[editorName] = new editorClass
               project: @project
               appSettings: @settings
-          
       ###    
       
       CodeEditor = require './editors/codeEditor/codeEditor'
