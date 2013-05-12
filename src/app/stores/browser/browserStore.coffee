@@ -80,6 +80,8 @@ define (require)->
         else
           projectsList = []
         @projectsList = projectsList
+        
+        @_getAllProjectsHelper()
         #kept for now
         ### 
         projectNames = []
@@ -175,7 +177,7 @@ define (require)->
       
       localStorage.setItem(projectURI,strinfigiedProject)
       
-      @vent.trigger("project:saved")
+      @vent.trigger("project:saved",project)
       if firstSave
         project._clearFlags()
       project.trigger("save", project)
@@ -306,18 +308,19 @@ define (require)->
       if projects?
         projects = projects.split(',')
         index = projects.indexOf(projectName)
-        projects.splice(index, 1)
-        if projects.length>0 then projects=projects.join(',') else projects = ""
-        localStorage.setItem(@storeURI,projects)
-        index = @projectsList.indexOf(projectName)
-        @projectsList.splice(index, 1)
-        
-        console.log "projectName"
-        projectURI = "#{@storeURI}-#{projectName}"
-        rootStoreURI = "#{projectURI}-files"
-        
-        localStorage.removeItem(rootStoreURI)
-        localStorage.removeItem(projectURI)
+        if index != -1
+          projects.splice(index, 1)
+          if projects.length>0 then projects=projects.join(',') else projects = ""
+          localStorage.setItem(@storeURI,projects)
+          index = @projectsList.indexOf(projectName)
+          @projectsList.splice(index, 1)
+          
+          console.log "projectName"
+          projectURI = "#{@storeURI}-#{projectName}"
+          rootStoreURI = "#{projectURI}-files"
+          
+          localStorage.removeItem(rootStoreURI)
+          localStorage.removeItem(projectURI)
       
     _addToProjectsList:(projectName)=>
       projects = localStorage.getItem(@storeURI)
@@ -416,6 +419,24 @@ define (require)->
           deferred.resolve(result)
         @loadProject(projectName,true).done(getContent)
       
+    _getAllProjectsHelper:()->
+      #just a a temporary helper, as the projects List seems to have been cleared by accident?
+      projects = []
+      console.log "localStorage",localStorage
+      for item, key of localStorage
+        projData = item.split("-")
+        #console.log "projData",projData
+        if projData[0] is "projects"
+          console.log "item", item
+          projectName = projData[1]
+          if projectName?
+            if projectName not in projects
+              projects.push(projectName)
+      console.log "projects", projects.join(",")
+       
+      #projectURI = "#{@storeURI}-#{projectName}"
+      #filesURI = "#{projectURI}-files"
+      #fileNames = localStorage.getItem(filesURI)
       
        
   return BrowserStore

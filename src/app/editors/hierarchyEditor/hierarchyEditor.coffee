@@ -26,6 +26,10 @@ define (require)->
       @vent = vent
       #@router = new HierarchyEditorRouter
       #  controller: @
+      
+      @startWithParent = true
+      @showOnAppStart = true
+      @addMainMenuIcon = true
       @icon = "icon-list"
       
       @vent.on("project:loaded",@resetEditor)
@@ -50,7 +54,8 @@ define (require)->
       
     onStart:()=>
       @settings = @appSettings.get("HierarchyEditor")
-      @showView()
+      if @showOnAppStart
+        @showView()
       
     showView:=>
       if not @dia?
@@ -76,7 +81,7 @@ define (require)->
         console.log "closing current hiearchy editor"
         @dia.close()
         @hierarchyEditorView = null
-        
-      @showView()
+      if @showOnAppStart  
+        @showView()
   
   return HierarchyEditor

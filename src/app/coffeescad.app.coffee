@@ -143,8 +143,9 @@ define (require)->
       #@_setupKeyboardBindings()
       @visualEditor.start()
       for editorName,editorInst of @editors
-        console.log "starting #{editorName}Editor"
-        editorInst.start()
+        if editorInst.startWithParent
+          console.log "starting #{editorName}Editor"
+          editorInst.start()
       @projectManager.start()
       
     onAppStarted:(appName)->
