@@ -31,6 +31,9 @@ THREE.GeometryExporter.prototype = {
 		var uvs = [[]];
 		var normals = [];
 		var normalsHash = {};
+		var colors = [];
+		var colorsHash = {};
+		
 
 		for ( var i = 0; i < geometry.faces.length; i ++ ) {
 
@@ -43,7 +46,7 @@ THREE.GeometryExporter.prototype = {
 			var hasFaceNormal = face.normal.length() > 0;
 			var hasFaceVertexNormal = face.vertexNormals[ 0 ] !== undefined;
 			var hasFaceColor = false; // face.color;
-			var hasFaceVertexColor = false; // face.vertexColors[ 0 ] !== undefined;
+			var hasFaceVertexColor = face.vertexColors[ 0 ] !== undefined;
 
 			var faceType = 0;
 
@@ -141,6 +144,29 @@ THREE.GeometryExporter.prototype = {
 				}
 
 			}
+			if ( hasFaceVertexColor ) {
+			    var vertexColors = face.vertexColors;
+
+                if ( isTriangle ) {
+
+                    faces.push(
+                        getColorIndex( vertexColors[ 0 ].r, vertexColors[ 0 ].g, vertexColors[ 0 ].b ),
+                        getColorIndex( vertexColors[ 1 ].r, vertexColors[ 1 ].g, vertexColors[ 1 ].b ),
+                        getColorIndex( vertexColors[ 2 ].r, vertexColors[ 2 ].g, vertexColors[ 2 ].b )
+                    );
+
+                } else {
+
+                    faces.push(
+                        getColorIndex( vertexColors[ 0 ].r, vertexColors[ 0 ].g, vertexColors[ 0 ].b ),
+                        getColorIndex( vertexColors[ 1 ].r, vertexColors[ 1 ].g, vertexColors[ 1 ].b ),
+                        getColorIndex( vertexColors[ 2 ].r, vertexColors[ 2 ].g, vertexColors[ 2 ].b ),
+                        getColorIndex( vertexColors[ 3 ].r, vertexColors[ 3 ].g, vertexColors[ 3 ].b )
+                    );
+
+                }
+			    
+			}
 
 		}
 
@@ -166,9 +192,28 @@ THREE.GeometryExporter.prototype = {
 			return normalsHash[ hash ];
 
 		}
+		
+		
+		function getColorIndex( r, g, b ) {
+
+            var hash = r.toString() + g.toString() + b.toString();
+
+            if ( colorsHash[ hash ] !== undefined ) {
+                return colorsHash[ hash ];
+            }
+
+            colorsHash[ hash ] = colors.length / 3;
+            color = "rgb("+Math.floor(r*255)+","+ Math.floor(g*255)+","+Math.floor(b*255)+")";
+            colors.push( color );
+            //rgb(255,0,0)
+
+            return colorsHash[ hash ];
+
+        }
 
 		output.vertices = vertices;
 		output.normals = normals;
+		output.colors = colors;
 		output.uvs = uvs;
 		output.faces = faces;
 

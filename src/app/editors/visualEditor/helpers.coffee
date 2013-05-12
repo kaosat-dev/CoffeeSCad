@@ -392,7 +392,7 @@ define (require) ->
         selectionAxis.position = mesh.position
         #selectionAxis.matrixAutoUpdate = false
         
-        cage.add selectionAxis
+        #cage.add selectionAxis
         #mesh.material.side= THREE.BackSide
         #widthArrow.material.side = THREE.FrontSide
         
@@ -422,7 +422,6 @@ define (require) ->
       #console.log "currentHover", selection
       if selection?
         @currentHover = selection
-        console.log @currentHover
         selection.currentHoverHex = selection.material.color.getHex()
         selection.material.color.setHex( @selectionColor )
         @renderCallback()
@@ -451,7 +450,6 @@ define (require) ->
         @currentSelect = null
         @renderCallback()
       #@currentHover.material = @currentHover.origMaterial if @currentHover.origMaterial
-      #@currentHover.material = @currentHover.origMaterial if @currentHover.origMaterial
       ###
             newMat = new  THREE.MeshLambertMaterial
                 color: 0xCC0000
@@ -473,9 +471,14 @@ define (require) ->
     get2DBB:(object,width,height)=>
       #get the 2d (screen) bounding box of 3d object
       if object?
-        boundingBox3d = @_get3DBB(object)
-        min3d = boundingBox3d.min.clone()
-        max3d = boundingBox3d.max.clone()
+        bbox3d = @_get3DBB(object)
+        min3d = bbox3d.min.clone()
+        max3d = bbox3d.max.clone()
+        
+        objLength = bbox3d.max.x-bbox3d.min.x
+        objWidth  = bbox3d.max.y-bbox3d.min.y
+        objHeight = bbox3d.max.z-bbox3d.min.z
+        
         
         pMin = @projector.projectVector(min3d, @camera) #projectedMin
         pMax = @projector.projectVector(max3d, @camera) #projectedMax
@@ -493,8 +496,19 @@ define (require) ->
         maxTop = maxPercY * height
         
         #console.log "min3d",min3d,"pMin",pMin,"max3d", max3d,"pMax" ,pMax
+        #,centerX,centerY
+        pos = object.position.clone()
+        pos = @projector.projectVector(pos, @camera) #projectedMin
+        centerPercX = (pos.x + 1) / 2
+        centerPercY = (-pos.y + 1) / 2
+        centerLeft = centerPercX * width
+        centerTop = centerPercY * height
         
-        return [minLeft, minTop, maxLeft, maxTop]
+        
+        #result = [minLeft, minTop, maxLeft, maxTop, centerLeft,centerTop]
+        result = [centerLeft,centerTop,objLength,objWidth,objHeight]
+        #console.log "selection positions",result
+        return result
         
    
     selectObjectAt:(x,y)=>

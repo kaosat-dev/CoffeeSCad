@@ -11,6 +11,10 @@ define (require) ->
   CustomOrbitControls = require './customOrbitControls'
   transformControls = require 'transformControls'
   
+  ObjectExport = require 'ObjectExport'
+  ObjectParser = require 'ObjectParser'
+  
+  
   Shaders = require './shaders'
   
   reqRes = require 'core/messaging/appReqRes'
@@ -220,7 +224,23 @@ define (require) ->
       
       @setBgColor()
       @setupView(@settings.position)
-      
+    
+    reloadAssembly:()=>
+      reloadedAssembly = @model.rootFolder.get(".assembly")
+      console.log "reloadedAssembly",reloadedAssembly
+      if reloadedAssembly?
+        reloadedAssembly = JSON.parse(reloadedAssembly.content)
+        loader = new THREE.ObjectParser()
+        
+        @assembly = loader.parse(reloadedAssembly)
+        console.log "parse Result", @assembly
+        @scene.add @assembly
+        
+        #hack because three.js does not reload the vertexColors flag correctly
+        #moved to @_updateAssemblyVisualAttrs
+        @_updateAssemblyVisualAttrs()
+        @_render()
+     
     setupRenderers:(settings)=>
       getValidRenderer=(settings)->
         renderer = settings.renderer
@@ -614,11 +634,16 @@ define (require) ->
         @current=null
       
       @model = newModel
+      
+      @selectionHelper._unSelect() #clear selection
       @_setupEventBindings()
       @_render()
       
+      @reloadAssembly()
+      
     _onProjectCompiled:(res)=>
       #compile succeeded, generate geometry from csg
+      @selectionHelper._unSelect()
       @fromCsg res
     
     _onProjectCompileFailed:()=>
@@ -874,23 +899,33 @@ define (require) ->
       @animate()
     
     _render:()=>
-      ###
       #experimental 2d overlay for projected min max values of the objects 3d bounding box
       if @selectionHelper?
         if @selectionHelper.currentSelect?
-          [minLeft,minTop,maxLeft,maxTop]=@selectionHelper.get2DBB(@selectionHelper.currentSelect,@width, @height)
+          #[minLeft,minTop,maxLeft,maxTop, centerLeft,centerTop]=@selectionHelper.get2DBB(@selectionHelper.currentSelect,@width, @height)
+          [centerLeft,centerTop,length,width,height]=@selectionHelper.get2DBB(@selectionHelper.currentSelect,@width, @height)
           
-          $("#testOverlay").css("top",minTop)
-          $("#testOverlay").css("left",minLeft+@$el.offset().left)
+          #console.log "result positions",[minLeft,minTop,maxLeft,maxTop, centerLeft,centerTop]
+          #$("#testOverlay").css("top",minTop)
+          #$("#testOverlay").css("left",minLeft+@$el.offset().left)
           
           
-          $("#testOverlay2").css("left",maxLeft+@$el.offset().left)
-          #$("#testOverlay2").css("top",@$el.offset().top-maxTop)
-          $("#testOverlay2").css('top', (maxTop - $("#testOverlay2").height() / 2))
+          $("#testOverlay2").removeClass("hide")
+          #$("#testOverlay2").css("left",maxLeft+@$el.offset().left)
+          #$("#testOverlay2").css('top', (maxTop - $("#testOverlay2").height() / 2))
           
-          $("#testOverlay2").text(@selectionHelper.currentSelect.name)
-      ###
-      
+          #.css('left', (left - $trackingOverlay.width() / 2) + 'px')
+          #.css('top', (top - $trackingOverlay.height() / 2) + 'px');
+          
+          $("#testOverlay2").css("left",centerLeft+@$el.offset().left)
+          $("#testOverlay2").css('top', (centerTop - $("#testOverlay2").height()/2)+'px')
+          infoText = "#{@selectionHelper.currentSelect.name}"#\n w:#{width} <br\> l:#{length} <br\>h:#{height}"
+          
+          $("#testOverlay2").text(infoText)
+        else
+          $("#testOverlay2").addClass("hide")
+      else
+        $("#testOverlay2").addClass("hide")
       #necessary hack
       THREE.EffectComposer.camera = new THREE.OrthographicCamera( -1, 1, 1, -1, 0, 1 )
       THREE.EffectComposer.quad = new THREE.Mesh( new THREE.PlaneGeometry( 2, 2 ), null )
@@ -931,7 +966,7 @@ define (require) ->
         @scene.remove @assembly
         @current=null
       
-      @assembly = new THREE.Mesh(new THREE.Geometry())
+      @assembly = new THREE.Object3D()
       @assembly.name = "assembly"
       
       if @model.rootAssembly.children?
@@ -943,6 +978,21 @@ define (require) ->
       console.log "Csg visualization time: #{end-start}"
       
       @_updateAssemblyVisualAttrs()
+      
+      
+      #TODO: once the core has been migrated to three.js, this should be in the compiler/project's after compile step
+      exporter = new THREE.ObjectExporter()
+      exported = exporter.parse(@assembly)
+      exported = JSON.stringify(exported)
+      #console.log "exported",exported
+      
+      if not @model.rootFolder.get(".assembly")
+        @model.addFile
+          name:".assembly"
+          content:exported
+      else
+        @model.rootFolder.get(".assembly").content = exported
+      
       @_render()
       
     _importGeom:(csgObj,rootObj)=>
@@ -1007,6 +1057,11 @@ define (require) ->
       applyStyle=(child)=>
         child.castShadow =  @settings.shadows
         child.receiveShadow = @settings.selfShadows and @settings.shadows
+        
+        #hack
+        if child.material?
+          child.material.vertexColors= THREE.VertexColors
+        
         switch @settings.objectViewMode
           when "shaded"
             removeRenderHelpers(child)

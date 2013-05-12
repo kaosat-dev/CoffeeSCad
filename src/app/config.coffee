@@ -23,7 +23,7 @@ require.config
     #ace:              "../assets/js/libs/ace"
     
     CoffeeScript:     "../assets/js/libs/CoffeeScript"
-    three:            "../assets/js/libs/three.min"
+    three:            "../assets/js/libs/three"
     detector:         "../assets/js/libs/detector"
     stats:            "../assets/js/libs/Stats"
     utils:            "../assets/js/libs/utils"
@@ -80,6 +80,11 @@ require.config
     three_csg:        "../assets/js/plugins/ThreeCSG"
     combo_cam:        "../assets/js/plugins/CombinedCamera"
     transformControls:"../assets/js/plugins/three/controls/transformControls"
+    
+    ObjectExport: "../assets/js/plugins/three/exporters/ObjectExport"
+    GeometryExporter: "../assets/js/plugins/three/exporters/GeometryExporter"
+    MaterialExporter: "../assets/js/plugins/three/exporters/MaterialExporter"
+    ObjectParser: "../assets/js/plugins/three/parsers/ObjectParser"
     
     CopyShader:       "../assets/js/plugins/three/CopyShader"
     EffectComposer:   "../assets/js/plugins/three/EffectComposer"
@@ -181,6 +186,17 @@ require.config
     utils: 
       deps:    ["jquery"]
       exports : "normalizeEvent"
+    ObjectExport:
+      deps:["three","GeometryExporter","MaterialExporter"]  
+    GeometryExporter:
+      deps:["three"]
+    MaterialExporter:
+      deps:["three"]
+    
+    ObjectParser:
+      deps:["three"]
+      
+    
     CopyShader:
       deps:    ["three"]
     EffectComposer:
@@ -205,6 +221,8 @@ require.config
       deps:["three"]
     AdditiveBlendShader:
       deps:["three"]
+      
+      
       
       
     jquery_ui:
