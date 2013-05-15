@@ -3,7 +3,7 @@ define (require)->
   _ = require 'underscore'
   Backbone = require 'backbone'
   buildProperties = require 'core/utils/buildProperties'
-  Compiler = require './compiler'
+  Compiler = require './kernel/compiler'
   
   debug  = false
   

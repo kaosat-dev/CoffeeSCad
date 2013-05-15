@@ -13,10 +13,17 @@
    height="1052.3622047"
    id="svg2"
    version="1.1"
-   inkscape:version="0.48.3.1 r9886"
+   inkscape:version="0.47 r22583"
    sodipodi:docname="overview.svg">
   <defs
      id="defs4">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 526.18109 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="744.09448 : 526.18109 : 1"
+       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
+       id="perspective199" />
     <marker
        inkscape:stockid="TriangleOutL"
        orient="auto"
@@ -52,15 +59,15 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.24748737"
-     inkscape:cx="4604.7598"
-     inkscape:cy="-661.45155"
+     inkscape:cx="7191.2662"
+     inkscape:cy="-1225.2842"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1680"
-     inkscape:window-height="990"
+     inkscape:window-width="1366"
+     inkscape:window-height="693"
      inkscape:window-x="0"
-     inkscape:window-y="33"
+     inkscape:window-y="25"
      inkscape:window-maximized="1" />
   <metadata
      id="metadata7">
@@ -1097,5 +1104,94 @@
          x="2369.2539"
          y="2147.3948" />
     </g>
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect3005"
+       width="2278.9041"
+       height="169.70563"
+       x="5951.8188"
+       y="1945.337" />
+    <text
+       xml:space="preserve"
+       style="font-size:56px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="6202.3369"
+       y="2042.5959"
+       id="text3791"><tspan
+         sodipodi:role="line"
+         id="tspan3793"
+         x="6202.3369"
+         y="2042.5959">HIGH LEVEL API (indepentant of actualy implementation)</tspan></text>
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:2.76160455;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect3795"
+       width="2290.2644"
+       height="633.61426"
+       x="5940.0781"
+       y="2192.1951" />
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="6557.9106"
+       y="2519.1038"
+       id="text3797"><tspan
+         sodipodi:role="line"
+         id="tspan3799"
+         x="6557.9106"
+         y="2519.1038"
+         style="font-size:64px">CONCRETE IMPLEMENTATION</tspan></text>
+    <rect
+       style="fill:none;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+       id="rect3801"
+       width="444.46713"
+       height="432.34531"
+       x="8331.7383"
+       y="1331.1643" />
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       x="8382.5098"
+       y="1379.205"
+       id="text3803"><tspan
+         sodipodi:role="line"
+         id="tspan3805"
+         x="8382.5098"
+         y="1379.205">Cube</tspan><tspan
+         sodipodi:role="line"
+         x="8382.5098"
+         y="1429.205"
+         id="tspan3807">Sphere</tspan><tspan
+         sodipodi:role="line"
+         x="8382.5098"
+         y="1479.205"
+         id="tspan3809">Cylinder</tspan><tspan
+         sodipodi:role="line"
+         x="8382.5098"
+         y="1529.205"
+         id="tspan3811">Torus</tspan><tspan
+         sodipodi:role="line"
+         x="8382.5098"
+         y="1579.205"
+         id="tspan3813">etc</tspan></text>
+    <rect
+       y="1820.0781"
+       x="8331.7383"
+       height="432.34531"
+       width="444.46713"
+       id="rect3815"
+       style="fill:none;stroke:#000000;stroke-width:2;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none" />
+    <text
+       id="text3817"
+       y="1868.1188"
+       x="8382.5098"
+       style="font-size:40px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans"
+       xml:space="preserve"><tspan
+         y="1868.1188"
+         x="8382.5098"
+         id="tspan3819"
+         sodipodi:role="line">stl export/import</tspan><tspan
+         id="tspan3827"
+         y="1918.1188"
+         x="8382.5098"
+         sodipodi:role="line">am export/import</tspan></text>
   </g>
 </svg>

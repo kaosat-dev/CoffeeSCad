@@ -47,20 +47,6 @@ require.config
     
     coffeelint:       "../assets/js/plugins/coffeelint"
     
-    ### 
-    coffee_synhigh:   "../assets/js/libs/codeMirror/mode/coffeescript/coffeescript"
-    
-    foldcode:         "../assets/js/plugins/codemirror/fold/foldcode"
-    indent_fold:      "../assets/js/plugins/codemirror/fold/indent-fold"
-    search:           "../assets/js/plugins/codemirror/search/search"
-    search_cursor:    "../assets/js/plugins/codemirror/search/searchcursor"
-    match_high:       "../assets/js/plugins/codemirror/search/match-highlighter"
-    dialog:           "../assets/js/plugins/codemirror/dialog/dialog"
-    hint:             "../assets/js/plugins/codemirror/hint/show-hint"
-    jsHint:           "../assets/js/plugins/codemirror/hint/coffeescad-hint"
-    closeBrackets:    "../assets/js/plugins/codemirror/edit/closeBrackets/closeBrackets"
-    matchBrackets:    "../assets/js/plugins/codemirror/edit/matchBrackets/matchBrackets"###
-    
     marionette:       "../assets/js/plugins/backbone.marionette.min"
     eventbinder:      "../assets/js/plugins/backbone.eventbinder.min"
     wreqr:            "../assets/js/plugins/backbone.wreqr.min"
@@ -77,7 +63,7 @@ require.config
     backbone_nested:  "../assets/js/plugins/backbone.nested.min"
     
     
-    three_csg:        "../assets/js/plugins/ThreeCSG"
+    three_csg:        "../assets/js/plugins/three/ThreeCSG"
     combo_cam:        "../assets/js/plugins/CombinedCamera"
     transformControls:"../assets/js/plugins/three/controls/transformControls"
     
@@ -143,32 +129,6 @@ require.config
     coffeelint:
       deps:    ["CoffeeScript"]
     
-    ###    
-    CodeMirror:
-      exports:  "CodeMirror"
-    foldcode:
-      deps:    ["CodeMirror"]
-    indent_fold:
-      deps:    ["CodeMirror","foldcode"]
-    coffee_synhigh:
-      deps:    ["CodeMirror"]
-    jsHint:
-      deps:    ["CodeMirror","hint"]
-    search:
-      deps:    ["CodeMirror"]
-    search_cursor:
-      deps:    ["CodeMirror"]
-    dialog:
-      deps:    ["CodeMirror"]
-    match_high:
-      deps:    ["CodeMirror","search","search_cursor"]
-    hint:
-      deps:    ["CodeMirror"]
-    closeBrackets: 
-      deps:    ["CodeMirror"]
-    matchBrackets:
-      deps:    ["CodeMirror"]###
-
     three: 
       exports : "THREE"
     three_csg: 

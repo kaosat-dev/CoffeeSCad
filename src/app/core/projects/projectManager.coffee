@@ -12,7 +12,7 @@ define (require)->
   Project = require 'core/projects/project'
   ProjectBrowserView = require './projectBrowseView2'
   
-  Compiler = require './compiler'
+  Compiler = require './kernel/compiler'
   
   class ProjectManager
     

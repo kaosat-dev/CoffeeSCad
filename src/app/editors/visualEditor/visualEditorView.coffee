@@ -22,7 +22,7 @@ define (require) ->
   
   threedView_template = require "text!./visualEditorView.tmpl"
   requestAnimationFrame = require 'core/utils/anim'
-  THREE.CSG = require 'core/projects/csg/csg.Three'
+  THREE.CSG = require 'core/projects/kernel/csg/csg.Three'
   
   helpers = require './helpers'
   
