@@ -20,12 +20,14 @@ define (require) ->
       @bsp = new ThreeBSP(@)
     
     union:(object)=>
+      @bsp = new ThreeBSP(@)
       @bsp = @bsp.union( object.bsp )
       #TODO : only generate geometry on final pass ie make use of csg tree or processing tree/ast
       @geometry = @bsp.toGeometry()
       @geometry.computeVertexNormals()
       
     subtract:(object)=>
+      @bsp = new ThreeBSP(@)
       @bsp = @bsp.subtract( object.bsp )
       #TODO : only generate geometry on final pass ie make use of csg tree or processing tree/ast
       @geometry = @bsp.toGeometry()
@@ -48,6 +50,5 @@ define (require) ->
       @geometry = @bsp.toGeometry()
       @geometry.computeVertexNormals()
   
-  #ObjectBase.prototype = Object.create( THREE.Mesh.prototype )
   
   return ObjectBase

@@ -64,6 +64,7 @@ require.config
     
     
     ThreeCSG:        "../assets/js/plugins/three/ThreeCSG2"
+    font:           "../assets/font/helvetiker_regular.typeface"
     combo_cam:        "../assets/js/plugins/CombinedCamera"
     transformControls:"../assets/js/plugins/three/controls/transformControls"
     
@@ -134,6 +135,8 @@ require.config
     ThreeCSG: 
       deps:    ["three"]
       exports: "THREE"
+    font:
+      deps:    ["three"]
     combo_cam: 
       deps:    ["three"]
       exports : "combo_cam"

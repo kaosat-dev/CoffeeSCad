@@ -30,6 +30,8 @@ define (require) ->
   includeMixin = require 'core/utils/mixins/mixins'
   dndMixin = require 'core/utils/mixins/dragAndDropRecieverMixin'
   
+  require 'font'
+  
 
   class VisualEditorView extends Backbone.Marionette.ItemView
     el: $("#visual")
@@ -969,17 +971,35 @@ define (require) ->
       #-----------------------------
       ObjectBase = require "core/projects/kernel/geometry/base"
   
-      c1 = new THREE.CubeGeometry( 3, 3, 3 )
       cube = new ObjectBase new THREE.CubeGeometry( 100, 100, 100 )
-      sphere = new ObjectBase new THREE.SphereGeometry( 80, 24, 24 )
+      sphere = new ObjectBase new THREE.SphereGeometry( 80, 48, 48 )
+      #sphere.translate(0,0,100)
       #sphere.position.z = 100
         
       #cube2 = new ObjectBase new THREE.CubeGeometry(100, 100, 50 )
       #cube2.position.x = -90
-      #cube2.position.y = -20
+      cube.position.y = -60
+      
+      shine= 1500
+      spec= 1000
+      mat = new THREE.MeshPhongMaterial({color:  0xFFFFFF , shading: THREE.SmoothShading,  shininess: shine, specular: spec, metal: false, vertexColors: THREE.VertexColors}) 
+      mat.opacity = 1
+      mat.ambient = mat.color
+      cube.material = mat
+      
+      text3d = new THREE.TextGeometry("bla bla",{size:30, height:20, curveSegments:1, font:"helvetiker"})
+      text3d.computeBoundingBox()
+      textMaterial = new THREE.MeshBasicMaterial( { color: Math.random() * 0xffffff}) #, overdraw: true } )
+      text = new THREE.Mesh( text3d, textMaterial )
+      
+      text.position.x = 0
+      text.position.y = 0
+      text.position.z = 0
+      
       
       cube.subtract(sphere)
-      @assembly.add(cube)
+      #@assembly.add(cube)
+      @assembly.add(text3d)
       #---------------------------
         
       @scene.add @assembly 
@@ -1090,8 +1110,8 @@ define (require) ->
         child.receiveShadow = @settings.selfShadows and @settings.shadows
         
         #hack
-        if child.material?
-          child.material.vertexColors= THREE.VertexColors
+        #if child.material?
+        #  child.material.vertexColors= THREE.VertexColors
         
         switch @settings.objectViewMode
           when "shaded"
