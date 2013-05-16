@@ -190,7 +190,7 @@ define (require)->
       
       ### 
       deferredList = []
-      #dynamic load, problematic ...not useable for now
+      #dynamic load, problematic
           console.log "editorName",editorName
           editorPath = "./editors/#{editorName}Editor/#{editorName}Editor"
           console.log "editorPath: #{editorPath}"
