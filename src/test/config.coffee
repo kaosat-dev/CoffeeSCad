@@ -57,6 +57,9 @@ require.config
     
     coffeelint:       "../assets/js/plugins/coffeelint"
     
+    three:            "../assets/js/libs/three"
+    ThreeCSG:        "../assets/js/plugins/three/ThreeCSG2"
+    
   shim:
     jasmine:
       exports: 'jasmine'
@@ -91,3 +94,8 @@ require.config
     
     XMLWriter:
        exports: "XMLWriter"
+    three: 
+      exports : "THREE"
+    ThreeCSG: 
+      deps:    ["three"]
+      exports : "THREE"

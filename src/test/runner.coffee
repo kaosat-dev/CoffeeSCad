@@ -6,20 +6,23 @@ define (require)->
   #Ensure you point to where your spec folder is, base directory is app/,
   specs=[]
   #core
-  specs.push("./spec/project.spec")
+  ###specs.push("./spec/project.spec")
   specs.push("./spec/preprocessor.spec")
   specs.push("./spec/csg.spec")
   specs.push("./spec/settings.spec")
   
-  specs.push("./spec/regexExperiments.spec")
+  specs.push("./spec/regexExperiments.spec")###
+  
+  specs.push("./spec/geometricKernel.spec")
   
   #editors
   
   #exporters
+  ###
   specs.push("./spec/exporters/bomExporter/bomExporter.spec")
   specs.push("./spec/exporters/stlExporter/stlExporter.spec")
   specs.push("./spec/exporters/amfExporter/amfExporter.spec")
-  
+  ###
   
   jasmineEnv = jasmine.getEnv()
   jasmineEnv.updateInterval = 1000

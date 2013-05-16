@@ -63,7 +63,7 @@ require.config
     backbone_nested:  "../assets/js/plugins/backbone.nested.min"
     
     
-    three_csg:        "../assets/js/plugins/three/ThreeCSG"
+    ThreeCSG:        "../assets/js/plugins/three/ThreeCSG2"
     combo_cam:        "../assets/js/plugins/CombinedCamera"
     transformControls:"../assets/js/plugins/three/controls/transformControls"
     
@@ -131,9 +131,9 @@ require.config
     
     three: 
       exports : "THREE"
-    three_csg: 
+    ThreeCSG: 
       deps:    ["three"]
-      exports : "THREE.CSG"
+      exports: "THREE"
     combo_cam: 
       deps:    ["three"]
       exports : "combo_cam"

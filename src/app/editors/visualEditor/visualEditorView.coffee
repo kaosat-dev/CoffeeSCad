@@ -959,6 +959,37 @@ define (require) ->
       requestAnimationFrame(@animate)
     
     fromCsg:()=>
+      start = new Date().getTime()
+      if @assembly?
+        @scene.remove @assembly
+      
+      @assembly = new THREE.Object3D()
+      @assembly.name = "assembly"
+      
+      #-----------------------------
+      ObjectBase = require "core/projects/kernel/geometry/base"
+  
+      c1 = new THREE.CubeGeometry( 3, 3, 3 )
+      cube = new ObjectBase new THREE.CubeGeometry( 100, 100, 100 )
+      sphere = new ObjectBase new THREE.SphereGeometry( 80, 24, 24 )
+      #sphere.position.z = 100
+        
+      #cube2 = new ObjectBase new THREE.CubeGeometry(100, 100, 50 )
+      #cube2.position.x = -90
+      #cube2.position.y = -20
+      
+      cube.subtract(sphere)
+      @assembly.add(cube)
+      #---------------------------
+        
+      @scene.add @assembly 
+      end = new Date().getTime()
+      console.log "Csg visualization time: #{end-start}"
+      
+      @_updateAssemblyVisualAttrs()
+      @_render()      
+    
+    fromCsg_old:()=>
       #try
       start = new Date().getTime()
       #console.log "project compiled, updating view"
