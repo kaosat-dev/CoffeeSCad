@@ -11,16 +11,15 @@ define (require) ->
     constructor:( geometry, material )->
       super(geometry, material)
       THREE.Mesh.call( @, geometry, material )
-      
       #FIXME: see THREE.jS constructors thingamajig
-      #@geometry = geometry or null
-      #@material = 
       #console.log @prototype
       #Object.create(@prototype)
-      @bsp = new ThreeBSP(@)
+      @bsp = null
     
     union:(object)=>
       @bsp = new ThreeBSP(@)
+      if not object.bsp?
+        object.bsp = new ThreeBSP(object)
       @bsp = @bsp.union( object.bsp )
       #TODO : only generate geometry on final pass ie make use of csg tree or processing tree/ast
       @geometry = @bsp.toGeometry()
@@ -28,6 +27,8 @@ define (require) ->
       
     subtract:(object)=>
       @bsp = new ThreeBSP(@)
+      
+      object.bsp = new ThreeBSP(object)
       @bsp = @bsp.subtract( object.bsp )
       #TODO : only generate geometry on final pass ie make use of csg tree or processing tree/ast
       @geometry = @bsp.toGeometry()

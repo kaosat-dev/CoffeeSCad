@@ -971,38 +971,96 @@ define (require) ->
       #-----------------------------
       ObjectBase = require "core/projects/kernel/geometry/base"
   
-      cube = new ObjectBase new THREE.CubeGeometry( 100, 100, 100 )
-      sphere = new ObjectBase new THREE.SphereGeometry( 80, 48, 48 )
+      de2ra = (degree)->
+        return degree*(Math.PI/180)
+  
+  
+      cube = new ObjectBase new THREE.CubeGeometry( 60, 30, 10 )
+      sphere = new ObjectBase new THREE.SphereGeometry( 10, 48, 48 )
+      cylinder = new ObjectBase(new THREE.CylinderGeometry(2, 2, 15, 8, 2))
+      cylinder.rotation.x = de2ra(90)
       #sphere.translate(0,0,100)
       #sphere.position.z = 100
         
       #cube2 = new ObjectBase new THREE.CubeGeometry(100, 100, 50 )
       #cube2.position.x = -90
-      cube.position.y = -60
+      
+      #cube.position.y = -60
       
       shine= 1500
       spec= 1000
       mat = new THREE.MeshPhongMaterial({color:  0xFFFFFF , shading: THREE.SmoothShading,  shininess: shine, specular: spec, metal: false, vertexColors: THREE.VertexColors}) 
       mat.opacity = 1
       mat.ambient = mat.color
-      cube.material = mat
+      #cube.material = mat
       
-      text3d = new THREE.TextGeometry("bla bla",{size:30, height:20, curveSegments:1, font:"helvetiker"})
+      
+      theText = "Hello Coffee! o_O"
+
+      hash = document.location.hash.substr( 1 )
+      if ( hash.length != 0 )
+        theText = hash
+      
+      
+      text3d = new THREE.TextGeometry(theText,{size:10, height:5, curveSegments:2, font:"helvetiker"})
       text3d.computeBoundingBox()
-      textMaterial = new THREE.MeshBasicMaterial( { color: Math.random() * 0xffffff}) #, overdraw: true } )
-      text = new THREE.Mesh( text3d, textMaterial )
+      text3d.computeVertexNormals()
+      textMaterial = new THREE.MeshBasicMaterial( { color: Math.random() * 0xffffff})
+      
+      
+      extrudeSettings = { amount: 10,  bevelEnabled: false, bevelSegments: 2, steps: 2 }
+      textShapes = THREE.FontUtils.generateShapes(theText,{size:10, divisions : 10, font:"helvetiker"})
+      text3d = new THREE.ExtrudeGeometry( textShapes, extrudeSettings )
+      text3d.computeBoundingBox()
+      text3d.computeVertexNormals()
+      
+      
+      text = new ObjectBase( text3d, textMaterial )
       
       text.position.x = 0
       text.position.y = 0
       text.position.z = 0
       
       
-      cube.subtract(sphere)
-      #@assembly.add(cube)
-      @assembly.add(text3d)
+      cylinder2 = cylinder.clone()
+      cylinder2.position.x = -20
+      
+      cube.subtract(text)
+      cube.subtract(cylinder)
+      cube.subtract(cylinder2)
+      
+      
+      extrudeSettings = { amount: 200,  bevelEnabled: false, bevelSegments: 2, steps: 150 }
+      extrudeBend = new THREE.SplineCurve3( 
+        [
+          new THREE.Vector3( 30, 12, 83),
+          new THREE.Vector3( 40, 20, 67),
+          new THREE.Vector3( 60, 40, 99),
+          new THREE.Vector3( 10, 60, 49),
+          new THREE.Vector3( 25, 80, 40)
+          ])
+          
+      pts = [new THREE.Vector3(150,0,25),#top left
+            new THREE.Vector3(200,0,25),#top right
+            new THREE.Vector3(200,0,-25),#bottom right
+            new THREE.Vector3(150,0,-25),#bottom left
+            new THREE.Vector3(150,0,25)#back to top left - close square path
+            ]
+      bla = new ObjectBase( new THREE.LatheGeometry( pts, 5 ), new THREE.MeshLambertMaterial( { color: 0x2D303D, wireframe: false, shading: THREE.FlatShading } ))
+
+      
+      
+      @assembly.add(cube)
+      @assembly.add(bla)
+      #@assembly.add(cylinder)
+      #@assembly.add(text)
+      
+      
       #---------------------------
         
       @scene.add @assembly 
+      
+      console.log @scene
       end = new Date().getTime()
       console.log "Csg visualization time: #{end-start}"
       
