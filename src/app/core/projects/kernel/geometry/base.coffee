@@ -11,9 +11,14 @@ define (require) ->
     
     constructor:( geometry, material )->
       if not material?
-        material = new THREE.MeshBasicMaterial( { color: 0xffffff, wireframe: false } );
+        material = new THREE.MeshBasicMaterial( { color: 0xffffff, wireframe: false } )
+        shine= 1500
+        spec= 1000
+        opacity = 1
+        material = new THREE.MeshPhongMaterial({color:  0xFFFFFF , shading: THREE.SmoothShading,  shininess: shine, specular: spec, metal: false}) 
       super(geometry, material)
       THREE.Mesh.call( @, geometry, material )
+      
       #FIXME: see THREE.jS constructors thingamajig
       #console.log @prototype
       #Object.create(@prototype)
