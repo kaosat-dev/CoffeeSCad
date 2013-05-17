@@ -15,6 +15,8 @@ window.ThreeBSP = (function() {
 			polygon,
 			polygons = [],
 			tree;
+		
+		this.isRetesselated = false
 	
 		if ( geometry instanceof THREE.Geometry ) {
 			this.matrix = new THREE.Matrix4;
@@ -202,6 +204,39 @@ window.ThreeBSP = (function() {
 		
 		return mesh;
 	};
+	
+	ThreeBSP.prototype.reTesselate = function(){
+		if (this.isRetesselated)
+		{
+			return this
+		}
+		else
+		{
+			/*
+			polygonsPerPlane = {};
+        	this.polygons.map (polygon) 
+	          planetag = polygon.plane.getTag()
+	          sharedtag = polygon.shared.getTag()
+	          planetag += "/" + sharedtag
+	          polygonsPerPlane[planetag] = []  unless planetag of polygonsPerPlane
+	          polygonsPerPlane[planetag].push polygon
+  
+	        destpolygons = []
+	        for planetag of polygonsPerPlane
+	          sourcepolygons = polygonsPerPlane[planetag]
+	          if sourcepolygons.length < 2
+	            destpolygons = destpolygons.concat(sourcepolygons)
+	          else
+	            retesselayedpolygons = []
+	            reTesselateCoplanarPolygons sourcepolygons, retesselayedpolygons
+	            destpolygons = destpolygons.concat(retesselayedpolygons)
+	        this.polygons = destpolygons
+			
+			this.isRetesselated = true
+			return this*/
+		}
+		
+	}
 	
 	
 	ThreeBSP.Polygon = function( vertices, normal, w ) {
