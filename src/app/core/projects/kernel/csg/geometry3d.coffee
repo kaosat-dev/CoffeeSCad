@@ -327,7 +327,7 @@ define (require)->
     constructor : (options) ->
       options = options or {}
       if ("r" of options or "r1" of options) then hasRadius = true
-      defaults = {h:1,center:[0,0,0],r:1,d:2,$fn:CSGBase.defaultResolution2D,rounded:false}
+      defaults = {h:1,center:[0,0,0],r:1,d:2,$fn:CSGBase.defaultResolution3D,rounded:false}
       #options = utils.parseOptions(options,defaults)
       super options
       

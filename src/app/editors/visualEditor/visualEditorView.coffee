@@ -961,6 +961,23 @@ define (require) ->
       requestAnimationFrame(@animate)
     
     fromCsg:()=>
+      console.log @model
+      start = new Date().getTime()
+      if @assembly?
+        @scene.remove @assembly
+      
+      @assembly = @model.rootAssembly
+      @scene.add @assembly 
+      
+      console.log @scene
+      end = new Date().getTime()
+      console.log "Csg visualization time: #{end-start}"
+      
+      @_updateAssemblyVisualAttrs()
+      @_render()      
+      
+      return
+      
       start = new Date().getTime()
       if @assembly?
         @scene.remove @assembly
@@ -1025,10 +1042,13 @@ define (require) ->
       cylinder2 = cylinder.clone()
       cylinder2.position.x = -20
       
+      icoSphere = new THREE.IcosahedronGeometry(10,2)
+      sphere2 = new ObjectBase(icoSphere)
+      
       cube.subtract(text)
       cube.subtract(cylinder)
       cube.subtract(cylinder2)
-      
+      cube.subtract(sphere2)
       
       extrudeSettings = { amount: 200,  bevelEnabled: false, bevelSegments: 2, steps: 150 }
       extrudeBend = new THREE.SplineCurve3( 
@@ -1051,7 +1071,8 @@ define (require) ->
       
       
       @assembly.add(cube)
-      @assembly.add(bla)
+      #@assembly.add(sphere2)
+      #@assembly.add(bla)
       #@assembly.add(cylinder)
       #@assembly.add(text)
       

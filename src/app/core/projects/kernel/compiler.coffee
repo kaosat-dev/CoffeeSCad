@@ -3,7 +3,7 @@ define (require)->
   merge = utils.merge
   
   PreProcessor = require "./preprocessor"
-  CsgProcessor = require "./csg/processor"
+  Processor = require "./processor"
   
   class Compiler
     
@@ -13,7 +13,7 @@ define (require)->
       {@project, @backgroundProcessing} = options
       
       @preProcessor = new PreProcessor()
-      @csgProcessor = new CsgProcessor()
+      @processor = new Processor()
       
       #this data structure is filled with log & error data 
       @compileResultData = {}
@@ -52,7 +52,7 @@ define (require)->
         deferred.reject(error)
       
       params = @project.meta.params
-      @csgProcessor.processScript source,@backgroundProcessing,params, (rootAssembly, partRegistry, logEntries, error)=>
+      @processor.processScript source,@backgroundProcessing,params, (rootAssembly, partRegistry, logEntries, error)=>
         @compileResultData["logEntries"] = logEntries or []
         if error?
           deferred.reject([error])
