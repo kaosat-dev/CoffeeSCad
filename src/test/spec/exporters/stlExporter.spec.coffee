@@ -12,7 +12,7 @@ define (require)->
       stlExporter = new THREE.stlExporter()
     
     
-    it 'can export a project to stl (blobUrl)',->
+    it 'can export a project to stl (ascii)',->
       project.addFile
         name:"test_project.coffee"
         content:"""
@@ -20,11 +20,101 @@ define (require)->
         assembly.add(myCube)
         """
       project.compile()
-      
       geometry = project.rootAssembly.children[0].geometry
-      blobUrl = stlExporter.parse(geometry)
-      console.log blobUrl
-      expect(blobUrl).not.toBe(null)
+      obsStl = stlExporter.parse(geometry)
+      expStl = """
+solid geometry.name 
+facet normal 1 0 0
+  outer loop
+    vertex 10.00000 10.00000 10.00000
+    vertex 10.00000 -10.00000 10.00000
+    vertex 10.00000 -10.00000 -10.00000
+  endloop
+endfacet
+facet normal 1 0 0
+  outer loop
+    vertex 10.00000 -10.00000 -10.00000
+    vertex 10.00000 10.00000 -10.00000
+    vertex 10.00000 10.00000 10.00000
+  endloop
+endfacet
+facet normal -1 0 0
+  outer loop
+    vertex -10.00000 10.00000 -10.00000
+    vertex -10.00000 -10.00000 -10.00000
+    vertex -10.00000 -10.00000 10.00000
+  endloop
+endfacet
+facet normal -1 0 0
+  outer loop
+    vertex -10.00000 -10.00000 10.00000
+    vertex -10.00000 10.00000 10.00000
+    vertex -10.00000 10.00000 -10.00000
+  endloop
+endfacet
+facet normal 0 1 0
+  outer loop
+    vertex -10.00000 10.00000 -10.00000
+    vertex -10.00000 10.00000 10.00000
+    vertex 10.00000 10.00000 10.00000
+  endloop
+endfacet
+facet normal 0 1 0
+  outer loop
+    vertex 10.00000 10.00000 10.00000
+    vertex 10.00000 10.00000 -10.00000
+    vertex -10.00000 10.00000 -10.00000
+  endloop
+endfacet
+facet normal 0 -1 0
+  outer loop
+    vertex -10.00000 -10.00000 10.00000
+    vertex -10.00000 -10.00000 -10.00000
+    vertex 10.00000 -10.00000 -10.00000
+  endloop
+endfacet
+facet normal 0 -1 0
+  outer loop
+    vertex 10.00000 -10.00000 -10.00000
+    vertex 10.00000 -10.00000 10.00000
+    vertex -10.00000 -10.00000 10.00000
+  endloop
+endfacet
+facet normal 0 0 1
+  outer loop
+    vertex -10.00000 10.00000 10.00000
+    vertex -10.00000 -10.00000 10.00000
+    vertex 10.00000 -10.00000 10.00000
+  endloop
+endfacet
+facet normal 0 0 1
+  outer loop
+    vertex 10.00000 -10.00000 10.00000
+    vertex 10.00000 10.00000 10.00000
+    vertex -10.00000 10.00000 10.00000
+  endloop
+endfacet
+facet normal 0 0 -1
+  outer loop
+    vertex 10.00000 10.00000 -10.00000
+    vertex 10.00000 -10.00000 -10.00000
+    vertex -10.00000 -10.00000 -10.00000
+  endloop
+endfacet
+facet normal 0 0 -1
+  outer loop
+    vertex -10.00000 -10.00000 -10.00000
+    vertex -10.00000 10.00000 -10.00000
+    vertex 10.00000 10.00000 -10.00000
+  endloop
+endfacet
+
+"""      
+      console.log obsStl
+      
+      
+      
+      expect(obsStl).toEqual(expStl)
     
     ###
     it 'can export a project to stl (blobUrl)',->

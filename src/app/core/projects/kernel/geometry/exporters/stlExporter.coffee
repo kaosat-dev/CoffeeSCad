@@ -14,8 +14,6 @@ define (require)->
       
       _generateString=(geometry)->
         header = "solid geometry.name \n"
-        
-        
         vertices = []
         for vertex in geometry.vertices
           vertices
@@ -25,21 +23,31 @@ define (require)->
           normal = face.normal
           normalData = "normal #{normal.x} #{normal.y} #{normal.z}\n"
           
+          vertexIndices = []
           if face instanceof THREE.Face3
-            numvertices = 3
+            vertexIndices[0] = [ face.a, face.b, face.c ]
+            #vertexIndices = [ face.a, face.b, face.c ]
           else if face instanceof THREE.Face4
-            numvertices = 4
-            
-          verticesData = "outer loop "
-          for i in [0...numvertices-2]
-            vertex = face.vertices[i]
-            verticesData += "vertex #{vertex.x} #{vertex.y} #{vertex.z}\n"
-            
-          verticesData += "endloop\n"
+            #TODO: triangulate
+            vertexIndices[0] = [ face.a, face.b, face.c ]
+            vertexIndices[1] = [ face.c, face.d, face.a ]
+            #vertexIndices = [ face.a, face.b, face.c, face.c, face.d, face.a]
           
-          facetData = facetData + normalData + verticesData + "endfacet\n"
-          facets.push()
-        return header + facets.join("\n")
+          verticesData = "" 
+          for i in [0...vertexIndices.length]
+            verticesData += facetData + normalData
+            verticesData += "  outer loop\n"
+            for j in [0...3]
+              vertex = geometry.vertices[ vertexIndices[i][j] ]
+              verticesData += "    vertex #{vertex.x.toPrecision(7)} #{vertex.y.toPrecision(7)} #{vertex.z.toPrecision(7)}\n"
+            
+            verticesData += "  endloop\n"+ "endfacet\n"
+          
+          #.toExponential(3)
+          #.toPrecision(3)
+          facetData = verticesData
+          facets.push( facetData )
+        return header + facets.join("")
         ### 
         facet normal ni nj nk
           outer loop
