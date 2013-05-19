@@ -558,7 +558,7 @@ define (require) ->
       @model.on("compiled", @_onProjectCompiled)
       @model.on("compile:error", @_onProjectCompileFailed)
       
-    makeScreenshot:(width=300, height=300)=>
+    makeScreenshot:(width=600, height=600)=>
       return helpers.captureScreen(@renderer.domElement,width,height)
     
     _onSelectAttempt:(ev)=>

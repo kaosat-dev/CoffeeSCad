@@ -222,11 +222,12 @@ define (require)->
     
     onStoreSelectToggled:()=>
       if @selected
-          header = @$el.find(".store-header")
-          header.addClass('alert-info')
-        else
-          header = @$el.find(".store-header")
-          header.removeClass('alert-info')
+        header = @$el.find(".store-header")
+        header.addClass('alert-info')
+        
+      else
+        header = @$el.find(".store-header")
+        header.removeClass('alert-info')
      
     onProjectSelected:(e)=>
       @trigger("store:selected")
@@ -246,6 +247,18 @@ define (require)->
           $("#projectFilesList").append("<tr><td>#{file}</td><td>#{ext}</td></tr>")
       
       @model.getProjectFiles(projectName).done(onFilesFetched)
+      
+      #fetch thumbnail
+      try
+        onThumbNailFetched = (imageUrl)=>
+          $("#thumbNail").html("""<img id="projectThumbNail" class="img-rounded"/>""")
+          $("#projectThumbNail").attr("src", imageUrl)
+          $("#thumbNail").removeClass("hide")
+        $("#thumbNail").removeClass("hide")  
+        $("#thumbNail").html("""<div style="height:100%;line-height:100px;">&nbsp &nbsp<i class="icon-spinner icon-spin icon-large"></i> Loading</div>""")
+        @model.getThumbNail(projectName).done(onThumbNailFetched)
+      catch error
+      
     
     onSaveRequested:(fileName)=>
       if @selected

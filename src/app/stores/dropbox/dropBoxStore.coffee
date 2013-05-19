@@ -163,6 +163,48 @@ define (require)->
       
             
     getThumbNail:(projectName)=>
+      myDeferred = $.Deferred()
+      deferred = @store._readFile( "/#{projectName}/.thumbnail.png",{arrayBuffer:true})
+      
+      parseBase64Png=( rawData)->
+        #console.log rawData
+        
+        ab2str=(buf)->
+          return String.fromCharCode.apply(null, new Uint16Array(buf))
+        str2ab=(str)->
+          buf = new ArrayBuffer(str.length*2); # 2 bytes for each char
+          bufView = new Uint16Array(buf)
+          for i in [0...str.length]
+            bufView[i] = str.charCodeAt(i)
+          return buf
+   
+        
+        data = btoa(String.fromCharCode.apply(null, new Uint8Array(rawData)))
+        base64src='data:image/png;base64,'+data
+        myDeferred.resolve(base64src)
+        
+        ### 
+        data = ''
+        for i in [0...rawData.length]
+          data += String.fromCharCode( ( rawData[ i ].charCodeAt(0) & 0xff ) )
+          
+        # Convert raw data to base64
+        data = btoa( data )
+        base64src='data:image/png;base64,'+data  # change the MIME type according to content
+        myDeferred.resolve(base64src)
+        ###
+       
+        
+        #blob = new Blob([rawData], {type: 'image/png'})
+        #console.log blob
+        #bytes = new Uint8Array( blob )
+        #console.log bytes
+        #data = btoa( bytes )
+        #base64src='data:image/png;base64,'+data
+        #myDeferred.resolve(base64src)
+        
+      deferred.done(parseBase64Png)
+      return myDeferred
     
     checkProjectExists:(projectName)=>
       return @store._readDir "/#{projectName}/"
@@ -206,12 +248,14 @@ define (require)->
           dataURIComponents = content.split(',')
           mimeString = dataURIComponents[0].split(':')[1].split(';')[0]
           if(dataURIComponents[0].indexOf('base64') != -1)
+            console.log "base64 v1"
             data =  atob(dataURIComponents[1])
             array = []
             for i in [0...data.length]
               array.push(data.charCodeAt(i))
-            content = new Blob([new Uint8Array(array)], {type: 'image/jpeg'})
+            content = new Blob([new Uint8Array(array)], {type: 'image/png'})
           else
+            console.log "other v2"
             byteString = unescape(dataURIComponents[1])
             length = byteString.length
             ab = new ArrayBuffer(length)

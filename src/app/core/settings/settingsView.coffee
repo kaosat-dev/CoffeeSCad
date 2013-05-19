@@ -145,7 +145,7 @@ define (require)->
             
           theme:
             type:'Select'
-            options : ["default", "spacelab","slate"]
+            options : ["coffeescad", "spacelab","slate"]
             
         options.fieldsets=[
           "legend": "CSG compiling settings"
