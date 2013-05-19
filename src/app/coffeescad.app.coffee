@@ -165,14 +165,12 @@ define (require)->
       modReg = new ModalRegion({elName:"settings",large:true})
       modReg.show settingsView
     
-    ### 
     onSettingsChanged:(settings, value)=> 
       for key, val of @settings.get("General").changedAttributes()
         switch key
           when "theme"
             @theme = val
-            $("#mainTheme").attr("href","assets/css/themes/#{@theme}/bootstrap.css")
-    ###
+            $("#mainTheme").attr("href","assets/css/style/#{@theme}/bootstrap.css")
     
     onProjectLoaded:(newProject)=>
       console.log "project loaded"
