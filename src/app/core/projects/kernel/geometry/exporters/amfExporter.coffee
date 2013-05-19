@@ -27,6 +27,7 @@ define (require)->
     _writeMaterial:( writer, material )->
       writer.writeStartElement( "material" )
       @_writeMetaData(writer,"Name",material.name)
+      #TODO: add support for composite, graded etc materials
       writer.writeEndElement()
       
     _writeTexture:( writer, texture )->
