@@ -223,11 +223,13 @@ define (require)->
     onStoreSelectToggled:()=>
       if @selected
         header = @$el.find(".store-header")
-        header.addClass('alert-info')
+        header.toggleClass('store-header-activated')
+        #header.addClass('alert-info')
         
       else
         header = @$el.find(".store-header")
-        header.removeClass('alert-info')
+        header.toggleClass('store-header-activated')
+        #header.removeClass('alert-info')
      
     onProjectSelected:(e)=>
       @trigger("store:selected")
