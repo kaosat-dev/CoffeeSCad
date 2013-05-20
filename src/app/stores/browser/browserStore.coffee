@@ -11,6 +11,12 @@ define (require)->
   
   Project = require 'core/projects/project'
   
+  #for zip dump
+  require 'jszip'
+  require 'jszip-deflate'
+  
+  #TODO: replace all getProjects name, files etc, with "readDirs etc", ie something closer to a file system manipulation
+  
   class BrowserLibrary extends Backbone.Collection
     """
     a library contains multiple projects, stored in localstorage (browser)
@@ -28,7 +34,7 @@ define (require)->
       
   
   class BrowserStore extends Backbone.Model
-    attributeNames: ['name', 'loggedIn']
+    attributeNames: ['name', 'loggedIn', 'isDataDumpAllowed']
     buildProperties @
     
     idAttribute: 'name'
@@ -37,6 +43,7 @@ define (require)->
       storeType: "browser"
       tooltip:"Store to localstorage (browser)"
       loggedIn: true
+      isDataDumpAllowed: false
     
     constructor:(options)->
       defaults = {storeURI:"projects"}
@@ -62,6 +69,9 @@ define (require)->
       #handler for project/file data fetch requests
       reqRes.addHandler("getbrowserFileOrProjectCode",@_sourceFetchHandler)
       
+      #check for any local storage issues, repair if necessary
+      @repair() 
+      
     login:=>
       console.log "browser logged in"
       @loggedIn = true
@@ -71,17 +81,43 @@ define (require)->
     
     authCheck:()->
     
+    repair:()->
+      #hack/fix in case project list got deleted
+      projectsList = localStorage.getItem(@storeURI)
+      if projectsList is null or projectsList == "" or projectsList == "null"
+        projectsList = @_getAllProjectsHelper()
+        localStorage.setItem(@storeURI, projectsList)
+    
+    dumpAllProjects:->
+      #dump all projects to a zip file
+      zip = new JSZip()
+      
+      #works but too big possibly ? 
+      ###
+      for projectName in @projectsList
+        try
+          files = @_getProjectFiles( projectName )
+          folder = zip.folder(projectName)
+          for fileName in files
+            fileContent = @_readFile(projectName, fileName)
+            folder.file(fileName, fileContent)
+        catch error
+      ###
+      zip.file("fileName", "fileContent")
+      content = zip.generate({compression:'DEFLATE'})
+      zipB64Url = "data:application/zip;base64,"+content
+      return zipB64Url
+        
     getProjectsName:(callback)=>
       try
         projectsList = localStorage.getItem("#{@storeURI}")
-        console.log "browser store projects", projectsList,"storeURI", "#{@storeURI}"
         if projectsList
           projectsList = projectsList.split(',')
         else
           projectsList = []
         @projectsList = projectsList
         
-        @_getAllProjectsHelper()
+        
         #kept for now
         ### 
         projectNames = []
@@ -367,7 +403,7 @@ define (require)->
         fileUri = "#{filesURI}-#{fileName}"
         fileData = localStorage.getItem(fileUri)
         rawData = JSON.parse(fileData)
-        console.log "raw file Data", rawData
+        #console.log "raw file Data", rawData
         return rawData["content"]
       else
         throw new Error("no such file")
@@ -422,18 +458,18 @@ define (require)->
     _getAllProjectsHelper:()->
       #just a a temporary helper, as the projects List seems to have been cleared by accident?
       projects = []
-      console.log "localStorage",localStorage
       for item, key of localStorage
         projData = item.split("-")
         #console.log "projData",projData
         if projData[0] is "projects"
-          console.log "item", item
           projectName = projData[1]
           if projectName?
             if projectName not in projects
               projects.push(projectName)
-      console.log "projects", projects.join(",")
-       
+      
+      projects = projects.join(",")
+      #console.log "projects",projects
+      return projects
       #projectURI = "#{@storeURI}-#{projectName}"
       #filesURI = "#{projectURI}-files"
       #fileNames = localStorage.getItem(filesURI)

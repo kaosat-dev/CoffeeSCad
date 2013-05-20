@@ -52,8 +52,15 @@
 <script id="projectStoreTmpl" type="text/x-underscore-template">
 	<div class="accordion-group" id="<%=name%>StoreContent">
 	 	<div class="accordion-heading store-header" >
-	 		<a class="accordion-toggle"> <!--data-toggle="collapse" data-parent="#accordion" href="#collapseOne">-->
+	 		<a class="accordion-toggle">
+	 			<span>
 				<%= storeType %> <i class="icon-question-sign icon-large" rel="tooltip" title="<%=tooltip%>"></i> 
+				</span>
+				<span class="pull-right">
+				<% if (isDataDumpAllowed == true) { %>
+					<a class="exportStore btn" href="#"><i class="icon-fixed-width icon-download-alt" rel="tooltip" title="export all projects"></i>Toto</a>
+				<% } %>
+				</span>
 				<span class="storeConnection pull-right" rel="tooltip" title="Store not connected, please sign in">
 					<i class="icon-ban-circle icon-large" style="color:#FF0000"></i>
 				</span>

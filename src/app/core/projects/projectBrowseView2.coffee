@@ -140,9 +140,17 @@ define (require)->
       "mousedown .projectSelector" : "onProjectSelected"
       "click .deleteProject": "onProjectDeleteRequest"
       "click .renameProject": "onProjectRenameRequest"
+      "click .exportStore" : "onStoreExportRequested"
       
     triggers:
       "click .accordion-heading": "store:selected" 
+    
+    templateHelpers:
+      repairRequired:->
+        if @isRepairRequired is true
+          return true
+        else 
+          return false
       
     constructor:(options)->
       super options
@@ -161,6 +169,28 @@ define (require)->
         loggedIn: [{selector: '.storeConnection', elAttribute: 'hidden'} ]
       
       @modelBinder = new Backbone.ModelBinder()
+    
+    onStoreExportRequested:=>
+      #TODO: cleanup
+      console.log "store #{@model.name} EXPORT requested"
+      if not @packedDataUrl?
+        console.log "generating"
+        packedDataUrl = @model.dumpAllProjects()
+      else
+        packedDataUrl = @packedDataUrl
+      
+      if packedDataUrl != null
+        console.log "packedDataUrl not null"
+        if not @packedDataUrl?
+          fileName = "CoScadStoreExport.zip"
+          #$(".exportStore").popover
+          #  html:true
+          #  content: """<a href="totot>Download Ready</a>"""
+          @packedDataUrl = packedDataUrl
+          $(".exportStore").prop("download", "#{fileName}")
+          $(".exportStore").prop("href", packedDataUrl)
+          #$(".exportStore").prop("target", "_blank")
+      return true  
     
     onProjectDeleteRequest:=>
       #FIXME: YUCK CODE

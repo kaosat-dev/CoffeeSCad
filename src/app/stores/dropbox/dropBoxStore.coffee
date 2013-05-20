@@ -7,7 +7,6 @@ define (require)->
   
   Project = require 'core/projects/project'
   
-  
   class DropBoxLibrary extends Backbone.Collection
     """
     a library contains multiple projects, stored on dropbox
@@ -32,7 +31,7 @@ define (require)->
       console.log "_____________"
   
   class DropBoxStore extends Backbone.Model
-    attributeNames: ['name','loggedIn']
+    attributeNames: ['name','loggedIn','isDataDumpAllowed']
     buildProperties @
     
     idAttribute: 'name'
@@ -41,6 +40,7 @@ define (require)->
       storeType: "Dropbox"
       tooltip:"Store to the Dropbox Cloud based storage: requires login"
       loggedIn:false
+      isDataDumpAllowed:false
     
     constructor:(options)->
       super options

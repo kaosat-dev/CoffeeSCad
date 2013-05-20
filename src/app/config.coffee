@@ -32,6 +32,8 @@ require.config
     github:           "../assets/js/libs/github"
     
     XMLWriter:        "../assets/js/libs/XMLWriter-1.0.0"
+    jszip:            "../assets/js/libs/jszip"
+    "jszip-deflate" : "../assets/js/libs/jszip-deflate"
     
     
     #plugins
@@ -247,4 +249,9 @@ require.config
       exports : "Github"
     XMLWriter:
       exports: "XMLWriter"
+    
+    jszip:
+      exports:"jszip"
+    "jszip-deflate":
+      deps:["jszip"]
       
