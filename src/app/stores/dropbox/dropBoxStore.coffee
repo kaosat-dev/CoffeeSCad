@@ -167,42 +167,17 @@ define (require)->
       deferred = @store._readFile( "/#{projectName}/.thumbnail.png",{arrayBuffer:true})
       
       parseBase64Png=( rawData)->
-        #console.log rawData
-        
-        ab2str=(buf)->
-          return String.fromCharCode.apply(null, new Uint16Array(buf))
-        str2ab=(str)->
-          buf = new ArrayBuffer(str.length*2); # 2 bytes for each char
-          bufView = new Uint16Array(buf)
-          for i in [0...str.length]
-            bufView[i] = str.charCodeAt(i)
-          return buf
-   
-        
-        data = btoa(String.fromCharCode.apply(null, new Uint8Array(rawData)))
+        #convert binary png to base64
+        bytes = new Uint8Array(rawData)
+        data = ''
+        for i in [0...bytes.length]
+          data += String.fromCharCode(bytes[i])
+        data =   btoa(data)
+        #crashes
+        #data = btoa(String.fromCharCode.apply(null, ))
         base64src='data:image/png;base64,'+data
         myDeferred.resolve(base64src)
-        
-        ### 
-        data = ''
-        for i in [0...rawData.length]
-          data += String.fromCharCode( ( rawData[ i ].charCodeAt(0) & 0xff ) )
-          
-        # Convert raw data to base64
-        data = btoa( data )
-        base64src='data:image/png;base64,'+data  # change the MIME type according to content
-        myDeferred.resolve(base64src)
-        ###
-       
-        
-        #blob = new Blob([rawData], {type: 'image/png'})
-        #console.log blob
-        #bytes = new Uint8Array( blob )
-        #console.log bytes
-        #data = btoa( bytes )
-        #base64src='data:image/png;base64,'+data
-        #myDeferred.resolve(base64src)
-        
+
       deferred.done(parseBase64Png)
       return myDeferred
     

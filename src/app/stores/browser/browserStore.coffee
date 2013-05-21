@@ -43,7 +43,7 @@ define (require)->
       storeType: "browser"
       tooltip:"Store to localstorage (browser)"
       loggedIn: true
-      isDataDumpAllowed: false
+      isDataDumpAllowed: true
     
     constructor:(options)->
       defaults = {storeURI:"projects"}
@@ -90,11 +90,18 @@ define (require)->
     
     dumpAllProjects:->
       #dump all projects to a zip file
+      #TODO: add caching
+      
       zip = new JSZip()
       
-      #works but too big possibly ? 
-      ###
-      for projectName in @projectsList
+      #TODO: refactor
+      projectsList = localStorage.getItem("#{@storeURI}")
+      if projectsList
+        projectsList = projectsList.split(',')
+      else
+        projectsList = []
+          
+      for projectName in projectsList
         try
           files = @_getProjectFiles( projectName )
           folder = zip.folder(projectName)
@@ -102,10 +109,12 @@ define (require)->
             fileContent = @_readFile(projectName, fileName)
             folder.file(fileName, fileContent)
         catch error
-      ###
-      zip.file("fileName", "fileContent")
+
+      #zip.file("fileName", "fileContent")
+      dataType = "base64"#"blob"
       content = zip.generate({compression:'DEFLATE'})
-      zipB64Url = "data:application/zip;base64,"+content
+      zipB64Url = "data:application/zip;#{dataType},"+content
+      
       return zipB64Url
         
     getProjectsName:(callback)=>
@@ -148,18 +157,14 @@ define (require)->
         #files = fileNames.split(',')
       d.resolve(fileNames)
       return d
+      
+    getThumbNail:(projectName)=>
+      deferred = $.Deferred()
+      file = @_readFile(projectName,".thumbnail.png")
+      #deferred.resolve(file.content)
+      deferred.resolve(file)
+      return deferred
         
-    saveProject_:(project, newName)=>
-      project.collection = null
-      @lib.add(project)
-      if newName?
-        project.name = newName
-      projectURI = "#{@storeURI}-#{newName}"
-      rootStoreURI = "#{projectURI}-files"
-      project.rootFolder.changeStorage("localStorage",new Backbone.LocalStorage(rootStoreURI))
-      project.save()
-      @vent.trigger("project:saved")  
-    
     saveProject:(project,newName)=>
       #experiment of saving projects withouth using backbone localstorage
       project.collection = null
@@ -191,7 +196,10 @@ define (require)->
         content =file.content
         filePath = "#{rootStoreURI}-#{name}"
         ext = name.split('.').pop()
+        #if ext != "png"
         localStorage.setItem(filePath,JSON.stringify(file.toJSON()))
+        #else
+        #  localStorage.setItem(filePath, file.content)
         filesList.push(file.name)
         file.trigger("save")
       
@@ -273,10 +281,6 @@ define (require)->
       project.rootFolder.changeStorage("localStorage",new Backbone.LocalStorage(rootStoreURI))
       
       onProjectLoaded=()=>
-        #remove old thumbnail
-        thumbNailFile = project.rootFolder.get(".thumbnail.png")
-        if thumbNailFile?
-          project.rootFolder.remove(thumbNailFile)
         project._clearFlags()
         project.trigger("loaded")
         #project.rootFolder.trigger("reset")
@@ -290,6 +294,12 @@ define (require)->
       fileNames = @_getProjectFiles(projectName)
       for fileName in fileNames
         content = @_readFile(projectName,fileName)
+        ### 
+        #remove old thumbnail
+        thumbNailFile = project.rootFolder.get(".thumbnail.png")
+        if thumbNailFile?
+          project.rootFolder.remove(thumbNailFile)
+        ###
         project.addFile
           content : content
           name : fileName

@@ -10,7 +10,7 @@ define (require)->
   
   Settings = require 'core/settings/settings'
   Project = require 'core/projects/project'
-  ProjectBrowserView = require './projectBrowseView2'
+  ProjectBrowserView = require './projectBrowseView'
   
   Compiler = require './compiler'
   
