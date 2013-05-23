@@ -1,6 +1,8 @@
 define (require)->
-  FSBase = require './fsBase'
-  fs = require('fs')
+  FSBase = require '../fsBase'
+  #we use the nodeRequire alias to avoid clash of requirejs and node's require
+  fs = nodeRequire('fs')
+  pathMod = nodeRequire('path')
   
   class NodeFS extends FSBase
     constructor:->
@@ -32,7 +34,18 @@ define (require)->
       fs.writeFile( path, options, callback )
       
       return deferred
-      
-      
-      
-      
+    
+    isDir: (path) ->
+      if fs.existsSync( path )
+        fs.lstatSync(path).isDirectory()  
+    
+    isProj: (path) ->
+      #check if the specified path is a coffeescad project (ie, a directory, with a .coffee file with the same name
+      #as the folder)
+      if @isDir( path )
+        filesList = fs.readdirSync( path )
+        projectMainFileName = pathMod.basename + ".coffee"
+        if projectMainFileName in filesList
+          return true
+          
+      return false

@@ -37,7 +37,7 @@ define (require)->
     stat:(path)->
       #get stats for file in path
       throw new Error("Not implemented")
-      
+     
     exists:(path)->
       #returns true if path exists , false otherwise
       throw new Error("Not implemented")
@@ -49,5 +49,5 @@ define (require)->
     unwatch:(path)->
       #stop watching a file or directory 
       throw new Error("Not implemented")
-
+  
   return FSBase

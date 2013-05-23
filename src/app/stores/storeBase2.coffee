@@ -11,34 +11,34 @@ define (require)->
   
   Project = require 'core/projects/project'
   
+  
   class StoreBase extends Backbone.Model
     idAttribute: 'name'
-    attributeNames: ['name','isLogInRequired', 'loggedIn']
+    attributeNames: ['name','shortName', 'type','description', '',  'isLogInRequired', 'loggedIn']
     
     defaults:
       name: "baseStore"
-      storeType: ""
-      storeShortName:""
-      tooltip:"Store base class"
+      shortName: "base"
+      type: "base"
+      description: "Store base class"
+      rootUri: ""
       loggedIn: true
       isLogginRequired:false
-    attributeNames: ['name', 'loggedIn']
     buildProperties @
     
     constructor:(options)->
-      defaults = {storeType:"",storeShortName:"",storeURI:""}
+      defaults = {name:"store", shortName:"", type:"", description: "", rootUri:"", loggedIn:true, isLoginRequired:false}
       options = merge defaults, options
-      {@storeType,@storeShortName,@storeURI} = options
-      super options
+      {@name, @shortName, @type, @description, @rootURI, @loggedIn, @isLogginRequired} = options
         
       @vent = vent
       @vent.on("#{@storeType}:login", @login)
       @vent.on("#{@storeType}:logout", @logout)
       
-      #for storage wrapping
-      @lib = []
-      @projectsList = []
+      @cachedProjectsList = []
       @cachedProjects = []
+      
+      @fs = require('./fsBase')
       
     login:=>
       @loggedIn = true
@@ -46,25 +46,28 @@ define (require)->
     logout:=>
       @loggedIn = false
     
-    authCheck:()->
+    setup:()->
+      #do authentification or any other preliminary operation
     
-    getProjectsName:(callback)=>
-      
-    getProject:(projectName)=>
+    tearDown:()->
+      #tidily shut down this store: is this necessary ? as stores have the same lifecycle as
+      #the app itself ?
+    
+    listProjects:( uri )=>
      
-    getProjectFiles:(projectName,callback)=>
+    listProjectFiles:( projectName )=>
         
-    saveProject:(project,newName)=> 
+    saveProject:( project, newName )=> 
     
-    loadProject:(projectName, silent=false)=>
+    loadProject:( projectName, silent=false )=>
     
-    deleteProject:(projectName)=>
+    deleteProject:( projectName )=>
       
-    renameProject:(oldName, newName)=>
+    renameProject:( oldName, newName )=>
       
-    saveFile:(file, uri)=>
+    saveFile:( file, uri )=>
     
-    loadFile:(uri)=>
+    loadFile:( uri )=>
     
     ###--------------Private methods---------------------###
     _removeFromProjectsList:(projectName)=>
@@ -108,7 +111,5 @@ define (require)->
           return result
         @loadProject(projectName,true).done(getContent)
         
-      
-      
        
-  return BrowserStore
+  return StoreBase

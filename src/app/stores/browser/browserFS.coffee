@@ -1,5 +1,5 @@
 define (require)->
-  FSBase = require './fsBase'
+  FSBase = require '../fsBase'
   
   class BrowserFS extends FSBase
     constructor:->

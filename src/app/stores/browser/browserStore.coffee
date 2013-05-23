@@ -51,23 +51,14 @@ define (require)->
       {@storeURI} = options
       super options
         
-      @store = new Backbone.LocalStorage(@storeURI)
       @isLogginRequired = false
       @vent = vent
       @vent.on("browserStore:login", @login)
       @vent.on("browserStore:logout", @logout)
       
-      #experimental
-      @lib = new BrowserLibrary()
-      @lib.localStorage = new Backbone.LocalStorage(@storeURI)
       @projectsList = []
       
       #TODO: should this be here ? ie this preloads all projects, perhaps we could lazy load?
-      @lib.fetch()
-      console.log "fetched lib", @lib
-      
-      #handler for project/file data fetch requests
-      reqRes.addHandler("getbrowserFileOrProjectCode",@_sourceFetchHandler)
       
       #check for any local storage issues, repair if necessary
       @repair() 
@@ -165,7 +156,7 @@ define (require)->
       deferred.resolve(file)
       return deferred
         
-    saveProject:(project,newName)=>
+    saveProject:( project, newName )=>
       #experiment of saving projects withouth using backbone localstorage
       project.collection = null
       @lib.add(project)
