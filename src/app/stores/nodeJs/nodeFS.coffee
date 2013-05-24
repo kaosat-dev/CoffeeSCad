@@ -49,3 +49,7 @@ define (require)->
           return true
           
       return false
+    
+    listProjs: ( path ) ->
+      #return a list of all projects in a given path: FIXME: should this be here or in the store ??
+      

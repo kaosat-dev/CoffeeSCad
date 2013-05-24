@@ -4,24 +4,33 @@
 	</div>
 	<div class="modal-body" style="overflow: hidden">
 		<div id="fileNameInput">
-			<label for="name" >Name:</label>
+			<label for="name" style="float:left;">Name: &nbsp;</label>
+			<span>
 			<input id="fileName" type="text" style="width:90%" value="<%=name%>" />
+			</span>
 		</div>
+		<div id="pathInput">
+			Location: &nbsp;
+			<span>
+			<a>Home / </a><a>bob / </a><a>MyData / </a>
+			</span>
+		</div>
+		
 		<div id="storesContainer">
 			<div id="projectStores" style="float:left; width: 20%"><!--storage types browser-->
-				Location
+				Locations
 			</div>
-			<!--
+			<div id="projectsContainer"   style="float:left; width: 80%">
+				<ul id="projects" style="list-style: none; height: 400px">
+				</ul>
+			</div>	
+				<!--
 			<div id="projectFiles"  style="float:left; width: 40%">
 				<table class="table table-hover table-condensed">
 					<thead><th>Name</th><th>Type</th></thead>
 			    	<tbody id="projectFilesList"></tbody>
 			  	</table>
 			</div>-->
-			<div id="projectsContainer"   style="float:left; width: 80%">
-				<ul id="projects" style="list-style: none; height: 400px">
-				</ul>
-			</div>	
 				<!--
 				<div>
 					<a href="#">

@@ -1,16 +1,9 @@
 define (require)->
   Backbone = require 'backbone'
-  LocalStorage = require 'localstorage'
-
-  vent = require 'core/messaging/appVent'
-  reqRes = require 'core/messaging/appReqRes'
   
   buildProperties = require 'core/utils/buildProperties'
   utils = require 'core/utils/utils'
   merge = utils.merge
-  
-  Project = require 'core/projects/project'
-  
   
   class StoreBase extends Backbone.Model
     idAttribute: 'name'
@@ -24,10 +17,14 @@ define (require)->
       rootUri: ""
       loggedIn: true
       isLogginRequired:false
+      isDataDumpAllowed: true
+      showPaths: false
+      
     buildProperties @
     
     constructor:(options)->
-      defaults = {name:"store", shortName:"", type:"", description: "", rootUri:"", loggedIn:true, isLoginRequired:false}
+      defaults = {name:"store", shortName:"", type:"", description: "", rootUri:"", loggedIn:true, isLoginRequired:false,
+      isDataDumpAllowed: false,showPaths:false}
       options = merge defaults, options
       {@name, @shortName, @type, @description, @rootURI, @loggedIn, @isLogginRequired} = options
         
@@ -55,11 +52,11 @@ define (require)->
     
     listProjects:( uri )=>
      
-    listProjectFiles:( projectName )=>
+    listProjectFiles:( uri )=>
         
     saveProject:( project, newName )=> 
     
-    loadProject:( projectName, silent=false )=>
+    loadProject:( projectUri, silent=false )=>
     
     deleteProject:( projectName )=>
       
@@ -68,6 +65,9 @@ define (require)->
     saveFile:( file, uri )=>
     
     loadFile:( uri )=>
+      
+    getThumbNail:( projectName )=>
+          
     
     ###--------------Private methods---------------------###
     _removeFromProjectsList:(projectName)=>

@@ -4,13 +4,11 @@ define (require)->
   class BrowserFS extends FSBase
     constructor:->
      
-     
     readdir:( path )=>
-      projectURI = "#{@storeURI}-#{projectName}"
-      filesURI = "#{projectURI}-files"
-      fileNames = localStorage.getItem(filesURI)
-      fileNames = fileNames.split(',')
-      return fileNames 
+      #projectURI = "#{@storeURI}-#{projectName}"
+      elements = localStorage.getItem(filesURI)
+      elements = fileNames.split(',')
+      return elements 
     
     rmdir: ( path )=>
       projects = localStorage.getItem(@storeURI)
@@ -30,21 +28,17 @@ define (require)->
           
           localStorage.removeItem(rootStoreURI)
           localStorage.removeItem(projectURI)
-      
 
     readfile:( path )->
-      projectURI = "#{@storeURI}-#{projectName}"
-      filesURI = "#{projectURI}-files"
-      fileNames = localStorage.getItem(filesURI)
-      fileNames = fileNames.split(',')
-      if fileName in fileNames
-        fileUri = "#{filesURI}-#{fileName}"
-        fileData = localStorage.getItem(fileUri)
-        rawData = JSON.parse(fileData)
-        #console.log "raw file Data", rawData
-        return rawData["content"]
-      else
+      ext = path.split("/")
+      ext = ext[ext.length-1]
+      if not path of localStorage
         throw new Error("no such file")
+        
+      fileData = localStorage.getItem( path )
+      rawData = JSON.parse(fileData)
+      return rawData
+        
     
     rm:( path )=>
       projectURI = "#{@storeURI}-#{projectName}"
@@ -58,3 +52,25 @@ define (require)->
       
       fileURI = "#{filesURI}-#{fileName}"
       localStorage.removeItem(fileURI)
+
+    isDir: (path) ->
+      #HOWTO ???
+      data = localStorage.getItem( path )
+      data = JSON.parse(data)
+      if data.isDir?
+        if data.isDir
+          return true
+      return false
+          
+    isProj: (path) ->
+      #check if the specified path is a coffeescad project (ie, a directory, with a .coffee file with the same name
+      #as the folder)
+      if @isDir( path )
+        filesList = fs.readdirSync( path )
+        projectMainFileName = pathMod.basename + ".coffee"
+        if projectMainFileName in filesList
+          return true
+          
+      return false
+
+  return BrowserFS

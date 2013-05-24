@@ -3,6 +3,8 @@ define (require)->
   utils = require 'core/utils/utils'
   merge = utils.merge
   
+  NodeFS = require './nodeFS'
+  
   class NodeJsStore extends StoreBase
     constructor:(options)->
       defaults= {
@@ -15,7 +17,7 @@ define (require)->
       options = merge defaults, options
       super options
       
-      @fs = require './nodeFS'
+      @fs = new NodeFS()
     
     listProjects:( uri )=>
       deferred =  $.Deferred()

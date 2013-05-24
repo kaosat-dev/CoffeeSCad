@@ -127,6 +127,10 @@ define (require)->
       @on("compile:error",@_onCompileError)
       @on("loaded",@_onFilesReset)
       
+    getFiles:( options ) ->
+      return @rootFolder.models
+      #for index, file of project.rootFolder.models
+        
     addFile:(options)->
       file = new ProjectFile
         name: options.name ? @name+".coffee"
