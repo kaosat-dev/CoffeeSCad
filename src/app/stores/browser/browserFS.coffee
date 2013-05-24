@@ -3,11 +3,19 @@ define (require)->
   
   class BrowserFS extends FSBase
     constructor:->
-     
+    
+    
+    mkdir:(path)->
+      #make directory(ies) : if a full path, generates all the intermediate directories if
+      #they don't exist
+      localStorage.setItem( path , "")
+      
+    
     readdir:( path )=>
       #projectURI = "#{@storeURI}-#{projectName}"
-      elements = localStorage.getItem(filesURI)
-      elements = fileNames.split(',')
+      elements = localStorage.getItem( path )
+      elements = elements.split(',')
+      
       return elements 
     
     rmdir: ( path )=>
@@ -29,15 +37,21 @@ define (require)->
           localStorage.removeItem(rootStoreURI)
           localStorage.removeItem(projectURI)
 
-    readfile:( path )->
+    writefile:(path, content, options)->
+      options = options or {}
+      localStorage.setItem(path, JSON.stringify(content.toJSON()))
+
+    readfile:( path, options )->
+      options = options or {}
       ext = path.split("/")
       ext = ext[ext.length-1]
       if not path of localStorage
         throw new Error("no such file")
         
       fileData = localStorage.getItem( path )
-      rawData = JSON.parse(fileData)
-      return rawData
+      if options.parseJson?
+        fileData = JSON.parse(fileData)
+      return fileData
         
     
     rm:( path )=>

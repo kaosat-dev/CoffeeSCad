@@ -9,6 +9,7 @@ define (require)->
     idAttribute: 'name'
     attributeNames: ['name','shortName', 'type','description', '',  'isLogInRequired', 'loggedIn']
     
+    
     defaults:
       name: "baseStore"
       shortName: "base"
@@ -19,18 +20,21 @@ define (require)->
       isLogginRequired:false
       isDataDumpAllowed: true
       showPaths: false
-      
+    
     buildProperties @
     
     constructor:(options)->
+      
       defaults = {name:"store", shortName:"", type:"", description: "", rootUri:"", loggedIn:true, isLoginRequired:false,
       isDataDumpAllowed: false,showPaths:false}
       options = merge defaults, options
-      {@name, @shortName, @type, @description, @rootURI, @loggedIn, @isLogginRequired} = options
-        
-      @vent = vent
-      @vent.on("#{@storeType}:login", @login)
-      @vent.on("#{@storeType}:logout", @logout)
+      super( options )
+      {@name, @shortName, @type, @description, @rootUri, @loggedIn, @isLogginRequired} = options
+      
+      #TODO: refactor this
+      #@vent = options.vent
+      #@vent.on("#{@storeType}:login", @login)
+      #@vent.on("#{@storeType}:logout", @logout)
       
       @cachedProjectsList = []
       @cachedProjects = []

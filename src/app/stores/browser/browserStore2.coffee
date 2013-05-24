@@ -2,27 +2,21 @@ define (require)->
   utils = require 'core/utils/utils'
   merge = utils.merge
   BrowserFS = require './browserFS'
+  StoreBase = require '../storeBase2'
   Project = require 'core/projects/project'
-  
-  #for zip dump
-  require 'jszip'
-  require 'jszip-deflate'
   
   #TODO: replace all getProjects name, files etc, with "readDirs etc", ie something closer to a file system manipulation
   
-  class BrowserStore extends Backbone.Model
+  class BrowserStore extends StoreBase
     
     constructor:(options)->
+      options = options or {}
       defaults = {
        browserStore:"store", shortName:"browser", type:"browser", description: "Store to localstorage (browser)",
-       rootUri:"", isDataDumpAllowed: true,showPaths:false}
+       rootUri:"projects", isDataDumpAllowed: true,showPaths:false}
       options = merge defaults, options
       super options
         
-      @isLogginRequired = false
-      @vent.on("browserStore:login", @login)
-      @vent.on("browserStore:logout", @logout)
-      
       @cacheSize = 5
       @cachedProjects = []#TODO: remove 
       @fs = new BrowserFS()     
@@ -33,7 +27,7 @@ define (require)->
       @repair() 
       
     listProjects:( uri )=>
-      uri = uri or @storeURI
+      uri = uri or @rootUri
       try
         projects = []
         projects = @fs.readdir( uri )
@@ -42,7 +36,7 @@ define (require)->
         console.log "could not fetch projects at #{uri} because of error #{error}"
     
     listProjectFiles:( uri )=>
-       #Get all the file names within a project : should actually get the file tree? (subdirs support etc)
+      #Get all the file names within a project : should actually get the file tree? (subdirs support etc)
       try
         files = []
         files = @fs.readdir( uri )
@@ -55,72 +49,24 @@ define (require)->
       if newName?
         project.name = newName
         #TODO: delete original project
+      projectUri = @rootUri + "/" + project.name
+      
+      @fs.mkdir(projectUri)
       
       for index, file of project.getFiles()
-        @fs.writefile(path, content, options)
+        filePath = projectUri + "/" + file.name 
         
-        name = file.name
-        content = file.content
-        filePath = "#{rootStoreURI}-#{name}"
+        @fs.writefile(filePath, file)
+        
         ext = name.split('.').pop()
         #if ext != "png"
-        localStorage.setItem(filePath,JSON.stringify(file.toJSON()))
         #else
-        #  localStorage.setItem(filePath, file.content)
-        filesList.push(file.name)
-        file.trigger("save")
-       
+        #file.trigger("save")
 
-    saveProject_old:( project, newName )=>
-        
-      firstSave = false
-      if not project.dataStore?
-        firstSave = true
-      else if project.dataStore != @ or nameChange
-        firstSave = true
-      
-      projectName = project.name 
-      
-       
-      filesList = []
-      for index, file of project.rootFolder.models
-        name = file.name
-        content = file.content
-        filePath = "#{rootStoreURI}-#{name}"
-        ext = name.split('.').pop()
-        #if ext != "png"
-        localStorage.setItem(filePath,JSON.stringify(file.toJSON()))
-        #else
-        #  localStorage.setItem(filePath, file.content)
-        filesList.push(file.name)
-        file.trigger("save")
-      
-      #fetch old list of files, for diff, delete old file if not present anymore
-      oldFiles = localStorage.getItem(rootStoreURI)
-      if oldFiles?
-        oldFiles = oldFiles.split(',')
-        added = _.difference(filesList,oldFiles)
-        removed = _.difference(oldFiles,filesList)
-        @_removeFile(projectName, fileName) for fileName in removed
-      
-      localStorage.setItem(rootStoreURI,filesList.join(","))
-      
-      attributes = _.clone(project.attributes)
-      for attrName, attrValue of attributes
-        if attrName not in project.persistedAttributeNames
-          delete attributes[attrName]
-      strinfigiedProject = JSON.stringify(attributes)
-      
-      localStorage.setItem(projectURI,strinfigiedProject)
-      
-      @vent.trigger("project:saved",project)
-      if firstSave
-        project._clearFlags()
-      project.trigger("save", project)
-          
     
     loadProject:( projectUri , silent=false)=>
-      projectName = projectUri #hmm ??
+      projectName = projectUri.split("/").pop()
+      projectUri = @rootUri + "/" + projectUri #hmm ??
       if projectUri in @cachedProjects
         #TODO: how to invalidate cache???
         return @cachedProjects[ projectUri ]
@@ -132,7 +78,11 @@ define (require)->
         fileNames = @fs.readdir( projectUri )
         for fileName in fileNames
           fileUri = projectUri + "/" + fileName
-          fileContent = @fs.readfile( fileUri )
+          fileData = @fs.readfile( fileUri, {parseJson:true})
+          if fileData?
+            fileContent = fileData.content
+          else
+            fileContent = ""
           project.addFile
             name: fileName
             content: fileContent
@@ -163,7 +113,15 @@ define (require)->
     
     dumpAllProjects:->
       #dump all projects to a zip file
+      #for zip dump
+      #require 'jszip'
+      #require 'jszip-deflate'
+      
       #TODO: add caching
+      #exportTimeStamp = new Date().getTime()
+      #if @exportTimeStamp
+      #  bla = 2
+      
       
       zip = new JSZip()
       
