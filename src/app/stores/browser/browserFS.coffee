@@ -3,18 +3,7 @@ define (require)->
   
   class BrowserFS extends FSBase
     constructor:(sep)->
-      @sep = sep or "/"
-    
-    join:( paths )->
-      #something like path.join()
-      return paths.join( @sep )
-      
-    dirname:( path) ->
-      components = path.split( @sep )
-      if components.length > 0
-        components.pop()
-        result = components.pop()
-      
+      super(sep or "/")
     
     mkdir:(path)->
       #make directory(ies) : if a full path, generates all the intermediate directories if
@@ -27,10 +16,8 @@ define (require)->
            prePath = @join( pathComponents )
            @_updateDirContent( prePath, curDir )
         localStorage.setItem( path , "")
-      
     
     readdir:( path )=>
-      #projectURI = "#{@storeURI}-#{projectName}"
       elements = localStorage.getItem( path )
       if elements?
         elements = elements.split(',')
@@ -40,31 +27,12 @@ define (require)->
       subElements = localStorage.getItem( path )
       #if not subElements? or subElements == ""
       #  throw new Error(" No such path ")
-        
       subElements = subElements.split(',')
       for element in subElements
         pathTosub = @join( [path, element])
         localStorage.removeItem( pathTosub )
       localStorage.removeItem( path )
-      ### 
-      projects = localStorage.getItem(@storeURI)
-      if projects?
-        projects = projects.split(',')
-        index = projects.indexOf(projectName)
-        if index != -1
-          projects.splice(index, 1)
-          if projects.length>0 then projects=projects.join(',') else projects = ""
-          localStorage.setItem(@storeURI,projects)
-          index = @projectsList.indexOf(projectName)
-          @projectsList.splice(index, 1)
-          
-          console.log "projectName"
-          projectURI = "#{@storeURI}-#{projectName}"
-          rootStoreURI = "#{projectURI}-files"
-          
-          localStorage.removeItem(rootStoreURI)
-          localStorage.removeItem(projectURI)
-      ###
+
     _updateDirContent: ( path , newEntry ) ->  
       items = localStorage.getItem( path )
       if items?
@@ -91,9 +59,12 @@ define (require)->
       
       fileName = path.split( @sep ).pop()
       @_updateDirContent(baseDir, fileName)
-      
-      localStorage.setItem(path, JSON.stringify(content.toJSON()))
-
+      if options.toJson?
+        if options.toJson
+          localStorage.setItem(path, JSON.stringify(content.toJSON()))
+      else
+        localStorage.setItem(path, content)
+        
     readfile:( path, options )->
       options = options or {}
       ext = path.split("/")
@@ -105,7 +76,33 @@ define (require)->
       if options.parseJson?
         fileData = JSON.parse(fileData)
       return fileData
+    
+    mv: ( srcPath, tgtPath )->
+      if localStorage.getItem(srcPath) == null
+        throw new Error("Source path does not exist")
+      if localStorage.getItem(tgtPath) != null
+        throw new Error("Destination path already exists")
         
+      @mkdir( tgtPath ) 
+      
+      subElements = @readdir( srcPath )
+      tgtElements = []
+      for element in subElements
+        tgtElement = element
+        if element == @basename( srcPath ) + ".coffee"
+          tgtElement =  @basename( tgtPath ) + ".coffee"
+        
+        src = localStorage.getItem( @join( [srcPath, element] ) )
+        if src?
+          src = src.replace( element, tgtElement ) #FIXME: iffy in case "element" is also present as string inside src (file content)
+        localStorage.setItem( @join( [tgtPath, tgtElement] ), src )  
+        tgtElements.push( tgtElement )
+        
+      localStorage.setItem( tgtPath, tgtElements.join( "," ) )
+      @rmdir( srcPath )
+      
+      
+          
     
     rm:( path )=>
       projectURI = "#{@storeURI}-#{projectName}"
@@ -120,7 +117,7 @@ define (require)->
       fileURI = "#{filesURI}-#{fileName}"
       localStorage.removeItem(fileURI)
 
-    isDir: (path) ->
+    isDir:(path) ->
       #HOWTO ???
       data = localStorage.getItem( path )
       data = JSON.parse(data)
@@ -129,7 +126,7 @@ define (require)->
           return true
       return false
           
-    isProj: (path) ->
+    isProj:(path) ->
       #check if the specified path is a coffeescad project (ie, a directory, with a .coffee file with the same name
       #as the folder)
       if @isDir( path )
@@ -139,5 +136,29 @@ define (require)->
           return true
           
       return false
-
+    
+    join:( paths )->
+      #something like path.join()
+      return paths.join( @sep )
+      
+    dirname:( path )->
+      components = path.split( @sep )
+      if components.length > 0
+        components.pop()
+        result = components.pop()
+        
+    basename:( path )->
+      components = path.split( @sep )
+      if components.length > 0
+        return components.pop()
+      return path
+      
+    absPath:( path , rootUri)->
+      if path.split( @sep ).length <= 1
+        path = @join( [rootUri, path] )
+      return path
+    
+    exists: ( path ) ->
+      if localStorage.getItem( path )? then return true else return false
+        
   return BrowserFS

@@ -19,6 +19,19 @@ define (require)->
         
       browserStore.setup()
     
+    afterEach ->
+      localStorage.removeItem("projectsTest/TestProject/TestProject.coffee")
+      localStorage.removeItem("projectsTest/TestProject/SomeOtherFile.coffee")
+      localStorage.removeItem("projectsTest/TestProject/.thumbnail.png")
+      localStorage.removeItem("projectsTest/TestProject")
+      
+      localStorage.removeItem("projectsTest/FooProject/FooProject.coffee")
+      localStorage.removeItem("projectsTest/FooProject/SomeOtherFile.coffee")
+      localStorage.removeItem("projectsTest/FooProject/.thumbnail.png")
+      localStorage.removeItem("projectsTest/FooProject")
+      
+      localStorage.removeItem("projectsTest")
+    
     it 'can save projects',->
       browserStore.saveProject( project )
       obsLocalStorageData = localStorage.getItem("projectsTest/TestProject/TestProject.coffee")
@@ -34,8 +47,6 @@ define (require)->
       
       project = browserStore.loadProject( "TestProject" )
       
-      localStorage.removeItem("projectsTest/TestProject")
-      localStorage.removeItem("projectsTest/TestProject/TestProject.coffee")
     
     it 'can list projects',->
       browserStore.saveProject( project )
@@ -46,14 +57,25 @@ define (require)->
     
     it 'can list a project s files',->
       browserStore.saveProject( project )
-      obsProjectsList = browserStore.listProjectFiles()
-      expProjectsList = ["TestProject"]
+      obsProjectsList = browserStore.listProjectFiles( project.name )
+      expProjectsList = ["TestProject.coffee"]
       
       expect(obsProjectsList).toEqual(expProjectsList)
     
-    it 'can rename projects',->
-      browserStore.renameProject( project, "FooProject" )
+    it 'can rename/move projects',->
+      browserStore.saveProject( project )
+      browserStore.renameProject( "TestProject", "FooProject" )
+      
+      expect(localStorage.getItem("projectsTest/TestProject")).toEqual(null)
+      expect(localStorage.getItem("projectsTest/TestProject/TestProject.coffee")).toEqual(null)
+      
+      expect(localStorage.getItem("projectsTest/FooProject")).toEqual("FooProject.coffee")
+      expect(localStorage.getItem("projectsTest/FooProject/FooProject.coffee")).not.toEqual(null)
 
+    #it 'can rename/move files',->
+    #  browserStore.saveProject( project )
+    #  browserStore.renameFile( "TestProject/TestProject.coffee", "TestProject/FooProject.coffee" )
+      
     #it 'can delete projects by reference',->
     #  browserStore.deleteProject ( project )
     

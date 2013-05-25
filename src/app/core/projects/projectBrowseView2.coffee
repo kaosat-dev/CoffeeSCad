@@ -174,16 +174,16 @@ define (require)->
             $("#projectFilesList").append("<tr><td>#{file}</td><td>#{ext}</td></tr>")
         @store.getProjectFiles(@selectedModelName).done(onFilesFetched)
       
-      onReallyRename=(fileName)=>
+      onReallyRename=(projectName)=>
         console.log "renaming to #{fileName}"
         projectToSave = @selectedModelName
-        projectNameExists = @model.getProject(fileName)
+        projectNameExists = @model.projectExists( projectName )
         if projectNameExists?
           bootbox.dialog "A project called #{fileName} already exists, overwrite?", [
             label: "Ok"
             class: "btn-inverse"
             callback: =>
-              @store.renameProject(projectToSave, fileName).done(()=>onRenameOk(fileName))
+              @store.renameProject(projectToSave, projectName).done(()=>onRenameOk(projectName))
               
           ,
             label: "Cancel"
@@ -191,7 +191,7 @@ define (require)->
             callback: ->
           ]
          else
-           @store.renameProject(projectToSave, fileName).done(()=>onRenameOk(fileName))
+           @store.renameProject(projectToSave, projectName).done(()=>onRenameOk(projectName))
       
       bootbox.prompt "New name","Cancel","Rename",
         (result) =>
@@ -232,16 +232,16 @@ define (require)->
     
     onSaveRequested:(fileName)=>
       if @selected
-        console.log "save to #{fileName} requested"
+        console.log "save to #{projectName} requested"
         projectToSave = @model.targetProject
-        projectNameExists = @model.getProject(fileName)
+        projectNameExists = @model.projectExists( fileName ) #TODO: use $.when deferred syntax, as the stores might not return this info immediatly
         if projectNameExists?
-          bootbox.dialog "A project called #{fileName} already exists, overwrite?", [
+          bootbox.dialog "A project called #{projectName} already exists, overwrite?", [
             label: "Ok"
             class: "btn-inverse"
             callback: =>
               @model.saveProject(projectToSave,fileName)
-          ,
+          , 
             label: "Cancel"
             class: "btn-inverse"
             callback: ->
@@ -318,7 +318,8 @@ define (require)->
     onStoreSelectToggled:()=>
       if @selected
         console.log "#{@model.name} selected"
-        @model.getProjectsName(@onProjectsFetched)
+        #handle both deferreds and basic objects returned by stores
+        $.when(@model.listProjects()).done(@onProjectsFetched)
         header = @$el.find(".store-header")
         header.toggleClass('store-header-activated')
         
@@ -328,23 +329,53 @@ define (require)->
       
       return true
     
+    onProjectSelected:(e)=>
+      @trigger("store:selected",@store)
+      e.preventDefault()
+      projectName = $(e.currentTarget).attr("id")
+      projectName= projectName.split("#{@model.name}").pop()
+      @selectedModelName = projectName
+      
+      vent.trigger("project:selected",projectName)
+      @trigger("project:selected", @model)
+      
+      onFilesFetched=(files)=>
+        $("#projectFilesList").html("")
+        for file in files
+          fullName = file.split('.')
+          ext = fullName.pop()
+          $("#projectFilesList").append("<tr><td>#{file}</td><td>#{ext}</td></tr>")
+      
+      $.when( @model.listProjectFiles( projectName ) ).done (onFilesFetched)
+      
+      #fetch thumbnail
+      try
+        onThumbNailFetched = (imageUrl)=>
+          $("#thumbNail").html("""<img id="projectThumbNail" class="img-rounded"/>""")
+          $("#projectThumbNail").attr("src", imageUrl)
+          $("#thumbNail").removeClass("hide")
+        $("#thumbNail").removeClass("hide")  
+        $("#thumbNail").html("""<div style="height:100%;line-height:100px;">&nbsp &nbsp<i class="icon-spinner icon-spin icon-large"></i> Loading</div>""")
+        @model.getThumbNail(projectName).done(onThumbNailFetched)
+      catch error
+    
     onRender:->
       console.log "getting projects from #{@model.name}"
       #@model.getProjectsName(@onProjectsFetched)
       #modelBinding
       #@modelBinder.bind(@model, @el, @bindings)
     
-    onSaveRequested:(fileName)=>
+    onSaveRequested:(projectName)=>
       if @selected
-        console.log "save to #{fileName} requested"
+        console.log "save to #{projectName} requested"
         projectToSave = @model.targetProject
-        projectNameExists = @model.getProject(fileName)
-        if projectNameExists?
-          bootbox.dialog "A project called #{fileName} already exists, overwrite?", [
+        projectNameExists = @model.projectExists( projectName )
+        if projectNameExists
+          bootbox.dialog "A project called #{projectName} already exists, overwrite?", [
             label: "Ok"
             class: "btn-inverse"
             callback: =>
-              @model.saveProject(projectToSave,fileName)
+              @model.saveProject(projectToSave,projectName)
           ,
             label: "Cancel"
             class: "btn-inverse"
@@ -352,7 +383,7 @@ define (require)->
           ]
         else
           if projectToSave?
-            @model.saveProject(projectToSave,fileName)
+            @model.saveProject(projectToSave,projectName)
       
       
     onProjectsFetched:(projectNames)=>
@@ -397,14 +428,18 @@ define (require)->
             </div>
           </div>
           </li>""")
-      
+      ### 
       targetElem.on("click",(event)=>
         console.log "$(event.target)", $(event.target)
         console.log "closest", $(event.target).parent()
         $(event.target).parent().toggleClass("flipped")
         #@onProjectSelected($(event.target).closest("li").att("id")
+      )###
+      #cache images with new Image() ??
+      
+      $(".projectSelector").on("click",(event)=>
+        @onProjectSelected(event)
       )
-      #cache images with new Image()
       
       @delegateEvents()
       height = 400#targetElem.height()

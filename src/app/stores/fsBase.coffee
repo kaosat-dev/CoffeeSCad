@@ -1,8 +1,11 @@
 define (require)->
   
   class FSBase
-    constructor:->
-      
+    constructor:(sep)->
+      #params:
+      #sep: seperator
+      @sep = sep
+            
     mkdir:(path)->
       #make directory(ies) : if a full path, generates all the intermediate directories if
       #they don't exist

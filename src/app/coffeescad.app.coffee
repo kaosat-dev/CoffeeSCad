@@ -51,10 +51,10 @@ define (require)->
       #@exporters["amf"] = new AmfExporter()
       
       #stores 
-      DropBoxStore = require './stores/dropbox/dropBoxStore'
-      BrowserStore = require './stores/browser/browserStore'
+      #DropBoxStore = require './stores/dropbox/dropBoxStore'
+      BrowserStore = require './stores/browser/browserStore2'
       #NodeJsStore = require './stores/nodeJs/nodeJsStore'
-      @stores["Dropbox"] = new DropBoxStore()
+      #@stores["Dropbox"] = new DropBoxStore()
       @stores["browser"] = new BrowserStore()
       #@stores["node"]    = new NodeJsStore()
       
@@ -102,7 +102,7 @@ define (require)->
       
       #we check if we came back form an oauth redirect/if we have already been authorized
       for index, store of @stores
-        store.authCheck()
+        store.setup()
     
     _setupKeyboardBindings:=>
       #Setup keyBindings

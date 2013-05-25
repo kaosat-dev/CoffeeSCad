@@ -5,8 +5,6 @@ define (require)->
   StoreBase = require '../storeBase2'
   Project = require 'core/projects/project'
   
-  #TODO: replace all getProjects name, files etc, with "readDirs etc", ie something closer to a file system manipulation
-  
   class BrowserStore extends StoreBase
     
     constructor:(options)->
@@ -38,8 +36,8 @@ define (require)->
     
     listProjectFiles:( uri )=>
       #Get all the file names within a project : should actually get the file tree? (subdirs support etc)
+      uri = @fs.absPath( uri, @rootUri )
       try
-        files = []
         files = @fs.readdir( uri )
         return files
       catch error
@@ -49,17 +47,15 @@ define (require)->
       project.dataStore = @
       if newName?
         project.name = newName
-        #TODO: delete original project
       projectUri = @fs.join([@rootUri, project.name])
-      
       @fs.mkdir(projectUri)
       
       for index, file of project.getFiles()
-        filePath = @fs.join([projectUri, file.name])
-        @fs.writefile(filePath, file)
-        #ext = name.split('.').pop()
+        fileName = file.name
+        filePath = @fs.join([projectUri, fileName])
+        ext = fileName.split('.').pop()
+        @fs.writefile(filePath, file, {toJson:true})
         #file.trigger("save")
-
     
     loadProject:( projectUri , silent=false)=>
       projectName = projectUri.split(@fs.sep).pop()
@@ -103,6 +99,16 @@ define (require)->
     deleteProject:(projectName)=>
       projectPath = @fs.join([@rootUri, projectName])
       @fs.rmdir( projectPath )
+      
+    renameProject:( projectName, newName) =>
+      #should this me "move project?"
+      projectSrcPath = @fs.join([@rootUri, projectName])
+      projectDstPath = @fs.join([@rootUri, newName])
+      
+      #TODO: add destination validity check
+      #TODO: how to deal with currently open project ??
+      #project.name = newName
+      @fs.mv( projectSrcPath, projectDstPath )
      
     repair:()->
       #hack/fix in case project list got deleted
@@ -111,18 +117,14 @@ define (require)->
         projectsList = @_getAllProjectsHelper()
         localStorage.setItem(@storeURI, projectsList)
     
-    dumpAllProjects:->
+    exportProjects:->
       #dump all projects to a zip file
-      #for zip dump
+      #for zip export
       #require 'jszip'
       #require 'jszip-deflate'
-      
-      #TODO: add caching
       #exportTimeStamp = new Date().getTime()
       #if @exportTimeStamp
       #  bla = 2
-      
-      
       zip = new JSZip()
       
       #TODO: refactor
@@ -147,11 +149,19 @@ define (require)->
       zipB64Url = "data:application/zip;#{dataType},"+content
       
       return zipB64Url
+    
+    #helpers
+    
+    projectExists: ( uri )=>
+      #checks if specified project /project uri exists
+      uri = @fs.absPath( uri, @rootUri )
+      return @fs.exists( uri )
+      
       
     getThumbNail:( projectName )=>
       filePath = @fs.join([@rootUri, projectName, ".thumbnail.png"])
-      file = @fs.readfile( filePath )
-      
+      file = @fs.readfile( filePath , {parseJson:true})
+      return file.content
     
     autoSaveProject:(srcProject)=>
       #used for autoSaving projects
@@ -196,92 +206,8 @@ define (require)->
       
       @vent.trigger("project:autoSaved")  
       
-    renameProject:(oldName, newName)=>
-      #EVEN MORREEE HACKS ! thanks backbone
-      project = @lib.get(oldName)
-      @lib.remove(project)
-      project.name = newName
-      
-      projectURI = "#{@storeURI}-#{newName}"
-      project.localstorage = new Backbone.LocalStorage(projectURI)
-      rootStoreURI = "#{projectURI}-files"
-      project.rootFolder.changeStorage("localStorage",new Backbone.LocalStorage(rootStoreURI))
-      project.save()
-      
-      @lib.add(project)
-    
     destroyFile:(projectName, fileName)=>
       return @_removeFile(projectName, fileName)  
-      
-    _removeFromProjectsList:(projectName)=>
-      projects = localStorage.getItem(@storeURI)
-      if projects?
-        projects = projects.split(',')
-        index = projects.indexOf(projectName)
-        if index != -1
-          projects.splice(index, 1)
-          if projects.length>0 then projects=projects.join(',') else projects = ""
-          localStorage.setItem(@storeURI,projects)
-          index = @projectsList.indexOf(projectName)
-          @projectsList.splice(index, 1)
-          
-          console.log "projectName"
-          projectURI = "#{@storeURI}-#{projectName}"
-          rootStoreURI = "#{projectURI}-files"
-          
-          localStorage.removeItem(rootStoreURI)
-          localStorage.removeItem(projectURI)
-      
-    _addToProjectsList:(projectName)=>
-      projects = localStorage.getItem(@storeURI)
-      if projects?
-        if projects == ""
-          projects = "#{projectName}"
-        else
-          projects = projects.split(',')
-          if not (projectName in projects)
-            projects.push(projectName)
-            projects = projects.join(',')
-      else
-        projects = "#{projectName}"
-      
-      @projectsList.push(projectName)
-      localStorage.setItem(@storeURI,projects)
-        
-    _removeFile:(projectName, fileName)=>
-      projectURI = "#{@storeURI}-#{projectName}"
-      filesURI = "#{projectURI}-files"
-      fileNames = localStorage.getItem(filesURI)
-      fileNames = fileNames.split(',')
-      index = fileNames.indexOf(fileName)
-      fileNames.splice(index, 1)
-      fileNames = fileNames.join(',')
-      localStorage.setItem(filesURI,fileNames)
-      
-      fileURI = "#{filesURI}-#{fileName}"
-      localStorage.removeItem(fileURI)
-      
-    _getProjectFiles:(projectName)=>
-      projectURI = "#{@storeURI}-#{projectName}"
-      filesURI = "#{projectURI}-files"
-      fileNames = localStorage.getItem(filesURI)
-      fileNames = fileNames.split(',')
-      return fileNames
-      
-    _readFile:(projectName, fileName)=>
-      projectURI = "#{@storeURI}-#{projectName}"
-      filesURI = "#{projectURI}-files"
-      fileNames = localStorage.getItem(filesURI)
-      fileNames = fileNames.split(',')
-      if fileName in fileNames
-        fileUri = "#{filesURI}-#{fileName}"
-        fileData = localStorage.getItem(fileUri)
-        rawData = JSON.parse(fileData)
-        #console.log "raw file Data", rawData
-        return rawData["content"]
-      else
-        throw new Error("no such file")
-      
       
     _sourceFetchHandler:([store, projectName, path, deferred])=>
       #This method handles project/file content requests and returns appropriate data
@@ -344,9 +270,6 @@ define (require)->
       projects = projects.join(",")
       #console.log "projects",projects
       return projects
-      #projectURI = "#{@storeURI}-#{projectName}"
-      #filesURI = "#{projectURI}-files"
-      #fileNames = localStorage.getItem(filesURI)
       
        
   return BrowserStore
