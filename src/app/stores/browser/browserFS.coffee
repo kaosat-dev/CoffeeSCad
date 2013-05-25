@@ -2,23 +2,51 @@ define (require)->
   FSBase = require '../fsBase'
   
   class BrowserFS extends FSBase
-    constructor:->
+    constructor:(sep)->
+      @sep = sep or "/"
     
+    join:( paths )->
+      #something like path.join()
+      return paths.join( @sep )
+      
+    dirname:( path) ->
+      components = path.split( @sep )
+      if components.length > 0
+        components.pop()
+        result = components.pop()
+      
     
     mkdir:(path)->
       #make directory(ies) : if a full path, generates all the intermediate directories if
       #they don't exist
-      localStorage.setItem( path , "")
+      if not localStorage.getItem( path )?
+        #if it is a subfolder, add it to parent's index
+        pathComponents = path.split( @sep )
+        if pathComponents.length > 1
+           curDir = pathComponents.pop()
+           prePath = @join( pathComponents )
+           @_updateDirContent( prePath, curDir )
+        localStorage.setItem( path , "")
       
     
     readdir:( path )=>
       #projectURI = "#{@storeURI}-#{projectName}"
       elements = localStorage.getItem( path )
-      elements = elements.split(',')
-      
+      if elements?
+        elements = elements.split(',')
       return elements 
     
     rmdir: ( path )=>
+      subElements = localStorage.getItem( path )
+      #if not subElements? or subElements == ""
+      #  throw new Error(" No such path ")
+        
+      subElements = subElements.split(',')
+      for element in subElements
+        pathTosub = @join( [path, element])
+        localStorage.removeItem( pathTosub )
+      localStorage.removeItem( path )
+      ### 
       projects = localStorage.getItem(@storeURI)
       if projects?
         projects = projects.split(',')
@@ -36,9 +64,34 @@ define (require)->
           
           localStorage.removeItem(rootStoreURI)
           localStorage.removeItem(projectURI)
-
+      ###
+    _updateDirContent: ( path , newEntry ) ->  
+      items = localStorage.getItem( path )
+      if items?
+        if items == ""
+          items = []
+        else
+          items = items.split(',')
+        index = items.indexOf( newEntry )
+        if index == -1
+          items.push( newEntry )
+          items=items.join( ',' )
+          #items.splice(index, 1)
+          #if items.length>0 then items=items.join( ',' ) else items = ""
+          localStorage.setItem( path, items )
+      else
+        localStorage.setItem( path, newEntry )
+        
     writefile:(path, content, options)->
       options = options or {}
+      dirName = @dirname( path )
+      baseDir = path.split(@sep)
+      baseDir.pop()
+      baseDir = baseDir.join( @sep )
+      
+      fileName = path.split( @sep ).pop()
+      @_updateDirContent(baseDir, fileName)
+      
       localStorage.setItem(path, JSON.stringify(content.toJSON()))
 
     readfile:( path, options )->

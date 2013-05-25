@@ -22,9 +22,10 @@ define (require)->
       @fs = new BrowserFS()     
       
     setup:()->
-      super.setup()
+      #super.setup()
+      @fs.mkdir( @rootUri )
       #check for any local storage issues, repair if necessary
-      @repair() 
+      #@repair() 
       
     listProjects:( uri )=>
       uri = uri or @rootUri
@@ -33,7 +34,7 @@ define (require)->
         projects = @fs.readdir( uri )
         return projects
       catch error
-        console.log "could not fetch projects at #{uri} because of error #{error}"
+        throw new Error( console.log "could not fetch projects at #{uri} because of error #{error}" )
     
     listProjectFiles:( uri )=>
       #Get all the file names within a project : should actually get the file tree? (subdirs support etc)
@@ -42,31 +43,27 @@ define (require)->
         files = @fs.readdir( uri )
         return files
       catch error
-        console.log "could not fetch files from #{uri} because of error #{error}"
+        throw new Error( "could not fetch files from #{uri} because of error #{error}" )
     
     saveProject:( project, newName )=> 
       project.dataStore = @
       if newName?
         project.name = newName
         #TODO: delete original project
-      projectUri = @rootUri + "/" + project.name
+      projectUri = @fs.join([@rootUri, project.name])
       
       @fs.mkdir(projectUri)
       
       for index, file of project.getFiles()
-        filePath = projectUri + "/" + file.name 
-        
+        filePath = @fs.join([projectUri, file.name])
         @fs.writefile(filePath, file)
-        
-        ext = name.split('.').pop()
-        #if ext != "png"
-        #else
+        #ext = name.split('.').pop()
         #file.trigger("save")
 
     
     loadProject:( projectUri , silent=false)=>
-      projectName = projectUri.split("/").pop()
-      projectUri = @rootUri + "/" + projectUri #hmm ??
+      projectName = projectUri.split(@fs.sep).pop()
+      projectUri = @fs.join([@rootUri, projectUri])
       if projectUri in @cachedProjects
         #TODO: how to invalidate cache???
         return @cachedProjects[ projectUri ]
@@ -77,7 +74,7 @@ define (require)->
         #first list the files in the project
         fileNames = @fs.readdir( projectUri )
         for fileName in fileNames
-          fileUri = projectUri + "/" + fileName
+          fileUri = @fs.join([projectUri, fileName])
           fileData = @fs.readfile( fileUri, {parseJson:true})
           if fileData?
             fileContent = fileData.content
@@ -101,8 +98,11 @@ define (require)->
         return project
         
       catch error
-        console.log "could not load project"
+        throw new Error( "could not load project: error #{error}")
 
+    deleteProject:(projectName)=>
+      projectPath = @fs.join([@rootUri, projectName])
+      @fs.rmdir( projectPath )
      
     repair:()->
       #hack/fix in case project list got deleted
@@ -148,12 +148,10 @@ define (require)->
       
       return zipB64Url
       
-    getThumbNail:(projectName)=>
-      deferred = $.Deferred()
-      file = @_readFile(projectName,".thumbnail.png")
-      #deferred.resolve(file.content)
-      deferred.resolve(file)
-      return deferred
+    getThumbNail:( projectName )=>
+      filePath = @fs.join([@rootUri, projectName, ".thumbnail.png"])
+      file = @fs.readfile( filePath )
+      
     
     autoSaveProject:(srcProject)=>
       #used for autoSaving projects
@@ -197,31 +195,6 @@ define (require)->
       
       
       @vent.trigger("project:autoSaved")  
-    
-    deleteProject:(projectName)=>
-      d = $.Deferred()
-      console.log "browser storage deletion of #{projectName}"
-      project = @lib.get(projectName)
-      
-      projectURI = "#{@storeURI}-#{projectName}"
-      rootStoreURI = "#{projectURI}-files"
-      
-      file = null
-      filesURI = "#{projectURI}-files"
-      console.log "filesURI #{filesURI}"
-      fileNames = localStorage.getItem(filesURI)
-      console.log "fileNames #{fileNames}"
-      if fileNames
-        fileNames = fileNames.split(',')
-        for fileName in fileNames 
-          fileUri = "#{rootStoreURI}-#{fileName}"
-          console.log "deleting #{fileUri}"
-          localStorage.removeItem(fileUri)
-      
-      @_removeFromProjectsList(projectName)
-      @lib.remove(project)
-      
-      return d.resolve()
       
     renameProject:(oldName, newName)=>
       #EVEN MORREEE HACKS ! thanks backbone

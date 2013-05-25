@@ -16,6 +16,8 @@ define (require)->
       
       browserStore = new BrowserStore
         rootUri:"projectsTest"
+        
+      browserStore.setup()
     
     it 'can save projects',->
       browserStore.saveProject( project )
@@ -42,12 +44,38 @@ define (require)->
       
       expect(obsProjectsList).toEqual(expProjectsList)
     
+    it 'can list a project s files',->
+      browserStore.saveProject( project )
+      obsProjectsList = browserStore.listProjectFiles()
+      expProjectsList = ["TestProject"]
+      
+      expect(obsProjectsList).toEqual(expProjectsList)
+    
     it 'can rename projects',->
       browserStore.renameProject( project, "FooProject" )
 
-    it 'can delete projects by reference',->
-      browserStore.deleteProject ( project )
+    #it 'can delete projects by reference',->
+    #  browserStore.deleteProject ( project )
     
     it 'can delete projects by name',->
+      browserStore.saveProject( project )
       browserStore.deleteProject ( "TestProject" )
+      
+      expStorageData = null
+      obsStorageData = localStorage.getItem( "projectsTest" + "TestProject" )
+      expect(obsStorageData).toEqual(expStorageData)
+      
+      expStorageData = null
+      obsStorageData = localStorage.getItem( "projectsTest/TestProject/TestProject.coffee")
+      expect(obsStorageData).toEqual(expStorageData)
     
+    it "provides a shorthand to get a project's thumbnail", ->
+      project.addFile
+        name: ".thumbnail.png"
+        content: "beautifull image"
+      browserStore.saveProject( project )
+      
+      obsthumbnail = browserStore.getThumbNail( "TestProject" )
+      expThumbnail = "beautifull image"
+      expect(obsthumbnail).toEqual(expThumbnail)
+      
