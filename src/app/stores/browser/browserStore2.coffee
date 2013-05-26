@@ -10,13 +10,12 @@ define (require)->
     constructor:(options)->
       options = options or {}
       defaults = {
-       browserStore:"store", shortName:"browser", type:"browser", description: "Store to localstorage (browser)",
+       name:"browser", shortName:"browser", type:"browserStore", description: "Store to localstorage (browser)",
        rootUri:"projects", isDataDumpAllowed: true,showPaths:false}
       options = merge defaults, options
       super options
         
       @cacheSize = 5
-      @cachedProjects = []#TODO: remove 
       @fs = new BrowserFS()     
       
     setup:()->
@@ -100,7 +99,7 @@ define (require)->
       catch error
         throw new Error( "could not load project: error #{error}")
 
-    deleteProject:(projectName)=>
+    deleteProject:( projectName )=>
       projectPath = @fs.join([@rootUri, projectName])
       @fs.rmdir( projectPath )
       
@@ -155,12 +154,10 @@ define (require)->
       return zipB64Url
     
     #helpers
-    
     projectExists: ( uri )=>
       #checks if specified project /project uri exists
       uri = @fs.absPath( uri, @rootUri )
       return @fs.exists( uri )
-      
       
     getThumbNail:( projectName )=>
       filePath = @fs.join([@rootUri, projectName, ".thumbnail.png"])
@@ -209,8 +206,6 @@ define (require)->
       strinfigiedProject = JSON.stringify(attributes)
       
       localStorage.setItem(projectURI,strinfigiedProject)
-      
-      
       @vent.trigger("project:autoSaved")  
       
     destroyFile:(projectName, fileName)=>

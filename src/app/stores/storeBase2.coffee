@@ -29,10 +29,10 @@ define (require)->
       isDataDumpAllowed: false,showPaths:false}
       options = merge defaults, options
       super( options )
-      {@pubSubModule, @name, @shortName, @type, @description, @rootUri, @loggedIn, @isLogginRequired} = options
+      {@pubSubModule, @name, @shortName, @type, @description, @rootUri, @loggedIn, @isLoginRequired} = options
       
       @cachedProjectsList = []
-      @cachedProjects = []
+      @cachedProjects = {}
       
       @fs = require('./fsBase')
       

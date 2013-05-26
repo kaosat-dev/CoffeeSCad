@@ -1,103 +1,61 @@
 define (require)->
-  #base64 = require 'base64'
-  buildProperties = require 'core/utils/buildProperties'
-  backbone_dropbox = require './backbone.dropbox'
-  vent = require 'core/messaging/appVent'
-  reqRes = require 'core/messaging/appReqRes'
-  
+  utils = require 'core/utils/utils'
+  merge = utils.merge
+  DropboxFS = require './dropboxFS'
+  StoreBase = require '../storeBase2'
   Project = require 'core/projects/project'
-  
-  class DropBoxLibrary extends Backbone.Collection
-    """
-    a library contains multiple projects, stored on dropbox
-    """  
-    #model: Project
-    #sync: backbone_dropbox.sync
-    path: ""
-    defaults:
-      recentProjects: []
+ 
+  class DropBoxStore extends StoreBase
     
     constructor:(options)->
+      options = options or {}
+      defaults = {
+       name:"Dropbox", shortName:"Dropbox", type:"DropboxStore", description: "Store to the Dropbox Cloud based storage: requires login",
+       rootUri:"/", isDataDumpAllowed: false, isLoginRequired:true, showPaths:false}
+      options = merge defaults, options
       super options
-      #@bind("reset", @onReset)
-    
-    comparator: (project)->
-      date = new Date(project.get('lastModificationDate'))
-      return date.getTime()
       
-    onReset:()->
-      console.log "DropBoxLibrary reset" 
-      console.log @
-      console.log "_____________"
-  
-  class DropBoxStore extends Backbone.Model
-    attributeNames: ['name','loggedIn','isDataDumpAllowed']
-    buildProperties @
-    
-    idAttribute: 'name'
-    defaults:
-      name: "DropboxStore"
-      storeType: "Dropbox"
-      tooltip:"Store to the Dropbox Cloud based storage: requires login"
-      loggedIn:false
-      isDataDumpAllowed:false
-    
-    constructor:(options)->
-      super options
-      @debug = true
-      
-      @store = new backbone_dropbox()
-      @isLogginRequired = true
-      @vent = vent
-      
-      @vent.on("DropboxStore:login", @login)
-      @vent.on("DropboxStore:logout", @logout)
-      
-      #experimental
-      @lib = new DropBoxLibrary
-        sync: @store.sync
-      @lib.sync = @store.sync
-      
-      #should this be here ?
-      @projectsList = []
-      @cachedProjects = {}
+      @fs = new DropboxFS()     
+      #@debug = true
+      #@vent.on("DropboxStore:login", @login)
       #handler for project/file data fetch requests
-      reqRes.addHandler("getdropboxFileOrProjectCode",@_sourceFetchHandler)
+      #reqRes.addHandler("getdropboxFileOrProjectCode",@_sourceFetchHandler)
       
     login:=>
       try
         onLoginSucceeded=()=>
           localStorage.setItem("dropboxCon-auth",true)
           @loggedIn = true
-          @vent.trigger("DropboxStore:loggedIn")
-          console.lo
+          @_dispatchEvent("DropboxStore:loggedIn")
           
         onLoginFailed=(error)=>
           throw error
           
-        loginPromise = @store.authentificate()
+        loginPromise = @fs.authentificate()
         $.when(loginPromise).done(onLoginSucceeded)
                             .fail(onLoginFailed)
       catch error
-        @vent.trigger("DropboxStore:loginFailed")
+        @_dispatchEvent("DropboxStore:loginFailed")
         
     logout:=>
       try
         onLogoutSucceeded=()=>
           localStorage.removeItem("dropboxCon-auth")
           @loggedIn = false
-          @vent.trigger("DropboxStore:loggedOut")
+          @_dispatchEvent("DropboxStore:loggedOut")
         onLoginFailed=(error)=>
           throw error
           
-        logoutPromise = @store.signOut()
+        logoutPromise = @fs.signOut()
         $.when(logoutPromise).done(onLogoutSucceeded)
                             .fail(onLogoutFailed)
       
       catch error
-        @vent.trigger("DropboxStore:logoutFailed")
+        @_dispatchEvent("DropboxStore:logoutFailed")
     
-    authCheck:()->
+    setup:()->
+      super
+      
       getURLParameter=(paramName)->
         searchString = window.location.search.substring(1)
         i = undefined
@@ -110,12 +68,7 @@ define (require)->
           i++
         null
       urlAuthOk = getURLParameter("_dropboxjs_scope")
-      #console.log "dropboxStore got redirect param #{urlAuthOk}"
-      
       authOk = localStorage.getItem("dropboxCon-auth")
-      #console.log "dropboxStore got localstorage Param #{authOk}"
-
-
       if urlAuthOk?
         @login()
         appBaseUrl = window.location.protocol + '//' + window.location.host + window.location.pathname
@@ -124,100 +77,27 @@ define (require)->
         if authOk?
           @login()
     
-    getProjectsName:(callback)=>
-      #hack
-      if @store.client?
-        @store.client.readdir "/", (error, entries) =>
-          if error
-            console.log ("error")
-          else
-            @projectsList = entries
-            if callback?
-              callback(entries)
+    listProjects:( uri )=>
+      uri = uri or @rootUri
+      return @fs.readdir( uri )
     
-    getProject:(projectName)=>
-      #console.log "locating #{projectName} in @projectsList"
-      #console.log @projectsList
-      if projectName in @projectsList
-        return @loadProject(projectName,true)
-      else
-        return null
+    listProjectFiles:( uri )=>
+      uri = @fs.absPath( uri, @rootUri )
+      return @fs.readdir( uri )
     
-    getProjectFiles:(projectName)=>
-      #returns all files in a project
-      d = $.Deferred()
-      if @store.client?
-        @store.client.readdir "/#{projectName}/", (error, entries) =>
-          if error
-            d.reject(error)
-          else
-            d.resolve(entries)
-       else
-        d.reject(error)
-      return d
-        
-    getProjectFiles2:(projectName)=> 
-      return @store.client.readdir "/#{projectName}/"
-      
-    getProjectFile:(projectName, fileName)=>
-      
-            
-    getThumbNail:(projectName)=>
-      myDeferred = $.Deferred()
-      deferred = @store._readFile( "/#{projectName}/.thumbnail.png",{arrayBuffer:true})
-      
-      parseBase64Png=( rawData)->
-        #convert binary png to base64
-        bytes = new Uint8Array(rawData)
-        data = ''
-        for i in [0...bytes.length]
-          data += String.fromCharCode(bytes[i])
-        data =   btoa(data)
-        #crashes
-        #data = btoa(String.fromCharCode.apply(null, ))
-        base64src='data:image/png;base64,'+data
-        myDeferred.resolve(base64src)
-
-      deferred.done(parseBase64Png)
-      return myDeferred
-    
-    checkProjectExists:(projectName)=>
-      return @store._readDir "/#{projectName}/"
-    
-    createProject:(fileName)=>
-      #project = @lib.create(options)
-      project = new Project
-        name: fileName
-      project.rootFolder.sync = @store.sync
-      project.rootFolder.path = project.get("name") 
-      
-      project.createFile
-        name: fileName
-      project.createFile
-        name: "config"
-       
-      #FIXME: have one event for both create & load, as in effect , they do the same thing ? (reset views, replace current)
-      #@vent.trigger("project:created",project)  
-      @vent.trigger("project:loaded",project) 
-      
-      
-    saveProject:(project, newName)=>
-      console.log "saving projectto dropbox"
-      project.collection = null
-      @lib.add(project)
+    saveProject:( project, newName )=> 
+      console.log "saving project to dropbox"
+      project.dataStore = @
       if newName?
         project.name = newName
-      project.dataStore = @
+      projectUri = @fs.join([@rootUri, project.name])
+      @fs.mkdir(projectUri)
       
-      filesList = []
-      for index, file of project.rootFolder.models
-        #actual saving of file, not json INSIDE the file
-        projectName = project.name
-        name = file.name
-        content =file.content
-        filePath = "#{projectName}/#{name}"
-        filesList.push(file.name)
-        ext = name.split('.').pop()
+      for index, file of project.getFiles()
+        fileName = file.name
+        filePath = @fs.join([projectUri, fileName])
+        ext = fileName.split('.').pop()
+        content = file.content
         if ext == "png"
           #save thumbnail
           dataURIComponents = content.split(',')
@@ -237,108 +117,38 @@ define (require)->
             ua = new Uint8Array(ab)
             for i in [0...length]
               ua[i] = byteString.charCodeAt(i)
-        file.trigger("save")
-        console.log "saving file to #{filePath}"
-        @store.writeFile(filePath, content)
         
-      #fetch old list of files, for diff, delete old file if not present anymore
-      ###
-      oldFiles = @projectsList
-      added = _.difference(filesList,oldFiles)
-      removed = _.difference(oldFiles,filesList)
-      console.log "added",added
-      console.log "removed", removed
-      @_removeFile(projectName, fileName) for fileName in removed
-      ###
-        
-      @vent.trigger("project:saved")
+        @fs.writefile(filePath, content, {toJson:false})
+        #file.trigger("save")
+      @_dispatchEvent( "project:saved",project )
+    
+    loadProject:( projectUri , silent=false)=>
+      projectName = projectUri.split(@fs.sep).pop()
+      projectUri = @fs.join([@rootUri, projectUri])
       
-    saveProject_:(project,newName)=>
-      console.log "saving projectto dropbox"
-      project.collection = null
-      @lib.add(project)
-      if newName?
-        project.name = newName
-      project.sync = @store.sync
-      project.rootFolder.sync = project.sync
-      project.rootFolder.path = project.name
-      #project.rootFolder.changeStorage("dropboxDataStore",{path:project.name})
-      project.save()
-      ### 
-      for index, file of project.rootFolder.models
-        #file.pathRoot= project.get("name")
-        #file.save()
-        
-        #actual saving of file, not json hack
-        projectName = project.name
-        name = file.name
-        content =file.content
-        filePath = "#{projectName}/#{name}"
-        ext = name.split('.').pop()
-        if ext == "png"
-          #save thumbnail
-          dataURIComponents = content.split(',')
-          console.log "dataURIComponents"
-          console.log dataURIComponents
-          mimeString = dataURIComponents[0].split(':')[1].split(';')[0]
-          if(dataURIComponents[0].indexOf('base64') != -1)
-            data =  atob(dataURIComponents[1])
-            array = []
-            for i in [0...data.length]
-              array.push(data.charCodeAt(i))
-            content = new Blob([new Uint8Array(array)], {type: 'image/jpeg'})
-          else
-            byteString = unescape(dataURIComponents[1])
-            length = byteString.length
-            ab = new ArrayBuffer(length)
-            ua = new Uint8Array(ab)
-            for i in [0...length]
-              ua[i] = byteString.charCodeAt(i)
-          file.trigger("save")
-        console.log "saving file to #{filePath}"
-        @store.writeFile(filePath, content)
-        ###
-      @vent.trigger("project:saved")
-    
-    loadProject:(projectName,silent=false)=>
       d = $.Deferred()
-      if projectName in @projectsList
-        console.log "dropbox loading project #{projectName}"
-        @lib.add(project)
-        
-        project = new Project()
-        project.name = projectName
-        
-        onProjectLoaded=()=>
-          thumbNailFile = project.rootFolder.get(".thumbnail.png")
-          project.rootFolder.remove(thumbNailFile)
-          project._clearFlags()
-          if not silent
-            @vent.trigger("project:loaded",project)
-          d.resolve(project)
-        
-        project.dataStore = @  
-        project.rootFolder.rawData = true
-        project.rootFolder.sync = @store.sync
-        project.rootFolder.path = projectName
-        
-        project.rootFolder.fetch().done(onProjectLoaded)
-      else
-        @checkProjectExists(projectName)
-        .fail(()=>d.fail(new Error("Project #{projectName} not found")))
-        .done ()=>
-          @projectsList.push(projectName)
-          @loadProject(projectName)
-        
+      project = new Project
+          name : projectName
+      project.dataStore = @
+      
+      onProjectLoaded=()=>
+        project._clearFlags()
+        if not silent
+          @_dispatchEvent("project:loaded",project)
+        d.resolve(project)
+      
+      loadFiles=( filesList ) =>
+        filesList 
+        onProjectLoaded()
+      
+      @fs.readdir( projectUri ).done(loadFiles)
       return d
-        
-    deleteProject:(projectName)=>
-      index = @projectsList.indexOf(projectName)
-      @projectsList.splice(index, 1)
-      return @store.remove("/#{projectName}")
     
-    destroyFile:(projectName, fileName)=>
-      return @store.remove("#{projectName}/#{fileName}")
+    deleteProject:( projectName )=>
+      projectPath = @fs.join([@rootUri, projectName])
+      #index = @projectsList.indexOf(projectName)
+      #@projectsList.splice(index, 1)
+      return @fs.rmdir( projectPath )
     
     renameProject:(oldName, newName)=>
       #move /rename project and its main file
@@ -346,8 +156,41 @@ define (require)->
       @projectsList.splice(index, 1)
       @projectsList.push(newName)      
       return @store.move(oldName,newName).done(@store.move("/#{newName}/#{oldName}.coffee","/#{newName}/#{newName}.coffee"))
+    
+    getProject:(projectName)=>
+      #console.log "locating #{projectName} in @projectsList"
+      #console.log @projectsList
+      if projectName in @projectsList
+        return @loadProject(projectName,true)
+      else
+        return null
+    
+    #helpers
+    projectExists: ( uri )=>
+      #checks if specified project /project uri exists
+      uri = @fs.absPath( uri, @rootUri )
+      return @fs.exists( uri )
+    
+    getThumbNail:(projectName)=>
+      myDeferred = $.Deferred()
+      deferred = @store._readFile( "/#{projectName}/.thumbnail.png",{arrayBuffer:true})
       
-    _removeFile:(projectName, fileName)=>
+      parseBase64Png=( rawData)->
+        #convert binary png to base64
+        bytes = new Uint8Array(rawData)
+        data = ''
+        for i in [0...bytes.length]
+          data += String.fromCharCode(bytes[i])
+        data =   btoa(data)
+        #crashes
+        #data = btoa(String.fromCharCode.apply(null, ))
+        base64src='data:image/png;base64,'+data
+        myDeferred.resolve(base64src)
+
+      deferred.done(parseBase64Png)
+      return myDeferred
+    
+    destroyFile:(projectName, fileName)=>
       return @store.remove("#{projectName}/#{fileName}")
     
     _sourceFetchHandler:([store, projectName, path, deferred])=>

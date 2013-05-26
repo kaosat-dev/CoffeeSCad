@@ -121,7 +121,7 @@ define (require)->
     _addStoreEntries:=>
       #add store entries to menu, and their event handlers
       for index, store of @stores
-         if store.isLogginRequired
+         if store.isLoginRequired
            loginClassName = "login#{index[0].toUpperCase() + index[1..-1]}"
            loginEvent = "#{index}Store:login"
            @events["click .#{loginClassName}"] = do(loginEvent)-> ->@appVent.trigger(loginEvent)

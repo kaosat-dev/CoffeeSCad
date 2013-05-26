@@ -5,7 +5,7 @@ define (require)->
     constructor:(sep)->
       super(sep or "/")
     
-    mkdir:(path)->
+    mkdir:( path)->
       #make directory(ies) : if a full path, generates all the intermediate directories if
       #they don't exist
       if not localStorage.getItem( path )?
@@ -137,10 +137,7 @@ define (require)->
           return true
           
       return false
-    
-    join:( paths )->
-      #something like path.join()
-      return paths.join( @sep )
+
       
     dirname:( path )->
       components = path.split( @sep )

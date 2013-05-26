@@ -378,22 +378,25 @@ define (require)->
       if @selected
         console.log "save to #{projectName} requested"
         projectToSave = @model.targetProject
-        projectNameExists = @model.projectExists( projectName )
-        if projectNameExists
-          bootbox.dialog "A project called #{projectName} already exists, overwrite?", [
-            label: "Ok"
-            class: "btn-inverse"
-            callback: =>
+        
+        callBackMethod = (projectNameExists) =>
+          if projectNameExists
+            bootbox.dialog "A project called #{projectName} already exists, overwrite?", [
+              label: "Ok"
+              class: "btn-inverse"
+              callback: =>
+                $.when(@model.saveProject(projectToSave,projectName)).done(@onOperationDone)
+            ,
+              label: "Cancel"
+              class: "btn-inverse"
+              callback: ->
+            ]
+          else
+            if projectToSave?
               $.when(@model.saveProject(projectToSave,projectName)).done(@onOperationDone)
-          ,
-            label: "Cancel"
-            class: "btn-inverse"
-            callback: ->
-          ]
-        else
-          if projectToSave?
-            $.when(@model.saveProject(projectToSave,projectName)).done(@onOperationDone)
-    
+              
+        @model.projectExists( projectName ).done(callBackMethod)
+        
     onLoadRequested:(fileName)=>
       if @selected
         #console.log "load requested from #{@model.name}"

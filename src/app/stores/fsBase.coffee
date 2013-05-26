@@ -52,5 +52,11 @@ define (require)->
     unwatch:(path)->
       #stop watching a file or directory 
       throw new Error("Not implemented")
+    
+    join:( paths )->
+      #something like path.join()
+      if paths[0] == @sep and paths.length == 2
+        return paths[0] + paths[1]
+      return paths.join( @sep )
   
   return FSBase

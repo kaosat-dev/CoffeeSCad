@@ -6357,6 +6357,9 @@ span.CodeMirror-matchhighlight {
   text-decoration: none;
   color: #ffffff;
 }
+.store thead .ProjectTitleCell {
+  width: 150px;
+}
 .store thead .progress {
   line-height: 10px;
   height: 11px;

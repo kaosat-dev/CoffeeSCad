@@ -8,7 +8,6 @@ define (require)->
     constructor:(debug=false)->
       @debug = debug
       @client=null
-      
       @destroy_cache = []
       
     authentificate:()=>
