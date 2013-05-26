@@ -31,8 +31,6 @@ define (require)->
       super( options )
       {@pubSubModule, @name, @shortName, @type, @description, @rootUri, @loggedIn, @isLogginRequired} = options
       
-      
-      
       @cachedProjectsList = []
       @cachedProjects = []
       
@@ -79,11 +77,11 @@ define (require)->
           
     
     ###--------------Private methods---------------------###
-    _removeFromProjectsList:(projectName)=>
-      
-    _addToProjectsList:(projectName)=>
-        
-    _removeFile:(projectName, fileName)=>
+    _dispatchEvent:(eventName, data)=>
+      if @pubSubModule?
+        @pubSubModule.trigger(eventName, data)
+      else
+        console.log( "no pubsub system specified, cannot dispatch event")
       
     _sourceFetchHandler:([store,projectName,path])=>
       #This method handles project/file content requests and returns appropriate data

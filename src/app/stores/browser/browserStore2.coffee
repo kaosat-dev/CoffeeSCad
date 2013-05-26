@@ -56,6 +56,7 @@ define (require)->
         ext = fileName.split('.').pop()
         @fs.writefile(filePath, file, {toJson:true})
         #file.trigger("save")
+      @_dispatchEvent( "project:saved",project )
     
     loadProject:( projectUri , silent=false)=>
       projectName = projectUri.split(@fs.sep).pop()
@@ -91,6 +92,9 @@ define (require)->
           d.resolve(project)
         
         @cachedProjects[ projectUri ] = project
+        
+        #
+        @_dispatchEvent( "project:loaded",project )
         return project
         
       catch error

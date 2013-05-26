@@ -54,8 +54,8 @@ define (require)->
       #DropBoxStore = require './stores/dropbox/dropBoxStore'
       BrowserStore = require './stores/browser/browserStore2'
       #NodeJsStore = require './stores/nodeJs/nodeJsStore'
-      #@stores["Dropbox"] = new DropBoxStore()
-      @stores["browser"] = new BrowserStore()
+      #@stores["Dropbox"] = new DropBoxStore({pubSubModule: vent})
+      @stores["browser"] = new BrowserStore({pubSubModule: vent})
       #@stores["node"]    = new NodeJsStore()
       
       

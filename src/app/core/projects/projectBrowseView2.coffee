@@ -308,7 +308,7 @@ define (require)->
       $(".exportStore > i").removeClass("icon-download-alt")
       $(".exportStore > i").addClass("icon-spinner icon-spin")
       
-      packedDataUrl = @model.dumpAllProjects()
+      packedDataUrl = @model.exportProjects()
       
       if packedDataUrl != null
         fileName = "CoScadStoreExport.zip"
@@ -393,7 +393,11 @@ define (require)->
         else
           if projectToSave?
             $.when(@model.saveProject(projectToSave,projectName)).done(@onOperationDone)
-      
+    
+    onLoadRequested:(fileName)=>
+      if @selected
+        #console.log "load requested from #{@model.name}"
+        @model.loadProject(fileName) 
       
     onProjectsFetched:(projectNames)=>
       #console.log "projectNames #{projectNames}"
