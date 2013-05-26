@@ -61,7 +61,8 @@ define (require)->
       @_updateDirContent(baseDir, fileName)
       if options.toJson?
         if options.toJson
-          localStorage.setItem(path, JSON.stringify(content.toJSON()))
+          content = JSON.stringify(content.toJSON())
+          localStorage.setItem(path, content)
       else
         localStorage.setItem(path, content)
         
@@ -158,7 +159,44 @@ define (require)->
         path = @join( [rootUri, path] )
       return path
     
-    exists: ( path ) ->
+    exists: ( path )->
       if localStorage.getItem( path )? then return true else return false
-        
+    
+    _getAvailableSpace:->
+      if not localStorage.getItem("storeSize")?
+        localStorage.setItem("DATA", "m")
+        try
+          for i in [0...40]
+            data = localStorage.getItem("DATA")
+            localStorage.setItem("DATA", data + data)
+        catch e
+          #console.log("LIMIT REACHED: (" + i + ")")
+          console.log(e)
+        totalSpace = JSON.stringify(localStorage).length
+        totalSpace = (totalSpace*2/1024/1024).toFixed(2) 
+        console.log("totalSpace",totalSpace)
+        localStorage.removeItem("DATA")
+        localStorage.setItem("storeSize", totalSpace)
+        return totalSpace
+      else
+        return localStorage.getItem("storeSize")
+    
+    spaceUsage: ()->
+      totalSpace = @_getAvailableSpace()
+      usedSpace = 0
+      ### 
+      for item, key  of localStorage
+        #usedSpace += ( ((item.length * 2)/1024/1024).toFixed(2) )
+        console.log("item length",item.length)
+        usedSpace += item.length + key.length
+      ###  
+      #
+      usedSpace = JSON.stringify(localStorage).length 
+      usedSpace = (usedSpace*2/1024/1024).toFixed(2) 
+      remainingSpace = (totalSpace - usedSpace).toFixed(2) 
+      usedPercent = ((usedSpace/totalSpace)*100).toFixed(2)
+      results = {total:totalSpace, used:usedSpace, remaining:remainingSpace, usedPercent:usedPercent}
+      console.log("storage space results", results)
+      return results
+      
   return BrowserFS

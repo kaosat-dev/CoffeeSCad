@@ -1,4 +1,3 @@
-@import url('//fonts.googleapis.com/css?family=Open+Sans:400italic,700italic,400,700');
 /*!
  * Bootstrap v2.3.1
  *
@@ -6357,6 +6356,14 @@ span.CodeMirror-matchhighlight {
 .store thead tr:hover > th > a {
   text-decoration: none;
   color: #ffffff;
+}
+.store thead .progress {
+  line-height: 10px;
+  height: 11px;
+  margin-bottom: 5px;
+}
+.store thead .progress .bar {
+  color: black;
 }
 .store-active > a {
   text-decoration: none;

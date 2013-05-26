@@ -24,17 +24,14 @@ define (require)->
     buildProperties @
     
     constructor:(options)->
-      
-      defaults = {name:"store", shortName:"", type:"", description: "", rootUri:"", loggedIn:true, isLoginRequired:false,
+      #pubsubModule : in our case, appVent or any other backbone.marionette vent, but could be ANY non backbone pubsub system as well
+      defaults = {pubSubModule: null, name:"store", shortName:"", type:"", description: "", rootUri:"", loggedIn:true, isLoginRequired:false,
       isDataDumpAllowed: false,showPaths:false}
       options = merge defaults, options
       super( options )
-      {@name, @shortName, @type, @description, @rootUri, @loggedIn, @isLogginRequired} = options
+      {@pubSubModule, @name, @shortName, @type, @description, @rootUri, @loggedIn, @isLogginRequired} = options
       
-      #TODO: refactor this
-      #@vent = options.vent
-      #@vent.on("#{@storeType}:login", @login)
-      #@vent.on("#{@storeType}:logout", @logout)
+      
       
       @cachedProjectsList = []
       @cachedProjects = []
@@ -49,6 +46,10 @@ define (require)->
     
     setup:()->
       #do authentification or any other preliminary operation
+      if @pubSubModule?
+        if @isLoginRequired
+          @pubSubModule.on("#{@type}:login", @login)
+          @pubSubModule.on("#{@type}:logout", @logout)
     
     tearDown:()->
       #tidily shut down this store: is this necessary ? as stores have the same lifecycle as
@@ -69,8 +70,12 @@ define (require)->
     saveFile:( file, uri )=>
     
     loadFile:( uri )=>
-      
+    
+    ###-------------Helpers ----------------------------###
     getThumbNail:( projectName )=>
+      
+    spaceUsage: ->
+      return {total:0, used:0, remaining:0, usedPercent:0}
           
     
     ###--------------Private methods---------------------###

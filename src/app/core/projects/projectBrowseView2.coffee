@@ -276,6 +276,12 @@ define (require)->
     #triggers:
     #  "click .store-header": "store:selected" 
     
+    
+    serializeData:(bla)->
+      data = this.model.toJSON();
+      data["spaceUsage"] = @model.spaceUsage()
+      return data
+    
     constructor:(options)->
       super options
       selectable = new Backbone.PickySitter.Selectable(@)
@@ -365,6 +371,9 @@ define (require)->
       #modelBinding
       #@modelBinder.bind(@model, @el, @bindings)
     
+    onOperationDone:()=>
+      console.log "done doing some stuff"
+    
     onSaveRequested:(projectName)=>
       if @selected
         console.log "save to #{projectName} requested"
@@ -375,7 +384,7 @@ define (require)->
             label: "Ok"
             class: "btn-inverse"
             callback: =>
-              @model.saveProject(projectToSave,projectName)
+              $.when(@model.saveProject(projectToSave,projectName)).done(@onOperationDone)
           ,
             label: "Cancel"
             class: "btn-inverse"
@@ -383,7 +392,7 @@ define (require)->
           ]
         else
           if projectToSave?
-            @model.saveProject(projectToSave,projectName)
+            $.when(@model.saveProject(projectToSave,projectName)).done(@onOperationDone)
       
       
     onProjectsFetched:(projectNames)=>

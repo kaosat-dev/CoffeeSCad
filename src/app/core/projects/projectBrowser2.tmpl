@@ -79,8 +79,20 @@
 						<i class="icon-question-sign icon-large" rel="tooltip" title="<%=description%>"></i>
 					</a>
 				</th>
+				<th style="width:50px">
+					<div class="progress">
+					  <div class="bar  
+					  	 <%if (spaceUsage.usedPercent<=50){ %> bar-success<% }%>
+					  	 <%if (spaceUsage.usedPercent>50 && spaceUsage.usedPercent<90){ %> bar-warning<% }%>
+					  	 <%if (spaceUsage.usedPercent>=90){ %> bar-danger<% } %> " style="width:<%= spaceUsage.usedPercent %>%"
+					  	rel="tooltip" title="Total: <%=spaceUsage.total%>Mb Used: <%=spaceUsage.used%>Mb Remaining: <%=spaceUsage.remaining%>Mb"
+					  	>
+					  	<%= spaceUsage.usedPercent %>%
+					  	
+					  </div>
+					</div>
+				</th>
 				<th class="icons-group" style="border-left: none"><!--TODO: why does it work in style but not css /less ???-->
-					
 					<% if (isDataDumpAllowed == true) { %>
 						<span class="pull-right">
 						<a class="exportStore" href="#"><i class="icon-fixed-width icon-download-alt" rel="tooltip" title="export all projects (slow, please be patient)"></i></a>

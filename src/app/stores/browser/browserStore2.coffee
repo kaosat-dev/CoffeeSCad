@@ -20,7 +20,7 @@ define (require)->
       @fs = new BrowserFS()     
       
     setup:()->
-      #super.setup()
+      super
       @fs.mkdir( @rootUri )
       #check for any local storage issues, repair if necessary
       #@repair() 
@@ -162,6 +162,9 @@ define (require)->
       filePath = @fs.join([@rootUri, projectName, ".thumbnail.png"])
       file = @fs.readfile( filePath , {parseJson:true})
       return file.content
+    
+    spaceUsage: ->
+      return @fs.spaceUsage()
     
     autoSaveProject:(srcProject)=>
       #used for autoSaving projects
