@@ -74,7 +74,7 @@ define (require) ->
       @selectionHelper = new helpers.SelectionHelper({renderCallback:@_render, camera:@camera,color:0x000000,textColor:@settings.textColor})
     
     
-    init:()=>
+    ___init:()=>
       EffectComposer = require 'EffectComposer'
       DotScreenPass = require 'DotScreenPass'
       FXAAShader = require 'FXAAShader'
@@ -855,6 +855,24 @@ define (require) ->
       @onResize()
     
     onDomRefresh:()=>
+      #experimental context menu
+      require 'contextMenu'
+      @$el.contextmenu
+        target:'#context-menu'
+        onItem: (e, element)=>
+          console.log  "Selected", $(element).text() 
+          console.log  "Selected", $(element).attr("data-value")
+          objectType = $(element).attr("data-value")
+          if objectType == "Cube"
+            @model.injectContent("\nassembly.add( new Cube({size:15,center:true}) )\n")
+          
+          if objectType == "Sphere"
+            @model.injectContent("\nassembly.add( new Sphere({r:10,center:true}) )\n")
+          
+          if objectType == "Cylinder"
+            @model.injectContent("\nassembly.add( new Cylinder({r:10,h:30,center:true}) )\n")
+      
+      
       if @settings.showStats
         @ui.overlayDiv.append(@stats.domElement)
         

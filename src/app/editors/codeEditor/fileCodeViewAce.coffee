@@ -29,7 +29,8 @@ define (require)->
       @_setupEventHandlers()
     
     _setupEventHandlers: =>
-      @model.on("change", @modelChanged)
+      console.log "my model", @model
+      @model.on("change:content", @modelChanged)
       @model.on("saved", @modelSaved)
       @settings.on("change", @settingsChanged)
       
@@ -117,7 +118,13 @@ define (require)->
       @bindTo(@model, "saved", @modelSaved)
       
     modelChanged: (model, value)=>
+      console.log "hey , my model has changed"
       @applyStyles()
+      #we have to de/re activate event bindings to avoid infinite event triggering
+      @editor.off("change", @_onEditorContentChange)
+      @editor.setValue(@model.content)
+      @editor.clearSelection()
+      @editor.on("change", @_onEditorContentChange)
       
     modelSaved: (model)=>  
       
@@ -267,12 +274,15 @@ define (require)->
       if @undoManager.hasRedo()
         @editor.redo()
     
+    _onEditorContentChange:(cm, change)=>
+      @model.off("change:content", @modelChanged)
+      @model.content = @editor.getValue()
+      @model.on("change:content", @modelChanged)
+      @updateUndoRedo()
+    
     _setupEditorEventHandlers:=>
       
-      @editor.on "change", (cm, change)=>
-        #@_updateHints()
-        @model.content = @editor.getValue()
-        @updateUndoRedo()
+      @editor.on("change", @_onEditorContentChange)
       
       @editor.getSession().selection.on 'changeCursor', (ev, selection) =>
         cursor = selection.anchor
@@ -301,8 +311,6 @@ define (require)->
       @undoManager = @editor.getSession().getUndoManager()
       
       @editor.resize()    
-      
-
       
       
       #undo_manager = ace.getSession().getUndoManager();
