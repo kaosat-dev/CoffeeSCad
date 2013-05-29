@@ -79,7 +79,7 @@ define (require)->
           d.resolve(stat)
       return d
     
-    readdir:( path )->
+    readdir: ( path )->
       d = $.Deferred()
       @client.readdir path, (error, entries)=>
         if error
@@ -87,7 +87,7 @@ define (require)->
         d.resolve entries
       return d.promise() 
 
-    remove:(name)=>
+    rmdir: (name)=>
       d = $.Deferred()
       @client.remove name, (error, userInfo)=>
         if error
@@ -96,7 +96,7 @@ define (require)->
         d.resolve()
       return d.promise()
         
-    writefile:(name, content)->
+    writefile: (name, content)->
       d = $.Deferred()
       @client.writeFile name, content, (error, stat) =>
         if error
@@ -106,30 +106,22 @@ define (require)->
           console.log ("File saved as revision " + stat.versionTag)
         d.resolve()
       return d.promise()
-    
-    move:(fromPath, toPath)=>
-      d = $.Deferred()
-      @client.move fromPath, toPath, (error)=>
-        if error
-          @formatError(error,d)
-        d.resolve()
-      return d.promise()
-        
-    _readDir:(path)->
-      d = $.Deferred()
-      @client.readdir path, (error, entries)=>
-        if error
-          @formatError(error,d)
-        d.resolve entries
-      return d.promise()
-        
-    _readFile:(path, options)->
+   
+    readfile:( path, options )->
       options = options or {}
       d = $.Deferred()
       @client.readFile path,options, (error, data)=>
         if error
           @formatError(error,d)
         d.resolve data
+      return d.promise()
+    
+    mv: (fromPath, toPath)=>
+      d = $.Deferred()
+      @client.move fromPath, toPath, (error)=>
+        if error
+          @formatError(error,d)
+        d.resolve()
       return d.promise()
     
     _findByName:(path,name)->

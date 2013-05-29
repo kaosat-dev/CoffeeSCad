@@ -138,8 +138,17 @@ define (require)->
         d.resolve(project)
       
       loadFiles=( filesList ) =>
-        filesList 
-        onProjectLoaded()
+        promises = []
+        for fileName in filesList
+          filePath = @fs.join( [projectUri, fileName] )
+          promises.push( @fs.readfile( filePath ) )
+        $.when.apply($, promises).done ()=>
+          data = arguments
+          for fileName, index in filesList #todo remove this second iteration
+            project.addFile 
+              name: fileName
+              content: data[index]
+          onProjectLoaded()
       
       @fs.readdir( projectUri ).done(loadFiles)
       return d
@@ -152,10 +161,10 @@ define (require)->
     
     renameProject:(oldName, newName)=>
       #move /rename project and its main file
-      index = @projectsList.indexOf(oldName)
-      @projectsList.splice(index, 1)
-      @projectsList.push(newName)      
-      return @store.move(oldName,newName).done(@store.move("/#{newName}/#{oldName}.coffee","/#{newName}/#{newName}.coffee"))
+      #index = @projectsList.indexOf(oldName)
+      #@projectsList.splice(index, 1)
+      #@projectsList.push(newName)      
+      return @fs.mv(oldName, newName).done(@fs.mv("/#{newName}/#{oldName}.coffee","/#{newName}/#{newName}.coffee"))
     
     getProject:(projectName)=>
       #console.log "locating #{projectName} in @projectsList"
@@ -242,9 +251,7 @@ define (require)->
           @loadProject(projectName,true).done(getContent)
         else 
           getContent(@cachedProjects[projectName])
-          
-           
-        
+
       return result
       
   return DropBoxStore
