@@ -23,7 +23,15 @@ define (require)->
       @fs.mkdir( @rootUri )
       #check for any local storage issues, repair if necessary
       #@repair() 
-      
+    
+    listDir:( uri )=>
+      uri = uri or @rootUri
+      uri = @fs.absPath( uri, @rootUri )
+      try
+        contents = @fs.readdir( uri )
+      catch error
+        throw new Error( console.log "could not fetch contents of #{uri} because of error #{error}" )
+    
     listProjects:( uri )=>
       uri = uri or @rootUri
       try
@@ -92,7 +100,6 @@ define (require)->
         
         @cachedProjects[ projectUri ] = project
         
-        #
         @_dispatchEvent( "project:loaded",project )
         return project
         

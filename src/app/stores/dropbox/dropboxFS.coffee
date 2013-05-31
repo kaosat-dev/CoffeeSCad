@@ -115,6 +115,15 @@ define (require)->
           @formatError(error,d)
         d.resolve data
       return d.promise()
+   
+    rmfile:( path )->
+      d = $.Deferred()
+      @client.remove name, (error, userInfo)=>
+        if error
+          @formatError(error,d)
+        console.log "removed #{name}"
+        d.resolve()
+      return d.promise()
     
     mv: (fromPath, toPath)=>
       d = $.Deferred()

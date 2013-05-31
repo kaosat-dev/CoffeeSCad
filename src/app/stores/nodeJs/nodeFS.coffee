@@ -1,35 +1,40 @@
 define (require)->
   FSBase = require '../fsBase'
   #we use the nodeRequire alias to avoid clash of requirejs and node's require
-  fs = nodeRequire('fs')
-  pathMod = nodeRequire('path')
+  try
+    fs = nodeRequire('fs')
+    pathMod = nodeRequire('path')
+  catch error
+  
+  $ = require 'jquery'
   
   class NodeFS extends FSBase
     constructor:->
       
     mkdir:( path )->
-      deferred = $.deferred()
+      deferred = $.Deferred()
       callback = deferred.resolve
       fs.mkdir( path, callback )
-      
       return deferred
     
     readdir: ( path )->
-      deferred = $.deferred()
+      console.log("reading path", path)
+      deferred = $.Deferred()
       callback = deferred.resolve
-      fs.readir( path, callback )
+      
+      fs.readdir( path, callback )
       
       return deferred
     
     rmdir: ( path )->
-      deferred = $.deferred()
+      deferred = $.Deferred()
       callback = deferred.resolve
       fs.rmdir( path, callback )
       
       return deferred
     
     writefile:(path, content, options)->
-      deferred = $.deferred()
+      deferred = $.Deferred()
       callback = deferred.resolve
       fs.writeFile( path, options, callback )
       

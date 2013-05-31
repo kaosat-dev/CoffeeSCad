@@ -61,8 +61,9 @@ define (require)->
       tmpCollection = new Backbone.Collection()
       for name, store of @stores
         #hack, to inject current, existing project to sub views (for saving only)
-        store.targetProject = @model
-        tmpCollection.add store
+        if store.enabled
+          store.targetProject = @model
+          tmpCollection.add store
       @stores =  tmpCollection
       
       projectsStoreView = new ProjectsStoreView
@@ -403,7 +404,7 @@ define (require)->
         @model.loadProject(fileName) 
       
     onProjectsFetched:(projectNames)=>
-      #console.log "projectNames #{projectNames}"
+      console.log "projectNames #{projectNames}"
       #console.log @
       @rootFolderCollection = new Backbone.Collection()
       

@@ -1,10 +1,11 @@
 /app
-!/app/disable_require.js
+!/app/nodeRequire.js
 !/app/requireLib.js
 !/app/text.js
 /test
 !/test/vendor
 !/test/index.html
 .project
+.pydevproject
 .settings/
 /node_modules/

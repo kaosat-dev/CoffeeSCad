@@ -9,7 +9,6 @@ define (require)->
     idAttribute: 'name'
     attributeNames: ['name','shortName', 'type','description', '',  'isLogInRequired', 'loggedIn']
     
-    
     defaults:
       name: "baseStore"
       shortName: "base"
@@ -25,11 +24,11 @@ define (require)->
     
     constructor:(options)->
       #pubsubModule : in our case, appVent or any other backbone.marionette vent, but could be ANY non backbone pubsub system as well
-      defaults = {pubSubModule: null, name:"store", shortName:"", type:"", description: "", rootUri:"", loggedIn:true, isLoginRequired:false,
+      defaults = {enabled:true, pubSubModule: null, name:"store", shortName:"", type:"", description: "", rootUri:"", loggedIn:true, isLoginRequired:false,
       isDataDumpAllowed: false,showPaths:false}
       options = merge defaults, options
       super( options )
-      {@pubSubModule, @name, @shortName, @type, @description, @rootUri, @loggedIn, @isLoginRequired} = options
+      {@enabled, @pubSubModule, @name, @shortName, @type, @description, @rootUri, @loggedIn, @isLoginRequired} = options
       
       @cachedProjectsList = []
       @cachedProjects = {}
@@ -53,9 +52,7 @@ define (require)->
       #tidily shut down this store: is this necessary ? as stores have the same lifecycle as
       #the app itself ?
     
-    listProjects:( uri )=>
-     
-    listProjectFiles:( uri )=>
+    listDir:( uri )=>
         
     saveProject:( project, newName )=> 
     

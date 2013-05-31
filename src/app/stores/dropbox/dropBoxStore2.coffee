@@ -17,7 +17,6 @@ define (require)->
       
       @fs = new DropboxFS()     
       #@debug = true
-      #@vent.on("DropboxStore:login", @login)
       #handler for project/file data fetch requests
       #reqRes.addHandler("getdropboxFileOrProjectCode",@_sourceFetchHandler)
       
@@ -199,8 +198,8 @@ define (require)->
       deferred.done(parseBase64Png)
       return myDeferred
     
-    destroyFile:(projectName, fileName)=>
-      return @store.remove("#{projectName}/#{fileName}")
+    deleteFile:( filePath )=>
+      @fs.rmfile( filePath )
     
     _sourceFetchHandler:([store, projectName, path, deferred])=>
       #This method handles project/file content requests and returns appropriate data
