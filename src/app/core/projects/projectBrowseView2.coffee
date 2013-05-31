@@ -326,7 +326,7 @@ define (require)->
       if @selected
         console.log "#{@model.name} selected"
         #handle both deferreds and basic objects returned by stores
-        $.when(@model.listProjects()).done(@onProjectsFetched)
+        $.when(@model.listDir()).done(@onProjectsFetched)
         header = @$el.find(".store-header")
         header.toggleClass('store-header-activated')
         
@@ -353,7 +353,7 @@ define (require)->
           ext = fullName.pop()
           $("#projectFilesList").append("<tr><td>#{file}</td><td>#{ext}</td></tr>")
       
-      $.when( @model.listProjectFiles( projectName ) ).done (onFilesFetched)
+      $.when( @model.listDir( projectName ) ).done (onFilesFetched)
       
       #fetch thumbnail
       try
@@ -402,27 +402,34 @@ define (require)->
       if @selected
         #console.log "load requested from #{@model.name}"
         @model.loadProject(fileName) 
+     
+    
+    navigateTo:( path )=>
+      console.log 'navigating to'+path 
+      @currentUri = path
       
-    onProjectsFetched:(projectNames)=>
-      console.log "projectNames #{projectNames}"
-      #console.log @
-      @rootFolderCollection = new Backbone.Collection()
+      pathElemens = @model.fs.split( path )
+      pathEl = ""
+      for elem, index in pathElemens 
+        pathEl += " <a id='pathId_#{index}' class='pathBarUrlComponent' href=#>#{elem}</a> "+ if index < (pathElemens.length-1) then @model.fs.sep else ""
+      $("#pathNavigate").html(pathEl)
       
-      ### 
-      for projectName in projectNames
-        projectFolder = new Backbone.Model()
-        @rootFolderCollection.add( projectFolder ) 
+      $(".pathBarUrlComponent").on("click",(event)=>
+          pathElemIndex = $(event.currentTarget).attr("id").split("pathId_").pop()
+          
+          targetPath = @model.fs.split(@currentUri)
+          targetPath = targetPath[0..pathElemIndex]#parseInt
+          targetPath = @model.fs.join(targetPath)
+          
+          @navigateTo(targetPath)
+        )
       
-      projectsView = new ProjectsListView
-        collection: @rootFolderCollection
-      ###  
-      #@projectStores.show projectsStoreView
-      
-      
-      
-      targetElem = $("#projects")#@ui.projects 
+      $.when(@model.listDir(path)).done(@_refreshContent)
+    
+    _refreshContent:(listOfStuff)=>
+      targetElem = $("#projects")
       targetElem.html("")
-      for name in projectNames
+      for name in listOfStuff
         targetElem.append("""<li class='projectBlock'>
           <div class="flip">
             <div class="front">
@@ -445,6 +452,34 @@ define (require)->
             </div>
           </div>
           </li>""")
+      $(".projectSelector").on("dblclick",(event)=>
+        itemName = $(event.currentTarget).attr("id")
+        itemName= itemName.split("#{@model.name}").pop()
+        targetPath = @model.fs.join([@currentUri,itemName])
+        @navigateTo( targetPath )
+      )
+      height = 400#targetElem.height()
+      console.log "elem height", height
+      targetElem.slimScroll({size:"10px";height:height+"px",alwaysVisible: true})
+      #@$el.find('[rel=tooltip]').tooltip({'placement': 'right'})
+      
+    onProjectsFetched:(projectNames)=>
+      console.log "projectNames #{projectNames}"
+      #console.log @
+      @rootFolderCollection = new Backbone.Collection()
+      
+      ### 
+      for projectName in projectNames
+        projectFolder = new Backbone.Model()
+        @rootFolderCollection.add( projectFolder ) 
+      
+      projectsView = new ProjectsListView
+        collection: @rootFolderCollection
+      ###  
+      #@projectStores.show projectsStoreView
+      
+      
+      
       ### 
       targetElem.on("click",(event)=>
         console.log "$(event.target)", $(event.target)
@@ -453,16 +488,18 @@ define (require)->
         #@onProjectSelected($(event.target).closest("li").att("id")
       )###
       #cache images with new Image() ??
-      
+      ### 
       $(".projectSelector").on("click",(event)=>
         @onProjectSelected(event)
-      )
+      )###
+      
+      @currentUri = @model.rootUri
+      $("#pathNavigate").html("<a class='pathBarUrlComponent' href=#>#{@model.rootUri}</a>")
+      
+      @_refreshContent(projectNames)
       
       @delegateEvents()
-      height = 400#targetElem.height()
-      console.log "elem height", height
-      targetElem.slimScroll({size:"10px";height:height+"px",alwaysVisible: true})
-      #@$el.find('[rel=tooltip]').tooltip({'placement': 'right'})
+      
     
     onClose:->
       #clean up events

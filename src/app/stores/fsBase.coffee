@@ -58,5 +58,12 @@ define (require)->
       if paths[0] == @sep and paths.length == 2
         return paths[0] + paths[1]
       return paths.join( @sep )
+    
+    split:( path )->
+      #split a string based path into a list of path components
+      result = path.split( @sep )
+      if result[0] == ""
+        result[0] = @sep
+      return result
   
   return FSBase

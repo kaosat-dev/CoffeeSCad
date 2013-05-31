@@ -18,31 +18,23 @@ define (require)->
       
       @fs = new NodeFS()
     
-    listProjects:( uri )=>
-      console.log "listing projects (folders) at " + uri
+    listDir:( uri )=>
       uri = uri or @rootUri
-      console.log "real uri", uri
+      console.log "listing projects (folders) at " + uri
       d = $.Deferred()
-      callbackbOfSorts=(err, folders )->
-        console.log "got folders"+ folders
-        result = folders? or []
-        d.resolve(folders)
+      callbackbOfSorts=(err, files )->
+        console.log "got folders"+ files + " errors "  + err
+        
+        result = files
+        if err?
+          result = []
+        
+        d.resolve(files)
         
       #$.when(@fs.readdir( uri )).done(callbackbOfSorts)
       fs = nodeRequire('fs')
-      fs.readdir( "/home/mmoissette/", callbackbOfSorts )
-      
+      fs.readdir( uri , callbackbOfSorts )
       return d
-      
-    listProjectFiles:( uri )=>
-      #this should be list files?
-      #Get all the file/folder names within a project 
-      uri = @fs.absPath( uri, @rootUri )
-      try
-        files = @fs.readdir( uri )
-        return files
-      catch error
-        throw new Error( "could not fetch files from #{uri} because of error #{error}" )
 
     saveProject:( project, options )=> 
       console.log "saving project to dropbox"

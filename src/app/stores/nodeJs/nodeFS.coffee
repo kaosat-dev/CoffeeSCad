@@ -9,7 +9,8 @@ define (require)->
   $ = require 'jquery'
   
   class NodeFS extends FSBase
-    constructor:->
+    constructor:(sep)->
+      super(sep or "/")
       
     mkdir:( path )->
       deferred = $.Deferred()
@@ -58,3 +59,8 @@ define (require)->
     listProjs: ( path ) ->
       #return a list of all projects in a given path: FIXME: should this be here or in the store ??
       
+    getType : ( path ) ->
+      result = {}
+      stat = fs.statSync(path)
+      if stat.isDirectory()
+        result.type = 'folder'

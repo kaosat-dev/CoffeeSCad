@@ -25,8 +25,7 @@ define (require)->
       #@repair() 
     
     listDir:( uri )=>
-      uri = uri or @rootUri
-      uri = @fs.absPath( uri, @rootUri )
+      uri = if uri? then uri else @rootUri #@fs.absPath( uri, @rootUri ) else @rootUri
       try
         contents = @fs.readdir( uri )
       catch error

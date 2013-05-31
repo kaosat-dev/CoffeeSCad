@@ -76,12 +76,8 @@ define (require)->
         if authOk?
           @login()
     
-    listProjects:( uri )=>
-      uri = uri or @rootUri
-      return @fs.readdir( uri )
-    
-    listProjectFiles:( uri )=>
-      uri = @fs.absPath( uri, @rootUri )
+    listDir:( uri )=>
+      uri = if uri? then @fs.absPath( uri, @rootUri ) else @rootUri
       return @fs.readdir( uri )
     
     saveProject:( project, newName )=> 
