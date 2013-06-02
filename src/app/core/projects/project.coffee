@@ -122,6 +122,16 @@ define (require)->
       @rootAssembly = {}
       @dataStore = null
       
+      #metadata: all stored in .project file
+      s4 = ->
+        Math.floor((1 + Math.random()) * 0x10000).toString(16).substring 1
+      guid = ->
+        s4() + s4() + "-" + s4() + "-" + s4() + "-" + s4() + "-" + s4() + s4() + s4()
+      @uid = guid()
+      @uri = null
+      @tags = []
+      
+      
       @on("change:name", @_onNameChanged)
       @on("compiled",@_onCompiled)
       @on("compile:error",@_onCompileError)

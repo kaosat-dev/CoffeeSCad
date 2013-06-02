@@ -402,7 +402,7 @@ define (require)->
             if projectToSave?
               $.when(@model.saveProject(projectToSave,projectName)).done(@onOperationDone)
               
-        @model.projectExists( projectName ).done(callBackMethod)
+        $.when(@model.projectExists( projectName )).done(callBackMethod)
         
     onLoadRequested:(fileName)=>
       #TODO: handle fileName cleanly

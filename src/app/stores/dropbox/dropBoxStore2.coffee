@@ -98,13 +98,18 @@ define (require)->
       @fs.readdir( uri ).done(addFileInfo)
       return d
     
-    saveProject:( project, newName )=> 
+    saveProject:( project, path )=> 
       console.log "saving project to dropbox"
       project.dataStore = @
-      if newName?
-        project.name = newName
-      projectUri = @fs.join([@rootUri, project.name])
-      @fs.mkdir(projectUri)
+      
+      if path?
+        projectUri = path
+        targetName = @fs.basename( path )
+        if targetName != project.name
+          project.name = targetName
+      else
+        projectUri = @fs.join([@rootUri, project.name])
+      #@fs.mkdir(projectUri)
       
       for index, file of project.getFiles()
         fileName = file.name
@@ -113,23 +118,24 @@ define (require)->
         content = file.content
         if ext == "png"
           #save thumbnail
-          dataURIComponents = content.split(',')
-          mimeString = dataURIComponents[0].split(':')[1].split(';')[0]
-          if(dataURIComponents[0].indexOf('base64') != -1)
-            console.log "base64 v1"
-            data =  atob(dataURIComponents[1])
-            array = []
-            for i in [0...data.length]
-              array.push(data.charCodeAt(i))
-            content = new Blob([new Uint8Array(array)], {type: 'image/png'})
-          else
-            console.log "other v2"
-            byteString = unescape(dataURIComponents[1])
-            length = byteString.length
-            ab = new ArrayBuffer(length)
-            ua = new Uint8Array(ab)
-            for i in [0...length]
-              ua[i] = byteString.charCodeAt(i)
+          if content != ""
+            dataURIComponents = content.split(',')
+            mimeString = dataURIComponents[0].split(':')[1].split(';')[0]
+            if(dataURIComponents[0].indexOf('base64') != -1)
+              console.log "base64 v1"
+              data =  atob(dataURIComponents[1])
+              array = []
+              for i in [0...data.length]
+                array.push(data.charCodeAt(i))
+              content = new Blob([new Uint8Array(array)], {type: 'image/png'})
+            else
+              console.log "other v2"
+              byteString = unescape(dataURIComponents[1])
+              length = byteString.length
+              ab = new ArrayBuffer(length)
+              ua = new Uint8Array(ab)
+              for i in [0...length]
+                ua[i] = byteString.charCodeAt(i)
         
         @fs.writefile(filePath, content, {toJson:false})
         #file.trigger("save")
@@ -137,7 +143,7 @@ define (require)->
     
     loadProject:( projectUri , silent=false)=>
       projectName = projectUri.split(@fs.sep).pop()
-      projectUri = @fs.join([@rootUri, projectUri])
+      #projectUri = @fs.join([@rootUri, projectUri])
       
       d = $.Deferred()
       project = new Project
@@ -166,11 +172,11 @@ define (require)->
       @fs.readdir( projectUri ).done(loadFiles)
       return d
     
-    deleteProject:( projectName )=>
-      projectPath = @fs.join([@rootUri, projectName])
+    deleteProject:( projectUri )=>
+      #projectPath = @fs.join([@rootUri, projectName])
       #index = @projectsList.indexOf(projectName)
       #@projectsList.splice(index, 1)
-      return @fs.rmdir( projectPath )
+      return @fs.rmdir( projectUri )
     
     renameProject:(oldName, newName)=>
       #move /rename project and its main file

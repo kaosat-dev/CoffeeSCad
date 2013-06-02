@@ -143,6 +143,13 @@ define (require)->
         d.resolve(data)
       return d.promise()
     
+    
+    basename:( path )->
+      components = path.split( @sep )
+      if components.length > 0
+        return components.pop()
+      return path
+    
     absPath:( path , rootUri)->
       if path.split( @sep ).length <= 1
         path = @join( [rootUri, path] )

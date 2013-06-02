@@ -37,15 +37,20 @@ define (require)->
       $.when(@fs.readdir( uri )).done(callbackbOfSorts)
       return d
 
-    saveProject:( project, options )=> 
-      console.log "saving project to dropbox"
+    saveProject:( project, path )=> 
+      console.log "saving project to nodejs"
       options = options or {}
       
       project.dataStore = @
       
-      if options.newName?
-        project.name = newName
-      projectUri = @fs.join([@rootUri, project.name])
+      if path?
+        projectUri = path
+        targetName = @fs.basename( path )
+        if targetName != project.name
+          project.name = targetName
+      else
+        projectUri = @fs.join([@rootUri, project.name])
+      
       @fs.mkdir(projectUri)
       
       for index, file of project.getFiles()
@@ -77,4 +82,40 @@ define (require)->
         #file.trigger("save")
       @_dispatchEvent( "project:saved",project )
       
-    
+    loadProject:( projectUri , silent=false)=>
+      projectName = projectUri.split(@fs.sep).pop()
+      #projectUri = @fs.join([@rootUri, projectUri])
+      
+      d = $.Deferred()
+      project = new Project
+          name : projectName
+      project.dataStore = @
+      
+      onProjectLoaded=()=>
+        project._clearFlags()
+        if not silent
+          @_dispatchEvent("project:loaded",project)
+        d.resolve(project)
+      
+      loadFiles=( filesList ) =>
+        promises = []
+        for fileName in filesList
+          filePath = @fs.join( [projectUri, fileName] )
+          promises.push( @fs.readfile( filePath ) )
+        $.when.apply($, promises).done ()=>
+          data = arguments
+          for fileName, index in filesList #todo remove this second iteration
+            project.addFile 
+              name: fileName
+              content: data[index]
+          onProjectLoaded()
+      
+      @fs.readdir( projectUri ).done(loadFiles)
+      return d
+
+    #helpers
+    projectExists: ( uri )=>
+      #checks if specified project /project uri exists
+      return @fs.exists( uri )
+
+  return NodeJsStore

@@ -199,7 +199,7 @@ define (require)->
     
     _handleAutoSave:=>
       #check if there is an autosaved project , if there is, ask user if he wants to reload
-      autosavedProject = @stores["browser"].getProject("autosave")
+      autosavedProject = @stores["browser"].projectExists("autosave")
       if autosavedProject?
         #there was an autosave, ie failure?
         showDialog = =>

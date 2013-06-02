@@ -35,11 +35,8 @@ define (require)->
       return deferred
     
     writefile:(path, content, options)->
-      deferred = $.Deferred()
-      callback = deferred.resolve
-      fs.writeFile( path, options, callback )
-      
-      return deferred
+      options = {} #ignoring passed options
+      fs.writeFileSync( path, content, options)
     
     isDir: (path) ->
       if fs.existsSync( path )
@@ -53,8 +50,10 @@ define (require)->
         projectMainFileName = pathMod.basename + ".coffee"
         if projectMainFileName in filesList
           return true
-          
       return false
+    
+    exists: (path) ->
+      return fs.existsSync( path )
     
     listProjs: ( path ) ->
       #return a list of all projects in a given path: FIXME: should this be here or in the store ??
