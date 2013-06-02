@@ -36,31 +36,34 @@ define (require)->
       catch error
         throw new Error( console.log "could not fetch contents of #{uri} because of error #{error}" )
     
-    saveProject:( project, newName )=> 
-      project.dataStore = @
-      if newName?
-        project.name = newName
-      projectUri = @fs.join([@rootUri, project.name])
-      @fs.mkdir(projectUri)
+    saveProject:( project, path )=> 
+      super
+      
+      #projectUri = @fs.join([@rootUri, project.name])
+      
+      @fs.mkdir(project.uri)
       
       for index, file of project.getFiles()
         fileName = file.name
-        filePath = @fs.join([projectUri, fileName])
+        filePath = @fs.join([project.uri, fileName])
         ext = fileName.split('.').pop()
         @fs.writefile(filePath, file, {toJson:true})
         #file.trigger("save")
       @_dispatchEvent( "project:saved",project )
     
     loadProject:( projectUri , silent=false)=>
+      super
+      
       projectName = projectUri.split(@fs.sep).pop()
       #projectUri = @fs.join([@rootUri, projectUri])
+      project = new Project
+          name : projectName
+      project.dataStore = @
+      
       if projectUri in @cachedProjects
         #TODO: how to invalidate cache???
         return @cachedProjects[ projectUri ]
       try
-        project = new Project
-          name : projectName
-        project.dataStore = @
         #first list the files in the project
         fileNames = @fs.readdir( projectUri )
         for fileName in fileNames

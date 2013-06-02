@@ -38,20 +38,9 @@ define (require)->
       return d
 
     saveProject:( project, path )=> 
-      console.log "saving project to nodejs"
-      options = options or {}
+      super
       
-      project.dataStore = @
-      
-      if path?
-        projectUri = path
-        targetName = @fs.basename( path )
-        if targetName != project.name
-          project.name = targetName
-      else
-        projectUri = @fs.join([@rootUri, project.name])
-      
-      @fs.mkdir(projectUri)
+      @fs.mkdir(project.uri)
       
       for index, file of project.getFiles()
         fileName = file.name
@@ -83,10 +72,10 @@ define (require)->
       @_dispatchEvent( "project:saved",project )
       
     loadProject:( projectUri , silent=false)=>
+      super
+      
       projectName = projectUri.split(@fs.sep).pop()
       #projectUri = @fs.join([@rootUri, projectUri])
-      
-      d = $.Deferred()
       project = new Project
           name : projectName
       project.dataStore = @

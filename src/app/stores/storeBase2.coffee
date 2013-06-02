@@ -5,6 +5,7 @@ define (require)->
   utils = require 'core/utils/utils'
   merge = utils.merge
   
+  
   class StoreBase extends Backbone.Model
     idAttribute: 'name'
     attributeNames: ['name','shortName', 'type','description', '',  'isLogInRequired', 'loggedIn']
@@ -54,7 +55,22 @@ define (require)->
     
     listDir:( uri )=>
         
-    saveProject:( project, newName )=> 
+    saveProject:( project, path )=> 
+      console.log "saving project to #{@type}"
+      project.dataStore = @
+      #also save metadata
+      project.addOrUpdateMetaFile()
+      
+      if path?
+        projectUri = path
+        project.uri = projectUri
+        targetName = @fs.basename( path )
+        if targetName != project.name
+          project.name = targetName
+      else
+        projectUri = project.uri
+        #projectUri = @fs.join([@rootUri, project.name])
+      
     
     loadProject:( projectUri, silent=false )=>
     

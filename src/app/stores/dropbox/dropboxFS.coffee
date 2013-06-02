@@ -98,12 +98,14 @@ define (require)->
         
     writefile: (name, content)->
       d = $.Deferred()
-      @client.writeFile name, content, (error, stat) =>
+      options = {}
+      @client.writeFile name, content, options, (error, stat) =>
         if error
           @formatError(error,d)
         if @debug
-          console.log "writen file #{name} with content #{content}"
-          console.log ("File saved as revision " + stat.versionTag)
+          if not error?
+            console.log "writen file #{name} with content #{content}"
+            console.log ("File saved as revision " + stat.versionTag)
         d.resolve()
       return d.promise()
    

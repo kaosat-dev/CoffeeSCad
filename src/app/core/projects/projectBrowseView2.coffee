@@ -477,10 +477,7 @@ define (require)->
       #@$el.find('[rel=tooltip]').tooltip({'placement': 'right'})
       
     onProjectsFetched:(projectNames)=>
-      console.log "projectNames #{projectNames}"
-      #console.log @
       @rootFolderCollection = new Backbone.Collection()
-      
       ### 
       for projectName in projectNames
         projectFolder = new Backbone.Model()
@@ -490,9 +487,6 @@ define (require)->
         collection: @rootFolderCollection
       ###  
       #@projectStores.show projectsStoreView
-      
-      
-      
       ### 
       targetElem.on("click",(event)=>
         console.log "$(event.target)", $(event.target)
@@ -505,14 +499,10 @@ define (require)->
       $(".projectSelector").on("click",(event)=>
         @onProjectSelected(event)
       )###
-      
       @currentUri = @model.rootUri
       $("#pathNavigate").html("<a class='pathBarUrlComponent' href=#>#{@model.rootUri}</a>")
-      
       @_refreshContent(projectNames)
-      
       @delegateEvents()
-      
     
     onClose:->
       #clean up events

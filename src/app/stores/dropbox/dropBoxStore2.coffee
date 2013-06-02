@@ -99,16 +99,8 @@ define (require)->
       return d
     
     saveProject:( project, path )=> 
-      console.log "saving project to dropbox"
-      project.dataStore = @
+      super
       
-      if path?
-        projectUri = path
-        targetName = @fs.basename( path )
-        if targetName != project.name
-          project.name = targetName
-      else
-        projectUri = @fs.join([@rootUri, project.name])
       #@fs.mkdir(projectUri)
       
       for index, file of project.getFiles()
@@ -136,19 +128,21 @@ define (require)->
               ua = new Uint8Array(ab)
               for i in [0...length]
                 ua[i] = byteString.charCodeAt(i)
-        
         @fs.writefile(filePath, content, {toJson:false})
         #file.trigger("save")
+      
       @_dispatchEvent( "project:saved",project )
     
     loadProject:( projectUri , silent=false)=>
+      super
+      
       projectName = projectUri.split(@fs.sep).pop()
       #projectUri = @fs.join([@rootUri, projectUri])
-      
-      d = $.Deferred()
       project = new Project
           name : projectName
       project.dataStore = @
+      
+      d = $.Deferred()
       
       onProjectLoaded=()=>
         project._clearFlags()

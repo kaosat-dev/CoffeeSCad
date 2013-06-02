@@ -128,6 +128,7 @@ define (require)->
       guid = ->
         s4() + s4() + "-" + s4() + "-" + s4() + "-" + s4() + "-" + s4() + s4() + s4()
       @uid = guid()
+      @version = 0.0
       @uri = null
       @tags = []
       
@@ -140,7 +141,14 @@ define (require)->
     getFiles:( options ) ->
       return @rootFolder.models
       #for index, file of project.rootFolder.models
-        
+      
+    getMetaData:->
+      return {uid:@uid, version:@version, tags:@tags}
+    addOrUpdateMetaFile:->
+      @addFile
+        name:".project"
+        content: JSON.stringify(@getMetaData())
+         
     addFile:(options)->
       file = new ProjectFile
         name: options.name ? @name+".coffee"
