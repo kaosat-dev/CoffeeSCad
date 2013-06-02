@@ -19,21 +19,22 @@ define (require)->
       @fs = new NodeFS()
     
     listDir:( uri )=>
-      uri = uri or @rootUri
-      console.log "listing projects (folders) at " + uri
+      uri = if uri? then uri else @rootUri
       d = $.Deferred()
-      callbackbOfSorts=(err, files )->
-        console.log "got folders"+ files + " errors "  + err
+      
+      callbackbOfSorts=(err, files )=>
+        #console.log "got folders"+ files + " errors "  + err
+        results = []
+        if not err?
+          for file in files
+            filePath = @fs.join([uri, file])
+            result = @fs.getType( filePath )
+            console.log "Result", result
+            results.push( result )
         
-        result = files
-        if err?
-          result = []
+        d.resolve(results)
         
-        d.resolve(files)
-        
-      #$.when(@fs.readdir( uri )).done(callbackbOfSorts)
-      fs = nodeRequire('fs')
-      fs.readdir( uri , callbackbOfSorts )
+      $.when(@fs.readdir( uri )).done(callbackbOfSorts)
       return d
 
     saveProject:( project, options )=> 

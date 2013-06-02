@@ -78,7 +78,25 @@ define (require)->
     
     listDir:( uri )=>
       uri = if uri? then @fs.absPath( uri, @rootUri ) else @rootUri
-      return @fs.readdir( uri )
+      d = $.Deferred()
+      
+      addFileInfo = (files, folderStats, filesStats)=>
+        results = []
+        for file, index in files
+          filePath = @fs.join([uri, file])
+          result = {
+            name: file,
+            path : filePath
+          }
+          if filesStats[index].isFolder
+            result.type = 'folder'
+          else
+            result.type = 'file'
+          results.push( result )
+        d.resolve(results)
+      
+      @fs.readdir( uri ).done(addFileInfo)
+      return d
     
     saveProject:( project, newName )=> 
       console.log "saving project to dropbox"

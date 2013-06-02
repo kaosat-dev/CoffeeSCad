@@ -120,12 +120,20 @@ define (require)->
 
     isDir:(path) ->
       #HOWTO ???
+      #cheat for now : all file contents are json (with brackets), while files lists (folder) have not
+      data = localStorage.getItem( path )
+      if not data?
+        return false
+      if '{' in data
+        return false
+      return true
+      ###
       data = localStorage.getItem( path )
       data = JSON.parse(data)
       if data.isDir?
         if data.isDir
           return true
-      return false
+      return false###
           
     isProj:(path) ->
       #check if the specified path is a coffeescad project (ie, a directory, with a .coffee file with the same name

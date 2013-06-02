@@ -58,9 +58,17 @@ define (require)->
     
     listProjs: ( path ) ->
       #return a list of all projects in a given path: FIXME: should this be here or in the store ??
+    
+    basename : (path) ->
+      return pathMod.basename( path )
       
     getType : ( path ) ->
-      result = {}
+      result = {name: @basename( path ),
+      path : path
+      }
       stat = fs.statSync(path)
       if stat.isDirectory()
         result.type = 'folder'
+      else
+        result.type = 'file'
+      return result

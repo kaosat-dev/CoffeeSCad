@@ -27,27 +27,14 @@ define (require)->
     listDir:( uri )=>
       uri = if uri? then uri else @rootUri #@fs.absPath( uri, @rootUri ) else @rootUri
       try
-        contents = @fs.readdir( uri )
+        files = @fs.readdir( uri )
+        results = []
+        for file in files
+          filePath = @fs.join([uri, file])
+          results.push( @fs.getType( filePath ) )
+        return results
       catch error
         throw new Error( console.log "could not fetch contents of #{uri} because of error #{error}" )
-    
-    listProjects:( uri )=>
-      uri = uri or @rootUri
-      try
-        projects = []
-        projects = @fs.readdir( uri )
-        return projects
-      catch error
-        throw new Error( console.log "could not fetch projects at #{uri} because of error #{error}" )
-    
-    listProjectFiles:( uri )=>
-      #Get all the file names within a project : should actually get the file tree? (subdirs support etc)
-      uri = @fs.absPath( uri, @rootUri )
-      try
-        files = @fs.readdir( uri )
-        return files
-      catch error
-        throw new Error( "could not fetch files from #{uri} because of error #{error}" )
     
     saveProject:( project, newName )=> 
       project.dataStore = @
@@ -66,7 +53,7 @@ define (require)->
     
     loadProject:( projectUri , silent=false)=>
       projectName = projectUri.split(@fs.sep).pop()
-      projectUri = @fs.join([@rootUri, projectUri])
+      #projectUri = @fs.join([@rootUri, projectUri])
       if projectUri in @cachedProjects
         #TODO: how to invalidate cache???
         return @cachedProjects[ projectUri ]

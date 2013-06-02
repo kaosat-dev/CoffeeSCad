@@ -1954,7 +1954,7 @@ table th[class*="span"],
   *margin-right: .3em;
   line-height: 14px;
   vertical-align: text-top;
-  background-image: url("../img/glyphicons-halflings.png");
+  background-image: url("");
   background-position: 14px 14px;
   background-repeat: no-repeat;
   margin-top: 1px;
@@ -1977,7 +1977,7 @@ table th[class*="span"],
 .dropdown-submenu:focus > a > [class^="icon-"],
 .dropdown-submenu:hover > a > [class*=" icon-"],
 .dropdown-submenu:focus > a > [class*=" icon-"] {
-  background-image: url("../img/glyphicons-halflings-white.png");
+  background-image: url("");
 }
 .icon-glass {
   background-position: 0      0;
@@ -6377,8 +6377,8 @@ span.CodeMirror-matchhighlight {
 .block {
   min-height: 20px;
   float: left;
-  width: 150px;
-  height: 150px;
+  width: 100px;
+  height: 100px;
   position: relative;
   padding: 2px;
   margin-bottom: 10px;
@@ -6472,8 +6472,8 @@ span.CodeMirror-matchhighlight {
 .projectBlock {
   min-height: 20px;
   float: left;
-  width: 150px;
-  height: 150px;
+  width: 100px;
+  height: 100px;
   position: relative;
   padding: 2px;
   margin-bottom: 10px;
@@ -6497,7 +6497,7 @@ span.CodeMirror-matchhighlight {
   word-wrap: break-word;
 }
 .projectBlock .titleContainer {
-  width: 150px;
+  width: 100px;
 }
 #projects > ul {
   padding: 0;

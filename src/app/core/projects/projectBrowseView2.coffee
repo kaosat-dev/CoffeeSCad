@@ -377,7 +377,13 @@ define (require)->
     
     onSaveRequested:(projectName)=>
       if @selected
+        projectPath = $("#fileName").attr("data-projectPath")
+        if not projectPath?
+          projectPath = @model.rootUri
+        projectName = @model.fs.join([projectPath,projectName])
+        
         console.log "save to #{projectName} requested"
+        
         projectToSave = @model.targetProject
         
         callBackMethod = (projectNameExists) =>
@@ -399,6 +405,9 @@ define (require)->
         @model.projectExists( projectName ).done(callBackMethod)
         
     onLoadRequested:(fileName)=>
+      #TODO: handle fileName cleanly
+      fileName = $("#fileName").attr("data-projectPath")
+      
       if @selected
         #console.log "load requested from #{@model.name}"
         @model.loadProject(fileName) 
@@ -408,7 +417,10 @@ define (require)->
       console.log 'navigating to'+path 
       @currentUri = path
       
+      $("#fileName").attr("data-projectPath", @currentUri)
       pathElemens = @model.fs.split( path )
+      $("#fileName").val(pathElemens[pathElemens.length-1])
+      
       pathEl = ""
       for elem, index in pathElemens 
         pathEl += " <a id='pathId_#{index}' class='pathBarUrlComponent' href=#>#{elem}</a> "+ if index < (pathElemens.length-1) then @model.fs.sep else ""
@@ -429,21 +441,22 @@ define (require)->
     _refreshContent:(listOfStuff)=>
       targetElem = $("#projects")
       targetElem.html("")
-      for name in listOfStuff
+      for fileData in listOfStuff
         targetElem.append("""<li class='projectBlock'>
           <div class="flip">
+            
             <div class="front">
               <table>
                 <thead>
                   <tr>
                     <th> 
                       <div class="titleContainer">
-                      <a id='#{@model.name}#{name}' class='projectSelector' href='#' data-toggle='context' data-target='##{@model.name}ProjectContextMenu'>#{name}</a>
+                      <div><i class="#{if(fileData.type =="folder") then "icon-folder-close-alt" else "icon-file"} icon-5x"></i> </div>
+                      <a id='#{@model.name}#{fileData.name}' class="#{if(fileData.type =="folder") then "projectSelector" else ""}" href='#' data-toggle='context' data-target='##{@model.name}ProjectContextMenu'>#{fileData.name}</a>
                       </div>
                     </th>
                   </tr>
                 </thead>
-              
               </table>
               
             </div>

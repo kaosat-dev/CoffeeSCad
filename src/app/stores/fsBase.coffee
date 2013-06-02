@@ -65,5 +65,16 @@ define (require)->
       if result[0] == ""
         result[0] = @sep
       return result
+    
+    getType : ( path ) ->
+      result = {name: @basename( path ),
+      path : path
+      }
+      if @isDir( path )
+        result.type = 'folder'
+      else
+        result.type = 'file'
+     
+      return result
   
   return FSBase

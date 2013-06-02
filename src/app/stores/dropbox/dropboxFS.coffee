@@ -81,10 +81,10 @@ define (require)->
     
     readdir: ( path )->
       d = $.Deferred()
-      @client.readdir path, (error, entries)=>
+      @client.readdir path, (error, entries, folderStat, entriesStats)=>
         if error
           @formatError(error,d)
-        d.resolve entries
+        d.resolve(entries, folderStat, entriesStats)
       return d.promise() 
 
     rmdir: (name)=>
@@ -156,5 +156,14 @@ define (require)->
         else
           d.resolve(true)
       return d.promise()
+   
+    getType : ( path ) ->
+      result = {name: @basename( path ),
+      path : path
+      }
+      if @isDir( path )
+        result.type = 'folder'
+      else
+        result.type = 'file'
 
   return DropboxFS
