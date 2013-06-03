@@ -159,11 +159,11 @@ define (require)->
     
     exists: ( path )->
       d = $.Deferred()
-      @client.findByName path, "*", {}, (error, data)=>
-        if error
-          d.reject(false)
-        else
+      @client.stat path, null, (error, data)=>
+        if not error?
           d.resolve(true)
+        else
+          d.resolve(false)
       return d.promise()
    
     getType : ( path ) ->

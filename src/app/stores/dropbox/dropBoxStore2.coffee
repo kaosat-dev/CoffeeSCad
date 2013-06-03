@@ -105,7 +105,7 @@ define (require)->
       
       for index, file of project.getFiles()
         fileName = file.name
-        filePath = @fs.join([projectUri, fileName])
+        filePath = @fs.join([project.uri, fileName])
         ext = fileName.split('.').pop()
         content = file.content
         if ext == "png"
