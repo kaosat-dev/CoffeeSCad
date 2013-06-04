@@ -4,7 +4,7 @@ define (require) ->
   
   #TODO: where to do canonicalization and normalization?
   #TODO: review inheritance : basic geometry (cube, sphere) should not have children etc (like "mesh") but should have position, rotation etc
-  
+  #TODO: add connectors ?
   
   class ObjectBase extends THREE.Mesh
     #base class regrouping feature of THREE.Mesh and THREE.CSG
@@ -23,6 +23,13 @@ define (require) ->
       #console.log @prototype
       #Object.create(@prototype)
       @bsp = null
+      
+      @connectors = []
+    
+    
+    color:(rgba)->
+      @material.color = rgba
+      
     
     union:(object)=>
       @bsp = new ThreeBSP(@)

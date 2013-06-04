@@ -1,6 +1,7 @@
 define (require) ->
   ObjectBase = require '../base'
-  
+  Constants = require '../constants'
+  utils = require '../utils'
   
   class Cylinder extends ObjectBase
     # Construct a solid cylinder.
@@ -23,15 +24,19 @@ define (require) ->
     constructor:(options)->
       options = options or {}
       if ("r" of options or "r1" of options) then hasRadius = true
-      defaults = {h:1,center:[0,0,0],r:1,d:2,$fn:CSGBase.defaultResolution3D,rounded:false}
+      defaults = {h:1,center:[0,0,0],r:1,d:2,$fn:Constants.defaultResolution3D,rounded:false}
+      options = utils.merge(defaults, options)
       
-      radiusTop = r1
-      radiusBottom = r2 
-      height = h 
+      
+      radiusTop = options.r
+      radiusBottom = options.r
+      height = options.h 
       heightSegments = 2
+      $fn = options.$fn
       
       geometry = new THREE.CylinderGeometry(radiusTop, radiusBottom, height, $fn, heightSegments)
-      
+      geometry.rotation.x = 90
       super(geometry)
   
   
+  return Cylinder

@@ -1,6 +1,6 @@
 define (require) ->
   ObjectBase = require '../base'
-  
+  Constants = require '../constants'
   
   class Sphere extends ObjectBase
     # Construct a solid sphere
@@ -14,7 +14,7 @@ define (require) ->
     # 
     constructor:(options)->
       options = options or {}
-      defaults = { r:1, center:[0,0,0] , $fn:1, icosa:true }
+      defaults = { r:1, center:[0,0,0] , $fn:Constants.defaultResolution3D, icosa:true }
       
       r = options.r or 1
       $fn = options.$fn or $fn

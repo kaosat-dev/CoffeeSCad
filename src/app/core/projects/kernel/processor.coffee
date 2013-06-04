@@ -43,7 +43,7 @@ define (require) ->
     _prepareScriptSync:()=>
       #prepare the source for compiling : convert to coffeescript, inject dependencies etc
       @script = """
-      {ObjectBase, Cube, Sphere, Circle, Rectangle}=geometryKernel
+      {ObjectBase, Cube, Sphere, Cylinder, Circle, Rectangle, Text}=geometryKernel
 
       assembly = new THREE.Object3D()
       

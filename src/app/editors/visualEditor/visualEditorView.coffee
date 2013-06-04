@@ -1012,33 +1012,7 @@ define (require) ->
       #cube.material = mat
       
       
-      theText = "Hello Coffee! o_O"
 
-      hash = document.location.hash.substr( 1 )
-      if ( hash.length != 0 )
-        theText = hash
-      
-      
-      text3d = new THREE.TextGeometry(theText,{size:10, height:5, curveSegments:2, font:"helvetiker"})
-      text3d.computeBoundingBox()
-      text3d.computeVertexNormals()
-      textMaterial = new THREE.MeshBasicMaterial( { color: Math.random() * 0xffffff})
-      
-      
-      extrudeSettings = { amount: 10,  bevelEnabled: false, bevelSegments: 2, steps: 2 }
-      textShapes = THREE.FontUtils.generateShapes(theText,{size:10, divisions : 10, font:"helvetiker"})
-      text3d = new THREE.ExtrudeGeometry( textShapes, extrudeSettings )
-      text3d.computeBoundingBox()
-      text3d.computeVertexNormals()
-      
-      
-      text = new ObjectBase( text3d, textMaterial )
-      
-      text.position.x = 0
-      text.position.y = 0
-      text.position.z = 0
-      
-      
       cylinder2 = cylinder.clone()
       cylinder2.position.x = -20
       
@@ -1071,7 +1045,7 @@ define (require) ->
       
       
       @assembly.add(cube)
-      #@assembly.add(sphere2)
+      @assembly.add(sphere2)
       #@assembly.add(bla)
       #@assembly.add(cylinder)
       #@assembly.add(text)

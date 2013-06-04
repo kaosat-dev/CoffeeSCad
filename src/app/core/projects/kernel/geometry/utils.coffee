@@ -51,7 +51,18 @@ define (require)->
           options[optionname]=defaultValue2
     
     result = parseOption(options, optionname, defaultValue)
-    result = new THREE.Vector3(result)
+    
+    if result instanceof Array
+      if result.length == 3
+        result = new THREE.Vector3(result[0], result[1], result[2])
+      else if result.length == 2
+        result = new THREE.Vector3(result[0], result[1], 1)
+      else if result.length == 1
+        result = new THREE.Vector3(result[0], 1, 1)
+    else if result instanceof THREE.Vector3
+      result = result
+    else
+      result = new THREE.Vector3(result, result, result)
     result
   
   parseOptionAs2DVector = (options, optionname, defaultValue, defaultValue2) ->
