@@ -6278,6 +6278,10 @@ span.CodeMirror-matchhighlight {
   line-height: 10px;
   height: 1em;
 }
+/**/
+.paramsEditor {
+  padding: 20px;
+}
 /*3d viewer*/
 #visual {
   -webkit-box-flex: 1;

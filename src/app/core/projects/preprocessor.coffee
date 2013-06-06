@@ -99,8 +99,9 @@ define (require) ->
         matches.push(match)
         match = @paramsPattern.exec(source)
       
-      @project.meta = {}
-      #console.log "matches", matches
+      if not @project.meta?
+        @project.meta = {}
+      console.log "matches", matches
       if matches.length>0
         mainMatch = matches[0][0].replace("=",":")
         params = eval(mainMatch)
@@ -109,7 +110,11 @@ define (require) ->
           results[param.name]=param.default
         source = source.replace(matches[0][0], "")
         @project.meta.params = results
-        
+      
+      #console.log "matches raw", JSON.parse(matches[1])
+      rawParams = eval(matches[0][0])
+      @project.meta.rawParams = rawParams
+      
       return source      
     
     _findMatches:(source)=>

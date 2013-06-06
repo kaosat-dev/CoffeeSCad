@@ -46,6 +46,7 @@ require.config
     bootbox:          "../assets/js/plugins/bootbox.min"
     contextMenu:      "../assets/js/plugins/bootstrap-contextmenu"
     notify:           "../assets/js/plugins/bootstrap-notify"
+    colorpicker:      "../assets/js/plugins/bootstrap-colorpicker"
     
     coffeelint:       "../assets/js/plugins/coffeelint"
     
@@ -115,6 +116,8 @@ require.config
     contextMenu:
       dep: ["bootstrap"]
     notify:
+      dep:["bootstrap"]
+    colorpicker: 
       dep:["bootstrap"]
       
     'backbone':

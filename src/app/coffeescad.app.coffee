@@ -207,6 +207,11 @@ define (require)->
       @editors['hierarchy'] = new HierarchyEditor
         project: @project
         appSettings: @settings
+      
+      ParamsEditor = require './editors/paramsEditor/paramsEditor'
+      @editors['params'] = new ParamsEditor
+        project: @project
+        appSettings: @settings
                  
       @settings.fetch()
       
