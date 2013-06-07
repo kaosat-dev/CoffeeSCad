@@ -47,6 +47,7 @@ require.config
     contextMenu:      "../assets/js/plugins/bootstrap-contextmenu"
     notify:           "../assets/js/plugins/bootstrap-notify"
     colorpicker:      "../assets/js/plugins/bootstrap-colorpicker"
+    slider:           "../assets/js/plugins/bootstrap-slider"
     
     coffeelint:       "../assets/js/plugins/coffeelint"
     
@@ -118,6 +119,8 @@ require.config
     notify:
       dep:["bootstrap"]
     colorpicker: 
+      dep:["bootstrap"]
+    slider: 
       dep:["bootstrap"]
       
     'backbone':

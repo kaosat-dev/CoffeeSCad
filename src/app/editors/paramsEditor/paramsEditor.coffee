@@ -54,7 +54,7 @@ define (require)->
       
     showView:=>
       if not @dia?
-        @dia = new DialogView({elName:"paramsEdit", title: "Parameters", width:200, height:150, position:[25,25]})
+        @dia = new DialogView({elName:"paramsEdit", title: "Parameters", width:400, height:300, position:[25,25]})
         @dia.render()
       
       if not @exampleEditorView?
