@@ -155,14 +155,12 @@ define (require)->
       if @autoUpdateBasedOnParams
         vent.trigger("project:compile")
       
-      
-      
     onParamsApply:()=>
       vent.trigger("project:compile")
     
     onParamsGenerated:=>
       if (not @preventUiRegen) or (@preventUiRegen and not @_drawnOnce)
-        rootEl = $('<div>',{id: "paramsContainer"})
+        rootEl = $('<div>',{id: "paramsContainer", class:"form-horizontal"})
         
         getParamValue= ( param )=>
           if @project.meta.modParams?
@@ -179,47 +177,63 @@ define (require)->
           paramValue = getParamValue( param )
           console.log "paramValue",paramValue
           
-          toolTip = """<span><a href="#" data-toggle="tooltip" rel="tooltip" title="#{param.caption}"><i class="icon-question-sign icon-medium"/></a></span>"""
+          container = $('<div>',{class: "control-group field-#{param.name}"})
+          label = """<label class="control-label" for="#{param.name}">#{param.name}</label>"""
+          toolTip = """<div class="help-inline"> <span><a href="#" data-toggle="tooltip" rel="tooltip" title="#{param.caption}"><i class="icon-question-sign icon-medium"/></a></span><div>"""
           
           switch param.type
             when "float", "int"
-              rootEl.append("<div>#{param.name}<input type='number' value='#{paramValue}' id='#{param.name}' class='myParams'/>#{toolTip}</div>")
+              control = """<div class="controls"> <input type='number' value='#{paramValue}' id='#{param.name}' class='myParams'/> #{toolTip} </div>"""
+            
             when "checkbox"   
-             rootEl.append("<div>#{param.name}&nbsp<input class='myParams' type='checkbox' id='#{param.name}' #{if param.default==true then 'checked' else ''}/>&nbsp#{toolTip}</div>")
+              control = """<div class="controls"> <input class='myParams' type='checkbox' id='#{param.name}' #{if param.default==true then 'checked' else ''}/> #{toolTip} </div>"""
+            
             when "select"
               values = param.values.split(',')
               vals = ""
               for val in values
                 vals += "<option value=#{val}>#{val}</option>"
-              rootEl.append("<div>#{param.name}<select id='#{param.name}' class='myParams'> #{vals} </select>#{toolTip}</div>")
+              control = """<div class="controls"> <select id='#{param.name}' class='myParams'> #{vals} </select>#{toolTip}</div>"""
+                
             when "color"
               if "#" in paramValue
                 paramValue = @_hexToRgba(paramValue)
               rgbaValue = "rgba(#{paramValue.r}, #{paramValue.g}, #{paramValue.b}, #{paramValue.a})"
-              
-              rootEl.append(""" 
-              <div>#{param.name}
+              control = """
+              <div class="controls">
               <div class="input-append color colorpicker" data-color="#{rgbaValue}" data-color-format="rgba" id='#{param.name}'>
                 <input type="text" class="span2" value="#{rgbaValue}" readonly="">
                 <span class="add-on"><i style="background-color: #{rgbaValue};"></i></span>
               </div>
-              #{toolTip}</div>
-              """)
+              #{toolTip}</div>"""
+             
             when "slider"
-              rootEl.append(""" 
-              <div>#{param.name}
-              #{param.min}&nbsp<input id='#{param.name}' type="text" class="span2 slider" value="" 
-                data-slider-min="#{param.min}" data-slider-max="#{param.max}" data-slider-step="#{param.step}" data-slider-value="#{paramValue}" 
-                data-slider-orientation="horizontal" data-slider-selection="after"data-slider-tooltip="show" data-slider-handle="square">&nbsp#{param.max}
+              control = """
+              <div class="controls">
+                <div>
+                #{param.min}&nbsp<input id='#{param.name}' type="text" class="span2 slider" value="" 
+                  data-slider-min="#{param.min}" data-slider-max="#{param.max}" data-slider-step="#{param.step}" data-slider-value="#{paramValue}" 
+                  data-slider-orientation="horizontal" data-slider-selection="after"data-slider-tooltip="show" data-slider-handle="square">&nbsp#{param.max}
+                
+                #{toolTip}
+                </div>
+              </div>"""
               
-              #{toolTip}</div>
-                """)
-                    
+          container.append(label)
+          container.append(control)
+          rootEl.append(container)          
         
-        rootEl.append("<div><button class='applyParams'>Apply Params</button></div>")  
-        rootEl.append("<div>Auto update<input class='autoUpdate' type='checkbox' #{if @autoUpdateBasedOnParams then 'checked' else ''} /></div>")    
-          
-        rootEl.append("<div>Do not regenerate ui <input class='preventUiRegen' type='checkbox' #{if @preventUiRegen then 'checked' else ''} /></div>")    
+        parametrizerSettingsFieldSet = $('<div>')
+        parametrizerSettingsFieldSet.append("""<legend>Parametrizer settings</legend>""")
+        parametrizerSettings = $('<div>',{class: "control-group field-parametrizerSettings"})
+        parametrizerSettings.append("""<div class='control-group field-autoUpdate'><label class="control-label" for="autoUpdate">Auto update</label> <div class="controls"> <input class='autoUpdate' id='autoUpdate' type='checkbox' #{if @autoUpdateBasedOnParams then 'checked' else ''} /></div></div>""")    
+        parametrizerSettings.append("""<div class='control-group field-preventUiRegen'><label class="control-label" for="preventUiRegen">Keep ui</label> <div class="controls">   <input class='preventUiRegen' id='preventUiRegen' type='checkbox' #{if @preventUiRegen then 'checked' else ''} /></div></div>""")   
+        parametrizerSettings.append("<div class='control-group field-applyParams'><button class='applyParams'>Apply Params</button></div>")  
+        parametrizerSettingsFieldSet.append(parametrizerSettings)
+        
+        rootEl.append( parametrizerSettingsFieldSet ) 
+        
+         
           
         @_drawnOnce = true
         @newRootEl = rootEl

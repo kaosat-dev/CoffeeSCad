@@ -6417,6 +6417,81 @@ span.CodeMirror-matchhighlight {
 .paramsEditor {
   padding: 20px;
 }
+.paramsEditor .form-horizontal .control-label {
+  width: 80px;
+}
+.paramsEditor .form-horizontal .controls {
+  margin-left: 100px;
+}
+.parametrizer-form-horizontal input,
+.parametrizer-form-horizontal textarea,
+.parametrizer-form-horizontal select,
+.parametrizer-form-horizontal .help-inline,
+.parametrizer-form-horizontal .uneditable-input,
+.parametrizer-form-horizontal .input-prepend,
+.parametrizer-form-horizontal .input-append {
+  display: inline-block;
+  *display: inline;
+  /* IE7 inline-block hack */
+
+  *zoom: 1;
+  margin-bottom: 0;
+  vertical-align: middle;
+}
+.parametrizer-form-horizontal .hide {
+  display: none;
+}
+.parametrizer-form-horizontal .control-group {
+  margin-bottom: 21px;
+  *zoom: 1;
+}
+.parametrizer-form-horizontal .control-group:before,
+.parametrizer-form-horizontal .control-group:after {
+  display: table;
+  content: "";
+  line-height: 0;
+}
+.parametrizer-form-horizontal .control-group:after {
+  clear: both;
+}
+.parametrizer-form-horizontal .control-label {
+  float: left;
+  width: 160px;
+  padding-top: 5px;
+  text-align: right;
+}
+.parametrizer-form-horizontal .controls {
+  *display: inline-block;
+  *padding-left: 20px;
+  margin-left: 180px;
+  *margin-left: 0;
+}
+.parametrizer-form-horizontal .controls:first-child {
+  *padding-left: 180px;
+}
+.parametrizer-form-horizontal .help-block {
+  margin-bottom: 0;
+}
+.parametrizer-form-horizontal input + .help-block,
+.parametrizer-form-horizontal select + .help-block,
+.parametrizer-form-horizontal textarea + .help-block,
+.parametrizer-form-horizontal .uneditable-input + .help-block,
+.parametrizer-form-horizontal .input-prepend + .help-block,
+.parametrizer-form-horizontal .input-append + .help-block {
+  margin-top: 10.5px;
+}
+.parametrizer-form-horizontal .form-actions {
+  padding-left: 180px;
+}
+.parametrizer-form-horizontal .control-label {
+  float: left;
+  width: 30px;
+  padding-top: 5px;
+  text-align: right;
+}
+.parametrizer-form-horizontal .controls {
+  margin-left: 100px;
+}
 /*3d viewer*/
 #visual {
   -webkit-box-flex: 1;
