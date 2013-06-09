@@ -101,8 +101,7 @@ define (require) ->
       
       if not @project.meta?
         @project.meta = {}
-      console.log "matches", matches
-      if matches.length>0
+      if matches.length > 0
         mainMatch = matches[0][0].replace("=",":")
         params = eval(mainMatch)
         results = {}
@@ -111,9 +110,9 @@ define (require) ->
         source = source.replace(matches[0][0], "")
         @project.meta.params = results
       
-      #console.log "matches raw", JSON.parse(matches[1])
-      rawParams = eval(matches[0][0])
-      @project.meta.rawParams = rawParams
+        #console.log "matches raw", JSON.parse(matches[1])
+        rawParams = eval(matches[0][0])
+        @project.meta.rawParams = rawParams
       
       return source      
     
