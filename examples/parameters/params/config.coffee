@@ -4,7 +4,8 @@ params = [
       type: 'float',
       default: 30,
       caption: "Width of the cube:",
-    },{
+    },
+    {
       name: 'height',
       type: 'float',
       default: 15,
