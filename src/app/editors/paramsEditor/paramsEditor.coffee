@@ -23,17 +23,15 @@ define (require)->
       @settings = options.settings ? new ParamsEditorSettings()
       @project= options.project ? new Project()
       @vent = vent
-      #@router = new ParamsEditorRouter
-      #  controller: @
       
       @startWithParent = true
-      @showOnAppStart = true
+      @showOnAppStart = false
       @addMainMenuIcon = true
       @icon = "icon-edit"
       
       @vent.on("project:loaded",@resetEditor)
       @vent.on("project:created",@resetEditor)
-      @vent.on("exampleEditor:show",@showView)
+      @vent.on("ParamsEditor:show",@showView)
       @init()
       
     init:=>
@@ -51,18 +49,18 @@ define (require)->
       @settings = @appSettings.get("ParamsEditor")
       if @showOnAppStart
         @showView()
-      
+    
     showView:=>
       if not @dia?
-        @dia = new DialogView({elName:"paramsEdit", title: "Parameters", width:400, height:300, position:[25,25]})
+        @dia = new DialogView({elName:"paramsEdit", title: "Parameters", width:400, height:300, position:[250,25]})
         @dia.render()
       
-      if not @exampleEditorView?
-        @exampleEditorView = new ParamsEditorView 
+      if not @paramsEditorView?
+        @paramsEditorView = new ParamsEditorView 
           model:    @project
           settings: @settings
       if not @dia.currentView?    
-        @dia.show(@exampleEditorView)
+        @dia.show(@paramsEditorView)
       else
         @dia.showDialog()
       
@@ -70,12 +68,12 @@ define (require)->
       @dia.hideDialog()
       
     resetEditor:(newProject)=>
-      console.log "resetting example editor"
+      #console.log "resetting params editor"
       @project = newProject
       if @dia?
-        console.log "closing current example editor"
+        #console.log "closing current example editor"
         @dia.close()
-        @exampleEditorView = null
+        @paramsEditorView = null
       if @showOnAppStart  
         @showView()
   

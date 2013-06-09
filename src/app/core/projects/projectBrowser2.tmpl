@@ -71,13 +71,6 @@
 					</a>
 				</th>
 				<th class="icons-group" style="border-left: none"><!--TODO: why does it work in style but not css /less ???-->
-					
-					<% if (isDataDumpAllowed == true) { %>
-						<span class="pull-right">
-						<a class="exportStore" href="#"><i class="icon-fixed-width icon-download-alt" rel="tooltip" title="export all projects (slow, please be patient)"></i></a>
-						</span>
-					<% } %>
-					
 					<% if (loggedIn == false) { %>
 					<span class="storeConnection pull-right" >
 						<i class="icon-ban-circle icon-large" rel="tooltip" title="Store not connected, please sign in" style="color:#FF0000"></i>
