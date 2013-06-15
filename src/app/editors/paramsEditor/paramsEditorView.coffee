@@ -172,72 +172,73 @@ define (require)->
             paramValue = param.default
           return paramValue
         
-        for param in @project.meta.rawParams
-          console.log "param",param
-          paramValue = getParamValue( param )
-          console.log "paramValue",paramValue
-          
-          container = $('<div>',{class: "control-group field-#{param.name}"})
-          label = """<label class="control-label" for="#{param.name}">#{param.name}</label>"""
-          toolTip = """<div class="help-inline"> <span><a href="#" data-toggle="tooltip" rel="tooltip" title="#{param.caption}"><i class="icon-question-sign icon-medium"/></a></span><div>"""
-          
-          switch param.type
-            when "float", "int"
-              control = """<div class="controls"> <input type='number' value='#{paramValue}' id='#{param.name}' class='myParams'/> #{toolTip} </div>"""
+        if @project.meta.rawParams?
+          for param in @project.meta.rawParams
+            console.log "param",param
+            paramValue = getParamValue( param )
+            console.log "paramValue",paramValue
             
-            when "checkbox"   
-              control = """<div class="controls"> <input class='myParams' type='checkbox' id='#{param.name}' #{if param.default==true then 'checked' else ''}/> #{toolTip} </div>"""
+            container = $('<div>',{class: "control-group field-#{param.name}"})
+            label = """<label class="control-label" for="#{param.name}">#{param.name}</label>"""
+            toolTip = """<div class="help-inline"> <span><a href="#" data-toggle="tooltip" rel="tooltip" title="#{param.caption}"><i class="icon-question-sign icon-medium"/></a></span><div>"""
             
-            when "select"
-              values = param.values.split(',')
-              vals = ""
-              for val in values
-                vals += "<option value=#{val}>#{val}</option>"
-              control = """<div class="controls"> <select id='#{param.name}' class='myParams'> #{vals} </select>#{toolTip}</div>"""
-                
-            when "color"
-              if "#" in paramValue
-                paramValue = @_hexToRgba(paramValue)
-              rgbaValue = "rgba(#{paramValue.r}, #{paramValue.g}, #{paramValue.b}, #{paramValue.a})"
-              control = """
-              <div class="controls">
-              <div class="input-append color colorpicker" data-color="#{rgbaValue}" data-color-format="rgba" id='#{param.name}'>
-                <input type="text" class="span2" value="#{rgbaValue}" readonly="">
-                <span class="add-on"><i style="background-color: #{rgbaValue};"></i></span>
-              </div>
-              #{toolTip}</div>"""
-             
-            when "slider"
-              control = """
-              <div class="controls">
-                <div>
-                #{param.min}&nbsp<input id='#{param.name}' type="text" class="span2 slider" value="" 
-                  data-slider-min="#{param.min}" data-slider-max="#{param.max}" data-slider-step="#{param.step}" data-slider-value="#{paramValue}" 
-                  data-slider-orientation="horizontal" data-slider-selection="after"data-slider-tooltip="show" data-slider-handle="square">&nbsp#{param.max}
-                
-                #{toolTip}
-                </div>
-              </div>"""
+            switch param.type
+              when "float", "int"
+                control = """<div class="controls"> <input type='number' value='#{paramValue}' id='#{param.name}' class='myParams'/> #{toolTip} </div>"""
               
-          container.append(label)
-          container.append(control)
-          rootEl.append(container)          
-        
-        parametrizerSettingsFieldSet = $('<div>')
-        parametrizerSettingsFieldSet.append("""<legend>Parametrizer settings</legend>""")
-        parametrizerSettings = $('<div>',{class: "control-group field-parametrizerSettings"})
-        parametrizerSettings.append("""<div class='control-group field-autoUpdate'><label class="control-label" for="autoUpdate">Auto update</label> <div class="controls"> <input class='autoUpdate' id='autoUpdate' type='checkbox' #{if @autoUpdateBasedOnParams then 'checked' else ''} /></div></div>""")    
-        parametrizerSettings.append("""<div class='control-group field-preventUiRegen'><label class="control-label" for="preventUiRegen">Keep ui</label> <div class="controls">   <input class='preventUiRegen' id='preventUiRegen' type='checkbox' #{if @preventUiRegen then 'checked' else ''} /></div></div>""")   
-        parametrizerSettings.append("<div class='control-group field-applyParams'><button class='applyParams'>Apply Params</button></div>")  
-        parametrizerSettingsFieldSet.append(parametrizerSettings)
-        
-        rootEl.append( parametrizerSettingsFieldSet ) 
-        
-         
+              when "checkbox"   
+                control = """<div class="controls"> <input class='myParams' type='checkbox' id='#{param.name}' #{if param.default==true then 'checked' else ''}/> #{toolTip} </div>"""
+              
+              when "select"
+                values = param.values.split(',')
+                vals = ""
+                for val in values
+                  vals += "<option value=#{val}>#{val}</option>"
+                control = """<div class="controls"> <select id='#{param.name}' class='myParams'> #{vals} </select>#{toolTip}</div>"""
+                  
+              when "color"
+                if "#" in paramValue
+                  paramValue = @_hexToRgba(paramValue)
+                rgbaValue = "rgba(#{paramValue.r}, #{paramValue.g}, #{paramValue.b}, #{paramValue.a})"
+                control = """
+                <div class="controls">
+                <div class="input-append color colorpicker" data-color="#{rgbaValue}" data-color-format="rgba" id='#{param.name}'>
+                  <input type="text" class="span2" value="#{rgbaValue}" readonly="">
+                  <span class="add-on"><i style="background-color: #{rgbaValue};"></i></span>
+                </div>
+                #{toolTip}</div>"""
+               
+              when "slider"
+                control = """
+                <div class="controls">
+                  <div>
+                  #{param.min}&nbsp<input id='#{param.name}' type="text" class="span2 slider" value="" 
+                    data-slider-min="#{param.min}" data-slider-max="#{param.max}" data-slider-step="#{param.step}" data-slider-value="#{paramValue}" 
+                    data-slider-orientation="horizontal" data-slider-selection="after"data-slider-tooltip="show" data-slider-handle="square">&nbsp#{param.max}
+                  
+                  #{toolTip}
+                  </div>
+                </div>"""
+                
+            container.append(label)
+            container.append(control)
+            rootEl.append(container)          
           
-        @_drawnOnce = true
-        @newRootEl = rootEl
-        @render()
+          parametrizerSettingsFieldSet = $('<div>')
+          parametrizerSettingsFieldSet.append("""<legend>Parametrizer settings</legend>""")
+          parametrizerSettings = $('<div>',{class: "control-group field-parametrizerSettings"})
+          parametrizerSettings.append("""<div class='control-group field-autoUpdate'><label class="control-label" for="autoUpdate">Auto update</label> <div class="controls"> <input class='autoUpdate' id='autoUpdate' type='checkbox' #{if @autoUpdateBasedOnParams then 'checked' else ''} /></div></div>""")    
+          parametrizerSettings.append("""<div class='control-group field-preventUiRegen'><label class="control-label" for="preventUiRegen">Keep ui</label> <div class="controls">   <input class='preventUiRegen' id='preventUiRegen' type='checkbox' #{if @preventUiRegen then 'checked' else ''} /></div></div>""")   
+          parametrizerSettings.append("<div class='control-group field-applyParams'><button class='applyParams'>Apply Params</button></div>")  
+          parametrizerSettingsFieldSet.append(parametrizerSettings)
+          
+          rootEl.append( parametrizerSettingsFieldSet ) 
+          
+           
+            
+          @_drawnOnce = true
+          @newRootEl = rootEl
+          @render()
     
       
   return ParamsEditorView
