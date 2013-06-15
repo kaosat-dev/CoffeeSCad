@@ -407,9 +407,12 @@ define (require) ->
       @depthMaterial = new THREE.MeshDepthMaterial()
       depthPass = new THREE.RenderPass(@scene, @camera, @depthMaterial)
       
+      @normalTarget = new THREE.WebGLRenderTarget(@width, @height, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat } )
+      @normalMaterial = new THREE.MeshNormalMaterial()
+      normalPass = new THREE.RenderPass(@scene, @camera, @normalMaterial)
+      
       
       copyPass = new THREE.ShaderPass( THREE.CopyShader )
-      dotScreenPass = new THREE.ShaderPass( THREE.DotScreenShader )
       
       @fxAAPass = new THREE.ShaderPass(THREE.FXAAShader)
       @fxAAPass.uniforms['resolution'].value.set(1 / (@width * @dpr), 1 / (@height * @dpr))
@@ -417,23 +420,32 @@ define (require) ->
       edgeDetectPass = new THREE.ShaderPass(THREE.EdgeShader)
       edgeDetectPass2 = new THREE.ShaderPass(THREE.EdgeShader2)
       vignettePass = new THREE.ShaderPass(THREE.VignetteShader)
+      vignettePass.uniforms["offset"].value = 0.4;
+      vignettePass.uniforms["darkness"].value = 5;
       
       @depthExtractPass = new THREE.ShaderPass(Shaders.depthExtractShader)
        
-
+      
       @composer = new THREE.EffectComposer( @renderer )
       @composer.setSize(@width * @dpr, @height * @dpr)
       @composer.addPass(renderPass)
+      
+      #generate depth texture
       #@composer.addPass(depthPass)
       #@composer.addPass(@depthExtractPass)
+      #generate normal texture
+      #@composer.addPass(normalPass)
+      
       @composer.addPass(@fxAAPass)
       #@composer.addPass(edgeDetectPass)
       #@composer.addPass(edgeDetectPass2)
       #@composer.addPass(copyPass)
-      #@composer.addPass(dotScreenPass)
-      #@composer.addPass(vignettePass)
+      @composer.addPass(vignettePass)
       #make sure the last in line renders to screen
       @composer.passes[@composer.passes.length-1].renderToScreen = true
+      
+      
+      
 
       
     setupView:(val)=>
@@ -776,10 +788,11 @@ define (require) ->
       )     
       
       b = "0x"+b.join("");###
+      @renderer.setClearColorHex( 0xFFFFFF, @renderer.getClearAlpha() )
       ###      
       @renderer.clearColor=0x363335
       console.log @renderer
-      @renderer.setClearColorHex( 0xFFFFFF, @renderer.getClearAlpha() )###
+      ###
       
     addGrid:()=>
       ###
@@ -950,10 +963,12 @@ define (require) ->
       THREE.EffectComposer.scene = new THREE.Scene()
       THREE.EffectComposer.scene.add( THREE.EffectComposer.quad )
       
-      ###
+      
       @scene.overrideMaterial = @depthMaterial
       @renderer.render( @scene, @camera, @depthTarget )
-      ###
+      
+      @scene.overrideMaterial = @normalMaterial
+      @renderer.render( @scene, @camera, @normalTarget )
       
       #depth rendering experiment
       ###
@@ -961,12 +976,12 @@ define (require) ->
         for child in @assembly.children
           child.material = @depthMaterial
       ###    
-      @renderer.render(@scene, @camera)
+      #@renderer.render(@scene, @camera)
       #@scene.overrideMaterial = null
       #@renderer.render(@scene, @camera)
       #@overlayRenderer.render(@overlayScene, @overlayCamera)
       
-      #@composer.render()
+      @composer.render()
       
       if @settings.showStats
         @stats.update()

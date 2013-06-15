@@ -422,14 +422,32 @@ define (require) ->
       #console.log "currentHover", selection
       if selection?
         @currentHover = selection
-        selection.currentHoverHex = selection.material.color.getHex()
-        selection.material.color.setHex( @selectionColor )
+        #selection.currentHoverHex = selection.material.color.getHex()
+        #selection.material.color.setHex( @selectionColor )
+        
+        
+        if not (selection.hoverOutline?) and not (selection.outline?) and not (selection.name is "hoverOutline")
+          outlineMaterial = new THREE.MeshBasicMaterial( { color: 0xffc200, side: THREE.BackSide } )
+          outline = new THREE.Mesh( selection.geometry.clone(), outlineMaterial )
+          #outline.position = selection.position
+          outline.scale.multiplyScalar(1.03)
+          outline.name = "hoverOutline"
+          selection.hoverOutline = outline
+          selection.add( outline )
+        
         @renderCallback()
       
     _unHover:=>
       if @currentHover
-        @currentHover.material.color.setHex( @currentHover.currentHoverHex )
+        #@currentHover.material.color.setHex( @currentHover.currentHoverHex )
+        
+        
+        if @currentHover.hoverOutline?
+          @currentHover.remove(@currentHover.hoverOutline)
+          @currentHover.hoverOutline = null
+        
         @currentHover = null
+        
         @renderCallback()
     
     _onSelect:(selection)=>
@@ -437,16 +455,26 @@ define (require) ->
       @_unHover()
       @currentSelect = selection
       new BoundingCage({mesh:selection,color:@options.color,textColor:@options.textColor})
-      selection.currentSelectHex = selection.material.color.getHex()
-      selection.material.color.setHex( @selectionColor )
+      #selection.currentSelectHex = selection.material.color.getHex()
+      #selection.material.color.setHex( @selectionColor )
+      
+      outlineMaterial = new THREE.MeshBasicMaterial( { color: 0xffc200, side: THREE.BackSide } )
+      outline = new THREE.Mesh( selection.geometry.clone(), outlineMaterial )
+      #outline.position = selection.position
+      outline.scale.multiplyScalar(1.03)
+      selection.outline = outline
+      selection.add( outline )
+      
       @renderCallback()
       
     _unSelect:=>
       if @currentSelect
         selection = @currentSelect
-        selection.material.color.setHex( selection.currentSelectHex )
+        #selection.material.color.setHex( selection.currentSelectHex )
         selection.remove(selection.cage)
+        selection.remove(selection.outline)
         selection.cage = null
+        selection.outline =null
         @currentSelect = null
         @renderCallback()
       #@currentHover.material = @currentHover.origMaterial if @currentHover.origMaterial
