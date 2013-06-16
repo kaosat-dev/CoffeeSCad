@@ -11,11 +11,12 @@ define (require) ->
     drawText:(text, displaySize)=>
       canvas = document.createElement('canvas')
       size = 256
+      displaysize = 256
       displaySize = displaySize or size
       canvas.width = size
       canvas.height = size
       context = canvas.getContext('2d')
-      context.font = "17px sans-serif"
+      context.font = "30px sans-serif"
       context.textAlign = 'center'
       context.fillStyle = @textColor
       context.fillText(text, canvas.width/2, canvas.height/2)
@@ -25,11 +26,13 @@ define (require) ->
       
       texture = new THREE.Texture(canvas)
       texture.needsUpdate = true
+      texture.magFilter = THREE.NearestMipMapLinearFilter
+      texture.minFilter = THREE.NearestMipMapLinearFilter
       
       spriteMaterial = new THREE.SpriteMaterial
          map: texture
          transparent:true
-         alphaTest: 0.5
+         alphaTest: 0.6
          #alignment: THREE.SpriteAlignment.topLeft,
          useScreenCoordinates: false
          scaleByViewport:false
@@ -55,14 +58,16 @@ define (require) ->
       
       texture = new THREE.Texture(canvas)
       texture.needsUpdate = true
-      texture.generateMipmaps = false
+      texture.generateMipmaps = true
       texture.magFilter = THREE.LinearFilter
       texture.minFilter = THREE.LinearFilter
+      #texture.anisotropy = 32
       
       material = new THREE.MeshBasicMaterial
         map: texture
         transparent: true 
         color: 0xffffff
+        alphaTest: 0.2
       
       plane = new THREE.Mesh(new THREE.PlaneGeometry(size/8, size/8),material)
       plane.doubleSided = true
@@ -396,12 +401,14 @@ define (require) ->
         #mesh.material.side= THREE.BackSide
         #widthArrow.material.side = THREE.FrontSide
         
+        cage.name = "boundingCage"
         cage.add widthArrow
         cage.add lengthArrow
         cage.add heightArrow
         
         mesh.cage = cage
         mesh.add cage
+        
       catch error
   
   
@@ -426,7 +433,7 @@ define (require) ->
         #selection.material.color.setHex( @selectionColor )
         
         
-        if not (selection.hoverOutline?) and not (selection.outline?) and not (selection.name is "hoverOutline")
+        if not (selection.hoverOutline?) and not (selection.outline?) and not (selection.name is "hoverOutline") and not (selection.name is "boundingCage")
           outlineMaterial = new THREE.MeshBasicMaterial( { color: 0xffc200, side: THREE.BackSide } )
           outline = new THREE.Mesh( selection.geometry.clone(), outlineMaterial )
           #outline.position = selection.position

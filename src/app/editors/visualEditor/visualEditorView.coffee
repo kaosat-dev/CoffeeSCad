@@ -390,7 +390,12 @@ define (require) ->
       #TODO:move this to view resize method
       if (window.devicePixelRatio is not undefined)
         @dpr = window.devicePixelRatio
-      
+        
+      resolutionBase = 1
+      resolutionMultiplier = 1.5
+      fxaaResolutionMultiplier = resolutionBase/resolutionMultiplier
+      composerResolutionMultiplier = resolutionBase*resolutionMultiplier
+       
       # depth
       depthShader = THREE.ShaderLib[ "depthRGBA" ]
       depthUniforms = THREE.UniformsUtils.clone( depthShader.uniforms )
@@ -402,6 +407,10 @@ define (require) ->
       # postprocessing
       renderPass = new THREE.RenderPass(@scene, @camera)
       overlayRenderPass = new THREE.RenderPass(@overlayScene, @overlayCamera)
+      
+      #
+      @colorTarget = new THREE.WebGLRenderTarget(@width, @height, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat } )
+      colorPass = new THREE.RenderPass(@scene, @camera)
       
       @depthTarget = new THREE.WebGLRenderTarget(@width, @height, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat } )
       @depthMaterial = new THREE.MeshDepthMaterial()
@@ -415,7 +424,7 @@ define (require) ->
       copyPass = new THREE.ShaderPass( THREE.CopyShader )
       
       @fxAAPass = new THREE.ShaderPass(THREE.FXAAShader)
-      @fxAAPass.uniforms['resolution'].value.set(1 / (@width * @dpr), 1 / (@height * @dpr))
+      @fxAAPass.uniforms['resolution'].value.set(fxaaResolutionMultiplier / (@width * @dpr), fxaaResolutionMultiplier / (@height * @dpr))
       
       edgeDetectPass = new THREE.ShaderPass(THREE.EdgeShader)
       edgeDetectPass2 = new THREE.ShaderPass(THREE.EdgeShader2)
@@ -427,7 +436,7 @@ define (require) ->
        
       
       @composer = new THREE.EffectComposer( @renderer )
-      @composer.setSize(@width * @dpr, @height * @dpr)
+      @composer.setSize(@width * @dpr*composerResolutionMultiplier, @height * @dpr*composerResolutionMultiplier)
       @composer.addPass(renderPass)
       
       #generate depth texture
@@ -850,8 +859,12 @@ define (require) ->
         @dpr = window.devicePixelRatio
       
       #shader uniforms updates
-      @fxAAPass.uniforms['resolution'].value.set(1 / (@width * @dpr), 1 / (@height * @dpr))
-      @composer.setSize(@width * @dpr, @height * @dpr)
+      resolutionBase = 1
+      resolutionMultiplier = 1.5
+      fxaaResolutionMultiplier = resolutionBase/resolutionMultiplier
+      composerResolutionMultiplier = resolutionBase*resolutionMultiplier
+      @fxAAPass.uniforms['resolution'].value.set(fxaaResolutionMultiplier / (@width * @dpr), fxaaResolutionMultiplier / (@height * @dpr))
+      @composer.setSize(@width * @dpr*composerResolutionMultiplier, @height * @dpr*composerResolutionMultiplier)
       
       @depthExtractPass.uniforms[ 'size' ].value.set( @width, @height )
       @depthExtractPass.uniforms[ 'cameraNear' ].value = 0.1 #@NEAR
