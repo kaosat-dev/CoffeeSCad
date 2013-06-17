@@ -409,19 +409,56 @@ define (require) ->
       overlayRenderPass = new THREE.RenderPass(@overlayScene, @overlayCamera)
       
       #
+      edgeHighlightShader = 
+        uniforms:
+            "tDiffuse": { type: "t", value: null }
+            "tDepth": { type: "t", value: null }
+            "tNormal": { type: "t", value: null }
+        vertexShader: 
+            """varying vec2 vUv;
+            void main() {
+                vUv = vec2( uv.x, uv.y );
+                gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+            }"""
+        fragmentShader: 
+            """
+            uniform sampler2D tDiffuse;
+            varying vec2 vUv;
+     
+            void main() {
+                vec4 srcColor = texture2D( tDiffuse, vUv );
+                vec4 endColor = vec4(1.0, 1.0, 1.0, 1.0)- srcColor * 200.0;
+                if(endColor[0]<0.3)
+                {
+                  endColor[3]=1.0;
+                }
+                else
+                {
+                  endColor[3]=0.0;
+                }
+                gl_FragColor = endColor;//vec4(1.0, 1.0, 1.0, 1.0)- srcColor * 200.0 ;
+            }"""
+      
+      
+      #various passes and rtts
       @colorTarget = new THREE.WebGLRenderTarget(@width, @height, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat } )
       colorPass = new THREE.RenderPass(@scene, @camera)
       
       @depthTarget = new THREE.WebGLRenderTarget(@width, @height, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat } )
       @depthMaterial = new THREE.MeshDepthMaterial()
       depthPass = new THREE.RenderPass(@scene, @camera, @depthMaterial)
+      @depthExtractPass = new THREE.ShaderPass(Shaders.depthExtractShader)
       
       @normalTarget = new THREE.WebGLRenderTarget(@width, @height, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat } )
       @normalMaterial = new THREE.MeshNormalMaterial()
       normalPass = new THREE.RenderPass(@scene, @camera, @normalMaterial)
       
+      #----------------
+      edgeHighlightPass = new THREE.ShaderPass(edgeHighlightShader)
+      #----------------
       
       copyPass = new THREE.ShaderPass( THREE.CopyShader )
+      
       
       @fxAAPass = new THREE.ShaderPass(THREE.FXAAShader)
       @fxAAPass.uniforms['resolution'].value.set(fxaaResolutionMultiplier / (@width * @dpr), fxaaResolutionMultiplier / (@height * @dpr))
@@ -432,7 +469,14 @@ define (require) ->
       vignettePass.uniforms["offset"].value = 0.4;
       vignettePass.uniforms["darkness"].value = 5;
       
-      @depthExtractPass = new THREE.ShaderPass(Shaders.depthExtractShader)
+      
+      @depthComposer = new THREE.EffectComposer( @renderer )
+      @depthComposer.setSize(@width * @dpr*composerResolutionMultiplier, @height * @dpr*composerResolutionMultiplier)
+      @depthComposer.addPass(depthPass)
+      
+      @normalComposer = new THREE.EffectComposer( @renderer )
+      @normalComposer.setSize(@width * @dpr*composerResolutionMultiplier, @height * @dpr*composerResolutionMultiplier)
+      @normalComposer.addPass(normalPass)
        
       
       @composer = new THREE.EffectComposer( @renderer )
@@ -444,17 +488,28 @@ define (require) ->
       #@composer.addPass(@depthExtractPass)
       #generate normal texture
       #@composer.addPass(normalPass)
-      
       @composer.addPass(@fxAAPass)
-      #@composer.addPass(edgeDetectPass)
-      #@composer.addPass(edgeDetectPass2)
-      #@composer.addPass(copyPass)
       @composer.addPass(vignettePass)
       #make sure the last in line renders to screen
       @composer.passes[@composer.passes.length-1].renderToScreen = true
       
+      #steps:
+      #render default to @colorTarget
+      #render depth
+      #render normal
       
+      #final composer
+      ### 
+      finalComposer = new THREE.EffectComposer( renderer, renderTarget );
+
+      #prepare the final render passes
+      renderModel = new THREE.RenderPass( scene, camera );
+      finalComposer.addPass( renderModel );
       
+      effectBlend = new THREE.ShaderPass( THREE.AdditiveBlendShader, "tDiffuse1" )
+      effectBlend.uniforms[ 'tDiffuse2' ].value = composer2.renderTarget2
+      finalComposer.addPass( effectBlend )
+      ###
 
       
     setupView:(val)=>
@@ -970,7 +1025,8 @@ define (require) ->
           $("#testOverlay2").addClass("hide")
       else
         $("#testOverlay2").addClass("hide")
-      #necessary hack
+        
+      #necessary hack for effectomposer
       THREE.EffectComposer.camera = new THREE.OrthographicCamera( -1, 1, 1, -1, 0, 1 )
       THREE.EffectComposer.quad = new THREE.Mesh( new THREE.PlaneGeometry( 2, 2 ), null )
       THREE.EffectComposer.scene = new THREE.Scene()
