@@ -158,22 +158,114 @@ define (require)->
     onParamsApply:()=>
       vent.trigger("project:compile")
     
+    
+    addFieldToFieldSet:(parentEl, param)=>
+      getParamValue= ( param )=>
+        if @project.meta.modParams?
+          if param.name of @project.meta.modParams
+            paramValue = @project.meta.modParams[param.name]
+          else
+            paramValue = param.default
+        else
+          paramValue = param.default
+        return paramValue
+      
+      
+      console.log "param",param
+      paramValue = getParamValue( param )
+      console.log "paramValue",paramValue
+      
+      container = $('<div>',{class: "control-group field-#{param.name}"})
+      label = """<label class="control-label" for="#{param.name}">#{param.name}</label>"""
+      toolTip = """<div class="help-inline"> <span><a href="#" data-toggle="tooltip" rel="tooltip" title="#{param.caption}"><i class="icon-question-sign icon-medium"/></a></span><div>"""
+      
+      switch param.type
+        when "float", "int"
+          control = """<div class="controls"> <input type='number' value='#{paramValue}' id='#{param.name}' class='myParams'/> #{toolTip} </div>"""
+        
+        when "checkbox"   
+          control = """<div class="controls"> <input class='myParams' type='checkbox' id='#{param.name}' #{if param.default==true then 'checked' else ''}/> #{toolTip} </div>"""
+        
+        when "select"
+          values = param.values.split(',')
+          vals = ""
+          for val in values
+            vals += "<option value=#{val}>#{val}</option>"
+          control = """<div class="controls"> <select id='#{param.name}' class='myParams'> #{vals} </select>#{toolTip}</div>"""
+            
+        when "color"
+          if "#" in paramValue
+            paramValue = @_hexToRgba(paramValue)
+          rgbaValue = "rgba(#{paramValue.r}, #{paramValue.g}, #{paramValue.b}, #{paramValue.a})"
+          control = """
+          <div class="controls">
+          <div class="input-append color colorpicker" data-color="#{rgbaValue}" data-color-format="rgba" id='#{param.name}'>
+            <input type="text" class="span2" value="#{rgbaValue}" readonly="">
+            <span class="add-on"><i style="background-color: #{rgbaValue};"></i></span>
+          </div>
+          #{toolTip}</div>"""
+         
+        when "slider"
+          control = """
+          <div class="controls">
+            <div>
+            #{param.min}&nbsp<input id='#{param.name}' type="text" class="span2 slider" value="" 
+              data-slider-min="#{param.min}" data-slider-max="#{param.max}" data-slider-step="#{param.step}" data-slider-value="#{paramValue}" 
+              data-slider-orientation="horizontal" data-slider-selection="after"data-slider-tooltip="show" data-slider-handle="square">&nbsp#{param.max}
+            
+            #{toolTip}
+            </div>
+          </div>"""
+          
+      container.append(label)
+      container.append(control)
+      parentEl.append(container)  
+      
+    
+    
     onParamsGenerated:=>
       if (not @preventUiRegen) or (@preventUiRegen and not @_drawnOnce)
         rootEl = $('<div>',{id: "paramsContainer", class:"form-horizontal"})
         
-        getParamValue= ( param )=>
-          if @project.meta.modParams?
-            if param.name of @project.meta.modParams
-              paramValue = @project.meta.modParams[param.name]
-            else
-              paramValue = param.default
-          else
-            paramValue = param.default
-          return paramValue
-        
         if @project.meta.rawParams?
-          for param in @project.meta.rawParams
+          unTreatedParams = {}
+          for param in @project.meta.rawParams.fields
+            unTreatedParams[param.name] = param
+          
+          #first handle all fieldsets and associeted fields/params
+          for fieldSetData in @project.meta.rawParams.fieldsets
+            console.log "fieldset", fieldSetData
+            fieldSet= $('<div>')
+            fieldSet.append("""<legend>#{fieldSetData.legend or "Default fieldset Name"}</legend>""")
+            
+            
+            for field in fieldSetData.fields
+              param = unTreatedParams[field]
+              ### 
+              for paramData in @project.meta.rawParams.fields
+                if paramData.name == field
+                  param = paramData
+                  break
+              ###
+              if param?
+                @addFieldToFieldSet(fieldSet, param)
+                delete unTreatedParams[field]
+              
+            rootEl.append( fieldSet )
+          
+          #handle fields with no fieldset
+          fieldSet= $('<div>')
+          fieldSet.append("""<legend>Other</legend>""") 
+          
+          for paramName of unTreatedParams
+            param = unTreatedParams[paramName]
+            @addFieldToFieldSet( fieldSet, param )
+            delete unTreatedParams[field]
+          
+          rootEl.append( fieldSet )
+            
+          ### 
+          for param in @project.meta.rawParams.fields
             console.log "param",param
             paramValue = getParamValue( param )
             console.log "paramValue",paramValue
@@ -222,7 +314,8 @@ define (require)->
                 
             container.append(label)
             container.append(control)
-            rootEl.append(container)          
+            rootEl.append(container)
+            ###         
           
           parametrizerSettingsFieldSet = $('<div>')
           parametrizerSettingsFieldSet.append("""<legend>Parametrizer settings</legend>""")

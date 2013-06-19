@@ -10,7 +10,7 @@ define (require) ->
       @debug = null
       @project = null
       @includePattern = /(?!\s*?#)(?:\s*?include\s*?)(?:\(?\"([\w\//:'%~+#-.*]+)\"\)?)/g
-      @paramsPattern = /^\s*?params\s*?=\s*?(\[(.|[\r\n])*?\])/g
+      @paramsPattern = /^(\s*)?params\s*?=\s*?(\{(.|[\r\n])*?\})/g
       
       @resolvedIncludes = []
       @unresolvedIncludes = []
@@ -93,6 +93,48 @@ define (require) ->
     
     _findParams:(source)=>
       source = source or ""
+      
+      buf = ""
+      openBrackets = 0
+      closeBrackets = 0
+      startMark = null
+      endMark = null
+      for char,index in source
+        buf+=char
+        
+        if buf.indexOf("params=") != -1 or buf.indexOf("params =") != -1#"para" in buf
+          console.log "found params at",index
+          startMark = index
+          buf = ""
+        
+        if startMark != null
+          if buf.indexOf("{") != -1 
+            openBrackets += 1
+            buf = ""
+          if buf.indexOf("}") != -1 
+            closeBrackets += 1
+            buf = ""
+          if openBrackets == closeBrackets and openBrackets != 0
+            endMark = index
+            break
+            
+      if not @project.meta?
+        @project.meta = {}  
+      
+      if startMark != null
+        paramsSourceBlock = "params " + source.slice(startMark,endMark+1)
+        params = eval(paramsSourceBlock)
+        
+        results = {}
+        for param in params.fields
+          results[param.name]=param.default
+        source = source.replace(paramsSourceBlock, "")
+        @project.meta.params = results
+        
+        rawParams = eval(paramsSourceBlock)
+        @project.meta.rawParams = rawParams
+       
+      ### 
       matches = []
       match = @paramsPattern.exec(source)
       while match  
@@ -113,7 +155,7 @@ define (require) ->
         #console.log "matches raw", JSON.parse(matches[1])
         rawParams = eval(matches[0][0])
         @project.meta.rawParams = rawParams
-      
+      ###
       return source      
     
     _findMatches:(source)=>
