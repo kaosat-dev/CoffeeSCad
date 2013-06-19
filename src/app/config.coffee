@@ -102,6 +102,7 @@ require.config
     VignetteShader: "../assets/js/plugins/three/VignetteShader"
     BlendShader : "../assets/js/plugins/three/BlendShader"
     AdditiveBlendShader : "../assets/js/plugins/three/AdditiveBlendShader"
+    BrightnessContrastShader : "../assets/js/plugins/three/BrightnessContrastShader"
     
     
   shim:
@@ -214,6 +215,8 @@ require.config
     ShaderPass:
       deps:    ["CopyShader"]
     DotScreenShader:
+      deps:    ["CopyShader"]
+    BrightnessContrastShader:
       deps:    ["CopyShader"]
     DotScreenPass :
       deps:    ["CopyShader","DotScreenShader"]

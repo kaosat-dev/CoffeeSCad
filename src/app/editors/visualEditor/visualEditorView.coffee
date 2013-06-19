@@ -82,6 +82,7 @@ define (require) ->
       EdgeShader = require 'EdgeShader'
       VignetteShader = require 'VignetteShader'
       BlendShader = require 'BlendShader'
+      BrightnessContrastShader = require 'BrightnessContrastShader'
       
       @stats.domElement.style.position = 'absolute'
       @stats.domElement.style.top = '30px'
@@ -465,18 +466,27 @@ define (require) ->
       
       edgeDetectPass = new THREE.ShaderPass(THREE.EdgeShader)
       edgeDetectPass2 = new THREE.ShaderPass(THREE.EdgeShader2)
+      
+      contrastPass = new THREE.ShaderPass(THREE.BrightnessContrastShader)
+      contrastPass.uniforms['contrast'].value=0.5
+      contrastPass.uniforms['brightness'].value=-0.4
+      
+      
       vignettePass = new THREE.ShaderPass(THREE.VignetteShader)
       vignettePass.uniforms["offset"].value = 0.4;
       vignettePass.uniforms["darkness"].value = 5;
       
       
+      
       @depthComposer = new THREE.EffectComposer( @renderer )
       @depthComposer.setSize(@width * @dpr*composerResolutionMultiplier, @height * @dpr*composerResolutionMultiplier)
       @depthComposer.addPass(depthPass)
+      @depthComposer.addPass(edgeDetectPass2)
       
       @normalComposer = new THREE.EffectComposer( @renderer )
       @normalComposer.setSize(@width * @dpr*composerResolutionMultiplier, @height * @dpr*composerResolutionMultiplier)
       @normalComposer.addPass(normalPass)
+      @normalComposer.addPass(edgeDetectPass2)
        
       
       @composer = new THREE.EffectComposer( @renderer )
@@ -485,9 +495,11 @@ define (require) ->
       
       #generate depth texture
       #@composer.addPass(depthPass)
+      #@composer.addPass(contrastPass)
+      
+      
       #@composer.addPass(@depthExtractPass)
-      #generate normal texture
-      #@composer.addPass(normalPass)
+      
       @composer.addPass(@fxAAPass)
       @composer.addPass(vignettePass)
       #make sure the last in line renders to screen
