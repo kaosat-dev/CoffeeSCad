@@ -26,6 +26,10 @@ define (require)->
       "click .applyParams":"onParamsApply"
       "change .autoUpdate" : "onAutoUpdateChanged"
       "change .preventUiRegen" : "onPreventUiRegenChanged"
+      "change .color-text": "onColorTextChanged"
+      "input .color-text": "onColorTextChanged"
+      "paste .color-text": "onColorTextChanged"
+      
       
     constructor:(options)->
       super options
@@ -40,7 +44,7 @@ define (require)->
     onDomRefresh:()=>
       $('.colorpicker').colorpicker().on('changeColor', @onColorChanged )
       $('.slider').slider().on('slide', @onSliderChanged )
-      @$el.find('[rel=tooltip]').tooltip({'placement': 'right'})
+      @$el.find('[rel=tooltip]').tooltip({'placement': 'bottom'})
 
     onResizeStart:=>
       
@@ -83,7 +87,20 @@ define (require)->
           b: parseInt(result[3], 16),
           a: if result[4]? then parseInt(result[4], 16) else 1
         }
-
+    
+    
+    _applyParamChange:(paramName, paramValue)=>
+      console.log "paramName",paramName, "paramValue",paramValue
+      if not @project.meta.modParams?
+        @project.meta.modParams={}
+        for param of @project.meta.params
+          @project.meta.modParams[param] = @project.meta.params[param]
+      
+      @project.meta.modParams[paramName] = paramValue
+      
+      if @autoUpdateBasedOnParams
+        vent.trigger("project:compile")
+      
     
     onAutoUpdateChanged:(e)=>
       autoUpdate = $(".autoUpdate").prop('checked')
@@ -97,7 +114,6 @@ define (require)->
     
     onParamChanged:(e)=>
       console.log "param changed",e
-      
       if $(e.srcElement).is('input:checkbox')
         paramValue = $(e.srcElement).prop('checked')
       else if $(e.srcElement).is('input:text')
@@ -108,19 +124,25 @@ define (require)->
         paramValue = $(e.srcElement).val()
         
       paramName = e.srcElement.id
-      
-      console.log "paramName",paramName, "paramValue",paramValue
-      
-      if not @project.meta.modParams?
-        @project.meta.modParams={}
-        for param of @project.meta.params
-          @project.meta.modParams[param] = @project.meta.params[param]
-      
-      @project.meta.modParams[paramName] = paramValue
-      
-      if @autoUpdateBasedOnParams
-        vent.trigger("project:compile")
+      @_applyParamChange( paramName, paramValue )
     
+    onColorTextChanged:(e)=>
+      console.log "color change"
+      colorText =  e.srcElement.value
+      paramName = e.srcElement.parentElement.id
+      if colorText.indexOf("rgb") != -1 
+        color = colorText.replace("rgba","").replace("rgb","").replace("(","").replace(")","").replace(/\s/g,"")
+        color = color.split(',')
+        for comp,index in color
+          color[index] = parseInt(comp)
+        paramValue = color
+        
+      paramValue = [paramValue[0]/255,paramValue[1]/255, paramValue[2]/255, paramValue[3]]
+      
+      bleh = $("#"+paramName).find(".color-visual")
+      bleh.css('background-color', colorText);
+      @_applyParamChange( paramName, paramValue )
+      
     onColorChanged:(e)=>
       console.log "color change", e.color.toRGB()
       console.log e
@@ -129,15 +151,7 @@ define (require)->
       paramValue = [paramValue.r/255,paramValue.g/255, paramValue.b/255, paramValue.a]
       console.log "Color name:", paramName," value",paramValue
       
-      if not @project.meta.modParams?
-        @project.meta.modParams={}
-        for param of @project.meta.params
-          @project.meta.modParams[param] = @project.meta.params[param]
-      
-      @project.meta.modParams[paramName] = paramValue
-      
-      if @autoUpdateBasedOnParams
-        vent.trigger("project:compile")
+      @_applyParamChange( paramName, paramValue )
       
     onSliderChanged:(e)=>
       console.log "slider change", e.value
@@ -145,19 +159,10 @@ define (require)->
       paramValue = e.value
       paramName  = e.currentTarget.id
       
-      if not @project.meta.modParams?
-        @project.meta.modParams={}
-        for param of @project.meta.params
-          @project.meta.modParams[param] = @project.meta.params[param]
-      
-      @project.meta.modParams[paramName] = paramValue
-      
-      if @autoUpdateBasedOnParams
-        vent.trigger("project:compile")
+      @_applyParamChange( paramName, paramValue )
       
     onParamsApply:()=>
       vent.trigger("project:compile")
-    
     
     addFieldToFieldSet:(parentEl, param)=>
       getParamValue= ( param )=>
@@ -200,8 +205,8 @@ define (require)->
           control = """
           <div class="controls">
           <div class="input-append color colorpicker" data-color="#{rgbaValue}" data-color-format="rgba" id='#{param.name}'>
-            <input type="text" class="span2" value="#{rgbaValue}" readonly="">
-            <span class="add-on"><i style="background-color: #{rgbaValue};"></i></span>
+            <input type="text" class="span2 color-text" value="#{rgbaValue}" >
+            <span class="add-on"><i class="color-visual" style="background-color: #{rgbaValue};"></i></span>
           </div>
           #{toolTip}</div>"""
          
@@ -212,7 +217,6 @@ define (require)->
             #{param.min}&nbsp<input id='#{param.name}' type="text" class="span2 slider" value="" 
               data-slider-min="#{param.min}" data-slider-max="#{param.max}" data-slider-step="#{param.step}" data-slider-value="#{paramValue}" 
               data-slider-orientation="horizontal" data-slider-selection="after"data-slider-tooltip="show" data-slider-handle="square">&nbsp#{param.max}
-            
             #{toolTip}
             </div>
           </div>"""

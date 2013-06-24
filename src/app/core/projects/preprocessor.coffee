@@ -65,15 +65,26 @@ define (require) ->
         if coffeeToJs
           @processedResult = CoffeeScript.compile(@processedResult, {bare: true})
           
+          
+          
+        ###other Experiment###
+        #tokens = CoffeeScript.tokens(@processedResult)
+        #nodes = CoffeeScript.nodes(@processedResult)
+        
+        #GODDAMIT !!! the minified, coffee-script.js DOES NOT WORK: the node names are mangled, therefore, parsing the ast based on node type is not possible...
+        ###RequirejsParser = (require "./codeParsers").RequireJSParser
+        requirejsParser = new RequirejsParser()
+        
+        nodes = requirejsParser.getNodes(@processedResult)
+        
+        deps = requirejsParser.getDependencies(nodes)
+        classes = requirejsParser.getClasses(nodes)
+        objects = requirejsParser.getObjects(nodes)
+        functions = requirejsParser.getFunctions(nodes)
+        console.log "classes",classes, "objects",objects, "functions",functions
+        ###
         #experiment
         ###
-        tokens = CoffeeScript.tokens(@processedResult)
-        console.log "tokens" 
-        console.log tokens
-        nodes = CoffeeScript.nodes(tokens)
-        console.log "nodes"
-        console.log nodes
-        
         addReplacementVisitor = onCall: (n, replaceCallback) ->
           if n.variable.base.value is "ADD"
             addOp = new nodes.Op("+", n.args[0], n.args[1])
@@ -84,6 +95,7 @@ define (require) ->
         for include in @resolvedIncludesFull
           @processedResult.replace(include, "")
         @processedResult.replace("""include""","toto")###
+        
         @processedResult = @_findParams(@processedResult) # just a test
         #console.log "@processedResult",@processedResult
         @deferred.resolve(@processedResult)
@@ -134,28 +146,6 @@ define (require) ->
         rawParams = eval(paramsSourceBlock)
         @project.meta.rawParams = rawParams
        
-      ### 
-      matches = []
-      match = @paramsPattern.exec(source)
-      while match  
-        matches.push(match)
-        match = @paramsPattern.exec(source)
-      
-      if not @project.meta?
-        @project.meta = {}
-      if matches.length > 0
-        mainMatch = matches[0][0].replace("=",":")
-        params = eval(mainMatch)
-        results = {}
-        for param in params
-          results[param.name]=param.default
-        source = source.replace(matches[0][0], "")
-        @project.meta.params = results
-      
-        #console.log "matches raw", JSON.parse(matches[1])
-        rawParams = eval(matches[0][0])
-        @project.meta.rawParams = rawParams
-      ###
       return source      
     
     _findMatches:(source)=>
