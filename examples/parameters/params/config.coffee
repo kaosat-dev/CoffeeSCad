@@ -1,5 +1,5 @@
-params = [
-  {
+params = {
+  fields:[{
       name: 'width',
       type: 'float',
       default: 30,
@@ -69,7 +69,7 @@ params = [
       step:0.5,
       caption: "ypos"
     },
-        {
+    {
       name:'zpos',
       type:'slider',
       default:15,
@@ -78,4 +78,15 @@ params = [
       step:0.5,
       caption: "zpos"
     }
-    ]
+  ],
+  fieldsets:[
+    {
+      "legend": "Main Cube",
+      "fields": ["width","height","depth","roundings","wheels","boxColor"]
+    },
+    {
+      "legend":"Substracted Cube",
+      "fields": ["boxColor2","vary","xpos","ypos","zpos"]
+    }
+  ]
+}
