@@ -156,7 +156,19 @@ define (require)->
         fileName = @rootFolder.get(@name+".coffee")
       
       file = @rootFolder.get(fileName)  
+      injectionIndex = file.content.length#file.content.split("\n").length
       file.content += content
+      return  injectionIndex#return line count/char count to get WHERE it was injected
+    
+    replaceContent:(start, end, newContent, fileName)=>
+      if not fileName?
+        fileName = @rootFolder.get(@name+".coffee")
+        
+      file = @rootFolder.get(fileName)  
+      content = file.content
+      startBlock = content.substring(0, start)
+      endBlock = content.substring(end)
+      file.content = startBlock + newContent + endBlock
     
     makeFileActive:(options)=>
       #set the currently active file (only one at a time)

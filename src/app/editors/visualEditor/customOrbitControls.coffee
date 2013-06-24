@@ -16,6 +16,8 @@ define (require) ->
     @eye = new THREE.Vector3()
     
     # API
+    @enabled = true
+    
     @userZoom = true
     @userZoomSpeed = 1.0
     @userRotate = true
@@ -161,24 +163,25 @@ define (require) ->
         panStart = panEnd
 
     @update = =>
-      if not @noRotate
-        @rotateCamera()
-      if not @noZoom
-        @zoomCamera()
-      if not @noPan 
-        @panCamera()
+      if @enabled
+        if not @noRotate
+          @rotateCamera()
+        if not @noZoom
+          @zoomCamera()
+        if not @noPan 
+          @panCamera()
+          
+        @object.position.addVectors( @target, @eye)
+        @object.lookAt(@target)
         
-      @object.position.addVectors( @target, @eye)
-      @object.lookAt(@target)
+        if ( lastPosition.distanceToSquared( @object.position ) >0)
+          @dispatchEvent(changeEvent)
+          lastPosition.copy(@object.position)
       
-      if ( lastPosition.distanceToSquared( @object.position ) >0)
-        @dispatchEvent(changeEvent)
-        lastPosition.copy(@object.position)
-    
-    
-    @zoomInOn=(object) =>
-      @target = object.position.clone()
-      #@zoomIn(2)
+      
+      @zoomInOn=(object) =>
+        @target = object.position.clone()
+        #@zoomIn(2)
     
     getAutoRotationAngle = ->
       2 * Math.PI / 60 / 60 * scope.autoRotateSpeed
@@ -187,6 +190,7 @@ define (require) ->
       Math.pow 0.95, scope.userZoomSpeed
       
     onMouseDown = (event) ->
+      return unless scope.enabled
       return  unless scope.userRotate
       event.preventDefault()
       if event.button is 0
@@ -203,6 +207,7 @@ define (require) ->
       document.addEventListener "mouseup", onMouseUp, false
       
     onMouseMove = (event) ->
+      return unless scope.enabled
       event.preventDefault()
       if state is STATE.ROTATE
         rotateEnd.set event.clientX, event.clientY
@@ -220,14 +225,18 @@ define (require) ->
         zoomStart.copy zoomEnd
       else if state is STATE.PAN
         panEnd = new THREE.Vector2(event.clientX, event.clientY)
+      
+      scope.update()
         
     onMouseUp = (event) ->
+      return unless scope.enabled
       return  unless scope.userRotate
       document.removeEventListener "mousemove", onMouseMove, false
       document.removeEventListener "mouseup", onMouseUp, false
       state = STATE.NONE
       
     onMouseWheel = (event) ->
+      return unless scope.enabled
       return  unless scope.userZoom
       delta = 0
       if event.wheelDelta # WebKit / Opera / Explorer 9

@@ -661,7 +661,46 @@ define (require) ->
       
       selected = @selectionHelper.selectObjectAt(x,y)
       
-      ###
+      #Transform controls, experimental
+      #if selected?
+        
+      onControlUpdate = =>
+        @controls.enabled=false 
+        #@controls.removeEventListener( 'change', @_render )
+        
+        for control in @currentSelection.controls
+          control.update()
+        
+        if @currentSelection.meta?
+          code = @currentSelection.meta.code
+          position = @currentSelection.position
+          
+          if code.indexOf("translate") != -1
+            positionStr = ".translate([#{position.x},#{position.y},#{position.z}])"
+            pattern = /\.translate\(\[(-?[0-9]*\.?[0-9]*),(-?[0-9]*\.?[0-9]*),(-?[0-9]*\.?[0-9]*)\]\)/
+            newCode =  code.replace( pattern, positionStr )
+          else
+            positionStr = ".translate([#{position.x},#{position.y},#{position.z}])"
+            newCode = code+(positionStr)
+            
+          #console.log "newCode", newCode
+          
+          mesh = @currentSelection
+          
+          start = mesh.meta.startIndex
+          end = mesh.meta.startIndex+mesh.meta.blockLength
+             
+          @model.replaceContent(start, end, newCode)
+          
+          mesh.meta.code = newCode
+          mesh.meta.blockLength = newCode.length
+          
+        @_render()
+        
+        #@controls.enabled=true 
+        #@controls.addEventListener( 'change', @_render )
+      
+      
       selectionChange = false
       if selected?
         if @currentSelection?
@@ -674,8 +713,8 @@ define (require) ->
         if @currentSelection?
           controls = @currentSelection.controls
           if controls?
-            controls.detatch(@currentSelection)
-            controls.removeEventListener( 'change', @_render)
+            controls.detach(@currentSelection)
+            controls.removeEventListener( 'change', onControlUpdate)
             @scene.remove(controls.gizmo)
             controls = null
             @currentSelection = null
@@ -683,14 +722,14 @@ define (require) ->
         @currentSelection = selected        
         controls = new THREE.TransformControls(@camera, @renderer.domElement)
         console.log controls
-        controls.addEventListener( 'change', @_render );
-        controls.attatch( selected );
+        controls.addEventListener( 'change', onControlUpdate );
+        controls.attach( selected );
         controls.scale = 0.65;
         @scene.add( controls.gizmo );
         selected.controls = controls
       
       @_render()
-      ###      
+           
       
       ev.preventDefault()
       return false
@@ -864,7 +903,8 @@ define (require) ->
       )     
       
       b = "0x"+b.join("");###
-      @renderer.setClearColorHex( 0xFFFFFF, @renderer.getClearAlpha() )
+      alpha = if @renderer.getClearAlpha? then @renderer.getClearAlpha() else 1
+      @renderer.setClearColor( 0xFFFFFF,  alpha)
       ###      
       @renderer.clearColor=0x363335
       console.log @renderer
@@ -950,6 +990,9 @@ define (require) ->
     onDomRefresh:()=>
       #experimental context menu
       require 'contextMenu'
+      
+      generatorTest = require "./generators/generatorGeometry"
+      
       @$el.contextmenu
         target:'#context-menu'
         onItem: (e, element)=>
@@ -964,7 +1007,39 @@ define (require) ->
           
           if objectType == "Cylinder"
             @model.injectContent("\nassembly.add( new Cylinder({r:10,h:30,center:true}) )\n")
-      
+          
+          visitResult = ""
+          mesh = null
+          switch objectType
+            when "CubeTest"
+              mesh = generatorTest.cubeGenerator()
+              coffeeSCadVisitor = new generatorTest.CoffeeSCadVisitor()
+            when "CylTest"
+              mesh = generatorTest.cylinderGenerator()
+              coffeeSCadVisitor = new generatorTest.CoffeeSCadVisitor()
+            when "SphereTest"
+              mesh = generatorTest.sphereGenerator()
+              coffeeSCadVisitor = new generatorTest.CoffeeSCadVisitor()
+            
+          
+          if not @assembly?
+            @assembly = new THREE.Object3D()
+            @assembly.name = "assembly"
+          
+          if mesh?
+            @assembly.add( mesh ) 
+            visitResult = coffeeSCadVisitor.visit(mesh)
+            console.log visitResult
+            @_render()
+            meshCode = "\nassembly.add(#{visitResult})"
+            line = @model.injectContent(meshCode)
+            mesh.meta = mesh.meta or {}
+            mesh.meta.startIndex = line
+            mesh.meta.blockLength = meshCode.length
+            mesh.meta.code = meshCode
+            console.log "mesh.meta", mesh.meta
+            
+          
       
       if @settings.showStats
         @ui.overlayDiv.append(@stats.domElement)
@@ -985,17 +1060,19 @@ define (require) ->
       container = $(@ui.renderBlock)
       container.append(@renderer.domElement)
       @renderer.domElement.setAttribute("id","3dView")
-      console.log @renderer.domElement.id
+      
       
       @controls = new CustomOrbitControls(@camera, @el)#
       @controls.rotateSpeed = 1.8
       @controls.zoomSpeed = 4.2
-      @controls.panSpeed = 0.8#1.4
+      @controls.panSpeed = 0.8
       @controls.addEventListener( 'change', @_render )
+      #@controls.addEventListener( 'change', @animate)
 
-      @controls.staticMoving = true
+      @controls.staticMoving = false
       @controls.dynamicDampingFactor = 0.3
       
+      ###
       container2 = $(@ui.glOverlayBlock)
       container2.append(@overlayRenderer.domElement)
       
@@ -1006,8 +1083,9 @@ define (require) ->
       @overlayControls.zoomSpeed = 0
       @overlayControls.panSpeed = 0
       @overlayControls.userZoomSpeed=0
+      ###
       
-      @animate()
+      #@animate()
     
     _render:()=>
       #experimental 2d overlay for projected min max values of the objects 3d bounding box
@@ -1038,18 +1116,14 @@ define (require) ->
       else
         $("#testOverlay2").addClass("hide")
         
-      #necessary hack for effectomposer
-      THREE.EffectComposer.camera = new THREE.OrthographicCamera( -1, 1, 1, -1, 0, 1 )
-      THREE.EffectComposer.quad = new THREE.Mesh( new THREE.PlaneGeometry( 2, 2 ), null )
-      THREE.EffectComposer.scene = new THREE.Scene()
-      THREE.EffectComposer.scene.add( THREE.EffectComposer.quad )
+     
       
       
-      @scene.overrideMaterial = @depthMaterial
-      @renderer.render( @scene, @camera, @depthTarget )
+      #.overrideMaterial = @depthMaterial
+      #@renderer.render( @scene, @camera, @depthTarget )
       
-      @scene.overrideMaterial = @normalMaterial
-      @renderer.render( @scene, @camera, @normalTarget )
+      #@scene.overrideMaterial = @normalMaterial
+      #@renderer.render( @scene, @camera, @normalTarget )
       
       #depth rendering experiment
       ###
@@ -1062,14 +1136,22 @@ define (require) ->
       #@renderer.render(@scene, @camera)
       #@overlayRenderer.render(@overlayScene, @overlayCamera)
       
-      @composer.render()
+      if @renderer instanceof THREE.CanvasRenderer
+        @renderer.render( @scene, @camera)
+      else
+        #necessary hack for effectomposer
+        THREE.EffectComposer.camera = new THREE.OrthographicCamera( -1, 1, 1, -1, 0, 1 )
+        THREE.EffectComposer.quad = new THREE.Mesh( new THREE.PlaneGeometry( 2, 2 ), null )
+        THREE.EffectComposer.scene = new THREE.Scene()
+        THREE.EffectComposer.scene.add( THREE.EffectComposer.quad )
+        @composer.render()
       
       if @settings.showStats
         @stats.update()
       
     animate:()=>
       @controls.update()
-      @overlayControls.update()
+      #@overlayControls.update()
       requestAnimationFrame(@animate)
     
     fromCsg:()=>
