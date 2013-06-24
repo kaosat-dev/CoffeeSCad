@@ -83,6 +83,52 @@ copyTemplate = (src_path)->
       ts = "#{twoDigits(ts.getHours())}:#{twoDigits(ts.getMinutes())}:#{twoDigits(ts.getSeconds())}"
       print("#{ts} - copied #{src_path}\n")
 
+_exec = (cmd,done)->
+   exec cmd, done
+
+compileLess = (srcPath)->
+  rootdir = srcPath.split(path.sep)[0]
+  
+  findAndCompileBootstrapMain=(srcPath)=>
+    curDirName = path.dirname(srcPath)
+    files = fs.readdirSync(curDirName)
+    #console.log "files",files
+    if "bootstrap.less" in files
+      fileName = path.basename(srcPath)
+      if fileName != "bootstrap.less"
+        splitPath = srcPath.split(path.sep)
+        splitPath[splitPath.length-1] = "bootstrap.less"
+        srcPath = splitPath.join(path.sep)
+      compileBootstrapMain(srcPath,"bootstrap.less")
+  
+  compileBootstrapMain=(srcPath, fileName) =>
+    splitPath = srcPath.split(path.sep)
+    outPath = splitPath[1..splitPath.length-2].join(path.sep)
+    
+    splitBase = __filename.split(path.sep)
+    basePath = splitBase[0..splitBase.length-2].join(path.sep)
+    
+    #console.log "basePath",basePath, "outPath",outPath,"fileName",fileName
+    
+    inPath = [basePath,srcPath].join(path.sep)
+    outPath = [basePath,"assets","css",outPath,fileName.slice(0,-5)+".css"]
+    outPath = outPath.join(path.sep)
+    ts = new Date()
+    ts = "#{twoDigits(ts.getHours())}:#{twoDigits(ts.getMinutes())}:#{twoDigits(ts.getSeconds())}"
+    console.log "#{ts} - LESS : #{inPath} to #{outPath}"
+    
+    _exec "lessc #{inPath} #{outPath}", (e,so,se)->
+      console.log "#{ts} - [lessc #{inPath} #{outPath}] OUT> #{so}" if so
+      console.log "#{ts} - [lessc #{inPath} #{outPath}] ERR> #{se}" if se
+  
+  if rootdir == "src"
+    findAndCompileBootstrapMain(srcPath)
+    
+    #fileName = path.basename(srcPath)
+    #if fileName is "bootstrap.less"
+    #  compileBootstrapMain(srcPath,"bootstrap.less")
+      
+
 deleteTemplate = (src_path)->
   file = src_path
   rootdir = file.split(path.sep)[0]
@@ -127,12 +173,20 @@ task 'watch', 'Watch src/ for changes',(options) ->
   watcher.on 'filePreexisted', (srcPath,stats)->
     if path.extname(srcPath) == ".tmpl"
       copyTemplate(srcPath)
+    if path.extname(srcPath) == ".less"
+      fileName = path.basename(srcPath)
+      if fileName is "bootstrap.less"
+        compileLess(srcPath)
   watcher.on 'fileCreated', (srcPath, stats) ->
     if path.extname(srcPath) == ".tmpl"
       copyTemplate(srcPath)
+    if path.extname(srcPath) == ".less"
+      compileLess(srcPath)
   watcher.on 'fileModified', (srcPath, stats) ->
     if path.extname(srcPath) == ".tmpl"
       copyTemplate(srcPath)
+    if path.extname(srcPath) == ".less"
+      compileLess(srcPath)
   watcher.on 'fileDeleted', (srcPath) ->
     if path.extname(srcPath) == ".tmpl"
       deleteTemplate(srcPath)
@@ -157,7 +211,7 @@ task 'build', 'build all the components', (options) ->
   #--lint
   invoke('cpTemplates')
   build '.coffee', '.js', 'coffee --compile  -o $target_path $source', options
-  #build '.less', '.css', 'lessc $source $target', options
+  build '.less', '.css', 'lessc $source $target', options
   
 task 'release', 'build, minify , prep for release' , (options) ->
   

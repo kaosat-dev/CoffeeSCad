@@ -1,3 +1,0 @@
-return new Cylinder({start: [0, 0, 100],end: [0, 0, 50],radius:15, resolution:90}).
-rotateX(25).union( new Cylinder({start: [0, 0, 100],end: [0, 0, 50],radius:15,
-resolution:5}).rotateY(75))

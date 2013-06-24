@@ -31,6 +31,18 @@ define (require)->
       console.log "compiling"
       @_compileStartTime = new Date().getTime()
       
+      #fetch params
+      @preProcessor.process(@project,false)
+        .done () =>
+          @project.trigger("compiled:params",@compileResultData)
+          return
+        .fail (errors) =>
+          if errors not instanceof Array
+            errors = [errors]
+          @compileResultData["errors"] = errors
+          @project.trigger("compile:error",@compileResultData)
+      
+      #fetch geometry
       return @preProcessor.process(@project,false).pipe(@_processScript)
         .done () =>
           @project.trigger("compiled",@compileResultData)
@@ -50,8 +62,13 @@ define (require)->
       if @project is null
         error = new Error("No project given to the compiler")
         deferred.reject(error)
-      
-      params = @project.meta.params
+        
+      if @project.meta.modParams?
+        params = @project.meta.modParams
+      else
+        params = @project.meta.params
+      console.log "injecting params", @project
+      console.log "injecting params", params
       @csgProcessor.processScript source,@backgroundProcessing,params, (rootAssembly, partRegistry, logEntries, error)=>
         @compileResultData["logEntries"] = logEntries or []
         if error?

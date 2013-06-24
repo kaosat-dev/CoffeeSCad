@@ -7,4 +7,8 @@ The structure of this repostiory is simple : all the top level folders are categ
 
 Contributors:
  - Jonathan Sorensen : Cube and SphereCylinder examples https://github.com/se5a 
+ - Simon Kirkby : Applied : Peristaltic pump example
+ 
+Log : 
+Friday June 7th : added parameters example
 

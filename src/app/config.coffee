@@ -6,7 +6,9 @@ require.config
       #env:'node'
       env: 'xhr'
   waitSeconds:200
-
+  
+  
+  #baseUrl: window.location.protocol + "//" + window.location.host + window.location.pathname.split("/").slice(0, -1).join("/")
   paths:
     #JavaScript folders.
     libs:             "../assets/js/libs"
@@ -18,7 +20,8 @@ require.config
     underscore:       "../assets/js/libs/underscore-min"
     backbone:         "../assets/js/libs/backbone"
     bootstrap:        "../assets/js/libs/bootstrap.min"
-    CodeMirror:       "../assets/js/libs/codemirror"
+    #ace:              "../assets/js/libs/ace"
+    
     CoffeeScript:     "../assets/js/libs/CoffeeScript"
     three:            "../assets/js/libs/three"
     detector:         "../assets/js/libs/detector"
@@ -29,6 +32,8 @@ require.config
     github:           "../assets/js/libs/github"
     
     XMLWriter:        "../assets/js/libs/XMLWriter-1.0.0"
+    jszip:            "../assets/js/libs/jszip"
+    "jszip-deflate" : "../assets/js/libs/jszip-deflate"
     
     
     #plugins
@@ -41,18 +46,11 @@ require.config
     bootbox:          "../assets/js/plugins/bootbox.min"
     contextMenu:      "../assets/js/plugins/bootstrap-contextmenu"
     notify:           "../assets/js/plugins/bootstrap-notify"
+    colorpicker:      "../assets/js/plugins/bootstrap-colorpicker"
+    slider:           "../assets/js/plugins/bootstrap-slider"
     
     coffeelint:       "../assets/js/plugins/coffeelint"
-    coffee_synhigh:   "../assets/js/libs/codeMirror/mode/coffeescript/coffeescript"
     
-    foldcode:         "../assets/js/plugins/codemirror/fold/foldcode"
-    indent_fold:      "../assets/js/plugins/codemirror/fold/indent-fold"
-    search:           "../assets/js/plugins/codemirror/search/search"
-    search_cursor:    "../assets/js/plugins/codemirror/search/searchcursor"
-    match_high:       "../assets/js/plugins/codemirror/search/match-highlighter"
-    dialog:           "../assets/js/plugins/codemirror/dialog/dialog"
-    hint:             "../assets/js/plugins/codemirror/hint/show-hint"
-    jsHint:           "../assets/js/plugins/codemirror/hint/coffeescad-hint"
     
     marionette:       "../assets/js/plugins/backbone.marionette.min"
     eventbinder:      "../assets/js/plugins/backbone.eventbinder.min"
@@ -72,6 +70,26 @@ require.config
     
     three_csg:        "../assets/js/plugins/ThreeCSG"
     combo_cam:        "../assets/js/plugins/CombinedCamera"
+    transformControls:"../assets/js/plugins/three/controls/transformControls"
+    
+    ObjectExport: "../assets/js/plugins/three/exporters/ObjectExport"
+    GeometryExporter: "../assets/js/plugins/three/exporters/GeometryExporter"
+    MaterialExporter: "../assets/js/plugins/three/exporters/MaterialExporter"
+    ObjectParser: "../assets/js/plugins/three/parsers/ObjectParser"
+    
+    CopyShader:       "../assets/js/plugins/three/CopyShader"
+    EffectComposer:   "../assets/js/plugins/three/EffectComposer"
+    RenderPass:       "../assets/js/plugins/three/RenderPass"
+    ShaderPass:       "../assets/js/plugins/three/ShaderPass"
+    DotScreenShader :   "../assets/js/plugins/three/DotScreenShader"
+    DotScreenPass :   "../assets/js/plugins/three/DotScreenPass"
+    FXAAShader: "../assets/js/plugins/three/FXAAShader"
+    EdgeShader: "../assets/js/plugins/three/EdgeShader"
+    EdgeShader2: "../assets/js/plugins/three/EdgeShader2"
+    VignetteShader: "../assets/js/plugins/three/VignetteShader"
+    BlendShader : "../assets/js/plugins/three/BlendShader"
+    AdditiveBlendShader : "../assets/js/plugins/three/AdditiveBlendShader"
+    BrightnessContrastShader : "../assets/js/plugins/three/BrightnessContrastShader"
     
     
   shim:
@@ -87,6 +105,10 @@ require.config
     contextMenu:
       dep: ["bootstrap"]
     notify:
+      dep:["bootstrap"]
+    colorpicker: 
+      dep:["bootstrap"]
+    slider: 
       dep:["bootstrap"]
       
     'backbone':
@@ -116,28 +138,7 @@ require.config
     #  exports:  "CoffeeScript"
     coffeelint:
       deps:    ["CoffeeScript"]
-          
-    CodeMirror:
-      exports:  "CodeMirror"
-    foldcode:
-      deps:    ["CodeMirror"]
-    indent_fold:
-      deps:    ["CodeMirror","foldcode"]
-    coffee_synhigh:
-      deps:    ["CodeMirror"]
-    jsHint:
-      deps:    ["CodeMirror","hint"]
-    search:
-      deps:    ["CodeMirror"]
-    search_cursor:
-      deps:    ["CodeMirror"]
-    dialog:
-      deps:    ["CodeMirror"]
-    match_high:
-      deps:    ["CodeMirror","search","search_cursor"]
-    hint:
-      deps:    ["CodeMirror"]
-
+    
     three: 
       exports : "THREE"
     three_csg: 
@@ -146,9 +147,8 @@ require.config
     combo_cam: 
       deps:    ["three"]
       exports : "combo_cam"
-    orbit_ctrl:
-      deps:    ["three"]
-      exports : "orbit_ctrl"
+    transformControls:
+      deps: ["three"]
     detector: 
       exports : "Detector"
     stats:
@@ -156,6 +156,47 @@ require.config
     utils: 
       deps:    ["jquery"]
       exports : "normalizeEvent"
+    ObjectExport:
+      deps:["three","GeometryExporter","MaterialExporter"]  
+    GeometryExporter:
+      deps:["three"]
+    MaterialExporter:
+      deps:["three"]
+    
+    ObjectParser:
+      deps:["three"]
+      
+    
+    CopyShader:
+      deps:    ["three"]
+    EffectComposer:
+      deps:    ["CopyShader","ShaderPass","RenderPass"]
+    RenderPass:
+      deps:    ["CopyShader"]
+    ShaderPass:
+      deps:    ["CopyShader"]
+    DotScreenShader:
+      deps:    ["CopyShader"]
+    BrightnessContrastShader:
+      deps:    ["CopyShader"]
+    DotScreenPass :
+      deps:    ["CopyShader","DotScreenShader"]
+    FXAAShader :
+      deps:["CopyShader"] 
+    EdgeShader:
+      deps:["CopyShader"] 
+    EdgeShader2:
+      deps:["CopyShader"] 
+    VignetteShader:
+      deps:["CopyShader"]
+    BlendShader:
+      deps:["three"]
+    AdditiveBlendShader:
+      deps:["three"]
+      
+      
+      
+      
     jquery_ui:
       deps:    ["jquery"]
       exports : "jquery_ui"   
@@ -178,3 +219,9 @@ require.config
       exports : "Github"
     XMLWriter:
       exports: "XMLWriter"
+    
+    jszip:
+      exports:"jszip"
+    "jszip-deflate":
+      deps:["jszip"]
+      

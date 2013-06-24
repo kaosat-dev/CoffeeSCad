@@ -178,6 +178,7 @@ define (require) ->
       three_geometry.computeBoundingBox()
       three_geometry.computeCentroids()
       three_geometry.computeFaceNormals();
+      three_geometry.computeBoundingSphere()
       #three_geometry.computeVertexNormals();
       
       connectors = []
@@ -211,7 +212,7 @@ define (require) ->
             ###
             searchForConnectors(prop)
       
-      searchForConnectors(properties)
+      #searchForConnectors(properties)
       three_geometry.connectors  = connectors
       #console.log "resulting three.geometry"
       #console.log three_geometry

@@ -16,8 +16,6 @@ define (require)->
  
   class CodeEditor extends Backbone.Marionette.Application
     title: "CodeEditor"
-    regions:
-      mainRegion: "#code"
     
     constructor:(options)->
       super options
@@ -28,7 +26,11 @@ define (require)->
       @router = new CodeEditorRouter
         controller: @
       
-      @icon = "icon-text-width" #TODO: should this be here? in the settings?
+      #TODO: should this be here? in the settings?
+      @startWithParent = true
+      @showOnAppStart = true
+      @addMainMenuIcon = true
+      @icon = "icon-code" 
         
       @vent.on("project:loaded",@resetEditor)
       @vent.on("project:created",@resetEditor)
@@ -48,36 +50,40 @@ define (require)->
         
     onStart:()=>
       @settings = @appSettings.get("CodeEditor")
-      @showView()
+      if @showOnAppStart
+        @showView()
       
     showView:=>
-      if @dia?
-        @dia.close()
-      @dia = new DialogView({elName:"codeEdit", title: "CodeEditor", width:450, height:250,position:[25,125],dockable:true})
-      @dia.render()
+      if not @dia?
+        #@dia.close()
+        @dia = new DialogView({elName:"codeEdit", title: "CodeEditor", width:450, height:250,position:[25,125],dockable:true})
+        @dia.render()
       
-      @codeEditorView = new CodeEditorView 
-        model:    @project
-        settings: @settings
-      
-      @dia.show(@codeEditorView)
-      
+      if not @codeEditorView?
+        @codeEditorView = new CodeEditorView 
+          model:    @project
+          settings: @settings
+      if not @dia.currentView?    
+        @dia.show(@codeEditorView)
+      else
+        @dia.showDialog()
       #Setup keyBindings
       ### 
       $(document).bind('keydown', 'ctrl+a', (event)->
         console.log "I WANT TO SAVE"
         )
       ###
+    hideView:=>
+      @dia.hideDialog()
+      
     resetEditor:(newProject)=>
       console.log "resetting code editor"
-      @dia.hide()
-      @codeEditorView.close()
-      
       @project = newProject
-      @codeEditorView = new CodeEditorView 
-        model:    @project
-        settings: @settings
       
-      @dia.show(@codeEditorView)
+      if @dia?
+        @dia.close()
+        @codeEditorView = null
+      if @showOnAppStart
+        @showView()
   
   return CodeEditor

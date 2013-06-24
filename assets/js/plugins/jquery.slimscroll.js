@@ -2,7 +2,7 @@
  * Dual licensed under the MIT (http://www.opensource.org/licenses/mit-license.php)
  * and GPL (http://www.opensource.org/licenses/gpl-license.php) licenses.
  *
- * Version: 1.0.6
+ * Version: 1.1.1
  *
  */
 (function($) {
@@ -11,25 +11,65 @@
     slimScroll: function(options) {
 
       var defaults = {
-        wheelStep : 20,
+
+        // width in pixels of the visible scroll area
         width : 'auto',
+
+        // height in pixels of the visible scroll area
         height : '250px',
+
+        // width in pixels of the scrollbar and rail
         size : '7px',
+
+        // scrollbar color, accepts any hex/color value
         color: '#000',
+
+        // scrollbar position - left/right
         position : 'right',
+
+        // distance in pixels between the side edge and the scrollbar
         distance : '1px',
+
+        // default scroll position on load - top / bottom / $('selector')
         start : 'top',
+
+        // sets scrollbar opacity
         opacity : .4,
+
+        // enables always-on mode for the scrollbar
         alwaysVisible : false,
+
+        // check if we should hide the scrollbar when user is hovering over
         disableFadeOut: false,
+
+        // sets visibility of the rail
         railVisible : false,
+
+        // sets rail color
         railColor : '#333',
-        railOpacity : '0.2',
+
+        // sets rail opacity
+        railOpacity : .2,
+
+        // whether  we should use jQuery UI Draggable to enable bar dragging
+        railDraggable : true,
+
+        // defautlt CSS class of the slimscroll rail
         railClass : 'slimScrollRail',
+
+        // defautlt CSS class of the slimscroll bar
         barClass : 'slimScrollBar',
+
+        // defautlt CSS class of the slimscroll wrapper
         wrapperClass : 'slimScrollDiv',
+
+        // check if mousewheel should scroll the window if we reach top/bottom
         allowPageScroll : false,
-        scroll : 0,
+
+        // scroll amount applied to each mouse wheel step
+        wheelStep : 20,
+
+        // scroll amount applied when user is using gestures
         touchScrollStep : 200
       };
 
@@ -48,20 +88,29 @@
         var me = $(this);
 
         // ensure we are not binding it again
-        if (me.parent().hasClass('slimScrollDiv'))
+        if (me.parent().hasClass(o.wrapperClass))
         {
             // start from last bar position
             var offset = me.scrollTop();
 
             // find bar and rail
-            bar = me.parent().find('.slimScrollBar');
-            rail = me.parent().find('.slimScrollRail');
+            bar = me.parent().find('.' + o.barClass);
+            rail = me.parent().find('.' + o.railClass);
 
             getBarHeight();
 
             // check if we should scroll existing instance
-            if (options)
+            if ($.isPlainObject(options))
             {
+              // Pass height: auto to an existing slimscroll object to force a resize after contents have changed
+              if ( 'height' in options && options.height == 'auto' ) {
+                me.parent().css('height', 'auto');
+                me.css('height', 'auto');
+                var height = me.parent().parent().innerHeight();
+                me.parent().css('height', height);
+                me.css('height', height);
+              }
+
               if ('scrollTo' in options)
               {
                 // jump to a static point
@@ -71,6 +120,14 @@
               {
                 // jump by value pixels
                 offset += parseInt(o.scrollBy);
+              }
+              else if ('destroy' in options)
+              {
+                // remove slimscroll elements
+                bar.remove();
+                rail.remove();
+                me.unwrap();
+                return;
               }
 
               // scroll content by the given offset
@@ -101,7 +158,7 @@
         });
 
         // create scrollbar rail
-        var rail  = $(divS)
+        var rail = $(divS)
           .addClass(o.railClass)
           .css({
             width: o.size,
@@ -145,17 +202,20 @@
         me.parent().append(rail);
 
         // make it draggable
-        bar.draggable({
-          axis: 'y',
-          containment: 'parent',
-          start: function() { isDragg = true; },
-          stop: function() { isDragg = false; hideBar(); },
-          drag: function(e)
-          {
-            // scroll content
-            scrollContent(0, $(this).position().top, false);
-          }
-        });
+        if (o.railDraggable)
+        {
+          bar.draggable({
+            axis: 'y',
+            containment: 'parent',
+            start: function() { isDragg = true; },
+            stop: function() { isDragg = false; hideBar(); },
+            drag: function(e)
+            {
+              // scroll content
+              scrollContent(0, $(this).position().top, false);
+            }
+          });
+        }
 
         // on rail over
         rail.hover(function(){
@@ -202,7 +262,29 @@
           }
         });
 
-        var _onWheel = function(e)
+        // check start position
+        if (o.start === 'bottom')
+        {
+          // scroll content to bottom
+          bar.css({ top: me.outerHeight() - bar.outerHeight() });
+          scrollContent(0, true);
+        }
+        else if (o.start !== 'top')
+        {
+          // assume jQuery selector
+          scrollContent($(o.start).position().top, null, true);
+
+          // make sure bar stays hidden
+          if (!o.alwaysVisible) { bar.hide(); }
+        }
+
+        // attach scroll events
+        attachWheel();
+
+        // set up initial height
+        getBarHeight();
+
+        function _onWheel(e)
         {
           // use mouse wheel only when mouse is over
           if (!isOverPanel) { return; }
@@ -213,8 +295,11 @@
           if (e.wheelDelta) { delta = -e.wheelDelta/120; }
           if (e.detail) { delta = e.detail / 3; }
 
-          // scroll content
-          scrollContent(delta, true);
+          var target = e.target || e.srcTarget;
+          if ($(target).closest('.' + o.wrapperClass).is(me.parent())) {
+            // scroll content
+            scrollContent(delta, true);
+          }
 
           // stop window scroll
           if (e.preventDefault && !releaseScroll) { e.preventDefault(); }
@@ -233,6 +318,12 @@
 
             // move bar, make sure it doesn't go out
             delta = Math.min(Math.max(delta, 0), maxTop);
+
+            // if scrolling down, make sure a fractional change to the
+            // scroll position isn't rounded away when the scrollbar's CSS is set
+            // this flooring of delta would happened automatically when
+            // bar.css is set below, but we floor here for clarity
+            delta = (y > 0) ? Math.ceil(delta) : Math.floor(delta);
 
             // scroll the scrollbar
             bar.css({ top: delta + 'px' });
@@ -253,6 +344,9 @@
           // scroll content
           me.scrollTop(delta);
 
+          // fire scrolling event
+          me.trigger('slimscrolling', ~~delta);
+
           // ensure bar is visible
           showBar();
 
@@ -260,7 +354,7 @@
           hideBar();
         }
 
-        var attachWheel = function()
+        function attachWheel()
         {
           if (window.addEventListener)
           {
@@ -273,18 +367,16 @@
           }
         }
 
-        // attach scroll events
-        attachWheel();
-
         function getBarHeight()
         {
           // calculate scrollbar height and make sure it is not too small
           barHeight = Math.max((me.outerHeight() / me[0].scrollHeight) * me.outerHeight(), minBarHeight);
           bar.css({ height: barHeight + 'px' });
-        }
 
-        // set up initial height
-        getBarHeight();
+          // hide scrollbar if content is not long enough
+          var display = barHeight == me.outerHeight() ? 'none' : 'block';
+          bar.css({ display: display });
+        }
 
         function showBar()
         {
@@ -293,7 +385,7 @@
           clearTimeout(queueHide);
 
           // when bar reached top or bottom
-          if (percentScroll == ~~ percentScroll)
+          if (percentScroll == ~~percentScroll)
           {
             //release wheel
             releaseScroll = o.allowPageScroll;
@@ -332,21 +424,6 @@
           }
         }
 
-        // check start position
-        if (o.start == 'bottom')
-        {
-          // scroll content to bottom
-          bar.css({ top: me.outerHeight() - bar.outerHeight() });
-          scrollContent(0, true);
-        }
-        else if (typeof o.start == 'object')
-        {
-          // scroll content
-          scrollContent($(o.start).position().top, null, true);
-
-          // make sure bar stays hidden
-          if (!o.alwaysVisible) { bar.hide(); }
-        }
       });
 
       // maintain chainability

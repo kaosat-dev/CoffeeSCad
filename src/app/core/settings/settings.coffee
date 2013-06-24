@@ -59,7 +59,7 @@ define (require)->
       
   class GeneralSettings extends Backbone.Model
     attributeNames: ['name', 'csgCompileMode','csgCompileDelay','csgBackgroundProcessing',
-    'autoReloadLastProject','autoSave','autoSaveFrequency']
+    'displayEventNotifications','autoReloadLastProject','autoSave','autoSaveFrequency']
     buildProperties @
     
     idAttribute: 'name'
@@ -75,7 +75,10 @@ define (require)->
       autoSave: false
       autoSaveFrequency: 30
       
+      language: "english"
       theme: "default"
+      displayEventNotifications: true
+      
       
     constructor:(options)->
       super options

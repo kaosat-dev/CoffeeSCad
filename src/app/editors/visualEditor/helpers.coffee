@@ -11,11 +11,12 @@ define (require) ->
     drawText:(text, displaySize)=>
       canvas = document.createElement('canvas')
       size = 256
+      displaysize = 256
       displaySize = displaySize or size
       canvas.width = size
       canvas.height = size
       context = canvas.getContext('2d')
-      context.font = "17px sans-serif"
+      context.font = "30px sans-serif"
       context.textAlign = 'center'
       context.fillStyle = @textColor
       context.fillText(text, canvas.width/2, canvas.height/2)
@@ -25,11 +26,13 @@ define (require) ->
       
       texture = new THREE.Texture(canvas)
       texture.needsUpdate = true
+      texture.magFilter = THREE.NearestMipMapLinearFilter
+      texture.minFilter = THREE.NearestMipMapLinearFilter
       
       spriteMaterial = new THREE.SpriteMaterial
          map: texture
          transparent:true
-         alphaTest: 0.5
+         alphaTest: 0.6
          #alignment: THREE.SpriteAlignment.topLeft,
          useScreenCoordinates: false
          scaleByViewport:false
@@ -55,14 +58,16 @@ define (require) ->
       
       texture = new THREE.Texture(canvas)
       texture.needsUpdate = true
-      texture.generateMipmaps = false
+      texture.generateMipmaps = true
       texture.magFilter = THREE.LinearFilter
       texture.minFilter = THREE.LinearFilter
+      #texture.anisotropy = 32
       
       material = new THREE.MeshBasicMaterial
         map: texture
         transparent: true 
         color: 0xffffff
+        alphaTest: 0.2
       
       plane = new THREE.Mesh(new THREE.PlaneGeometry(size/8, size/8),material)
       plane.doubleSided = true
@@ -332,8 +337,6 @@ define (require) ->
       defaults = {mesh:null,color:0xFFFFFF,textColor:"#FFFFFF",addLabels:true}
       options = merge defaults, options
       {mesh, @color, @textColor,@addLabels} = options
-      console.log @size, @step, @color, @opacity
-      
       color = new THREE.Color().setHex(@color)
       #attempt to draw bounding box
       try
@@ -394,16 +397,275 @@ define (require) ->
         selectionAxis.position = mesh.position
         #selectionAxis.matrixAutoUpdate = false
         
-        cage.add selectionAxis
+        #cage.add selectionAxis
         #mesh.material.side= THREE.BackSide
         #widthArrow.material.side = THREE.FrontSide
         
+        cage.name = "boundingCage"
         cage.add widthArrow
         cage.add lengthArrow
         cage.add heightArrow
         
         mesh.cage = cage
         mesh.add cage
+        
       catch error
+  
+  
+  class SelectionHelper extends BaseHelper
+    #Helper to detect intersection with mouse /touch position (hover and click) and apply effect  
+    constructor:(options)->
+      super options
+      defaults = {hiearchyRoot:null,renderCallback:null, camera :null ,viewWidth:640, viewHeight:480}
+      options = merge defaults, options
+      {@hiearchyRoot, @renderCallback, @camera, @viewWidth, @viewHeight} = options
+      @options = options
+      @currentHover = null
+      @currentSelect = null
+      @selectionColor = 0xCC8888
+      @projector = new THREE.Projector()
+    
+    _onHover:(selection)=>
+      #console.log "currentHover", selection
+      if selection?
+        @currentHover = selection
+        #selection.currentHoverHex = selection.material.color.getHex()
+        #selection.material.color.setHex( @selectionColor )
+        
+        
+        if not (selection.hoverOutline?) and not (selection.outline?) and not (selection.name is "hoverOutline") and not (selection.name is "boundingCage")
+          outlineMaterial = new THREE.MeshBasicMaterial( { color: 0xffc200, side: THREE.BackSide } )
+          outline = new THREE.Mesh( selection.geometry.clone(), outlineMaterial )
+          #outline.position = selection.position
+          outline.scale.multiplyScalar(1.03)
+          outline.name = "hoverOutline"
+          selection.hoverOutline = outline
+          selection.add( outline )
+        
+        @renderCallback()
+      
+    _unHover:=>
+      if @currentHover
+        #@currentHover.material.color.setHex( @currentHover.currentHoverHex )
+        
+        
+        if @currentHover.hoverOutline?
+          @currentHover.remove(@currentHover.hoverOutline)
+          @currentHover.hoverOutline = null
+        
+        @currentHover = null
+        
+        @renderCallback()
+    
+    _onSelect:(selection)=>
+      #console.log "currentSelect", selection
+      @_unHover()
+      @currentSelect = selection
+      new BoundingCage({mesh:selection,color:@options.color,textColor:@options.textColor})
+      #selection.currentSelectHex = selection.material.color.getHex()
+      #selection.material.color.setHex( @selectionColor )
+      
+      outlineMaterial = new THREE.MeshBasicMaterial( { color: 0xffc200, side: THREE.BackSide } )
+      outline = new THREE.Mesh( selection.geometry.clone(), outlineMaterial )
+      #outline.position = selection.position
+      outline.scale.multiplyScalar(1.03)
+      selection.outline = outline
+      selection.add( outline )
+      
+      @renderCallback()
+      
+    _unSelect:=>
+      if @currentSelect
+        selection = @currentSelect
+        #selection.material.color.setHex( selection.currentSelectHex )
+        selection.remove(selection.cage)
+        selection.remove(selection.outline)
+        selection.cage = null
+        selection.outline =null
+        @currentSelect = null
+        @renderCallback()
+      #@currentHover.material = @currentHover.origMaterial if @currentHover.origMaterial
+      ###
+            newMat = new  THREE.MeshLambertMaterial
+                color: 0xCC0000
+            @currentHover.origMaterial = @currentHover.material
+            @currentHover.material = newMat
+            ###
+            
+    _get3DBB:(object)=>
+      #shorthand to get object bounding box
+      if object?
+        if object.geometry?
+          if object.geometry.boundingBox?
+            return object.geometry.boundingBox
+          else
+            object.geometry.computeBoundingBox()
+            return object.geometry.boundingBox
+      return null
+              
+    get2DBB:(object,width,height)=>
+      #get the 2d (screen) bounding box of 3d object
+      if object?
+        bbox3d = @_get3DBB(object)
+        min3d = bbox3d.min.clone()
+        max3d = bbox3d.max.clone()
+        
+        objLength = bbox3d.max.x-bbox3d.min.x
+        objWidth  = bbox3d.max.y-bbox3d.min.y
+        objHeight = bbox3d.max.z-bbox3d.min.z
+        
+        
+        pMin = @projector.projectVector(min3d, @camera) #projectedMin
+        pMax = @projector.projectVector(max3d, @camera) #projectedMax
+      
+        minPercX = (pMin.x + 1) / 2
+        minPercY = (-pMin.y + 1) / 2
+        # scale these values to our viewport size
+        minLeft = minPercX * width
+        minTop = minPercY * height
+        
+        maxPercX = (pMax.x + 1) / 2
+        maxPercY = (-pMax.y + 1) / 2
+        # scale these values to our viewport size
+        maxLeft = maxPercX * width
+        maxTop = maxPercY * height
+        
+        #console.log "min3d",min3d,"pMin",pMin,"max3d", max3d,"pMax" ,pMax
+        #,centerX,centerY
+        pos = object.position.clone()
+        pos = @projector.projectVector(pos, @camera) #projectedMin
+        centerPercX = (pos.x + 1) / 2
+        centerPercY = (-pos.y + 1) / 2
+        centerLeft = centerPercX * width
+        centerTop = centerPercY * height
+        
+        
+        #result = [minLeft, minTop, maxLeft, maxTop, centerLeft,centerTop]
+        result = [centerLeft,centerTop,objLength,objWidth,objHeight]
+        #console.log "selection positions",result
+        return result
+        
+   
+    selectObjectAt:(x,y)=>
+      v = new THREE.Vector3((x/@viewWidth)*2-1, -(y/@viewHeight)*2+1, 0.5)
+      @projector.unprojectVector(v, @camera)
+      raycaster = new THREE.Raycaster(@camera.position, v.sub(@camera.position).normalize())
+      intersects = raycaster.intersectObjects(@hiearchyRoot, true )
+      
+      if intersects.length > 0
+        if intersects[0].object != @currentSelect
+          @_unSelect()
+          @_onSelect(intersects[0].object)
+          return @currentSelect
+      else if @currentSelect?
+        return @currentSelect
+      else
+        @_unSelect()
+    
+    highlightObjectAt:(x,y)=>
+      v = new THREE.Vector3((x/@viewWidth)*2-1, -(y/@viewHeight)*2+1, 0.5)
+      @projector.unprojectVector(v, @camera)
+      raycaster = new THREE.Raycaster(@camera.position, v.sub(@camera.position).normalize())
+      intersects = raycaster.intersectObjects(@hiearchyRoot, true )
+      
+      if intersects.length > 0
+        if intersects[0].object != @currentHover
+          if intersects[0].object.name != "workplane"
+            @_unHover()
+            @_onHover(intersects[0].object)
+      else
+        @_unHover()
+    
+   
+  captureScreen=(domElement, width=600, height=600)->
+    # Save screenshot of 3d view
+    if not domElement
+      throw new Error("Cannot Do screeshot without canvas domElement")
+    #resizing
+    srcImg = domElement.toDataURL("image/png")
+    #canvas = document.createElement("canvas")
+    #canvas.width = width
+    #canvas.height = height
+    #ctx = canvas.getContext('2d')
+    #imgAsDataURL =null
+    d = $.Deferred()
+    
+    _aspectResize = (srcUrl, dstW, dstH) =>
+      #taken from THREE.x by Jerome Etienne
+      ### 
+      resize an image to another resolution while preserving aspect
+     
+      @param {String} srcUrl the url of the image to resize
+      @param {Number} dstWidth the destination width of the image
+      @param {Number} dstHeight the destination height of the image
+      @param {Number} callback the callback to notify once completed with callback(newImageUrl)
+      ###
+    
+      cpuScaleAspect = (maxW, maxH, curW, curH)->
+        ratio = curH / curW
+        if( curW >= maxW and ratio <= 1 )
+          curW  = maxW
+          curH  = maxW * ratio
+        else if(curH >= maxH)
+          curH  = maxH
+          curW  = maxH / ratio
+        return { width: curW, height: curH }
+    
+      onLoad = =>
+        canvas  = document.createElement('canvas')
+        canvas.width  = dstW
+        canvas.height = dstH
+        ctx   = canvas.getContext('2d')
+  
+        #ctx.fillStyle = "black";
+        #ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+        # scale the image while preserving the aspect
+        scaled  = cpuScaleAspect(canvas.width, canvas.height, img.width, img.height)
+  
+        # actually draw the image on canvas
+        offsetX = (canvas.width  - scaled.width )/2
+        offsetY = (canvas.height - scaled.height)/2
+        ctx.drawImage(img, offsetX, offsetY, scaled.width, scaled.height)
+  
+        #dump the canvas to an URL    
+        mimetype  = "image/png"
+        newDataUrl  = canvas.toDataURL(mimetype)
+        d.resolve(newDataUrl)
+    
+    
+      img = new Image()
+      img.onload = onLoad
+      ###.onload = ()=> 
+        ctx.drawImage(img, 0,0,width, height)
+        imgAsDataURL = canvas.toDataURL("image/png")
+        d.resolve(imgAsDataURL)###
+      img.src = srcUrl
+      
+    _aspectResize( srcImg, width, height)
+    return d
+  
+  geometryToline=( geo )->
+    # credit to WestLangley!
+    geometry = new THREE.Geometry()
+    vertices = geometry.vertices;
 
-  return {"LabeledAxes":LabeledAxes, "Arrow":Arrow, "Grid":Grid, "BoundingCage":BoundingCage}
+    for i in [0...geo.faces.length]
+      face = geo.faces[i]
+      if face instanceof THREE.Face3
+        a = geo.vertices[ face.a ].clone()
+        b = geo.vertices[ face.b ].clone()
+        c = geo.vertices[ face.c ].clone()
+        vertices.push( a,b, b,c, c,a )
+      else if face instanceof THREE.Face4
+        a = geo.vertices[ face.a ].clone()
+        b = geo.vertices[ face.b ].clone()
+        c = geo.vertices[ face.c ].clone()
+        d = geo.vertices[ face.d ].clone()
+        vertices.push( a,b, b,c, c,d, d,a )
+
+    geometry.computeLineDistances()
+    return geometry
+      
+
+  return {"LabeledAxes":LabeledAxes, "Arrow":Arrow, "Grid":Grid, "BoundingCage":BoundingCage, "SelectionHelper":SelectionHelper, "captureScreen":captureScreen, "geometryToline":geometryToline}

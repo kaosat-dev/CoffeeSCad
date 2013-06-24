@@ -7,7 +7,7 @@ define (require)->
   require 'bootbox'
   require 'notify'
   
-  vent = require 'core/messaging/appVent'
+  appVent = require 'core/messaging/appVent'
   
   mainMenuMasterTemplate = require "text!core/mainMenu.tmpl"
   
@@ -19,7 +19,7 @@ define (require)->
     el: $("#header")
     template: mainMenuTemplate
     regions:
-      recentProjects:   "#recentProjects"
+      recentsStub:   "#recentProjects"
       examplesStub:         "#examples"
       exportersStub:        "#exporters"
     
@@ -28,51 +28,54 @@ define (require)->
       storesStub: "#stores"
       
     events:
-      "click .newProject":    ()->vent.trigger("project:new")
-      "click .newFile":       ()->vent.trigger("project:file:new")
-      "click .saveProjectAs": ()->vent.trigger("project:saveAs")
-      "click .saveProject":   ()->vent.trigger("project:save")
-      "click .loadProject":   ()->vent.trigger("project:load")
-      "click .deleteProject": ()->vent.trigger("project:delete")
+      "click .newProject":    ()->appVent.trigger("project:new")
+      "click .newFile":       ()->appVent.trigger("project:file:new")
+      "click .saveProjectAs": ()->appVent.trigger("project:saveAs")
+      "click .saveProject":   ()->appVent.trigger("project:save")
+      "click .loadProject":   ()->appVent.trigger("project:load")
+      "click .deleteProject": ()->appVent.trigger("project:delete")
       "click .undo":          "onUndoClicked"
       "click .redo":          "onRedoClicked"
       
-      "click .settings":      ()->vent.trigger("settings:show")
-      "click .showEditor":    ()->vent.trigger("codeEditor:show")
+      "click .settings":      ()->appVent.trigger("settings:show")
+      "click .showEditor":    ()->appVent.trigger("codeEditor:show")
       
-      "click .compileProject"  : ()->vent.trigger("project:compile")
+      "click .compileProject"  : ()->appVent.trigger("project:compile")
       
-      "click .geometryCreator" : ()->vent.trigger("geometryEditor:show")
+      "click .geometryCreator" : ()->appVent.trigger("geometryEditor:show")
       
       "click .about" : "showAbout"
   
     constructor:(options)->
       super options
-      @vent = vent
+      @appVent = appVent
       
       @editors = {}
       @stores= options.stores ? {}
       @exporters= options.exporters ? {}
+      @settings = options.settings
       
       #TODO: move this to data binding
-      @vent.on("file:undoAvailable", @_onUndoAvailable)
-      @vent.on("file:redoAvailable", @_onRedoAvailable)
-      @vent.on("file:undoUnAvailable", @_onNoUndoAvailable)
-      @vent.on("file:redoUnAvailable", @_onNoRedoAvailable)
-      @vent.on("clearUndoRedo", @_clearUndoRedo)
+      @appVent.on("file:undoAvailable", @_onUndoAvailable)
+      @appVent.on("file:redoAvailable", @_onRedoAvailable)
+      @appVent.on("file:undoUnAvailable", @_onNoUndoAvailable)
+      @appVent.on("file:redoUnAvailable", @_onNoRedoAvailable)
+      @appVent.on("clearUndoRedo", @_clearUndoRedo)
         
-      @vent.on("notify",@onNotificationRequested)
-      @vent.on("project:loaded",()=>@_onNotificationRequested("Project:loaded"))
-      @vent.on("project:saved",()=>@_onNotificationRequested("Project:saved"))
-      @vent.on("project:autoSaved",()=>@_onNotificationRequested("Project:autosave"))
-      @vent.on("project:compiled",()=>@_onNotificationRequested("Project:compiled"))
-      @vent.on("project:compile:error",()=>@_onNotificationRequested("Project:compile ERROR check console for details!"))
-      @vent.on("project:loaded", @onProjectLoaded)
+      @appVent.on("notify",@onNotificationRequested)
+      @appVent.on("project:loaded",()=>@_onNotificationRequested("Project:loaded"))
+      @appVent.on("project:saved",()=>@_onNotificationRequested("Project:saved"))
+      @appVent.on("project:autoSaved",()=>@_onNotificationRequested("Project:autosave"))
+      @appVent.on("project:compiled",()=>@_onNotificationRequested("Project:compiled"))
+      @appVent.on("project:compile:error",()=>@_onNotificationRequested("Project:compile ERROR check console for details!"))
       
-      @vent.on("app:started",@_onSubAppStarted)
+      
+      @appVent.on("app:started",@_onSubAppStarted)
     
     _onNotificationRequested:(message)=>
-      $('.notifications').notify(message: { text:message },fadeOut:{enabled:true, delay: 1000 }).show()
+      console.log "bla",@settings.get("General").displayEventNotifications
+      if @settings.get("General").displayEventNotifications
+        $('.notifications').notify(message: { text:message },fadeOut:{enabled:true, delay: 1000 }).show()
       
     _clearUndoRedo:=>
       $('#undoBtn').addClass("disabled")
@@ -86,31 +89,30 @@ define (require)->
     _onNoRedoAvailable:=>
       $('#redoBtn').addClass("disabled")
     
-    
     _onSubAppStarted:(title,subApp)=>
       #console.log "#{title} started",subApp
-      title = subApp.title
-      icon = subApp.icon
-      
-      if not title of @editors
-        @editors[title]=subApp
-      
-      className = "open#{title[0].toUpperCase() + title[1..-1]}"
-      subAppEl = """<li><a id="#{title}Btn" href="#" rel="tooltip" title="Open #{title}" class=#{className}><i class="#{icon}"></i></a></li>"""
-      $(subAppEl).insertAfter('#editorsMarker')
-      
-      event = "#{title}:show"
-      @events["click .#{className}"] = do(event)-> ->@vent.trigger(event)
-      
-      @delegateEvents()
-      
+      if subApp.addMainMenuIcon
+        title = subApp.title
+        icon = subApp.icon
+        
+        if not title of @editors
+          @editors[title]=subApp
+        
+        className = "open#{title[0].toUpperCase() + title[1..-1]}"
+        subAppEl = """<li><a id="#{title}Btn" href="#" rel="tooltip" title="Open #{title}" class=#{className}><i class="#{icon}"></i></a></li>"""
+        $(subAppEl).insertAfter('#editorsMarker')
+        
+        event = "#{title}:show"
+        @events["click .#{className}"] = do(event)-> ->@appVent.trigger(event)
+        
+        @delegateEvents()
     
     _addExporterEntries:=>
       #add exporter entries to menu, and their event handlers
       for index, exporterName of @exporters
          className = "start#{index[0].toUpperCase() + index[1..-1]}Exporter"
          event = "#{index}Exporter:start"
-         @events["click .#{className}"] = do(event)-> ->@vent.trigger(event)
+         @events["click .#{className}"] = do(event)-> ->@appVent.trigger(event)
          #see http://www.mennovanslooten.nl/blog/post/62 and http://rzrsharp.net/2011/06/27/what-does-coffeescripts-do-do.html
          #for more explanation (or lookup "anonymous functions inside loops")
          @ui.exportersStub.append("<li ><a href='#' class='#{className}'>#{index}</li>") 
@@ -121,11 +123,11 @@ define (require)->
          if store.isLogginRequired
            loginClassName = "login#{index[0].toUpperCase() + index[1..-1]}"
            loginEvent = "#{index}Store:login"
-           @events["click .#{loginClassName}"] = do(loginEvent)-> ->@vent.trigger(loginEvent)
+           @events["click .#{loginClassName}"] = do(loginEvent)-> ->@appVent.trigger(loginEvent)
            
            logoutClassName = "logout#{index[0].toUpperCase() + index[1..-1]}"
            logoutEvent = "#{index}Store:logout"
-           @events["click .#{logoutClassName}"] = do(logoutEvent)-> ->@vent.trigger(logoutEvent)
+           @events["click .#{logoutClassName}"] = do(logoutEvent)-> ->@appVent.trigger(logoutEvent)
            
            do(index)=>
              onLoggedIn=()=>
@@ -145,8 +147,8 @@ define (require)->
                .show()
                $(selector).replaceWith("<li id='#{loginClassName}' ><a href='#' class='#{loginClassName}'><i class='icon-signin' style='color:red'/>  #{index} - Signed out</a></li>")
              
-             @vent.on("#{index}Store:loggedIn",()->onLoggedIn())
-             @vent.on("#{index}Store:loggedOut",()->onLoggedOut())
+             @appVent.on("#{index}Store:loggedIn",()->onLoggedIn())
+             @appVent.on("#{index}Store:loggedOut",()->onLoggedOut())
            
            @ui.storesStub.append("<li id='#{loginClassName}'><a href='#' class='#{loginClassName}'><i class='icon-signin' style='color:red'/>  #{index} - Signed Out</a></li>") 
     
@@ -157,15 +159,16 @@ define (require)->
       @delegateEvents()
       
       @examplesStub.show( new ExamplesView())
+      #@recentsStub.show (new RecentFilesView())
     
     onRedoClicked:=>
       if not ($('#redoBtn').hasClass("disabled"))
-        @vent.trigger("file:redoRequest")
+        @appVent.trigger("file:redoRequest")
     
     onUndoClicked:->
       if not ($('#undoBtn').hasClass("disabled"))
         console.log "triggering undo Request"
-        @vent.trigger("file:undoRequest")
+        @appVent.trigger("file:undoRequest")
     
     _fetchFiles:=>
       #just experimenting
@@ -177,7 +180,7 @@ define (require)->
         console.log data
         
     showAbout:(ev)=>
-      bootbox.dialog """<b>Coffeescad v0.321</b> (pre-alpha)<br/><br/>
+      bootbox.dialog """<b>Coffeescad v0.324</b> (pre-alpha)<br/><br/>
       Licenced under the MIT Licence<br/>
       @2012-2013 by Mark 'kaosat-dev' Moissette
       """, [
@@ -195,15 +198,38 @@ define (require)->
     onRender:()=>
       @$el.attr("id",@model.name)
   
-  class RecentFilesView extends Backbone.Marionette.ItemView
+  class RecentFilesView extends Backbone.Marionette.CollectionView
+    tagName:  "ul"
+    className: "dropdown-menu recentProjects"
+    itemView:RecentFileView
+    
+    constructor:(options)->
+      options = options or {}
+      tmpCollection = new Backbone.Collection()
+      tmpCollection.add {name:"toto"}
+      options.collection = tmpCollection
+      super options
+      @appVent = appVent
+      @appVent.on("project:saved", @_onProjectLoadedAndSaved)
+      @appVent.on("project:loaded", @_onProjectLoadedAndSaved)
+      
+    _onProjectLoadedAndSaved:(project)=>
+      console.log "save and load handler", project
+      console.log @collection
+      @collection.add(project)
+      
+    comparator: (project)->
+      date = new Date(project.lastModificationDate)
+      return date.getTime()
     
     
   class ExamplesView extends Backbone.Marionette.ItemView
-    tagName:  "li"
-    className: "dropdown-submenu examplesTree"
+    tagName:  "ul"
+    className: "dropdown-menu examplesTree"
       
     events:
       "click .example":          "onLoadExampleClicked"
+      "click":          "onLoadExampleClicked"
       
     constructor:(options)->
       super options
@@ -217,6 +243,7 @@ define (require)->
         @render()
     
     onLoadExampleClicked:(e)=>
+      console.log "example clicked"
       exampleFullPath = $(e.currentTarget).data("id")
       Project = require "core/projects/project"
       
@@ -239,7 +266,7 @@ define (require)->
       $.when.apply($, deferredList).done ()=>
         project._clearFlags()
         project.trigger("loaded")
-        vent.trigger("project:loaded",project) 
+        appVent.trigger("project:loaded",project) 
    
     render:()=>
       @isClosed = false
@@ -247,8 +274,11 @@ define (require)->
       @triggerMethod("item:before:render", @)
   
       rootEl = @_generateExamplesTree()
-      @$el.html("")
-      @$el.append(rootEl)
+      @$el.parent().append("""<a tabindex="-1" href="#"><i class="icon-fixed-width icon-list-ul"></i>Examples</a>""")
+      
+      insertRoot = @$el
+      $(rootEl).children("li").each (i) ->
+        insertRoot.append($(this))
       
       @bindUIElements()
       @triggerMethod("render", @)
@@ -263,9 +293,9 @@ define (require)->
           $obj = $('<a>').attr('href', "#").text(jsonObj.name)
           #is this a project?
           if "files" of jsonObj
-            $obj= $obj.prepend($("<i class='icon-file'></i>"))
+            $obj= $obj.prepend($("<i class='icon-fixed-width icon-file'></i>"))
           else
-            $obj= $obj.prepend($("<i class='icon-folder-open'></i>"))
+            $obj= $obj.prepend($("<i class='icon-fixed-width icon-folder-open'></i>"))
           $obj = $('<li>').append($obj)
           
         if jsonObj.length

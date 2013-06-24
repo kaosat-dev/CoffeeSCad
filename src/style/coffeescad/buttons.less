@@ -1,0 +1,17 @@
+
+// Core
+.btn {
+  &:hover,
+  &:focus {
+    color: @grayDark;
+    text-decoration: none;
+
+    // transition is only when going to hover/focus, otherwise the background
+    // behind the gradient (there for IE<=9 fallback) gets mismatched
+    .transition(background-color .1s linear);
+  }
+  // Focus state for keyboard and accessibility
+  &:focus {
+    .tab-focus();
+  }
+}

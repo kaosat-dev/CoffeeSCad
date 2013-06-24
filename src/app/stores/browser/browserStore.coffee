@@ -11,6 +11,12 @@ define (require)->
   
   Project = require 'core/projects/project'
   
+  #for zip dump
+  require 'jszip'
+  require 'jszip-deflate'
+  
+  #TODO: replace all getProjects name, files etc, with "readDirs etc", ie something closer to a file system manipulation
+  
   class BrowserLibrary extends Backbone.Collection
     """
     a library contains multiple projects, stored in localstorage (browser)
@@ -28,7 +34,7 @@ define (require)->
       
   
   class BrowserStore extends Backbone.Model
-    attributeNames: ['name', 'loggedIn']
+    attributeNames: ['name', 'loggedIn', 'isDataDumpAllowed']
     buildProperties @
     
     idAttribute: 'name'
@@ -37,6 +43,7 @@ define (require)->
       storeType: "browser"
       tooltip:"Store to localstorage (browser)"
       loggedIn: true
+      isDataDumpAllowed: true
     
     constructor:(options)->
       defaults = {storeURI:"projects"}
@@ -62,6 +69,9 @@ define (require)->
       #handler for project/file data fetch requests
       reqRes.addHandler("getbrowserFileOrProjectCode",@_sourceFetchHandler)
       
+      #check for any local storage issues, repair if necessary
+      @repair() 
+      
     login:=>
       console.log "browser logged in"
       @loggedIn = true
@@ -71,6 +81,42 @@ define (require)->
     
     authCheck:()->
     
+    repair:()->
+      #hack/fix in case project list got deleted
+      projectsList = localStorage.getItem(@storeURI)
+      if projectsList is null or projectsList == "" or projectsList == "null"
+        projectsList = @_getAllProjectsHelper()
+        localStorage.setItem(@storeURI, projectsList)
+    
+    dumpAllProjects:->
+      #dump all projects to a zip file
+      #TODO: add caching
+      
+      zip = new JSZip()
+      
+      #TODO: refactor
+      projectsList = localStorage.getItem("#{@storeURI}")
+      if projectsList
+        projectsList = projectsList.split(',')
+      else
+        projectsList = []
+          
+      for projectName in projectsList
+        try
+          files = @_getProjectFiles( projectName )
+          folder = zip.folder(projectName)
+          for fileName in files
+            fileContent = @_readFile(projectName, fileName)
+            folder.file(fileName, fileContent)
+        catch error
+
+      #zip.file("fileName", "fileContent")
+      dataType = "base64"#"blob"
+      content = zip.generate({compression:'DEFLATE'})
+      zipB64Url = "data:application/zip;#{dataType},"+content
+      
+      return zipB64Url
+        
     getProjectsName:(callback)=>
       try
         projectsList = localStorage.getItem("#{@storeURI}")
@@ -79,6 +125,8 @@ define (require)->
         else
           projectsList = []
         @projectsList = projectsList
+        
+        
         #kept for now
         ### 
         projectNames = []
@@ -86,6 +134,7 @@ define (require)->
           projectNames.push(model.id)
           @projectsList.push(model.id) 
         ### 
+        
         callback(@projectsList)
       catch error
         console.log "could not fetch projectsName from #{@name} because of error #{error}"
@@ -108,18 +157,14 @@ define (require)->
         #files = fileNames.split(',')
       d.resolve(fileNames)
       return d
+      
+    getThumbNail:(projectName)=>
+      deferred = $.Deferred()
+      file = @_readFile(projectName,".thumbnail.png")
+      #deferred.resolve(file.content)
+      deferred.resolve(file)
+      return deferred
         
-    saveProject_:(project, newName)=>
-      project.collection = null
-      @lib.add(project)
-      if newName?
-        project.name = newName
-      projectURI = "#{@storeURI}-#{newName}"
-      rootStoreURI = "#{projectURI}-files"
-      project.rootFolder.changeStorage("localStorage",new Backbone.LocalStorage(rootStoreURI))
-      project.save()
-      @vent.trigger("project:saved")  
-    
     saveProject:(project,newName)=>
       #experiment of saving projects withouth using backbone localstorage
       project.collection = null
@@ -151,7 +196,10 @@ define (require)->
         content =file.content
         filePath = "#{rootStoreURI}-#{name}"
         ext = name.split('.').pop()
+        #if ext != "png"
         localStorage.setItem(filePath,JSON.stringify(file.toJSON()))
+        #else
+        #  localStorage.setItem(filePath, file.content)
         filesList.push(file.name)
         file.trigger("save")
       
@@ -173,7 +221,7 @@ define (require)->
       
       localStorage.setItem(projectURI,strinfigiedProject)
       
-      @vent.trigger("project:saved")
+      @vent.trigger("project:saved",project)
       if firstSave
         project._clearFlags()
       project.trigger("save", project)
@@ -233,10 +281,6 @@ define (require)->
       project.rootFolder.changeStorage("localStorage",new Backbone.LocalStorage(rootStoreURI))
       
       onProjectLoaded=()=>
-        #remove old thumbnail
-        thumbNailFile = project.rootFolder.get(".thumbnail.png")
-        if thumbNailFile?
-          project.rootFolder.remove(thumbNailFile)
         project._clearFlags()
         project.trigger("loaded")
         #project.rootFolder.trigger("reset")
@@ -250,6 +294,12 @@ define (require)->
       fileNames = @_getProjectFiles(projectName)
       for fileName in fileNames
         content = @_readFile(projectName,fileName)
+        ### 
+        #remove old thumbnail
+        thumbNailFile = project.rootFolder.get(".thumbnail.png")
+        if thumbNailFile?
+          project.rootFolder.remove(thumbNailFile)
+        ###
         project.addFile
           content : content
           name : fileName
@@ -304,18 +354,19 @@ define (require)->
       if projects?
         projects = projects.split(',')
         index = projects.indexOf(projectName)
-        projects.splice(index, 1)
-        if projects.length>0 then projects=projects.join(',') else projects = ""
-        localStorage.setItem(@storeURI,projects)
-        index = @projectsList.indexOf(projectName)
-        @projectsList.splice(index, 1)
-        
-        console.log "projectName"
-        projectURI = "#{@storeURI}-#{projectName}"
-        rootStoreURI = "#{projectURI}-files"
-        
-        localStorage.removeItem(rootStoreURI)
-        localStorage.removeItem(projectURI)
+        if index != -1
+          projects.splice(index, 1)
+          if projects.length>0 then projects=projects.join(',') else projects = ""
+          localStorage.setItem(@storeURI,projects)
+          index = @projectsList.indexOf(projectName)
+          @projectsList.splice(index, 1)
+          
+          console.log "projectName"
+          projectURI = "#{@storeURI}-#{projectName}"
+          rootStoreURI = "#{projectURI}-files"
+          
+          localStorage.removeItem(rootStoreURI)
+          localStorage.removeItem(projectURI)
       
     _addToProjectsList:(projectName)=>
       projects = localStorage.getItem(@storeURI)
@@ -362,7 +413,7 @@ define (require)->
         fileUri = "#{filesURI}-#{fileName}"
         fileData = localStorage.getItem(fileUri)
         rawData = JSON.parse(fileData)
-        console.log "raw file Data", rawData
+        #console.log "raw file Data", rawData
         return rawData["content"]
       else
         throw new Error("no such file")
@@ -414,6 +465,24 @@ define (require)->
           deferred.resolve(result)
         @loadProject(projectName,true).done(getContent)
       
+    _getAllProjectsHelper:()->
+      #just a a temporary helper, as the projects List seems to have been cleared by accident?
+      projects = []
+      for item, key of localStorage
+        projData = item.split("-")
+        #console.log "projData",projData
+        if projData[0] is "projects"
+          projectName = projData[1]
+          if projectName?
+            if projectName not in projects
+              projects.push(projectName)
+      
+      projects = projects.join(",")
+      #console.log "projects",projects
+      return projects
+      #projectURI = "#{@storeURI}-#{projectName}"
+      #filesURI = "#{projectURI}-files"
+      #fileNames = localStorage.getItem(filesURI)
       
        
   return BrowserStore

@@ -1,0 +1,224 @@
+/*based on bootstrap modal*/
+//
+// Dialogs
+// --------------------------------------------------
+.dialog {
+  position:absolute;
+  top:100px;
+  left:150px;
+  height:auto;
+  z-index: @zindexDialog;
+  overflow: hidden;
+  width: 560px;
+  margin: 0px;
+  background-color: @white;
+  border: 1px solid #999;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  *border: 1px solid #999; /* IE6-7 */
+  .border-radius(@baseBorderRadius);
+  .box-shadow(0 3px 7px rgba(0,0,0,0.3));
+  .background-clip(padding-box);
+  // Remove focus outline from opened modal
+  outline: none;
+  /* IE6-7 */
+  -webkit-box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
+  -moz-box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
+  -webkit-background-clip: padding-box;
+  -moz-background-clip: padding-box;
+  background-clip: padding-box;
+  border-color:rgb(255, 194, 0);
+}
+
+.dialog-header {
+  padding: 5px;
+  border-bottom: 1px solid #eee;
+}
+.dialog-header .close {
+  margin-top: 1px;
+}
+.dialog-header .minimize {
+  margin-top: 1px;
+  font-size: 2.5em;
+  margin-right:3px;
+}
+
+.dialog-header h3 {
+  margin: 0;
+  line-height: 30px;
+}
+.dialog-header h5 {
+  margin: 0;
+  margin-left:2px;
+  line-height: 20px;
+}
+
+.dialog-header a:hover
+{
+  outline: none;
+  /*outline: 5px auto -webkit-focus-ring-color;*/
+  outline-offset: 0px;
+}
+
+.dialog-body {
+  overflow-y: auto;
+}
+
+.minimize {
+  float: right;
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 20px;
+  color: #000000;
+  text-shadow: 0 1px 0 #ffffff;
+  opacity: 0.2;
+  filter: alpha(opacity=20);
+}
+.minimize:hover {
+  color: #000000;
+  text-decoration: none;
+  cursor: pointer;
+  opacity: 0.4;
+  filter: alpha(opacity=40);
+}
+
+button.minimize {
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  -webkit-appearance: none;
+}
+
+
+.config {
+  float: right;
+  font-size: 20px;
+  font-weight: bold;
+  line-height: 20px;
+  color: #000000;
+  text-shadow: 0 1px 0 #ffffff;
+  opacity: 0.2;
+  filter: alpha(opacity=20);
+}
+.config:hover {
+  color: #000000;
+  text-decoration: none;
+  cursor: pointer;
+  opacity: 0.4;
+  filter: alpha(opacity=40);
+}
+
+button.config {
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  -webkit-appearance: none;
+}
+
+.dialog-header-icon
+{
+  padding-right: 5px;
+  padding-left: 2px;
+  float: right;
+    font-size: 13px;
+    font-weight: bold;
+    line-height: 20px;
+    color: #000000;
+    text-shadow: 0 1px 0 #ffffff;
+    opacity: 0.2;
+    filter: alpha(opacity=20);
+}
+.dialog-header-icon:hover {
+  color: #000000;
+  text-decoration: none;
+  cursor: pointer;
+  opacity: 0.4;
+  filter: alpha(opacity=40);
+}
+
+button.dialog-header-icon {
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  -webkit-appearance: none;
+}
+
+
+/*jquery ui*/
+.ui-dialog .ui-dialog-titlebar{
+  padding:0;
+}
+.ui-dialog .ui-dialog-content{
+  padding:0;
+}
+
+.ui-dialog
+{
+  background-color: @bodyBackground;
+  border: 1px solid rgba(0, 0, 0, 0.3);
+  color: @white ;
+  border-radius: @baseBorderRadius;
+}
+.ui-dialog-title
+{
+  color: #C8C8C8 !important;
+  border-color: @black;
+}
+.ui-dialog-titlebar
+{
+  border-color: @black;
+
+}
+.ui-dialog .ui-dialog-titlebar
+{
+  border-color: transparent !important;
+  /*padding:4em 0em;*/
+  
+}
+.ui-dialog-titlebar-close {
+  visibility: hidden;
+}
+.ui-dialog-content
+{
+  background-color:@bodyBackground;
+}
+
+.ui-resizable-handle
+{
+  background-color:@bodyBackground;
+}
+
+.ui-widget-content
+{
+  background: @dialogAndModalBackground;
+  padding:0.1em;
+}
+.ui-widget-header
+{
+  background:none;
+}
+
+.ui-widget-content a
+{
+  color:@linkColor;
+}
+
+#dialogRegion
+{
+  background-color:  @bodyBackground;
+  padding: 0px;
+}
+
+.ui-dialog .ui-dialog-titlebar-close .ui-state-hover
+{
+  color:#FF0000 !important;
+}
+
+ui-icon ui-icon-closethick .ui-state-hover
+{
+  color:#FF0000 !important;
+  background-color: #FF0000 !important;
+}

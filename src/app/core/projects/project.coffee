@@ -150,6 +150,14 @@ define (require)->
       @compiler.project = @
       return @compiler.compile(options)
     
+    injectContent:(content, fileName)=>
+      #add content (code to either the main, or a specific file)
+      if not fileName?
+        fileName = @rootFolder.get(@name+".coffee")
+      
+      file = @rootFolder.get(fileName)  
+      file.content += content
+    
     makeFileActive:(options)=>
       #set the currently active file (only one at a time)
       #you could argue that this is purely UI side, in fact it is not : events, adding data to the file etc should use the currently active

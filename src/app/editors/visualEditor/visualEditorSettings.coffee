@@ -4,7 +4,7 @@ define (require)->
 
 
   class VisualEditorSettings extends Backbone.Model
-    attributeNames: ['name','renderer','antialiasing','shadows','selfShadows',
+    attributeNames: ['name','renderer','antialiasing','shadows','shadowResolution','selfShadows',
     'showAxes','showConnectors','showGrid','gridSize','gridStep','gridColor','gridOpacity','gridText',
     'showStats','position','projection','objectViewMode','helpersColor','textColor','bgColor','bgColor2','axesSize']
     
@@ -19,6 +19,7 @@ define (require)->
       antialiasing : true
       
       shadows      : true
+      shadowResolution: "256x256"
       selfShadows  : false
       
       showAxes     : true
@@ -28,7 +29,7 @@ define (require)->
       showGrid     : true
       gridSize     : 200
       gridStep     : 10
-      gridColor    : "0xFFFFFF"
+      gridColor    : "0x00baff"
       gridOpacity  : 0.1
       gridText     : true
       gridNumberingPosition: 'center'
@@ -41,12 +42,12 @@ define (require)->
       objectViewMode : 'shaded'    
       
       
-      helpersColor : "0xFFFFFF"
-      textColor    : "#FFFFFF"     
+      helpersColor : "0x00baff"
+      textColor    : "#000000"     
       
-      bgColor      : "#363335"
-      bgColor2     : "#363335"
-      axesSize     : 80
+      bgColor      : "#FFFFFF"
+      bgColor2     : "#FFFFFF"
+      axesSize     : 100
       
     constructor:(options)->
       super options

@@ -1,0 +1,26 @@
+/*Visual Elements for drag and drop tracking on screen*/
+.circle {
+    background-color: rgba(0, 0139, 0139, 0.5);
+    -moz-border-radius:50%;
+    -webkit-border-radius: 50%;
+    border-radius:50%;
+    /*display: inline-block;*/
+    text-align: center;
+    line-height: 1;
+}
+
+.circle span {
+    display: block;
+    padding: 50%;
+    margin: -3em -50% 0;
+    position: relative;
+    top: 1.5em;
+    border: 1em solid transparent;
+    white-space: nowrap;
+}
+
+.circle + .circle {background-color: yellow;}
+.circle + .circle + .circle {background-color: pink;}
+.forcedStack {background-color: cyan!important;}
+.forcedStack span {max-width: 50px; margin-top: -5em; top: 2.5em;  white-space: normal; overflow: auto; /*IE9 needs this*/}
+.forcedStack + .circle {background-color: red!important}

@@ -7,7 +7,6 @@ define (require)->
   
   Project = require 'core/projects/project'
   
-  
   class DropBoxLibrary extends Backbone.Collection
     """
     a library contains multiple projects, stored on dropbox
@@ -32,7 +31,7 @@ define (require)->
       console.log "_____________"
   
   class DropBoxStore extends Backbone.Model
-    attributeNames: ['name','loggedIn']
+    attributeNames: ['name','loggedIn','isDataDumpAllowed']
     buildProperties @
     
     idAttribute: 'name'
@@ -41,6 +40,7 @@ define (require)->
       storeType: "Dropbox"
       tooltip:"Store to the Dropbox Cloud based storage: requires login"
       loggedIn:false
+      isDataDumpAllowed:false
     
     constructor:(options)->
       super options
@@ -163,6 +163,23 @@ define (require)->
       
             
     getThumbNail:(projectName)=>
+      myDeferred = $.Deferred()
+      deferred = @store._readFile( "/#{projectName}/.thumbnail.png",{arrayBuffer:true})
+      
+      parseBase64Png=( rawData)->
+        #convert binary png to base64
+        bytes = new Uint8Array(rawData)
+        data = ''
+        for i in [0...bytes.length]
+          data += String.fromCharCode(bytes[i])
+        data =   btoa(data)
+        #crashes
+        #data = btoa(String.fromCharCode.apply(null, ))
+        base64src='data:image/png;base64,'+data
+        myDeferred.resolve(base64src)
+
+      deferred.done(parseBase64Png)
+      return myDeferred
     
     checkProjectExists:(projectName)=>
       return @store._readDir "/#{projectName}/"
@@ -206,12 +223,14 @@ define (require)->
           dataURIComponents = content.split(',')
           mimeString = dataURIComponents[0].split(':')[1].split(';')[0]
           if(dataURIComponents[0].indexOf('base64') != -1)
+            console.log "base64 v1"
             data =  atob(dataURIComponents[1])
             array = []
             for i in [0...data.length]
               array.push(data.charCodeAt(i))
-            content = new Blob([new Uint8Array(array)], {type: 'image/jpeg'})
+            content = new Blob([new Uint8Array(array)], {type: 'image/png'})
           else
+            console.log "other v2"
             byteString = unescape(dataURIComponents[1])
             length = byteString.length
             ab = new ArrayBuffer(length)

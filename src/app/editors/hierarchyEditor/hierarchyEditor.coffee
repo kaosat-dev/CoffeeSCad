@@ -26,6 +26,10 @@ define (require)->
       @vent = vent
       #@router = new HierarchyEditorRouter
       #  controller: @
+      
+      @startWithParent = true
+      @showOnAppStart = true
+      @addMainMenuIcon = true
       @icon = "icon-list"
       
       @vent.on("project:loaded",@resetEditor)
@@ -36,32 +40,39 @@ define (require)->
       #@addRegions @regions
       
     init:=>
+      ### 
       if @appSettings?
         @appSettings.registerSettingClass("HierarchyEditor", HierarchyEditorSettings)
-        
+      ###  
       @addInitializer ->
         @vent.trigger "app:started", "#{@title}",@
       
       #if requested we send back the type of SettingsView to use for this specific sub app
-      reqRes.addHandler "HierarchyEditorSettingsView", ()->
+      ###reqRes.addHandler "HierarchyEditorSettingsView", ()->
         return HierarchyEditorSettingsView
-        
+      ###  
+      
     onStart:()=>
       @settings = @appSettings.get("HierarchyEditor")
-      @showView()
+      if @showOnAppStart
+        @showView()
       
     showView:=>
-      if @dia?
-        @dia.close()
-      @dia = new DialogView({elName:"hiearchyEdit", title: "Assembly", width:200, height:150,position:[25,25]})
-      @dia.render()
+      if not @dia?
+        @dia = new DialogView({elName:"hiearchyEdit", title: "Assembly", width:200, height:150,position:[25,25]})
+        @dia.render()
       
       if not @hierarchyEditorView?
         @hierarchyEditorView = new HierarchyEditorView 
           model:    @project
           settings: @settings
+      if not @dia.currentView?    
+        @dia.show(@hierarchyEditorView)
+      else
+        @dia.showDialog()
       
-      @dia.show(@hierarchyEditorView)
+    hideView:=>
+      @dia.hideDialog()
       
     resetEditor:(newProject)=>
       console.log "resetting hiearchy editor"
@@ -69,9 +80,8 @@ define (require)->
       if @dia?
         console.log "closing current hiearchy editor"
         @dia.close()
-        @hierarchyEditorView.close()
         @hierarchyEditorView = null
-        
-      @showView()
+      if @showOnAppStart  
+        @showView()
   
   return HierarchyEditor
