@@ -44,7 +44,7 @@ define (require)->
       @vent.on("project:compiled",@_onProjectCompiled)
       @vent.on("project:compile:error",@_onProjectCompileError)
       #hack to fix annoying resize bug
-      @vent.on("codeMirror:refresh",@onRefreshRequested)
+      @vent.on("codeEditor:refresh",@onRefreshRequested)
     
     _tearDownEventHandlers:=>
       #cleanup all events
@@ -62,14 +62,13 @@ define (require)->
       @vent.off("project:compiled",@_onProjectCompiled)
       @vent.off("project:compile:error",@_onProjectCompileError)
       #hack to fix annoying resize bug
-      @vent.off("codeMirror:refresh",@onRefreshRequested)
+      @vent.off("codeEditor:refresh",@onRefreshRequested)
     
     
     onRefreshRequested:(newHeight)=>
       #elHeight
-      #@editor.refresh()
-      #@editor.setSize("100%",newHeight)
-      console.log "on refresh"
+      #console.log "on refresh", newHeight
+      @$el.height(newHeight)
       @editor.resize()    
     
     onFileSelected:(model)=>

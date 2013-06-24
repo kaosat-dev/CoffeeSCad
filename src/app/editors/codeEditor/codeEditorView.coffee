@@ -57,6 +57,9 @@ define (require)->
       
       elHeight = @$el.parent().height()
       @$el.height(elHeight)
+      
+      $("#codeArea").height(elHeight-40)
+      $(".codeEditorBlock").height(elHeight-40)
       @myLayout.resizeAll()
 
     onResizeStart:=>
@@ -64,16 +67,23 @@ define (require)->
       console.log "old size: #{@$el.parent().height()}"
       console.log @$el.parent()
       
-    onResizeStop:=>
-      elHeight = $("#codeEdit").outerHeight(false) #what the heck ?#FIXME:horrible hackery to get the different elements to resize correctly
-      elHeight = $("#codeEdit").height()-60
+    onResizeStop:(ev,args)=>
+      if args?
+        elHeight = args.ui.size.height
+      else
+        elHeight = $("#codeEdit").outerHeight(false) #what the heck ?#FIXME:horrible hackery to get the different elements to resize correctly
+        elHeight = $("#codeEdit").height()
       #console.log "elHeight", elHeight
       @$el.height(elHeight)
       #@$el.height("100")
+      
+      $("#codeArea").height(elHeight-40)
+      $(".codeEditorBlock").height(elHeight-40)
       @myLayout.resizeAll()
       
+      
       #hack
-      #vent.trigger("codeMirror:refresh",elHeight)
+      vent.trigger("codeEditor:refresh",elHeight)
 
     onRender:=>
       #show files tree
