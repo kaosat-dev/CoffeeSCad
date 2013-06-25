@@ -26,8 +26,8 @@ define (require) ->
       
       texture = new THREE.Texture(canvas)
       texture.needsUpdate = true
-      texture.magFilter = THREE.NearestMipMapLinearFilter
-      texture.minFilter = THREE.NearestMipMapLinearFilter
+      texture.magFilter = THREE.LinearFilter
+      texture.minFilter = THREE.LinearFilter
       
       spriteMaterial = new THREE.SpriteMaterial
          map: texture
@@ -340,6 +340,8 @@ define (require) ->
       color = new THREE.Color().setHex(@color)
       #attempt to draw bounding box
       try
+        if not mesh.geometry.boundingBox
+          mesh.geometry.computeBoundingBox()
         bbox = mesh.geometry.boundingBox
         length = bbox.max.x-bbox.min.x
         width  = bbox.max.y-bbox.min.y
@@ -515,24 +517,31 @@ define (require) ->
     #Helper to detect intersection with mouse /touch position (hover and click) and apply effect  
     constructor:(options)->
       super options
-      defaults = {hiearchyRoot:null,renderCallback:null, camera :null ,viewWidth:640, viewHeight:480}
+      defaults = {hiearchyRoot:null,camera :null ,viewWidth:640, viewHeight:480}
       options = merge defaults, options
-      {@hiearchyRoot, @renderCallback, @camera, @viewWidth, @viewHeight} = options
+      {@hiearchyRoot, @camera, @viewWidth, @viewHeight} = options
       @options = options
       @currentHover = null
       @currentSelect = null
-      @selectionColor = 0xCC8888
+      @selectionColor = 0xfffccc#0xCC8888
       @projector = new THREE.Projector()
+      
+      
+      @addEventListener = THREE.EventDispatcher.prototype.addEventListener
+      @hasEventListener = THREE.EventDispatcher.prototype.hasEventListener
+      @removeEventListener = THREE.EventDispatcher.prototype.removeEventListener
+      @dispatchEvent = THREE.EventDispatcher.prototype.dispatchEvent
+      
     
     _onHover:(selection)=>
       #console.log "currentHover", selection
       if selection?
         @currentHover = selection
-        #selection.currentHoverHex = selection.material.color.getHex()
-        #selection.material.color.setHex( @selectionColor )
         
-        
-        if not (selection.hoverOutline?) and not (selection.outline?) and not (selection.name is "hoverOutline") and not (selection.name is "boundingCage")
+        if not (selection.hoverOutline?) and not (selection.outline?) and not (selection.name is "hoverOutline") and not (selection.name is "boundingCage") and not (selection.name is "")
+          selection.currentHoverHex = selection.material.color.getHex()
+          selection.material.color.setHex( @selectionColor )
+          
           outlineMaterial = new THREE.MeshBasicMaterial( { color: 0xffc200, side: THREE.BackSide } )
           outline = new THREE.Mesh( selection.geometry.clone(), outlineMaterial )
           #outline.position = selection.position
@@ -540,21 +549,18 @@ define (require) ->
           outline.name = "hoverOutline"
           selection.hoverOutline = outline
           selection.add( outline )
-        
-        @renderCallback()
+          
+        @dispatchEvent({type:'hoverIn',selection:selection})
       
     _unHover:=>
       if @currentHover
-        #@currentHover.material.color.setHex( @currentHover.currentHoverHex )
-        
-        
         if @currentHover.hoverOutline?
+          @currentHover.material.color.setHex( @currentHover.currentHoverHex )
           @currentHover.remove(@currentHover.hoverOutline)
           @currentHover.hoverOutline = null
         
         @currentHover = null
-        
-        @renderCallback()
+        @dispatchEvent({type:'hoverOut',selection:@currentHover})
     
     _onSelect:(selection)=>
       #console.log "currentSelect", selection
@@ -571,7 +577,7 @@ define (require) ->
       selection.outline = outline
       selection.add( outline )
       
-      @renderCallback()
+      @dispatchEvent({type:'selected',selection:selection})
       
     _unSelect:=>
       if @currentSelect
@@ -582,7 +588,7 @@ define (require) ->
         selection.cage = null
         selection.outline =null
         @currentSelect = null
-        @renderCallback()
+        @dispatchEvent({type:'unselected',selection:selection})
       #@currentHover.material = @currentHover.origMaterial if @currentHover.origMaterial
       ###
             newMat = new  THREE.MeshLambertMaterial
@@ -775,34 +781,37 @@ define (require) ->
     else
       throw("Please provide either a mesh or a geometry for volume calculation")
     
-    console.log "Computing Volume"
-    volume = 0
-    
-    for face in geometry.faces
-      if face instanceof THREE.Face4
-        #a, b ,c  AND a, c , d
-        a = geometry.vertices[face.a]
-        b = geometry.vertices[face.b]
-        c = geometry.vertices[face.c]
-        
-        pv1 =  a.x*b.y*c.z  + a.y*b.z*c.x + a.z*b.x*c.y - a.x*b.z*c.y - a.y*b.x*c.z - a.z*b.y*c.x
-        
-        a = geometry.vertices[face.a]
-        b = geometry.vertices[face.c]
-        c = geometry.vertices[face.d]
-        pv2 =  a.x*b.y*c.z  + a.y*b.z*c.x + a.z*b.x*c.y - a.x*b.z*c.y - a.y*b.x*c.z - a.z*b.y*c.x
-        
-        volume += (pv1 + pv2)
-        
-      else if face instanceof THREE.Face3
-        #a, b ,c  #PxQyRz + PyQzRx + PzQxRy - PxQzRy - PyQxRz - PzQyRx
-        a = geometry.vertices[face.a]
-        b = geometry.vertices[face.b]
-        c = geometry.vertices[face.c]
-        pv =  a.x*b.y*c.z  + a.y*b.z*c.x + a.z*b.x*c.y - a.x*b.z*c.y - a.y*b.x*c.z - a.z*b.y*c.x
-        volume += pv
-    
-    volume = volume/6
+    if not (mesh.volume?)
+      console.log "Computing Volume"
+      volume = 0
+      for face in geometry.faces
+        if face instanceof THREE.Face4
+          #a, b ,c  AND a, c , d
+          a = geometry.vertices[face.a]
+          b = geometry.vertices[face.b]
+          c = geometry.vertices[face.c]
+          
+          pv1 =  a.x*b.y*c.z  + a.y*b.z*c.x + a.z*b.x*c.y - a.x*b.z*c.y - a.y*b.x*c.z - a.z*b.y*c.x
+          
+          a = geometry.vertices[face.a]
+          b = geometry.vertices[face.c]
+          c = geometry.vertices[face.d]
+          pv2 =  a.x*b.y*c.z  + a.y*b.z*c.x + a.z*b.x*c.y - a.x*b.z*c.y - a.y*b.x*c.z - a.z*b.y*c.x
+          
+          volume += (pv1 + pv2)
+          
+        else if face instanceof THREE.Face3
+          #a, b ,c  #PxQyRz + PyQzRx + PzQxRy - PxQzRy - PyQxRz - PzQyRx
+          a = geometry.vertices[face.a]
+          b = geometry.vertices[face.b]
+          c = geometry.vertices[face.c]
+          pv =  a.x*b.y*c.z  + a.y*b.z*c.x + a.z*b.x*c.y - a.x*b.z*c.y - a.y*b.x*c.z - a.z*b.y*c.x
+          volume += pv
+      
+      volume = volume/6
+      mesh.volume = volume
+    else
+      volume = mesh.volume
     console.log "volume is: #{volume}"
     return volume
       

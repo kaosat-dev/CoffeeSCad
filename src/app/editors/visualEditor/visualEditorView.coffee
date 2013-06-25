@@ -71,8 +71,43 @@ define (require) ->
       @dpr = 1
       
       @init()
-      @selectionHelper = new helpers.SelectionHelper({renderCallback:@_render, camera:@camera,color:0x000000,textColor:@settings.textColor})
+      @selectionHelper = new helpers.SelectionHelper({camera:@camera,color:0x000000,textColor:@settings.textColor})
+      
+      @selectionHelper.addEventListener( 'selected',  @onObjectSelected)
+      @selectionHelper.addEventListener( 'unselected', @onObjectUnSelected)
+      @selectionHelper.addEventListener( 'hoverIn', @onObjectHover)
+      @selectionHelper.addEventListener( 'hoverOut', @onObjectHover)
     
+    onObjectSelected:(selectionInfo)=>
+      #experimental 2d overlay for projected min max values of the objects 3d bounding box
+      [centerLeft,centerTop,length,width,height]=@selectionHelper.get2DBB(selectionInfo.selection,@width, @height)
+      $("#testOverlay2").removeClass("hide")
+      $("#testOverlay2").css("left",centerLeft+@$el.offset().left)
+      $("#testOverlay2").css('top', (centerTop - $("#testOverlay2").height()/2)+'px')
+      infoText = "#{@selectionHelper.currentSelect.name}"#\n w:#{width} <br\> l:#{length} <br\>h:#{height}"
+      
+      $("#testOverlay2").html("""<span>#{infoText} <a class="toto"><i class="icon-exclamation-sign"></a></span>""")
+      $(".toto").click ()=>
+        volume = @selectionHelper.currentSelect.volume or 0
+        
+        htmlStuff = """<span>#{infoText} <br>Volume:#{volume} <a class="toto"><i class="icon-exclamation-sign"></a></span>"""
+        $("#testOverlay2").html(htmlStuff)
+      @_render()
+      #console.log "result positions",[minLeft,minTop,maxLeft,maxTop, centerLeft,centerTop]
+      #$("#testOverlay").css("top",minTop)
+      #$("#testOverlay").css("left",minLeft+@$el.offset().left)
+      #$("#testOverlay2").css("left",maxLeft+@$el.offset().left)
+      #$("#testOverlay2").css('top', (maxTop - $("#testOverlay2").height() / 2))
+      
+      #.css('left', (left - $trackingOverlay.width() / 2) + 'px')
+      #.css('top', (top - $trackingOverlay.height() / 2) + 'px');
+      
+    onObjectUnSelected:(selectionInfo)=>
+      $("#testOverlay2").addClass("hide")
+      @_render()
+      
+    onObjectHover:()=>
+      @_render()
     
     ___init:()=>
       EffectComposer = require 'EffectComposer'
@@ -477,7 +512,6 @@ define (require) ->
       vignettePass.uniforms["darkness"].value = 5;
       
       
-      
       @depthComposer = new THREE.EffectComposer( @renderer )
       @depthComposer.setSize(@width * @dpr*composerResolutionMultiplier, @height * @dpr*composerResolutionMultiplier)
       @depthComposer.addPass(depthPass)
@@ -500,8 +534,8 @@ define (require) ->
       
       #@composer.addPass(@depthExtractPass)
       
-      @composer.addPass(@fxAAPass)
-      @composer.addPass(vignettePass)
+      #@composer.addPass(@fxAAPass)
+      #@composer.addPass(vignettePass)
       #make sure the last in line renders to screen
       @composer.passes[@composer.passes.length-1].renderToScreen = true
       
@@ -849,25 +883,16 @@ define (require) ->
       @_render()  
     
     setBgColor:()=>
-      bgColor1 = @settings.bgColor
-      bgColor2 = @settings.bgColor2
-      $("body").css("background-color", bgColor1)
+      bgColor = @settings.bgColor
+      $("body").css("background-color", bgColor)
       
-      console.log @settings.bgColor
-      bgColor = @settings.bgColor.split('#').pop()
+      _HexTO0x=(c)->
+        hex = parseInt("0x"+c.split('#').pop(),16)
+        return  hex 
       
-      ###
-      bgColor = a.map((x) -> #For each array element
-        x = parseInt(x).toString(16) #Convert to a base16 string
-        (if (x.length is 1) then "0" + x else x) #Add zero if we get only one character
-      )     
+      color = _HexTO0x(bgColor)
       
-      b = "0x"+b.join("");###
-      @renderer.setClearColorHex( 0xFFFFFF, @renderer.getClearAlpha() )
-      ###      
-      @renderer.clearColor=0x363335
-      console.log @renderer
-      ###
+      @renderer.setClearColor( color, 1 )
       
     addGrid:()=>
       ###
@@ -1009,34 +1034,6 @@ define (require) ->
       @animate()
     
     _render:()=>
-      #experimental 2d overlay for projected min max values of the objects 3d bounding box
-      if @selectionHelper?
-        if @selectionHelper.currentSelect?
-          #[minLeft,minTop,maxLeft,maxTop, centerLeft,centerTop]=@selectionHelper.get2DBB(@selectionHelper.currentSelect,@width, @height)
-          [centerLeft,centerTop,length,width,height]=@selectionHelper.get2DBB(@selectionHelper.currentSelect,@width, @height)
-          
-          #console.log "result positions",[minLeft,minTop,maxLeft,maxTop, centerLeft,centerTop]
-          #$("#testOverlay").css("top",minTop)
-          #$("#testOverlay").css("left",minLeft+@$el.offset().left)
-          
-          
-          $("#testOverlay2").removeClass("hide")
-          #$("#testOverlay2").css("left",maxLeft+@$el.offset().left)
-          #$("#testOverlay2").css('top', (maxTop - $("#testOverlay2").height() / 2))
-          
-          #.css('left', (left - $trackingOverlay.width() / 2) + 'px')
-          #.css('top', (top - $trackingOverlay.height() / 2) + 'px');
-          
-          $("#testOverlay2").css("left",centerLeft+@$el.offset().left)
-          $("#testOverlay2").css('top', (centerTop - $("#testOverlay2").height()/2)+'px')
-          infoText = "#{@selectionHelper.currentSelect.name}"#\n w:#{width} <br\> l:#{length} <br\>h:#{height}"
-          
-          $("#testOverlay2").text(infoText)
-        else
-          $("#testOverlay2").addClass("hide")
-      else
-        $("#testOverlay2").addClass("hide")
-        
       #necessary hack for effectomposer
       ###
       THREE.EffectComposer.camera = new THREE.OrthographicCamera( -1, 1, 1, -1, 0, 1 )
@@ -1044,26 +1041,19 @@ define (require) ->
       THREE.EffectComposer.scene = new THREE.Scene()
       THREE.EffectComposer.scene.add( THREE.EffectComposer.quad )
       ###
-      
       #@scene.overrideMaterial = @depthMaterial
       #@renderer.render( @scene, @camera, @depthTarget )
       
       #@scene.overrideMaterial = @normalMaterial
       #@renderer.render( @scene, @camera, @normalTarget )
       
-      #depth rendering experiment
-      ###
-      if @assembly?
-        for child in @assembly.children
-          child.material = @depthMaterial
-      ###    
       #@renderer.render(@scene, @camera)
       
-      @scene.overrideMaterial = null
+      #@scene.overrideMaterial = null
       @renderer.render(@scene, @camera)
       @overlayRenderer.render(@overlayScene, @overlayCamera)
       
-      @composer.render()
+      #@composer.render()
       
       if @settings.showStats
         @stats.update()
