@@ -358,7 +358,7 @@ define (require) ->
           wireframe: true
           shading:THREE.FlatShading
         
-        cage = new THREE.Mesh(cageGeo, lineMat)
+        cage = new THREE.Object3D()#new THREE.Mesh(cageGeo, lineMat)
         #cage = new THREE.Line(cageGeo, lineMat, THREE.Lines)
         middlePoint=(geometry)->
           middle  = new THREE.Vector3()
@@ -370,44 +370,143 @@ define (require) ->
         delta = middlePoint(mesh.geometry)
         cage.position = delta
         
+        
+        
+        widthArrowPos = new THREE.Vector3( length/2+10, 0, -height/2 )
+        lengthArrowPos = new THREE.Vector3( 0, width/2+10, -height/2)
+        heightArrowPos = new THREE.Vector3( -length/2-5,-width/2-5,0)
+        
         if @addLabels
-          labelSize = 64
-          widthLabel=@drawText("w: #{width.toFixed(2)}",labelSize)
-          widthLabel.position.set(-length/2-10,0,height/2)
+          labelSize = 24
+          widthLabel=@drawText("#{width.toFixed(2)}",labelSize)
+          widthLabel.position = widthArrowPos 
           
-          lengthLabel=@drawText("l: #{length.toFixed(2)}",labelSize)
-          lengthLabel.position.set(0,-width/2-10,height/2)
+          lengthLabel=@drawText("#{length.toFixed(2)}",labelSize)
+          lengthLabel.position = lengthArrowPos
     
-          heightLabel=@drawText("h: #{height.toFixed(2)}",labelSize)
-          heightLabel.position.set(-length/2-10,-width/2-10,height/2)
+          heightLabel=@drawText("#{height.toFixed(2)}",labelSize)
+          heightLabel.position = heightArrowPos
           
           cage.add widthLabel
           cage.add lengthLabel
           cage.add heightLabel
-      
-        #TODO: solve z fighting issue
-        widthArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,0),width/2, 0xFF7700) #new Arrow({length:width/2, color:"#FF7700"})#
-        lengthArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,0),length/2, 0x77FF00)
-        heightArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(0,0,0),height/2, 0x0077FF)
+       
+          widthLabel.material.depthTest = false
+          widthLabel.material.depthWrite = false
+          widthLabel.material.side= THREE.FrontSide 
+          
+          lengthLabel.material.depthTest = false
+          lengthLabel.material.depthWrite = false
+          lengthLabel.material.side= THREE.FrontSide 
+          
+          heightLabel.material.depthTest = false
+          heightLabel.material.depthWrite = false
+          heightLabel.material.side= THREE.FrontSide 
+          
+          
+       
+        forceOverlay=(arrows,sideLines)=>
+          for arrow in arrows
+            arrow.cone.material.side= THREE.FrontSide 
+            arrow.line.material.side= THREE.FrontSide 
+            #arrow.line.material.depthWrite = false
+            arrow.line.material.depthTest = false
+            #arrow.cone.material.depthWrite = false
+            arrow.cone.material.depthTest = false
+            arrow.line.renderDepth = 1e20
+            arrow.cone.renderDepth = 1e20
+          
+          for line in sideLines
+            line.material.side= THREE.FrontSide 
+            line.material.depthTest = false
+            line.renderDepth = 1e20
+          
+        require 'ArrowHelper2'  
+        
+        widthArrow1 = new THREE.ArrowHelper2(new THREE.Vector3(0,-1,0),widthArrowPos,width/2, 0x000000)
+        widthArrow2 = new THREE.ArrowHelper2(new THREE.Vector3(0,1,0),widthArrowPos,width/2, 0x000000)
+        
+        widthLineGeometry = new THREE.Geometry();
+        widthLineGeometry.vertices.push( new THREE.Vector3( length/2, width/2, -height/2 ) );
+        widthLineGeometry.vertices.push( new THREE.Vector3( length/2+10, width/2, -height/2 ) );
+        widthLine = new THREE.Line( widthLineGeometry, new THREE.LineBasicMaterial( { color: 0x000000,depthTest:false,depthWrite:false,renderDepth : 1e20 } ) );
+        cage.add( widthLine)
+        
+        widthLineGeometry2 = new THREE.Geometry();
+        widthLineGeometry2.vertices.push( new THREE.Vector3( length/2, -width/2, -height/2 ) );
+        widthLineGeometry2.vertices.push( new THREE.Vector3( length/2+10, -width/2, -height/2 ) );
+        widthLine2 = new THREE.Line( widthLineGeometry2, new THREE.LineBasicMaterial( { color: 0x000000 } ) );
+        cage.add( widthLine2)
+        forceOverlay([widthArrow1,widthArrow2], [widthLine,widthLine2])
+         
+        lengthArrow1 = new THREE.ArrowHelper2(new THREE.Vector3(1,0,0),lengthArrowPos,length/2, 0x000000)
+        lengthArrow2 = new THREE.ArrowHelper2(new THREE.Vector3(-1,0,0),lengthArrowPos,length/2, 0x000000)
+        
+        lengthLineGeometry = new THREE.Geometry();
+        lengthLineGeometry.vertices.push( new THREE.Vector3( length/2, width/2,  -height/2 ) )
+        lengthLineGeometry.vertices.push( new THREE.Vector3( length/2, width/2+10, -height/2 ) )
+        lengthLine = new THREE.Line( lengthLineGeometry, new THREE.LineBasicMaterial( { color: 0x000000 } ) )
+        cage.add( lengthLine);
+        
+        lengthLineGeometry2 = new THREE.Geometry();
+        lengthLineGeometry2.vertices.push( new THREE.Vector3( -length/2, width/2, -height/2 ) )
+        lengthLineGeometry2.vertices.push( new THREE.Vector3( -length/2, width/2 +10, -height/2 ) )
+        lengthLine2 = new THREE.Line( lengthLineGeometry2, new THREE.LineBasicMaterial( { color: 0x000000 } ) )
+        cage.add( lengthLine2)
+        
+        forceOverlay([lengthArrow1,lengthArrow2], [lengthLine,lengthLine2])
         
         
+        heightArrow1 = new THREE.ArrowHelper2(new THREE.Vector3(0,0,1),heightArrowPos,height/2, 0x000000)
+        heightArrow2 = new THREE.ArrowHelper2(new THREE.Vector3(0,0,-1),heightArrowPos,height/2, 0x000000)
+        
+        
+        heightLineGeometry = new THREE.Geometry();
+        heightLineGeometry.vertices.push( new THREE.Vector3( -length/2, -width/2, -height/2 ) )
+        heightLineGeometry.vertices.push( new THREE.Vector3( -length/2-5, -width/2 -5, -height/2 ) )
+        heightLine = new THREE.Line( heightLineGeometry, new THREE.LineBasicMaterial( { color: 0x000000 } ) )
+        
+        heightLineGeometry2 = new THREE.Geometry();
+        heightLineGeometry2.vertices.push( new THREE.Vector3( -length/2, -width/2, height/2 ) )
+        heightLineGeometry2.vertices.push( new THREE.Vector3( -length/2-5, -width/2 -5, height/2 ) )
+        heightLine2 = new THREE.Line( heightLineGeometry2, new THREE.LineBasicMaterial( { color: 0x000000 } ) )
+        
+        
+        forceOverlay([heightArrow1,heightArrow2], [heightLine,heightLine2])
+        
+        cage.add( heightLine)
+        cage.add( heightLine2)
+        
+        
+        ###
         selectionAxis = new THREE.AxisHelper(Math.min(width,length, height))
         selectionAxis.material.depthTest = false
         selectionAxis.material.transparent = true
-        selectionAxis.position = mesh.position
+        selectionAxis.position = mesh.position###
         #selectionAxis.matrixAutoUpdate = false
         
-        #cage.add selectionAxis
-        #mesh.material.side= THREE.BackSide
-        #widthArrow.material.side = THREE.FrontSide
+        dashMaterial = new THREE.LineDashedMaterial( { color: 0x000000, dashSize: 0.5, gapSize: 2, depthTest: false,linewidth:2} )
+        baseCubeGeom = new THREE.CubeGeometry(length,width,0)
+        baseOutline = new THREE.Line( geometryToline(baseCubeGeom.clone()), dashMaterial, THREE.LinePieces )
+        baseOutline.renderDepth = 1e20
+        baseOutline.position = new THREE.Vector3(delta.x,delta.y,-delta.z)
+        cage.add(baseOutline)
+        
         
         cage.name = "boundingCage"
-        cage.add widthArrow
-        cage.add lengthArrow
-        cage.add heightArrow
+        cage.add widthArrow1
+        cage.add widthArrow2
+        
+        cage.add lengthArrow1
+        cage.add lengthArrow2
+        
+        cage.add heightArrow1
+        cage.add heightArrow2
         
         mesh.cage = cage
         mesh.add cage
+        
+        computeVolume(mesh)
         
       catch error
   
@@ -666,6 +765,46 @@ define (require) ->
 
     geometry.computeLineDistances()
     return geometry
+      
+  computeVolume=(mesh)->
+    geometry = null
+    if mesh instanceof THREE.Mesh
+      geometry = mesh.geometry
+    else if mesh instanceof THREE.Geometry
+      geometry = mesh
+    else
+      throw("Please provide either a mesh or a geometry for volume calculation")
+    
+    console.log "Computing Volume"
+    volume = 0
+    
+    for face in geometry.faces
+      if face instanceof THREE.Face4
+        #a, b ,c  AND a, c , d
+        a = geometry.vertices[face.a]
+        b = geometry.vertices[face.b]
+        c = geometry.vertices[face.c]
+        
+        pv1 =  a.x*b.y*c.z  + a.y*b.z*c.x + a.z*b.x*c.y - a.x*b.z*c.y - a.y*b.x*c.z - a.z*b.y*c.x
+        
+        a = geometry.vertices[face.a]
+        b = geometry.vertices[face.c]
+        c = geometry.vertices[face.d]
+        pv2 =  a.x*b.y*c.z  + a.y*b.z*c.x + a.z*b.x*c.y - a.x*b.z*c.y - a.y*b.x*c.z - a.z*b.y*c.x
+        
+        volume += (pv1 + pv2)
+        
+      else if face instanceof THREE.Face3
+        #a, b ,c  #PxQyRz + PyQzRx + PzQxRy - PxQzRy - PyQxRz - PzQyRx
+        a = geometry.vertices[face.a]
+        b = geometry.vertices[face.b]
+        c = geometry.vertices[face.c]
+        pv =  a.x*b.y*c.z  + a.y*b.z*c.x + a.z*b.x*c.y - a.x*b.z*c.y - a.y*b.x*c.z - a.z*b.y*c.x
+        volume += pv
+    
+    volume = volume/6
+    console.log "volume is: #{volume}"
+    return volume
       
 
   return {"LabeledAxes":LabeledAxes, "Arrow":Arrow, "Grid":Grid, "BoundingCage":BoundingCage, "SelectionHelper":SelectionHelper, "captureScreen":captureScreen, "geometryToline":geometryToline}

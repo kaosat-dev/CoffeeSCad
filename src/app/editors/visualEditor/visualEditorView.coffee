@@ -715,8 +715,7 @@ define (require) ->
       #@unbindAll()
       @model.off("compiled", @_onProjectCompiled)
       @model.off("compile:error", @_onProjectCompileFailed)
-      try
-        @scene.remove @current.cageView
+
       if @assembly?
         @scene.remove @assembly
         @current=null
@@ -1039,17 +1038,18 @@ define (require) ->
         $("#testOverlay2").addClass("hide")
         
       #necessary hack for effectomposer
+      ###
       THREE.EffectComposer.camera = new THREE.OrthographicCamera( -1, 1, 1, -1, 0, 1 )
       THREE.EffectComposer.quad = new THREE.Mesh( new THREE.PlaneGeometry( 2, 2 ), null )
       THREE.EffectComposer.scene = new THREE.Scene()
       THREE.EffectComposer.scene.add( THREE.EffectComposer.quad )
+      ###
       
+      #@scene.overrideMaterial = @depthMaterial
+      #@renderer.render( @scene, @camera, @depthTarget )
       
-      @scene.overrideMaterial = @depthMaterial
-      @renderer.render( @scene, @camera, @depthTarget )
-      
-      @scene.overrideMaterial = @normalMaterial
-      @renderer.render( @scene, @camera, @normalTarget )
+      #@scene.overrideMaterial = @normalMaterial
+      #@renderer.render( @scene, @camera, @normalTarget )
       
       #depth rendering experiment
       ###
@@ -1058,9 +1058,10 @@ define (require) ->
           child.material = @depthMaterial
       ###    
       #@renderer.render(@scene, @camera)
-      #@scene.overrideMaterial = null
-      #@renderer.render(@scene, @camera)
-      #@overlayRenderer.render(@overlayScene, @overlayCamera)
+      
+      @scene.overrideMaterial = null
+      @renderer.render(@scene, @camera)
+      @overlayRenderer.render(@overlayScene, @overlayCamera)
       
       @composer.render()
       

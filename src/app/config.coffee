@@ -72,6 +72,8 @@ require.config
     combo_cam:        "../assets/js/plugins/CombinedCamera"
     transformControls:"../assets/js/plugins/three/controls/transformControls"
     
+    ArrowHelper2:      "../assets/js/plugins/three/helpers/ArrowHelper"
+    
     ObjectExport: "../assets/js/plugins/three/exporters/ObjectExport"
     GeometryExporter: "../assets/js/plugins/three/exporters/GeometryExporter"
     MaterialExporter: "../assets/js/plugins/three/exporters/MaterialExporter"
@@ -149,6 +151,9 @@ require.config
       exports : "combo_cam"
     transformControls:
       deps: ["three"]
+      
+    ArrowHelper2:
+      deps: ["three"]  
     detector: 
       exports : "Detector"
     stats:
