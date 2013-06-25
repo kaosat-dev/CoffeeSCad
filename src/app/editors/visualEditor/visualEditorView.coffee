@@ -64,20 +64,13 @@ define (require) ->
       
       @renderer=null
       @overlayRenderer = null
+      @selectionHelper = null
       
       @defaultCameraPosition = new THREE.Vector3(100,100,200)
-      @width = 100
-      @height = 100
+      @width = 320
+      @height = 240
       @dpr = 1
       
-      @init()
-      @selectionHelper = new helpers.SelectionHelper({camera:@camera,color:0x000000,textColor:@settings.textColor})
-      
-      @selectionHelper.addEventListener( 'selected',  @onObjectSelected)
-      @selectionHelper.addEventListener( 'unselected', @onObjectUnSelected)
-      @selectionHelper.addEventListener( 'hoverIn', @onObjectHover)
-      @selectionHelper.addEventListener( 'hoverOut', @onObjectHover)
-    
     onObjectSelected:(selectionInfo)=>
       #experimental 2d overlay for projected min max values of the objects 3d bounding box
       [centerLeft,centerTop,length,width,height]=@selectionHelper.get2DBB(selectionInfo.selection,@width, @height)
@@ -118,6 +111,7 @@ define (require) ->
       VignetteShader = require 'VignetteShader'
       BlendShader = require 'BlendShader'
       BrightnessContrastShader = require 'BrightnessContrastShader'
+      AdditiveBlendShader = require 'AdditiveBlendShader'
       
       @stats.domElement.style.position = 'absolute'
       @stats.domElement.style.top = '30px'
@@ -253,6 +247,12 @@ define (require) ->
       @setupRenderers(@settings)
       @setupScenes()
       @setupPostProcess()
+      
+      @selectionHelper = new helpers.SelectionHelper({camera:@camera,color:0x000000,textColor:@settings.textColor})
+      @selectionHelper.addEventListener( 'selected',  @onObjectSelected)
+      @selectionHelper.addEventListener( 'unselected', @onObjectUnSelected)
+      @selectionHelper.addEventListener( 'hoverIn', @onObjectHover)
+      @selectionHelper.addEventListener( 'hoverOut', @onObjectHover)
       
       if @settings.shadows then @renderer.shadowMapAutoUpdate = @settings.shadows
       if @settings.showGrid then @addGrid()
@@ -428,7 +428,7 @@ define (require) ->
         @dpr = window.devicePixelRatio
         
       resolutionBase = 1
-      resolutionMultiplier = 1.5
+      resolutionMultiplier = 1#1.5
       fxaaResolutionMultiplier = resolutionBase/resolutionMultiplier
       composerResolutionMultiplier = resolutionBase*resolutionMultiplier
        
@@ -480,14 +480,6 @@ define (require) ->
       @colorTarget = new THREE.WebGLRenderTarget(@width, @height, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat } )
       colorPass = new THREE.RenderPass(@scene, @camera)
       
-      @depthTarget = new THREE.WebGLRenderTarget(@width, @height, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat } )
-      @depthMaterial = new THREE.MeshDepthMaterial()
-      depthPass = new THREE.RenderPass(@scene, @camera, @depthMaterial)
-      @depthExtractPass = new THREE.ShaderPass(Shaders.depthExtractShader)
-      
-      @normalTarget = new THREE.WebGLRenderTarget(@width, @height, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat } )
-      @normalMaterial = new THREE.MeshNormalMaterial()
-      normalPass = new THREE.RenderPass(@scene, @camera, @normalMaterial)
       
       #----------------
       edgeHighlightPass = new THREE.ShaderPass(edgeHighlightShader)
@@ -496,9 +488,6 @@ define (require) ->
       copyPass = new THREE.ShaderPass( THREE.CopyShader )
       
       
-      @fxAAPass = new THREE.ShaderPass(THREE.FXAAShader)
-      @fxAAPass.uniforms['resolution'].value.set(fxaaResolutionMultiplier / (@width * @dpr), fxaaResolutionMultiplier / (@height * @dpr))
-      
       edgeDetectPass = new THREE.ShaderPass(THREE.EdgeShader)
       edgeDetectPass2 = new THREE.ShaderPass(THREE.EdgeShader2)
       
@@ -506,36 +495,49 @@ define (require) ->
       contrastPass.uniforms['contrast'].value=0.5
       contrastPass.uniforms['brightness'].value=-0.4
       
-      
       vignettePass = new THREE.ShaderPass(THREE.VignetteShader)
       vignettePass.uniforms["offset"].value = 0.4;
       vignettePass.uniforms["darkness"].value = 5;
       
+      @hRes = @width * @dpr*composerResolutionMultiplier
+      @vRes = @height * @dpr*composerResolutionMultiplier
+      @hRes = @width
+      @vRes = @height
       
-      @depthComposer = new THREE.EffectComposer( @renderer )
-      @depthComposer.setSize(@width * @dpr*composerResolutionMultiplier, @height * @dpr*composerResolutionMultiplier)
-      @depthComposer.addPass(depthPass)
-      @depthComposer.addPass(edgeDetectPass2)
+      @fxAAPass = new THREE.ShaderPass(THREE.FXAAShader)
+      #@fxAAPass.uniforms['resolution'].value.set(fxaaResolutionMultiplier / (@width * @dpr), fxaaResolutionMultiplier / (@height * @dpr))
+      @fxAAPass.uniforms['resolution'].value.set(@hRes, @vRes)
       
-      @normalComposer = new THREE.EffectComposer( @renderer )
-      @normalComposer.setSize(@width * @dpr*composerResolutionMultiplier, @height * @dpr*composerResolutionMultiplier)
-      @normalComposer.addPass(normalPass)
-      @normalComposer.addPass(edgeDetectPass2)
+      #depth data generation
+      @depthTarget = new THREE.WebGLRenderTarget(@width, @height, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat } )
+      @depthMaterial = new THREE.MeshDepthMaterial()
+      depthPass = new THREE.RenderPass(@scene, @camera, @depthMaterial)
+      @depthExtractPass = new THREE.ShaderPass(Shaders.depthExtractShader)
+      
+      @depthComposer = new THREE.EffectComposer( @renderer, @depthTarget )
+      @depthComposer.setSize(@hRes, @vRes)
+      @depthComposer.addPass( depthPass )
+      @depthComposer.addPass( edgeDetectPass2 )
+      @depthComposer.addPass( copyPass )
+      
+      
+      #normal data generation
+      @normalTarget = new THREE.WebGLRenderTarget(@width, @height, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat } )
+      @normalMaterial = new THREE.MeshNormalMaterial()
+      normalPass = new THREE.RenderPass(@scene, @camera, @normalMaterial)
+      
+      @normalComposer = new THREE.EffectComposer( @renderer, @normalTarget )
+      @normalComposer.setSize(@hRes, @vRes)
+      @normalComposer.addPass( normalPass )
+      @normalComposer.addPass( edgeDetectPass2 )
+      @normalComposer.addPass(copyPass)
        
       
       @composer = new THREE.EffectComposer( @renderer )
       @composer.setSize(@width * @dpr*composerResolutionMultiplier, @height * @dpr*composerResolutionMultiplier)
       @composer.addPass(renderPass)
-      
-      #generate depth texture
-      #@composer.addPass(depthPass)
-      #@composer.addPass(contrastPass)
-      
-      
-      #@composer.addPass(@depthExtractPass)
-      
-      #@composer.addPass(@fxAAPass)
-      #@composer.addPass(vignettePass)
+      @composer.addPass(@fxAAPass)
+      @composer.addPass(vignettePass)
       #make sure the last in line renders to screen
       @composer.passes[@composer.passes.length-1].renderToScreen = true
       
@@ -544,18 +546,24 @@ define (require) ->
       #render depth
       #render normal
       
-      #final composer
-      ### 
-      finalComposer = new THREE.EffectComposer( renderer, renderTarget );
-
-      #prepare the final render passes
-      renderModel = new THREE.RenderPass( scene, camera );
-      finalComposer.addPass( renderModel );
+      #final compositing
+      renderTargetParameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBFormat, stencilBuffer: false };
+      renderTarget = new THREE.WebGLRenderTarget( @width , @height, renderTargetParameters );
       
+       
+      @finalComposer = new THREE.EffectComposer( @renderer , renderTarget )
+      @finalComposer.setSize(@hres, @vres)
+      #prepare the final render passes
+      @finalComposer.addPass( renderPass )
+      @finalComposer.addPass(@fxAAPass)
+      #blend in the edge detection results
       effectBlend = new THREE.ShaderPass( THREE.AdditiveBlendShader, "tDiffuse1" )
-      effectBlend.uniforms[ 'tDiffuse2' ].value = composer2.renderTarget2
-      finalComposer.addPass( effectBlend )
-      ###
+      effectBlend.uniforms[ 'tDiffuse2' ].value = @normalComposer.renderTarget2
+      effectBlend.uniforms[ 'tDiffuse3' ].value = @depthComposer.renderTarget2
+      @finalComposer.addPass( effectBlend )
+      
+      @finalComposer.passes[@finalComposer.passes.length-1].renderToScreen = true
+      @finalComposer.passes[@finalComposer.passes.length-1].needsSwap = true
 
       
     setupView:(val)=>
@@ -891,8 +899,9 @@ define (require) ->
         return  hex 
       
       color = _HexTO0x(bgColor)
+      alpha = if @renderer.getClearAlpha? then @renderer.getClearAlpha() else 1
+      @renderer.setClearColor( color, alpha )
       
-      @renderer.setClearColor( color, 1 )
       
     addGrid:()=>
       ###
@@ -951,15 +960,20 @@ define (require) ->
       
       #shader uniforms updates
       resolutionBase = 1
-      resolutionMultiplier = 1.5
+      resolutionMultiplier = 1.0#5
       fxaaResolutionMultiplier = resolutionBase/resolutionMultiplier
       composerResolutionMultiplier = resolutionBase*resolutionMultiplier
       @fxAAPass.uniforms['resolution'].value.set(fxaaResolutionMultiplier / (@width * @dpr), fxaaResolutionMultiplier / (@height * @dpr))
       @composer.setSize(@width * @dpr*composerResolutionMultiplier, @height * @dpr*composerResolutionMultiplier)
       
-      @depthExtractPass.uniforms[ 'size' ].value.set( @width, @height )
-      @depthExtractPass.uniforms[ 'cameraNear' ].value = 0.1 #@NEAR
-      @depthExtractPass.uniforms[ 'cameraFar' ].value = 100 #@FAR
+      
+      @normalComposer.setSize(@hRes, @vRes)
+      @depthComposer.setSize(@hRes, @vRes)
+      @finalComposer.setSize(@hRes, @vRes)
+      
+      #@depthExtractPass.uniforms[ 'size' ].value.set( @width, @height )
+      #@depthExtractPass.uniforms[ 'cameraNear' ].value = 0.1 #@NEAR
+      #@depthExtractPass.uniforms[ 'cameraFar' ].value = 100 #@FAR
       
       @camera.aspect = @width / @height
       @camera.setSize(@width,@height)
@@ -972,6 +986,11 @@ define (require) ->
       @onResize()
     
     onDomRefresh:()=>
+      #recompute view size
+      @_computeViewSize()
+      #setup everything 
+      @init()
+      
       #experimental context menu
       require 'contextMenu'
       @$el.contextmenu
@@ -992,8 +1011,6 @@ define (require) ->
       
       if @settings.showStats
         @ui.overlayDiv.append(@stats.domElement)
-        
-      @_computeViewSize()
       
       @camera.aspect = @width / @height
       @camera.setSize(@width,@height)
@@ -1034,26 +1051,29 @@ define (require) ->
       @animate()
     
     _render:()=>
-      #necessary hack for effectomposer
-      ###
-      THREE.EffectComposer.camera = new THREE.OrthographicCamera( -1, 1, 1, -1, 0, 1 )
-      THREE.EffectComposer.quad = new THREE.Mesh( new THREE.PlaneGeometry( 2, 2 ), null )
-      THREE.EffectComposer.scene = new THREE.Scene()
-      THREE.EffectComposer.scene.add( THREE.EffectComposer.quad )
-      ###
-      #@scene.overrideMaterial = @depthMaterial
-      #@renderer.render( @scene, @camera, @depthTarget )
-      
-      #@scene.overrideMaterial = @normalMaterial
-      #@renderer.render( @scene, @camera, @normalTarget )
-      
-      #@renderer.render(@scene, @camera)
-      
-      #@scene.overrideMaterial = null
-      @renderer.render(@scene, @camera)
-      @overlayRenderer.render(@overlayScene, @overlayCamera)
-      
-      #@composer.render()
+      if @renderer instanceof THREE.CanvasRenderer
+        @renderer.render( @scene, @camera)
+        @overlayRenderer.render(@overlayScene, @overlayCamera)
+      else
+        #necessary hack for effectomposer
+        THREE.EffectComposer.camera = new THREE.OrthographicCamera( -1, 1, 1, -1, 0, 1 )
+        THREE.EffectComposer.quad = new THREE.Mesh( new THREE.PlaneGeometry( 2, 2 ), null )
+        THREE.EffectComposer.scene = new THREE.Scene()
+        THREE.EffectComposer.scene.add( THREE.EffectComposer.quad )
+        
+        
+        @depthComposer.render()
+        @normalComposer.render()
+        
+        @finalComposer.passes[@finalComposer.passes.length-1].needsSwap = true
+        @finalComposer.passes[@finalComposer.passes.length-1].uniforms[ 'tDiffuse2' ].value = @normalComposer.renderTarget2
+        @finalComposer.passes[@finalComposer.passes.length-1].uniforms[ 'tDiffuse3' ].value = @depthComposer.renderTarget2
+        
+        @finalComposer.render()
+        
+        #@composer.render()
+        @overlayRenderer.render(@overlayScene, @overlayCamera)
+        
       
       if @settings.showStats
         @stats.update()
