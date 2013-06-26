@@ -7,24 +7,24 @@ define (require) ->
   detector = require 'detector'
   stats = require  'stats'
   utils = require 'utils'
-  OrbitControls = require './orbitControls'
-  CustomOrbitControls = require './customOrbitControls'
+  reqRes = require 'core/messaging/appReqRes'
+  vent = require 'core/messaging/appVent'
+  
+  OrbitControls = require './controls/orbitControls'
+  CustomOrbitControls = require './controls/customOrbitControls'
   transformControls = require 'transformControls'
+  
+  Shaders = require './shaders/shaders'
+  helpers = require './helpers'
+  RenderManager = require 'RenderManager'
   
   ObjectExport = require 'ObjectExport'
   ObjectParser = require 'ObjectParser'
-  
-  
-  Shaders = require './shaders'
-  
-  reqRes = require 'core/messaging/appReqRes'
-  vent = require 'core/messaging/appVent'
   
   threedView_template = require "text!./visualEditorView.tmpl"
   requestAnimationFrame = require 'core/utils/anim'
   THREE.CSG = require 'core/projects/csg/csg.Three'
   
-  helpers = require './helpers'
   
   
   includeMixin = require 'core/utils/mixins/mixins'
@@ -60,8 +60,6 @@ define (require) ->
         return @makeScreenshot()
       
       ##########
-      @stats = new stats()
-      
       @renderer=null
       @overlayRenderer = null
       @selectionHelper = null
@@ -71,179 +69,15 @@ define (require) ->
       @height = 240
       @dpr = 1
       
-    onObjectSelected:(selectionInfo)=>
-      #experimental 2d overlay for projected min max values of the objects 3d bounding box
-      [centerLeft,centerTop,length,width,height]=@selectionHelper.get2DBB(selectionInfo.selection,@width, @height)
-      $("#testOverlay2").removeClass("hide")
-      $("#testOverlay2").css("left",centerLeft+@$el.offset().left)
-      $("#testOverlay2").css('top', (centerTop - $("#testOverlay2").height()/2)+'px')
-      infoText = "#{@selectionHelper.currentSelect.name}"#\n w:#{width} <br\> l:#{length} <br\>h:#{height}"
-      
-      $("#testOverlay2").html("""<span>#{infoText} <a class="toto"><i class="icon-exclamation-sign"></a></span>""")
-      $(".toto").click ()=>
-        volume = @selectionHelper.currentSelect.volume or 0
-        
-        htmlStuff = """<span>#{infoText} <br>Volume:#{volume} <a class="toto"><i class="icon-exclamation-sign"></a></span>"""
-        $("#testOverlay2").html(htmlStuff)
-      @_render()
-      #console.log "result positions",[minLeft,minTop,maxLeft,maxTop, centerLeft,centerTop]
-      #$("#testOverlay").css("top",minTop)
-      #$("#testOverlay").css("left",minLeft+@$el.offset().left)
-      #$("#testOverlay2").css("left",maxLeft+@$el.offset().left)
-      #$("#testOverlay2").css('top', (maxTop - $("#testOverlay2").height() / 2))
-      
-      #.css('left', (left - $trackingOverlay.width() / 2) + 'px')
-      #.css('top', (top - $trackingOverlay.height() / 2) + 'px');
-      
-    onObjectUnSelected:(selectionInfo)=>
-      $("#testOverlay2").addClass("hide")
-      @_render()
-      
-    onObjectHover:()=>
-      @_render()
-    
-    ___init:()=>
-      EffectComposer = require 'EffectComposer'
-      DotScreenPass = require 'DotScreenPass'
-      FXAAShader = require 'FXAAShader'
-      EdgeShader2 = require 'EdgeShader2'
-      EdgeShader = require 'EdgeShader'
-      VignetteShader = require 'VignetteShader'
-      BlendShader = require 'BlendShader'
-      BrightnessContrastShader = require 'BrightnessContrastShader'
-      AdditiveBlendShader = require 'AdditiveBlendShader'
-      
+      @stats = new stats()
       @stats.domElement.style.position = 'absolute'
       @stats.domElement.style.top = '30px'
       @stats.domElement.style.zIndex = 100
 
-              
-    settingsChanged:(settings, value)=> 
-      for key, val of @settings.changedAttributes()
-        switch key
-          when "bgColor"
-            @setBgColor()
-          when "bgColor2"
-            @setBgColor()
-          when "renderer"
-            delete @renderer
-            @init()
-            @fromCsg @model
-            @render()
-          when "showGrid"
-            if val
-              @addGrid()
-            else
-              @removeGrid()
-          when "gridSize"
-            if @grid?
-              @removeGrid()
-              @addGrid()
-          when "gridStep"
-            if @grid?
-              @removeGrid()
-              @addGrid()
-          when "gridColor"
-            if @grid?
-              @grid.setColor(val)
-          when "gridOpacity"
-            if @grid?
-              @grid.setOpacity(val)
-          when "gridText"
-            @grid.toggleText(val)
-          when "gridNumberingPosition"
-            @grid.setTextLocation(val)
-          when "showAxes"
-            if val
-              @addAxes()
-            else
-              @removeAxes()
-          when "axesSize"
-              @removeAxes()
-              @addAxes()
-          when "shadows"
-            if not val
-              @renderer.clearTarget(@light.shadowMap)
-              @_updateAssemblyVisualAttrs()
-              @_render()
-              @renderer.shadowMapAutoUpdate = false
-              if @settings.showGrid
-                @removeGrid()
-                @addGrid()
-            else
-              @renderer.shadowMapAutoUpdate = true
-              @_updateAssemblyVisualAttrs()
-              @_render()
-              if @settings.showGrid
-                @removeGrid()
-                @addGrid()
-          when "shadowResolution"
-            #TODO: this does not seem to get applied
-            shadowResolution = parseInt(val.split("x")[0])
-            @light.shadowMapWidth = shadowResolution
-            @light.shadowMapHeight = shadowResolution
-            if @settings.shadows
-              @renderer.shadowMapAutoUpdate = true
-              @_updateAssemblyVisualAttrs()
-              @_render()
-              if @settings.showGrid
-                @removeGrid()
-                @addGrid()
-          
-          when "selfShadows"
-            @_updateAssemblyVisualAttrs()
-            @_render()
-          when "showStats"
-            if val
-              @ui.overlayDiv.append(@stats.domElement)
-            else
-              $(@stats.domElement).remove()
-          when  "projection"
-            if val == "orthographic"
-              @camera.toOrthographic()
-              #@camera.setZoom(6)
-            else
-              @camera.toPerspective()
-              @camera.setZoom(1)
-          when "position"
-            @setupView(val)
-          when "objectViewMode"
-            #TODO: should not be global , but object specific?
-            @_updateAssemblyVisualAttrs()
-            @_render()
-          when 'center'
-            try
-              tgt = @controls.target
-              offset = new THREE.Vector3().sub(@controls.target.clone())
-              @controls.target.addSelf(offset)
-              @camera.position.addSelf(offset)
-            catch error
-              console.log "error #{error} in center"
-            @camera.lookAt(@scene.position)
-          when 'helpersColor'
-            if @axes?
-              @removeAxes()
-              @addAxes()
-          when 'textColor'
-            if @axes?
-              @removeAxes()
-              @addAxes()
-          when 'showConnectors'
-            if val
-              @assembly.traverse (object)->
-                console.log "pouet"
-                console.log object
-                if object.name is "connectors"
-                  object.visible = true 
-            else
-              @assembly.traverse (object)->
-                console.log "pouet"
-                console.log object
-                if object.name is "connectors"
-                  object.visible = false 
-      @_render()  
-       
     init:()=>
+      # Setup the RenderManager
+      @renderManager = new THREE.Extras.RenderManager(@renderer)
+      
       @setupRenderers(@settings)
       @setupScenes()
       @setupPostProcess()
@@ -260,23 +94,8 @@ define (require) ->
       
       @setBgColor()
       @setupView(@settings.position)
+      @setupContextMenu()
     
-    reloadAssembly:()=>
-      reloadedAssembly = @model.rootFolder.get(".assembly")
-      console.log "reloadedAssembly",reloadedAssembly
-      if reloadedAssembly?
-        reloadedAssembly = JSON.parse(reloadedAssembly.content)
-        loader = new THREE.ObjectParser()
-        
-        @assembly = loader.parse(reloadedAssembly)
-        console.log "parse Result", @assembly
-        @scene.add @assembly
-        
-        #hack because three.js does not reload the vertexColors flag correctly
-        #moved to @_updateAssemblyVisualAttrs
-        @_updateAssemblyVisualAttrs()
-        @_render()
-     
     setupRenderers:(settings)=>
       getValidRenderer=(settings)->
         renderer = settings.renderer
@@ -308,8 +127,6 @@ define (require) ->
           antialias: true
         @overlayRenderer.setSize(350, 250)
         @overlayRenderer.setClearColor(0x00000000,0)
-        
-        
       else if renderer is "canvas"
         @renderer = new THREE.CanvasRenderer 
           antialias: true
@@ -324,6 +141,8 @@ define (require) ->
         @overlayRenderer.setClearColor(0x00000000,0)
 
     setupScenes:()->
+      @scene = require './scenes/main'
+      @renderManager.add("main", @scene, @camera)
       @setupScene()
       @setupOverlayScene() 
              
@@ -342,14 +161,10 @@ define (require) ->
           @NEAR,
           @FAR)
 
-      #function ( width, height, fov, near, far, orthoNear, orthoFar )
       @camera.up = new THREE.Vector3( 0, 0, 1 )
       @camera.position = @defaultCameraPosition
           
-      @scene = new THREE.Scene()
       @scene.add(@camera)
-      @setupLights()
-      
       @cameraHelper = new THREE.CameraHelper(@camera)
       
     setupOverlayScene:()->
@@ -372,200 +187,158 @@ define (require) ->
       @overlayScene = new THREE.Scene()
       @overlayScene.add(@overlayCamera)
 
-    setupLights:()=>
-      #console.log "Setting up lights"
-      pointLight =
-        new THREE.PointLight(0x333333,4)
-      pointLight.position.x = -2500
-      pointLight.position.y = -2500
-      pointLight.position.z = 2200
-      
-      pointLight2 =
-        new THREE.PointLight(0x333333,3)
-      pointLight2.position.x = 2500
-      pointLight2.position.y = 2500
-      pointLight2.position.z = -5200
-
-      @ambientColor = 0x253565
-      @ambientColor = 0x354575
-      @ambientColor = 0x455585
-      @ambientColor = 0x565595
-      ambientLight = new THREE.AmbientLight(@ambientColor)
-      
-      spotLight = new THREE.SpotLight( 0xbbbbbb, 1.5)    
-      spotLight.position.x = 50
-      spotLight.position.y = 50
-      spotLight.position.z = 300
-      
-      #spotLight.shadowCameraVisible = true
-      
-      spotLight.shadowCameraNear = 1
-      spotLight.shadowCameraFar = 500
-      spotLight.shadowCameraFov = 50
-      
-      spotLight.shadowMapBias = 0.000039
-      spotLight.shadowMapDarkness = 0.5
-      shadowResolution = parseInt(@settings.shadowResolution.split("x")[0])
-      spotLight.shadowMapWidth = shadowResolution
-      spotLight.shadowMapHeight = shadowResolution
-      
-      spotLight.castShadow = true
-      
-      @light= spotLight 
-      
-      @scene.add(ambientLight)
-      @scene.add(pointLight)
-      @scene.add(pointLight2)
-      @scene.add(spotLight)
-      
-      @camera.add(pointLight)
-    
-    
     setupPostProcess:=>
-      #shaders, post processing etc
-      #TODO:move this to view resize method
-      if (window.devicePixelRatio is not undefined)
-        @dpr = window.devicePixelRatio
+      if @renderer instanceof THREE.WebGLRenderer
+        EffectComposer = require 'EffectComposer'
+        DotScreenPass = require 'DotScreenPass'
+        FXAAShader = require 'FXAAShader'
+        EdgeShader2 = require 'EdgeShader2'
+        EdgeShader = require 'EdgeShader'
+        VignetteShader = require 'VignetteShader'
+        BlendShader = require 'BlendShader'
+        BrightnessContrastShader = require 'BrightnessContrastShader'
+        AdditiveBlendShader = require 'AdditiveBlendShader'
         
-      resolutionBase = 1
-      resolutionMultiplier = 1#1.5
-      fxaaResolutionMultiplier = resolutionBase/resolutionMultiplier
-      composerResolutionMultiplier = resolutionBase*resolutionMultiplier
-       
-      # depth
-      depthShader = THREE.ShaderLib[ "depthRGBA" ]
-      depthUniforms = THREE.UniformsUtils.clone( depthShader.uniforms )
-      @depthMaterial = new THREE.ShaderMaterial( { fragmentShader: depthShader.fragmentShader, vertexShader: depthShader.vertexShader, uniforms: depthUniforms } )
-      @depthMaterial.blending = THREE.NoBlending
-      
-      @depthTarget = new THREE.WebGLRenderTarget(@width, @height, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBAFormat } )
+        
+        #shaders, post processing etc
+        #TODO:move this to view resize method
+        if (window.devicePixelRatio is not undefined)
+          @dpr = window.devicePixelRatio
+          
+        resolutionBase = 1
+        resolutionMultiplier = 1#1.5
+        fxaaResolutionMultiplier = resolutionBase/resolutionMultiplier
+        composerResolutionMultiplier = resolutionBase*resolutionMultiplier
+         
+        #various passes and rtts
+        renderPass = new THREE.RenderPass(@scene, @camera)
+        
+        copyPass = new THREE.ShaderPass( THREE.CopyShader )
+        
+        edgeDetectPass = new THREE.ShaderPass(THREE.EdgeShader)
+        edgeDetectPass2 = new THREE.ShaderPass(THREE.EdgeShader2)
+        
+        contrastPass = new THREE.ShaderPass(THREE.BrightnessContrastShader)
+        contrastPass.uniforms['contrast'].value=0.5
+        contrastPass.uniforms['brightness'].value=-0.4
+        
+        vignettePass = new THREE.ShaderPass(THREE.VignetteShader)
+        vignettePass.uniforms["offset"].value = 0.4;
+        vignettePass.uniforms["darkness"].value = 5;
+        
+        @hRes = @width * @dpr*composerResolutionMultiplier
+        @vRes = @height * @dpr*composerResolutionMultiplier
+        @hRes = @width
+        @vRes = @height
+        
+        @fxAAPass = new THREE.ShaderPass(THREE.FXAAShader)
+        #@fxAAPass.uniforms['resolution'].value.set(fxaaResolutionMultiplier / (@width * @dpr), fxaaResolutionMultiplier / (@height * @dpr))
+        @fxAAPass.uniforms['resolution'].value.set(@hRes, @vRes)
+        
+        #depth data generation
+        @depthTarget = new THREE.WebGLRenderTarget(@width, @height, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat } )
+        @depthMaterial = new THREE.MeshDepthMaterial()
+        depthPass = new THREE.RenderPass(@scene, @camera, @depthMaterial)
+        @depthExtractPass = new THREE.ShaderPass(Shaders.depthExtractShader)
+        
+        @depthComposer = new THREE.EffectComposer( @renderer, @depthTarget )
+        @depthComposer.setSize(@hRes, @vRes)
+        @depthComposer.addPass( depthPass )
+        @depthComposer.addPass( edgeDetectPass2 )
+        @depthComposer.addPass( copyPass )
+        
+        
+        #normal data generation
+        @normalTarget = new THREE.WebGLRenderTarget(@width, @height, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat } )
+        @normalMaterial = new THREE.MeshNormalMaterial()
+        normalPass = new THREE.RenderPass(@scene, @camera, @normalMaterial)
+        
+        @normalComposer = new THREE.EffectComposer( @renderer, @normalTarget )
+        @normalComposer.setSize(@hRes, @vRes)
+        @normalComposer.addPass( normalPass )
+        @normalComposer.addPass( edgeDetectPass2 )
+        @normalComposer.addPass(copyPass)
+         
+        
+        @composer = new THREE.EffectComposer( @renderer )
+        @composer.setSize(@width * @dpr*composerResolutionMultiplier, @height * @dpr*composerResolutionMultiplier)
+        @composer.addPass(renderPass)
+        @composer.addPass(@fxAAPass)
+        @composer.addPass(vignettePass)
+        #make sure the last in line renders to screen
+        @composer.passes[@composer.passes.length-1].renderToScreen = true
+        
+        #final compositing
+        #steps:
+        #render default to @colorTarget
+        #render depth
+        #render normal
+        
+        renderTargetParameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBFormat, stencilBuffer: false };
+        renderTarget = new THREE.WebGLRenderTarget( @width , @height, renderTargetParameters );
+        
+        @finalComposer = new THREE.EffectComposer( @renderer , renderTarget )
+        @finalComposer.setSize(@hres, @vres)
+        #prepare the final render passes
+        @finalComposer.addPass( renderPass )
+        @finalComposer.addPass(@fxAAPass)
+        #blend in the edge detection results
+        effectBlend = new THREE.ShaderPass( THREE.AdditiveBlendShader, "tDiffuse1" )
+        effectBlend.uniforms[ 'tDiffuse2' ].value = @normalComposer.renderTarget2
+        effectBlend.uniforms[ 'tDiffuse3' ].value = @depthComposer.renderTarget2
+        @finalComposer.addPass( effectBlend )
+        
+        @finalComposer.passes[@finalComposer.passes.length-1].renderToScreen = true
+        @finalComposer.passes[@finalComposer.passes.length-1].needsSwap = true
 
-      # postprocessing
-      renderPass = new THREE.RenderPass(@scene, @camera)
-      overlayRenderPass = new THREE.RenderPass(@overlayScene, @overlayCamera)
+    
+    setupContextMenu:=>
+      #experimental context menu
+      require 'contextMenu'
+      generatorTest = require "./generators/generatorGeometry"
       
-      #
-      edgeHighlightShader = 
-        uniforms:
-            "tDiffuse": { type: "t", value: null }
-            "tDepth": { type: "t", value: null }
-            "tNormal": { type: "t", value: null }
-        vertexShader: 
-            """varying vec2 vUv;
-            void main() {
-                vUv = vec2( uv.x, uv.y );
-                gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-            }"""
-        fragmentShader: 
-            """
-            uniform sampler2D tDiffuse;
-            varying vec2 vUv;
+      language = "coffee"
+      visitor = new generatorTest.CoffeeSCadVisitor()
+      
+      switch language
+        when "coffee"
+          visitor = new generatorTest.CoffeeSCadVisitor()
+        when "jscad"
+          visitor = new generatorTest.OpenJSCadVisitor()
+        when "scad"
+          visitor = new generatorTest.OpenSCadVisitor()
+      
+      @$el.contextmenu
+        target:'#context-menu'
+        onItem: (e, element)=>
+          visitResult = ""
+          mesh = null
+          objectType = $(element).attr("data-value")
+          switch objectType
+            when "Cube"
+              mesh = generatorTest.cubeGenerator()
+            when "Sphere"
+              mesh = generatorTest.sphereGenerator()
+            when "Cylinder"
+              mesh = generatorTest.cylinderGenerator()
+          
+          if not @assembly?
+            @assembly = new THREE.Object3D()
+            @assembly.name = "assembly"
+          
+          if mesh?
+            @assembly.add( mesh ) 
+            visitResult = visitor.visit(mesh)
+            console.log visitResult
+            @_render()
+            meshCode = "\nassembly.add(#{visitResult})"
+            line = @model.injectContent(meshCode)
+            mesh.meta = mesh.meta or {}
+            mesh.meta.startIndex = line
+            mesh.meta.blockLength = meshCode.length
+            mesh.meta.code = meshCode
+            console.log "mesh.meta", mesh.meta
      
-            void main() {
-                vec4 srcColor = texture2D( tDiffuse, vUv );
-                vec4 endColor = vec4(1.0, 1.0, 1.0, 1.0)- srcColor * 200.0;
-                if(endColor[0]<0.3)
-                {
-                  endColor[3]=1.0;
-                }
-                else
-                {
-                  endColor[3]=0.0;
-                }
-                gl_FragColor = endColor;//vec4(1.0, 1.0, 1.0, 1.0)- srcColor * 200.0 ;
-            }"""
-      
-      
-      #various passes and rtts
-      @colorTarget = new THREE.WebGLRenderTarget(@width, @height, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat } )
-      colorPass = new THREE.RenderPass(@scene, @camera)
-      
-      
-      #----------------
-      edgeHighlightPass = new THREE.ShaderPass(edgeHighlightShader)
-      #----------------
-      
-      copyPass = new THREE.ShaderPass( THREE.CopyShader )
-      
-      
-      edgeDetectPass = new THREE.ShaderPass(THREE.EdgeShader)
-      edgeDetectPass2 = new THREE.ShaderPass(THREE.EdgeShader2)
-      
-      contrastPass = new THREE.ShaderPass(THREE.BrightnessContrastShader)
-      contrastPass.uniforms['contrast'].value=0.5
-      contrastPass.uniforms['brightness'].value=-0.4
-      
-      vignettePass = new THREE.ShaderPass(THREE.VignetteShader)
-      vignettePass.uniforms["offset"].value = 0.4;
-      vignettePass.uniforms["darkness"].value = 5;
-      
-      @hRes = @width * @dpr*composerResolutionMultiplier
-      @vRes = @height * @dpr*composerResolutionMultiplier
-      @hRes = @width
-      @vRes = @height
-      
-      @fxAAPass = new THREE.ShaderPass(THREE.FXAAShader)
-      #@fxAAPass.uniforms['resolution'].value.set(fxaaResolutionMultiplier / (@width * @dpr), fxaaResolutionMultiplier / (@height * @dpr))
-      @fxAAPass.uniforms['resolution'].value.set(@hRes, @vRes)
-      
-      #depth data generation
-      @depthTarget = new THREE.WebGLRenderTarget(@width, @height, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat } )
-      @depthMaterial = new THREE.MeshDepthMaterial()
-      depthPass = new THREE.RenderPass(@scene, @camera, @depthMaterial)
-      @depthExtractPass = new THREE.ShaderPass(Shaders.depthExtractShader)
-      
-      @depthComposer = new THREE.EffectComposer( @renderer, @depthTarget )
-      @depthComposer.setSize(@hRes, @vRes)
-      @depthComposer.addPass( depthPass )
-      @depthComposer.addPass( edgeDetectPass2 )
-      @depthComposer.addPass( copyPass )
-      
-      
-      #normal data generation
-      @normalTarget = new THREE.WebGLRenderTarget(@width, @height, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat } )
-      @normalMaterial = new THREE.MeshNormalMaterial()
-      normalPass = new THREE.RenderPass(@scene, @camera, @normalMaterial)
-      
-      @normalComposer = new THREE.EffectComposer( @renderer, @normalTarget )
-      @normalComposer.setSize(@hRes, @vRes)
-      @normalComposer.addPass( normalPass )
-      @normalComposer.addPass( edgeDetectPass2 )
-      @normalComposer.addPass(copyPass)
-       
-      
-      @composer = new THREE.EffectComposer( @renderer )
-      @composer.setSize(@width * @dpr*composerResolutionMultiplier, @height * @dpr*composerResolutionMultiplier)
-      @composer.addPass(renderPass)
-      @composer.addPass(@fxAAPass)
-      @composer.addPass(vignettePass)
-      #make sure the last in line renders to screen
-      @composer.passes[@composer.passes.length-1].renderToScreen = true
-      
-      #steps:
-      #render default to @colorTarget
-      #render depth
-      #render normal
-      
-      #final compositing
-      renderTargetParameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBFormat, stencilBuffer: false };
-      renderTarget = new THREE.WebGLRenderTarget( @width , @height, renderTargetParameters );
-      
-       
-      @finalComposer = new THREE.EffectComposer( @renderer , renderTarget )
-      @finalComposer.setSize(@hres, @vres)
-      #prepare the final render passes
-      @finalComposer.addPass( renderPass )
-      @finalComposer.addPass(@fxAAPass)
-      #blend in the edge detection results
-      effectBlend = new THREE.ShaderPass( THREE.AdditiveBlendShader, "tDiffuse1" )
-      effectBlend.uniforms[ 'tDiffuse2' ].value = @normalComposer.renderTarget2
-      effectBlend.uniforms[ 'tDiffuse3' ].value = @depthComposer.renderTarget2
-      @finalComposer.addPass( effectBlend )
-      
-      @finalComposer.passes[@finalComposer.passes.length-1].renderToScreen = true
-      @finalComposer.passes[@finalComposer.passes.length-1].needsSwap = true
-
-      
     setupView:(val)=>
       if @settings.projection is "orthographic"
         @camera.toOrthographic()
@@ -688,8 +461,166 @@ define (require) ->
       @model.on("compiled", @_onProjectCompiled)
       @model.on("compile:error", @_onProjectCompileFailed)
       
+    settingsChanged:(settings, value)=> 
+      for key, val of @settings.changedAttributes()
+        switch key
+          when "bgColor"
+            @setBgColor()
+          when "renderer"
+            delete @renderer
+            @init()
+            @fromCsg @model
+            @render()
+          when "showGrid"
+            if val
+              @addGrid()
+            else
+              @removeGrid()
+          when "gridSize"
+            if @grid?
+              @removeGrid()
+              @addGrid()
+          when "gridStep"
+            if @grid?
+              @removeGrid()
+              @addGrid()
+          when "gridColor"
+            if @grid?
+              @grid.setColor(val)
+          when "gridOpacity"
+            if @grid?
+              @grid.setOpacity(val)
+          when "gridText"
+            @grid.toggleText(val)
+          when "gridNumberingPosition"
+            @grid.setTextLocation(val)
+          when "showAxes"
+            if val
+              @addAxes()
+            else
+              @removeAxes()
+          when "axesSize"
+              @removeAxes()
+              @addAxes()
+          when "shadows"
+            if not val
+              @renderer.clearTarget(@light.shadowMap)
+              helpers.updateVisuals(@assembly, @settings)
+              @_render()
+              @renderer.shadowMapAutoUpdate = false
+              if @settings.showGrid
+                @removeGrid()
+                @addGrid()
+            else
+              @renderer.shadowMapAutoUpdate = true
+              helpers.updateVisuals(@assembly, @settings)
+              @_render()
+              if @settings.showGrid
+                @removeGrid()
+                @addGrid()
+          when "shadowResolution"
+            #TODO: this does not seem to get applied
+            shadowResolution = parseInt(val.split("x")[0])
+            @light.shadowMapWidth = shadowResolution
+            @light.shadowMapHeight = shadowResolution
+            if @settings.shadows
+              @renderer.shadowMapAutoUpdate = true
+              helpers.updateVisuals(@assembly, @settings)
+              @_render()
+              if @settings.showGrid
+                @removeGrid()
+                @addGrid()
+          when "selfShadows"
+            helpers.updateVisuals(@assembly, @settings)
+            @_render()
+          when "showStats"
+            if val
+              @ui.overlayDiv.append(@stats.domElement)
+            else
+              $(@stats.domElement).remove()
+          when  "projection"
+            if val == "orthographic"
+              @camera.toOrthographic()
+              #@camera.setZoom(6)
+            else
+              @camera.toPerspective()
+              @camera.setZoom(1)
+          when "position"
+            @setupView(val)
+          when "objectViewMode"
+            #TODO: should not be global , but object specific?
+            helpers.updateVisuals(@assembly, @settings)
+            @_render()
+          when 'center'
+            try
+              tgt = @controls.target
+              offset = new THREE.Vector3().sub(@controls.target.clone())
+              @controls.target.addSelf(offset)
+              @camera.position.addSelf(offset)
+            catch error
+              console.log "error #{error} in center"
+            @camera.lookAt(@scene.position)
+          when 'helpersColor'
+            if @axes?
+              @removeAxes()
+              @addAxes()
+          when 'textColor'
+            if @axes?
+              @removeAxes()
+              @addAxes()
+          when 'showConnectors'
+            if val
+              @assembly.traverse (object)->
+                if object.name is "connectors"
+                  object.visible = true 
+            else
+              @assembly.traverse (object)->
+                console.log "pouet"
+                console.log object
+                if object.name is "connectors"
+                  object.visible = false 
+      @_render()  
+  
+    reloadAssembly:()=>
+      reloadedAssembly = @model.rootFolder.get(".assembly")
+      console.log "reloadedAssembly",reloadedAssembly
+      if reloadedAssembly?
+        reloadedAssembly = JSON.parse(reloadedAssembly.content)
+        loader = new THREE.ObjectParser()
+        
+        @assembly = loader.parse(reloadedAssembly)
+        console.log "parse Result", @assembly
+        @scene.add @assembly
+        
+        #hack because three.js does not reload the vertexColors flag correctly
+        helpers.updateVisuals(@assembly, @settings)
+        @_render()
+      
     makeScreenshot:(width=600, height=600)=>
       return helpers.captureScreen(@renderer.domElement,width,height)
+    
+    onObjectSelected:(selectionInfo)=>
+      #experimental 2d overlay for projected min max values of the objects 3d bounding box
+      [centerLeft,centerTop,length,width,height]=@selectionHelper.get2DBB(selectionInfo.selection,@width, @height)
+      $("#testOverlay2").removeClass("hide")
+      $("#testOverlay2").css("left",centerLeft+@$el.offset().left)
+      $("#testOverlay2").css('top', (centerTop - $("#testOverlay2").height()/2)+'px')
+      infoText = "#{@selectionHelper.currentSelect.name}"#\n w:#{width} <br\> l:#{length} <br\>h:#{height}"
+      
+      $("#testOverlay2").html("""<span>#{infoText} <a class="toto"><i class="icon-exclamation-sign"></a></span>""")
+      $(".toto").click ()=>
+        volume = @selectionHelper.currentSelect.volume or 0
+        
+        htmlStuff = """<span>#{infoText} <br>Volume:#{volume} <a class="toto"><i class="icon-exclamation-sign"></a></span>"""
+        $("#testOverlay2").html(htmlStuff)
+      @_render()
+      
+    onObjectUnSelected:(selectionInfo)=>
+      $("#testOverlay2").addClass("hide")
+      @_render()
+      
+    onObjectHover:()=>
+      @_render()
     
     _onSelectAttempt:(ev)=>
       """used either for selection or context menu"""
@@ -751,6 +682,19 @@ define (require) ->
       @selectionHelper.viewWidth=@width
       @selectionHelper.viewHeight=@height
       @selectionHelper.highlightObjectAt(x,y)
+
+    _onProjectCompiled:(res)=>
+      #compile succeeded, generate geometry from csg
+      @selectionHelper._unSelect()
+      @fromCsg res
+    
+    _onProjectCompileFailed:()=>
+      #in case project compilation failed, remove previously generated geometry
+      if @assembly?
+        @scene.remove @assembly
+        @assembly = null
+      @_render()
+      
     
     switchModel:(newModel)->
       #replace current model with a new one
@@ -769,126 +713,6 @@ define (require) ->
       @_render()
       
       @reloadAssembly()
-      
-    _onProjectCompiled:(res)=>
-      #compile succeeded, generate geometry from csg
-      @selectionHelper._unSelect()
-      @fromCsg res
-    
-    _onProjectCompileFailed:()=>
-      #in case project compilation failed, remove previously generated geometry
-      if @assembly?
-        @scene.remove @assembly
-        @assembly = null
-      @_render()
-              
-    settingsChanged:(settings, value)=> 
-      for key, val of @settings.changedAttributes()
-        switch key
-          when "bgColor"
-            @setBgColor()
-          when "renderer"
-            delete @renderer
-            @init()
-            @fromCsg @model
-            @render()
-          when "showGrid"
-            if val
-              @addGrid()
-            else
-              @removeGrid()
-          when "gridSize"
-            if @grid?
-              @removeGrid()
-              @addGrid()
-          when "gridStep"
-            if @grid?
-              @removeGrid()
-              @addGrid()
-          when "gridColor"
-            if @grid?
-              @grid.setColor(val)
-          when "gridOpacity"
-            if @grid?
-              @grid.setOpacity(val)
-          when "gridText"
-            @grid.toggleText(val)
-          when "gridNumberingPosition"
-            @grid.setTextLocation(val)
-          when "showAxes"
-            if val
-              @addAxes()
-            else
-              @removeAxes()
-          when "axesSize"
-              @removeAxes()
-              @addAxes()
-          when "shadows"
-            if not val
-              @renderer.clearTarget(@light.shadowMap)
-              @_updateAssemblyVisualAttrs()
-              @_render()
-              @renderer.shadowMapAutoUpdate = false
-              if @settings.showGrid
-                @removeGrid()
-                @addGrid()
-            else
-              @renderer.shadowMapAutoUpdate = true
-              @_updateAssemblyVisualAttrs()
-              @_render()
-              if @settings.showGrid
-                @removeGrid()
-                @addGrid()
-          when "selfShadows"
-            @_updateAssemblyVisualAttrs()
-            @_render()
-          when "showStats"
-            if val
-              @ui.overlayDiv.append(@stats.domElement)
-            else
-              $(@stats.domElement).remove()
-          when  "projection"
-            if val == "orthographic"
-              @camera.toOrthographic()
-              #@camera.setZoom(6)
-            else
-              @camera.toPerspective()
-              @camera.setZoom(1)
-          when "position"
-            @setupView(val)
-          when "objectViewMode"
-            #TODO: should not be global , but object specific?
-            @_updateAssemblyVisualAttrs()
-            @_render()
-          when 'center'
-            try
-              tgt = @controls.target
-              offset = new THREE.Vector3().sub(@controls.target.clone())
-              @controls.target.addSelf(offset)
-              @camera.position.addSelf(offset)
-            catch error
-              console.log "error #{error} in center"
-            @camera.lookAt(@scene.position)
-          when 'helpersColor'
-            if @axes?
-              @removeAxes()
-              @addAxes()
-          when 'textColor'
-            if @axes?
-              @removeAxes()
-              @addAxes()
-          when 'showConnectors'
-            if val
-              @assembly.traverse (object)->
-                if object.name is "connectors"
-                  object.visible = true 
-            else
-              @assembly.traverse (object)->
-                console.log "pouet"
-                console.log object
-                if object.name is "connectors"
-                  object.visible = false 
-      @_render()  
     
     setBgColor:()=>
       bgColor = @settings.bgColor
@@ -966,14 +790,9 @@ define (require) ->
       @fxAAPass.uniforms['resolution'].value.set(fxaaResolutionMultiplier / (@width * @dpr), fxaaResolutionMultiplier / (@height * @dpr))
       @composer.setSize(@width * @dpr*composerResolutionMultiplier, @height * @dpr*composerResolutionMultiplier)
       
-      
       @normalComposer.setSize(@hRes, @vRes)
       @depthComposer.setSize(@hRes, @vRes)
       @finalComposer.setSize(@hRes, @vRes)
-      
-      #@depthExtractPass.uniforms[ 'size' ].value.set( @width, @height )
-      #@depthExtractPass.uniforms[ 'cameraNear' ].value = 0.1 #@NEAR
-      #@depthExtractPass.uniforms[ 'cameraFar' ].value = 100 #@FAR
       
       @camera.aspect = @width / @height
       @camera.setSize(@width,@height)
@@ -990,24 +809,6 @@ define (require) ->
       @_computeViewSize()
       #setup everything 
       @init()
-      
-      #experimental context menu
-      require 'contextMenu'
-      @$el.contextmenu
-        target:'#context-menu'
-        onItem: (e, element)=>
-          console.log  "Selected", $(element).text() 
-          console.log  "Selected", $(element).attr("data-value")
-          objectType = $(element).attr("data-value")
-          if objectType == "Cube"
-            @model.injectContent("\nassembly.add( new Cube({size:15,center:true}) )\n")
-          
-          if objectType == "Sphere"
-            @model.injectContent("\nassembly.add( new Sphere({r:10,center:true}) )\n")
-          
-          if objectType == "Cylinder"
-            @model.injectContent("\nassembly.add( new Cylinder({r:10,h:30,center:true}) )\n")
-      
       
       if @settings.showStats
         @ui.overlayDiv.append(@stats.domElement)
@@ -1061,7 +862,6 @@ define (require) ->
         THREE.EffectComposer.scene = new THREE.Scene()
         THREE.EffectComposer.scene.add( THREE.EffectComposer.quad )
         
-        
         @depthComposer.render()
         @normalComposer.render()
         
@@ -1069,11 +869,10 @@ define (require) ->
         @finalComposer.passes[@finalComposer.passes.length-1].uniforms[ 'tDiffuse2' ].value = @normalComposer.renderTarget2
         @finalComposer.passes[@finalComposer.passes.length-1].uniforms[ 'tDiffuse3' ].value = @depthComposer.renderTarget2
         
-        @finalComposer.render()
+        #@finalComposer.render()
         
-        #@composer.render()
+        @composer.render()
         @overlayRenderer.render(@overlayScene, @overlayCamera)
-        
       
       if @settings.showStats
         @stats.update()
@@ -1102,8 +901,7 @@ define (require) ->
       end = new Date().getTime()
       console.log "Csg visualization time: #{end-start}"
       
-      @_updateAssemblyVisualAttrs()
-      
+      helpers.updateVisuals(@assembly, @settings)
       
       #TODO: once the core has been migrated to three.js, this should be in the compiler/project's after compile step
       exporter = new THREE.ObjectExporter()
@@ -1165,66 +963,10 @@ define (require) ->
         mesh.add connectorMesh   
        
       rootObj.add mesh
-      #@_addIndicator2(mesh)
       
       #recursive, for sub objects
       if csgObj.children?
         for index, child of csgObj.children
           @_importGeom(child, mesh) 
-     
-    _updateAssemblyVisualAttrs:=>
-      console.log "applying object visual style"
-      removeRenderHelpers=(child)=>
-        if child.renderSubElementsHelper?
-          child.remove(child.renderSubElementsHelper)
-          child.renderSubElementsHelper = null
-      
-      applyStyle=(child)=>
-        child.castShadow =  @settings.shadows
-        child.receiveShadow = @settings.selfShadows and @settings.shadows
-        
-        #hack
-        if child.material?
-          child.material.vertexColors= THREE.VertexColors
-        
-        switch @settings.objectViewMode
-          when "shaded"
-            removeRenderHelpers(child)
-            if child.material?
-              child.material.wireframe = false
-          when "wireframe"
-            removeRenderHelpers(child)
-            if child.material?
-              child.material.wireframe = true
-          when "structural"
-            if child.material?
-              child.material.wireframe = false
-            if child.geometry?
-              removeRenderHelpers(child)
-              basicMaterial1 = new THREE.MeshBasicMaterial( { color: 0xccccdd, side: THREE.DoubleSide, depthTest: true, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 } )
-              dashMaterial = new THREE.LineDashedMaterial( { color: 0x000000, dashSize: 2, gapSize: 3, depthTest: false, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1  } )
-              wireFrameMaterial = new THREE.MeshBasicMaterial( { color: 0x000000, depthTest: true, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1, wireframe: true } )
-              renderSubElementsHelper  = new THREE.Object3D()
-              renderSubElementsHelper.name = "renderSubs"
-              
-              geom = child.geometry
-              obj2 = new THREE.Mesh( geom.clone(), basicMaterial1 )
-              obj3 = new THREE.Line( helpers.geometryToline(geom.clone()), dashMaterial, THREE.LinePieces )
-              obj4 = new THREE.Mesh( geom.clone(), wireFrameMaterial)
-      
-              renderSubElementsHelper.add(obj2)
-              renderSubElementsHelper.add(obj3)
-              renderSubElementsHelper.add(obj4)
-              child.add(renderSubElementsHelper)
-              child.renderSubElementsHelper = renderSubElementsHelper
-              
-        for subchild in child.children
-          if subchild.name != "renderSubs" and subchild.name !="connectors"
-            applyStyle(subchild)
-          
-      if @assembly?
-        for child in @assembly.children  
-          applyStyle(child)
-    
-
+ 
   return VisualEditorView

@@ -814,6 +814,61 @@ define (require) ->
       volume = mesh.volume
     console.log "volume is: #{volume}"
     return volume
+  
+  updateVisuals=(rootAssembly, settings)->
+      console.log "applying visual style to #{rootAssembly}"
+      
+      removeRenderHelpers=(child)=>
+        if child.renderSubElementsHelper?
+          child.remove(child.renderSubElementsHelper)
+          child.renderSubElementsHelper = null
+      
+      applyStyle=(child)=>
+        child.castShadow =  settings.shadows
+        child.receiveShadow = settings.selfShadows and settings.shadows
+        
+        #hack
+        if child.material?
+          child.material.vertexColors= THREE.VertexColors
+        
+        switch settings.objectViewMode
+          when "shaded"
+            removeRenderHelpers(child)
+            if child.material?
+              child.material.wireframe = false
+          when "wireframe"
+            removeRenderHelpers(child)
+            if child.material?
+              child.material.wireframe = true
+          when "structural"
+            if child.material?
+              child.material.wireframe = false
+            if child.geometry?
+              removeRenderHelpers(child)
+              basicMaterial1 = new THREE.MeshBasicMaterial( { color: 0xccccdd, side: THREE.DoubleSide, depthTest: true, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 } )
+              dashMaterial = new THREE.LineDashedMaterial( { color: 0x000000, dashSize: 2, gapSize: 3, depthTest: false, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1  } )
+              wireFrameMaterial = new THREE.MeshBasicMaterial( { color: 0x000000, depthTest: true, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1, wireframe: true } )
+              renderSubElementsHelper  = new THREE.Object3D()
+              renderSubElementsHelper.name = "renderSubs"
+              
+              geom = child.geometry
+              obj2 = new THREE.Mesh( geom.clone(), basicMaterial1 )
+              obj3 = new THREE.Line( helpers.geometryToline(geom.clone()), dashMaterial, THREE.LinePieces )
+              obj4 = new THREE.Mesh( geom.clone(), wireFrameMaterial)
+      
+              renderSubElementsHelper.add(obj2)
+              renderSubElementsHelper.add(obj3)
+              renderSubElementsHelper.add(obj4)
+              child.add(renderSubElementsHelper)
+              child.renderSubElementsHelper = renderSubElementsHelper
+              
+        for subchild in child.children
+          if subchild.name != "renderSubs" and subchild.name !="connectors"
+            applyStyle(subchild)
+          
+      if rootAssembly?
+        for child in rootAssembly.children  
+          applyStyle(child)
       
 
-  return {"LabeledAxes":LabeledAxes, "Arrow":Arrow, "Grid":Grid, "BoundingCage":BoundingCage, "SelectionHelper":SelectionHelper, "captureScreen":captureScreen, "geometryToline":geometryToline}
+  return {"LabeledAxes":LabeledAxes, "Arrow":Arrow, "Grid":Grid, "BoundingCage":BoundingCage, "SelectionHelper":SelectionHelper, "captureScreen":captureScreen, "geometryToline":geometryToline, "updateVisuals":updateVisuals}

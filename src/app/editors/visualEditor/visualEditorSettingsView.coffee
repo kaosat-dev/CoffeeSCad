@@ -64,6 +64,22 @@ define (require)->
           textColor:
             type: 'Text'
           axesSize: 'Number'
+          
+          grid:
+            type: 'Object'
+            subSchema:
+              enabled: 'Checkbox'
+              size    : 'Number'
+              steps   : 'Number'
+              color   : 'Text'
+              opacity : {type:'Number', editorAttrs: { step: 0.1, min: 0, max: 1 } }
+              numbering: 'Checkbox'
+              numberingPosition: 
+                title : 'Grid numbering position'
+                type:'Select'
+                options:['center','border']
+              
+          
             
         options.fieldsets=[
           "legend":"Render settings"
@@ -77,6 +93,9 @@ define (require)->
         , 
           "legend":"Extra settings"
           "fields": ["bgColor","bgColor2", "textColor", "axesSize", "showStats"]
+         ,
+          "legend":"TEST"
+          "fields":["grid"]
           
         ]
       super options

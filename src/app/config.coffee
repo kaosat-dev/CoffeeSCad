@@ -72,6 +72,8 @@ require.config
     combo_cam:        "../assets/js/plugins/CombinedCamera"
     transformControls:"../assets/js/plugins/three/controls/transformControls"
     
+    RenderManager:    "../assets/js/plugins/three/extras/RenderManager"
+    
     ArrowHelper2:      "../assets/js/plugins/three/helpers/ArrowHelper"
     
     ObjectExport: "../assets/js/plugins/three/exporters/ObjectExport"
@@ -170,7 +172,9 @@ require.config
     
     ObjectParser:
       deps:["three"]
-      
+    
+    RenderManager:
+      deps:    ["three"]
     
     CopyShader:
       deps:    ["three"]
