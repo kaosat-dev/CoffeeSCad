@@ -95,6 +95,8 @@ require.config
     AdditiveBlendShader : "../assets/js/plugins/three/AdditiveBlendShader"
     BrightnessContrastShader : "../assets/js/plugins/three/BrightnessContrastShader"
     
+    EdgeShader3: "../assets/js/plugins/three/shaders/EdgeShader3"
+    
     
   shim:
     #any AMD compliant lib should NOT need shims
@@ -200,7 +202,11 @@ require.config
       deps:["CopyShader"]
     BlendShader:
       deps:["three"]
+      
     AdditiveBlendShader:
+      deps:["three"]
+      
+    EdgeShader3:
       deps:["three"]
       
       

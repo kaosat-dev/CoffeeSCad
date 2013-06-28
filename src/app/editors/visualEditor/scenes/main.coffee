@@ -41,10 +41,9 @@ define (require) ->
   
   light= spotLight 
   
-  mainScene.add(ambientLight)
-  mainScene.add(pointLight)
-  mainScene.add(pointLight2)
-  mainScene.add(spotLight)
   #@camera.add(pointLight)
-  
+  lights = [ambientLight,pointLight, pointLight2, spotLight]
+  mainScene.lights = lights
+  for light in lights
+    mainScene.add(light)
   return mainScene

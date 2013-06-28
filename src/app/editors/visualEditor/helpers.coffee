@@ -263,6 +263,7 @@ define (require) ->
       @add @subGrid
       @add @plane
       @_drawNumbering()
+      @name = "grid"
      
     _drawNumbering:->
       if @labels?
@@ -572,6 +573,7 @@ define (require) ->
       
       outlineMaterial = new THREE.MeshBasicMaterial( { color: 0xffc200, side: THREE.BackSide } )
       outline = new THREE.Mesh( selection.geometry.clone(), outlineMaterial )
+      outline.name = "selectOutline"
       #outline.position = selection.position
       outline.scale.multiplyScalar(1.03)
       selection.outline = outline
@@ -815,6 +817,40 @@ define (require) ->
     console.log "volume is: #{volume}"
     return volume
   
+  
+  toggleHelpers = (rootAssembly)->
+    originalStates = {}
+    
+    _hideHelpers=(child, hide)=>
+      if hide?
+        if hide 
+          originalStates[child]= child.visible
+          child.visible = false
+      else
+        if child.name == "boundingCage" or child.name == "grid" or child.name == "hoverOutline" or child.name =="selectOutline"
+          originalStates[child]= child.visible
+          child.visible = false
+          hide = true
+          
+      for subchild in child.children
+        _hideHelpers(subchild,hide)
+          
+    if rootAssembly?
+      for child in rootAssembly.children  
+        _hideHelpers(child)
+    return originalStates
+   
+  enableHelpers = (rootAssembly, originalStates)->
+    _enableHelpers=(child)=>
+      if child of originalStates
+        child.visible = originalStates[child]
+        for subchild in child.children
+          _enableHelpers(subchild)
+      
+    if rootAssembly?
+      for child in rootAssembly.children  
+        _enableHelpers(child)
+  
   updateVisuals=(rootAssembly, settings)->
       console.log "applying visual style to #{rootAssembly}"
       
@@ -871,4 +907,4 @@ define (require) ->
           applyStyle(child)
       
 
-  return {"LabeledAxes":LabeledAxes, "Arrow":Arrow, "Grid":Grid, "BoundingCage":BoundingCage, "SelectionHelper":SelectionHelper, "captureScreen":captureScreen, "geometryToline":geometryToline, "updateVisuals":updateVisuals}
+  return {"LabeledAxes":LabeledAxes, "Arrow":Arrow, "Grid":Grid, "BoundingCage":BoundingCage, "SelectionHelper":SelectionHelper, "captureScreen":captureScreen, "geometryToline":geometryToline, "toggleHelpers":toggleHelpers, "enableHelpers":enableHelpers, "updateVisuals":updateVisuals}

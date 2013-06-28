@@ -12,7 +12,11 @@ THREE.AdditiveBlendShader = {
     
         "tDiffuse1": { type: "t", value: null },
         "tDiffuse2": { type: "t", value: null },
-        "tDiffuse3": { type: "t", value: null }
+        "tDiffuse3": { type: "t", value: null },
+        "normalThreshold": { type: "f", value: 0.1 },
+        "depthThreshold": { type: "f", value: 0.05 },
+        "strengh"  : { type: "f", value: 0.3 },
+        "color"    : { type: "c", value: new THREE.Color( 0x000022 ) }
     },
 
     vertexShader: [
@@ -33,6 +37,10 @@ THREE.AdditiveBlendShader = {
         "uniform sampler2D tDiffuse1;",
         "uniform sampler2D tDiffuse2;",
         "uniform sampler2D tDiffuse3;",
+        "uniform float normalThreshold;",
+        "uniform float depthThreshold;",
+        "uniform float strengh;",
+        "uniform vec3 color;",
 
         "varying vec2 vUv;",
 
@@ -42,9 +50,10 @@ THREE.AdditiveBlendShader = {
             "vec4 normalTexel = texture2D( tDiffuse2, vUv );",
             "vec4 depthTexel = texture2D( tDiffuse3, vUv );",
             "gl_FragColor = colorTexel;",
-            "if( normalTexel.r >= 0.05 || depthTexel.r >=0.05) {",
-            "gl_FragColor= colorTexel*0.8 + vec4(0,0,0,1);",
+            "if( normalTexel.r >= normalThreshold || depthTexel.r >=depthThreshold) {",
+            "gl_FragColor= colorTexel*(1.0-strengh) + vec4(color[0], color[1], color[2],1);",
             "}",
+            
         "}"
 
     ].join("\n")
