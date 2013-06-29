@@ -539,7 +539,7 @@ define (require) ->
       if selection?
         @currentHover = selection
         
-        if not (selection.hoverOutline?) and not (selection.outline?) and not (selection.name is "hoverOutline") and not (selection.name is "boundingCage") and not (selection.name is "")
+        if not (selection.hoverOutline?) and not (selection.outline?) and not (selection.name is "hoverOutline") and not (selection.name is "boundingCage") and not (selection.name is "selectOutline")
           selection.currentHoverHex = selection.material.color.getHex()
           selection.material.color.setHex( @selectionColor )
           
