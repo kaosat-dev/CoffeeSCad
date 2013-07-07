@@ -38,15 +38,16 @@ define (require)->
             options:['center','border']
           
           showStats    : 'Checkbox'
+          
           position     :
             type: 'Select'
             options: ['diagonal', 'top', 'bottom', 'front', 'back', 'left', 'right', 'center'] 
-          
           projection   :
             type: 'Select'
             options: ['perspective', 'orthographic']
-          
           center: 'Checkbox'
+          autoRotate : 'Checkbox'
+          
           
           objectViewMode :
             title : 'object rendering'
@@ -89,7 +90,7 @@ define (require)->
           "fields": ["renderer","antialiasing","shadows","shadowResolution","selfShadows","objectViewMode","objectOutline"]
         , 
           "legend":"View settings"
-          "fields": ["position","projection","center"]
+          "fields": ["position","projection","center","autoRotate"]
         ,
           "legend":"Axes and Grid settings"
           "fields": ["showAxes","helpersColor","showConnectors", "showGrid","gridSize","gridStep","gridColor","gridOpacity","gridText","gridNumberingPosition"]

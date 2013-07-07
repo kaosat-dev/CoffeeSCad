@@ -71,6 +71,7 @@ require.config
     three_csg:        "../assets/js/plugins/ThreeCSG"
     combo_cam:        "../assets/js/plugins/CombinedCamera"
     transformControls:"../assets/js/plugins/three/controls/transformControls"
+    OrbitControls:    "../assets/js/plugins/three/controls/OrbitControls"
     
     RenderManager:    "../assets/js/plugins/three/extras/RenderManager"
     
@@ -155,7 +156,8 @@ require.config
       exports : "combo_cam"
     transformControls:
       deps: ["three"]
-      
+    OrbitControls:  
+      deps: ["three"]
     ArrowHelper2:
       deps: ["three"]  
     detector: 

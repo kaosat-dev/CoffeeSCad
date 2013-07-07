@@ -30,6 +30,7 @@ define (require)->
     constructor:(options)->
       super options
       @vent = vent
+      @showMenu = true
       
       @settings = new Settings()
       @initSettings()
@@ -71,14 +72,18 @@ define (require)->
       @initLayout()
       
     initLayout:=>
-      @menuView = new MenuView
-        stores: @stores
-        exporters: @exporters
-        model : @project
-        settings: @settings
-      #@headerRegion.show @menuView
-      @menuView.render()
-      @menuView.onDomRefresh()
+      if @showMenu
+        @menuView = new MenuView
+          stores: @stores
+          exporters: @exporters
+          model : @project
+          settings: @settings
+        #@headerRegion.show @menuView
+        @menuView.render()
+        @menuView.onDomRefresh()
+      else
+        $("#header").addClass("hide")
+        $("#header").height(0)
     
     initSettings:->
       setupSettingsBindings= =>

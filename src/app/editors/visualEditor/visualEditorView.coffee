@@ -10,7 +10,8 @@ define (require) ->
   reqRes = require 'core/messaging/appReqRes'
   vent = require 'core/messaging/appVent'
   
-  OrbitControls = require './controls/orbitControls'
+  #OrbitControls = require './controls/orbitControls'
+  OrbitControls = require 'OrbitControls'
   CustomOrbitControls = require './controls/customOrbitControls'
   transformControls = require 'transformControls'
   
@@ -47,6 +48,12 @@ define (require) ->
       "resize:stop" : "onResizeStop"
       "resize"      : "onResizeStop"
       
+      "mousedown .switchProjection":          "switchProjection"
+      "mousedown .toggleGrid"      :          "toggleGrid"
+      "mousedown .toggleAxes"      :          "toggleAxes"
+      "mousedown .toggleAutoRotate"      :    "toggleAutoRotate"
+      "mousedown .toggleOutlines"      :    "toggleOutlines"
+            
     constructor:(options, settings)->
       super options
       @vent = vent 
@@ -98,7 +105,6 @@ define (require) ->
       @setBgColor()
       @setupView(@settings.position)
       @setupContextMenu()
-      
       
     
     setupRenderers:(settings)=>
@@ -196,9 +202,7 @@ define (require) ->
         AdditiveBlendShader = require 'AdditiveBlendShader'
         EdgeShader3 = require 'EdgeShader3'
         
-        
         #shaders, post processing etc
-          
         resolutionBase = 1
         resolutionMultiplier = 1.5
         
@@ -210,9 +214,7 @@ define (require) ->
         
         copyPass = new THREE.ShaderPass( THREE.CopyShader )
         
-        edgeDetectPass = new THREE.ShaderPass(THREE.EdgeShader)
-        edgeDetectPass2 = new THREE.ShaderPass(THREE.EdgeShader2)
-        edgeDetectPass3 = new THREE.ShaderPass(THREE.EdgeShader3)
+        @edgeDetectPass3 = new THREE.ShaderPass(THREE.EdgeShader3)
         
         contrastPass = new THREE.ShaderPass(THREE.BrightnessContrastShader)
         contrastPass.uniforms['contrast'].value=0.5
@@ -228,7 +230,7 @@ define (require) ->
         @fxAAPass = new THREE.ShaderPass(THREE.FXAAShader)
         #@fxAAPass.uniforms['resolution'].value.set(@fxaaResolutionMultiplier / (@width * @dpr), @fxaaResolutionMultiplier / (@height * @dpr))
         @fxAAPass.uniforms['resolution'].value.set(1/@hRes, 1/@vRes)
-        edgeDetectPass3.uniforms[ 'aspect' ].value = new THREE.Vector2( @width, @height )
+        @edgeDetectPass3.uniforms[ 'aspect' ].value = new THREE.Vector2( @width, @height )
          
         #depth data generation
         @depthTarget = new THREE.WebGLRenderTarget(@width, @height, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat } )
@@ -238,7 +240,7 @@ define (require) ->
         @depthComposer = new THREE.EffectComposer( @renderer, @depthTarget )
         @depthComposer.setSize(@hRes, @vRes)
         @depthComposer.addPass( depthPass )
-        @depthComposer.addPass( edgeDetectPass3 )
+        @depthComposer.addPass( @edgeDetectPass3 )
         @depthComposer.addPass( copyPass )
         #@depthComposer.addPass(@fxAAPass)
         
@@ -250,7 +252,7 @@ define (require) ->
         @normalComposer = new THREE.EffectComposer( @renderer, @normalTarget )
         @normalComposer.setSize(@hRes, @vRes)
         @normalComposer.addPass( normalPass )
-        @normalComposer.addPass( edgeDetectPass3 )
+        @normalComposer.addPass( @edgeDetectPass3 )
         @normalComposer.addPass(copyPass)
         #@normalComposer.addPass(@fxAAPass)
         
@@ -329,7 +331,7 @@ define (require) ->
     setupView:(val)=>
       if @settings.projection is "orthographic"
         @camera.toOrthographic()
-        @camera.setZoom(6)
+        
       
       resetCam=()=>
         @camera.position.z = 0
@@ -343,8 +345,8 @@ define (require) ->
           @overlayCamera.position.y = 150
           @overlayCamera.position.z = 250
           
-          @camera.lookAt(@scene.position)
-          @overlayCamera.lookAt(@overlayScene.position)
+          #@camera.lookAt(@scene.position)
+          #@overlayCamera.lookAt(@overlayScene.position)
           
         when 'top'
           @camera.toTopView()
@@ -428,7 +430,7 @@ define (require) ->
           @camera.lookAt(@scene.position)
           @overlayCamera.lookAt(@overlayScene.position)
           
-        when 'right'
+        when 'right' 
           #@camera.toRightView()
           try
             offset = @camera.position.clone().sub(@controls.target)
@@ -537,6 +539,7 @@ define (require) ->
               @ui.overlayDiv.append(@stats.domElement)
             else
               $(@stats.domElement).remove()
+         
           when  "projection"
             if val == "orthographic"
               @camera.toOrthographic()
@@ -546,6 +549,9 @@ define (require) ->
               @camera.setZoom(1)
           when "position"
             @setupView(val)
+          when "autoRotate"
+            @controls.autoRotate = val
+            @overlayControls.autoRotate = val
           when "objectViewMode"
             #TODO: should not be global , but object specific?
             helpers.updateVisuals(@assembly, @settings)
@@ -694,6 +700,57 @@ define (require) ->
       @selectionHelper.viewHeight=@height
       @selectionHelper.highlightObjectAt(x,y)
 
+    switchProjection:(ev)->
+      projection = @settings.projection
+      if projection is "perspective"
+        @settings.projection = "orthographic"
+        $(ev.target).addClass("uicon-off")
+      else
+        @settings.projection = "perspective"
+        $(ev.target).removeClass("uicon-off")
+      return false
+    
+    toggleGrid: (ev)=>
+      toggled = @settings.showGrid
+      if toggled
+        @settings.showGrid = false
+        $(ev.target).addClass("uicon-off")
+      else
+        @settings.showGrid = true
+        $(ev.target).removeClass("uicon-off")
+      return false
+    
+    toggleAxes:(ev)=>
+      toggled = @settings.showAxes
+      if toggled
+        @settings.showAxes = false
+        $(ev.target).addClass("uicon-off")
+      else
+        @settings.showAxes = true
+        $(ev.target).removeClass("uicon-off")
+      return false
+    
+    toggleAutoRotate:(ev)=>
+      toggled = @settings.autoRotate
+      if toggled
+        @settings.autoRotate = false
+        $(ev.target).addClass("uicon-off")
+      else
+        @settings.autoRotate = true
+        $(ev.target).removeClass("uicon-off")
+      return false
+
+    toggleOutlines:(ev)=>
+      console.log "toggle outlines"
+      toggled = @settings.objectOutline
+      if toggled
+        @settings.objectOutline = false
+        $(ev.target).addClass("uicon-off")
+      else
+        @settings.objectOutline = true
+        $(ev.target).removeClass("uicon-off")
+      return false
+      
     _onProjectCompiled:(res)=>
       #compile succeeded, generate geometry from csg
       @selectionHelper._unSelect()
@@ -737,7 +794,6 @@ define (require) ->
         return  hex 
       
       color = _HexTO0x(bgColor)
-      #color = 0x000000
       alpha = if @renderer.getClearAlpha? then @renderer.getClearAlpha() else 1
       alpha = 1
       @renderer.setClearColor( color, alpha )
@@ -777,7 +833,7 @@ define (require) ->
       delete @overlayAxes
             
     _computeViewSize:=>
-      @height = window.innerHeight-30
+      @height = window.innerHeight-($("#header").height())
       if window.devicePixelRatio?
         @dpr = window.devicePixelRatio
 
@@ -806,6 +862,7 @@ define (require) ->
       
       if (@renderer instanceof THREE.WebGLRenderer and @settings.objectOutline is true)
         #shader uniforms updates
+        @edgeDetectPass3.uniforms[ 'aspect' ].value = new THREE.Vector2( @width, @height )
         @fxAAPass.uniforms['resolution'].value.set(1/@hRes, 1/@vRes)
         #@fxAAPass.uniforms['resolution'].value.set(@fxaaResolutionMultiplier / (@width * @dpr), @fxaaResolutionMultiplier / (@height * @dpr))
         
@@ -839,26 +896,33 @@ define (require) ->
       container = $(@ui.renderBlock)
       container.append(@renderer.domElement)
       @renderer.domElement.setAttribute("id","3dView")
-      console.log @renderer.domElement.id
       
-      @controls = new CustomOrbitControls(@camera, @el)#
+      @controls = new THREE.OrbitControls(@camera, @el)
+      @controls.staticMoving = true
+      @controls.autoRotate = @settings.autoRotate
+      @controls.autoRotateSpeed = 4.0
+      
+      ###
       @controls.rotateSpeed = 1.8
       @controls.zoomSpeed = 4.2
       @controls.panSpeed = 0.8#1.4
       #@controls.addEventListener( 'change', @_render )
       @controls.staticMoving = true
-      @controls.dynamicDampingFactor = 0.3
+      @controls.dynamicDampingFactor = 0.3###
       
       container2 = $(@ui.glOverlayBlock)
       container2.append(@overlayRenderer.domElement)
       
-      @overlayControls = new CustomOrbitControls(@overlayCamera, @el)#Custom
+      @overlayControls = new THREE.OrbitControls(@overlayCamera, @el)#new CustomOrbitControls(@overlayCamera, @el)#Custom
       @overlayControls.noPan = true
       @overlayControls.noZoom = false
-      @overlayControls.rotateSpeed = 2
-      @overlayControls.zoomSpeed = 4.2
+      #@overlayControls.rotateSpeed = 2
+      #@overlayControls.zoomSpeed = 4.2
       @overlayControls.panSpeed = 0
       @overlayControls.userZoomSpeed=0
+      
+      @overlayControls.autoRotate = @settings.autoRotate
+      @overlayControls.autoRotateSpeed = 4.0
       
       @overlayControls.addEventListener( 'change', @_renderOverlay )
       
@@ -885,8 +949,6 @@ define (require) ->
       else
         @renderer.render( @scene, @camera)
       
-      
-      
       if @settings.showStats
         @stats.update()
       
@@ -897,6 +959,12 @@ define (require) ->
     animate:()=>
       @controls.update()
       @overlayControls.update()
+      
+      blaZoom = Math.pow( 0.95, @controls.userZoomSpeed )
+      #@camera.setZoom(@controls.scale*10)
+      #@camera.setFov(10)
+      #console.log @camera.position
+      
       @_render()
       requestAnimationFrame(@animate)
     

@@ -30,10 +30,44 @@ THREE.CombinedCamera = function ( width, height, fov, near, far, orthoNear, orth
     this.toPerspective();
 
     var aspect = width/height;
+    this.target = new THREE.Object3D()
 
 };
 
 THREE.CombinedCamera.prototype = Object.create( THREE.Camera.prototype );
+
+
+
+
+THREE.CombinedCamera.prototype.lookAt = function () {
+
+    // This routine does not support cameras with rotated and/or translated parent(s)
+
+    var m1 = new THREE.Matrix4();
+
+    return function ( vector ) {
+        this.target = vector;
+        if(this.inOrthographicMode===true)
+        {
+            this.toOrthographic();
+        }
+        
+        m1.lookAt( this.position, vector, this.up );
+
+        if ( this.useQuaternion === true )  {
+
+            this.quaternion.setFromRotationMatrix( m1 );
+
+        } else {
+
+            this.rotation.setEulerFromRotationMatrix( m1, this.eulerOrder );
+
+        }
+
+    };
+
+}();
+
 
 THREE.CombinedCamera.prototype.toPerspective = function () {
 
@@ -62,8 +96,19 @@ THREE.CombinedCamera.prototype.toOrthographic = function () {
     var near = this.cameraP.near;
     var far = this.cameraP.far;
 
-    // The size that we set is the mid plane of the viewing frustum
+    var distance = this.position.length()*0.3;
+    console.log("distance",distance);
+    var width = Math.tan(fov) * distance * aspect;
+    var height = Math.tan (fov) * distance;
+    console.log("distance",distance,"height",height,"width",width);
+    
+    //TODO: distance should not be relative to [0,0,0], but to the target (taking panning into account)
+    //cameraP
+    //set the orthographic view rectangle to 0,0,width,height
+    //see here : http://stackoverflow.com/questions/13483775/set-zoomvalue-of-a-perspective-equal-to-perspective
 
+    // The size that we set is the mid plane of the viewing frustum
+    /*
     var hyperfocus = ( near + far ) / 2;
 
     var halfHeight = Math.tan( fov / 2 ) * hyperfocus;
@@ -72,22 +117,16 @@ THREE.CombinedCamera.prototype.toOrthographic = function () {
     var halfWidth = planeWidth / 2;
 
     halfHeight /= this.zoom;
-    halfWidth /= this.zoom;
+    halfWidth /= this.zoom;*/
+   
+    var halfWidth = width;
+    var halfHeight = height;
 
-    this.cameraO.left = -halfWidth;
-    this.cameraO.right = halfWidth;
-    this.cameraO.top = halfHeight;
-    this.cameraO.bottom = -halfHeight;
+    this.cameraO.left = halfWidth;
+    this.cameraO.right = -halfWidth;
+    this.cameraO.top = -halfHeight;
+    this.cameraO.bottom = halfHeight;
 
-    // this.cameraO.left = -farHalfWidth;
-    // this.cameraO.right = farHalfWidth;
-    // this.cameraO.top = farHalfHeight;
-    // this.cameraO.bottom = -farHalfHeight;
-
-    // this.cameraO.left = this.left / this.zoom;
-    // this.cameraO.right = this.right / this.zoom;
-    // this.cameraO.top = this.top / this.zoom;
-    // this.cameraO.bottom = this.bottom / this.zoom;
 
     this.cameraO.updateProjectionMatrix();
 
@@ -183,10 +222,8 @@ THREE.CombinedCamera.prototype.toFrontView = function() {
     this.rotation.x = 0;
     this.rotation.y = 0;
     this.rotation.z = 0;
+    
 
-    // should we be modifing the matrix instead?
-
-    this.rotationAutoUpdate = false;
 
 };
 
@@ -205,6 +242,15 @@ THREE.CombinedCamera.prototype.toLeftView = function() {
     this.rotation.y = - Math.PI / 2;
     this.rotation.z = 0;
     this.rotationAutoUpdate = false;
+    
+    
+    /*try
+    offset = @camera.position.clone().sub(@controls.target)
+    nPost = new  THREE.Vector3()
+    nPost.x = offset.length()
+    @camera.position = nPost
+  catch error
+    @camera.position = new THREE.Vector3(@defaultCameraPosition.x,0,0)*/
 
 };
 
@@ -234,4 +280,3 @@ THREE.CombinedCamera.prototype.toBottomView = function() {
     this.rotationAutoUpdate = false;
 
 };
-
