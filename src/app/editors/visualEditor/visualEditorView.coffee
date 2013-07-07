@@ -67,7 +67,10 @@ define (require) ->
       @defaultCameraPosition = new THREE.Vector3(100,100,200)
       @width = 320
       @height = 240
+      @resUpscaler = 1
       @dpr = 1
+      @hRes = 320
+      @vRes = 240
       
       @stats = new stats()
       @stats.domElement.style.position = 'absolute'
@@ -95,6 +98,8 @@ define (require) ->
       @setBgColor()
       @setupView(@settings.position)
       @setupContextMenu()
+      
+      
     
     setupRenderers:(settings)=>
       getValidRenderer=(settings)->
@@ -147,7 +152,7 @@ define (require) ->
       @setupOverlayScene() 
              
     setupScene:()->
-      @viewAngle=45
+      @viewAngle=40
       ASPECT = @width / @height
       @NEAR = 1
       @FAR = 1000
@@ -169,19 +174,9 @@ define (require) ->
       
     setupOverlayScene:()->
       #Experimental overlay
-      ASPECT = 350 / 250
-      NEAR = 1
-      FAR = 10000
-      @overlayCamera =
-        #new THREE.PerspectiveCamera(@viewAngle,ASPECT, NEAR, FAR)
-        new THREE.CombinedCamera(
-          350,
-          250,
-          @viewAngle,
-          NEAR,
-          FAR,
-          NEAR,
-          FAR)
+      NEAR = 0.1
+      FAR = 1000
+      @overlayCamera = new THREE.OrthographicCamera( 350 / - 2, 350 / 2, 250 / 2, 250 / - 2, NEAR, FAR )
       @overlayCamera.up = new THREE.Vector3( 0, 0, 1 )
       
       @overlayScene = new THREE.Scene()
@@ -210,9 +205,6 @@ define (require) ->
         @fxaaResolutionMultiplier = resolutionBase/resolutionMultiplier
         composerResolutionMultiplier = resolutionBase*resolutionMultiplier
         
-        @resUpscaler = 1
-        
-         
         #various passes and rtts
         renderPass = new THREE.RenderPass(@scene, @camera)
         
@@ -236,7 +228,6 @@ define (require) ->
         @fxAAPass = new THREE.ShaderPass(THREE.FXAAShader)
         #@fxAAPass.uniforms['resolution'].value.set(@fxaaResolutionMultiplier / (@width * @dpr), @fxaaResolutionMultiplier / (@height * @dpr))
         @fxAAPass.uniforms['resolution'].value.set(1/@hRes, 1/@vRes)
-        
         edgeDetectPass3.uniforms[ 'aspect' ].value = new THREE.Vector2( @width, @height )
          
         #depth data generation
@@ -249,7 +240,7 @@ define (require) ->
         @depthComposer.addPass( depthPass )
         @depthComposer.addPass( edgeDetectPass3 )
         @depthComposer.addPass( copyPass )
-        @depthComposer.addPass(@fxAAPass)
+        #@depthComposer.addPass(@fxAAPass)
         
         #normal data generation
         @normalTarget = new THREE.WebGLRenderTarget(@width, @height, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat } )
@@ -261,7 +252,7 @@ define (require) ->
         @normalComposer.addPass( normalPass )
         @normalComposer.addPass( edgeDetectPass3 )
         @normalComposer.addPass(copyPass)
-        @normalComposer.addPass(@fxAAPass)
+        #@normalComposer.addPass(@fxAAPass)
         
         
         #final compositing
@@ -274,7 +265,7 @@ define (require) ->
         renderTarget = new THREE.WebGLRenderTarget( @width , @height, renderTargetParameters );
         
         @finalComposer = new THREE.EffectComposer( @renderer , renderTarget )
-        @finalComposer.setSize(@hres, @vres)
+        @finalComposer.setSize(@hRes, @vRes)
         #prepare the final render passes
         @finalComposer.addPass( renderPass )
         #@finalComposer.addPass(@fxAAPass)
@@ -283,12 +274,10 @@ define (require) ->
         effectBlend.uniforms[ 'tDiffuse2' ].value = @normalComposer.renderTarget2
         effectBlend.uniforms[ 'tDiffuse3' ].value = @depthComposer.renderTarget2
         @finalComposer.addPass( effectBlend )
-        @finalComposer.addPass( vignettePass )
         #
+        #@finalComposer.addPass( vignettePass )
         #make sure the last in line renders to screen
         @finalComposer.passes[@finalComposer.passes.length-1].renderToScreen = true
-        #@finalComposer.passes[@finalComposer.passes.length-1].needsSwap = true
-        
     
     setupContextMenu:=>
       #experimental context menu
@@ -452,8 +441,9 @@ define (require) ->
           @overlayCamera.position = new THREE.Vector3(-250,0,0)
           @camera.lookAt(@scene.position)
           @overlayCamera.lookAt(@overlayScene.position)
-         
-      @_render()
+      
+      if @initialized 
+        @_render()
     
     _setupEventBindings:=>
       @model.on("compiled", @_onProjectCompiled)
@@ -528,6 +518,17 @@ define (require) ->
               if @settings.showGrid
                 @removeGrid()
                 @addGrid()
+          
+          when "objectOutline"
+            console.log "objectOutline",val
+            #TODO: move this to a seperate method
+            if val
+              @fxAAPass.uniforms['resolution'].value.set(1/@hRes, 1/@vRes)
+              @normalComposer.setSize(@hRes, @vRes)
+              @depthComposer.setSize(@hRes, @vRes)
+              @finalComposer.setSize(@hRes, @vRes)
+            @_render()
+          
           when "selfShadows"
             helpers.updateVisuals(@assembly, @settings)
             @_render()
@@ -697,6 +698,9 @@ define (require) ->
       #compile succeeded, generate geometry from csg
       @selectionHelper._unSelect()
       @fromCsg res
+      
+      @grid.rootAssembly = @assembly
+      @grid.updateGridSize()
     
     _onProjectCompileFailed:()=>
       #in case project compilation failed, remove previously generated geometry
@@ -733,7 +737,9 @@ define (require) ->
         return  hex 
       
       color = _HexTO0x(bgColor)
+      #color = 0x000000
       alpha = if @renderer.getClearAlpha? then @renderer.getClearAlpha() else 1
+      alpha = 1
       @renderer.setClearColor( color, alpha )
       
       
@@ -761,7 +767,7 @@ define (require) ->
       @axes = new helpers.LabeledAxes({xColor:helpersColor, yColor:helpersColor, zColor:helpersColor, size:@settings.gridSize/2, addLabels:false, addArrows:false})
       @scene.add(@axes)
       
-      @overlayAxes = new helpers.LabeledAxes({textColor:@settings.textColor, size:@settings.axesSize})
+      @overlayAxes = new helpers.LabeledAxes({textColor:@settings.textColor, size:100})
       @overlayScene.add @overlayAxes
       
     removeAxes:()->
@@ -771,11 +777,11 @@ define (require) ->
       delete @overlayAxes
             
     _computeViewSize:=>
-      @height = window.innerHeight-10
-      @height = @$el.height()
+      @height = window.innerHeight-30
+      if window.devicePixelRatio?
+        @dpr = window.devicePixelRatio
 
       if not @initialized?
-        @initialized = true
         westWidth = $("#_dockZoneWest").width()
         eastWidth = $("#_dockZoneEast").width()
         @width = window.innerWidth - (westWidth + eastWidth)
@@ -783,30 +789,29 @@ define (require) ->
         westWidth = $("#_dockZoneWest").width()
         eastWidth = $("#_dockZoneEast").width()
         @width = window.innerWidth - (westWidth + eastWidth)
-      #console.log "window.innerWidth", window.getCoordinates().width#window.outerWidth
-      @height = window.innerHeight-30
+        #@width = Math.floor(window.innerWidth*@dpr) - (westWidth + eastWidth)
       
-      if window.devicePixelRatio?
-        @dpr = window.devicePixelRatio
-      
+      #BUG in firefox: dpr is not 1 on desktop, scaling issue ensue, so forcing to "1"
+      @dpr=1
       @hRes = @width * @dpr * @resUpscaler
       @vRes = @height * @dpr * @resUpscaler
     
     onResize:()=>
       @_computeViewSize()
       
-      #shader uniforms updates
-      @fxAAPass.uniforms['resolution'].value.set(1/@hRes, 1/@vRes)
-      #@fxAAPass.uniforms['resolution'].value.set(@fxaaResolutionMultiplier / (@width * @dpr), @fxaaResolutionMultiplier / (@height * @dpr))
-      
-      @normalComposer.setSize(@hRes, @vRes)
-      @depthComposer.setSize(@hRes, @vRes)
-      @finalComposer.setSize(@hRes, @vRes)
-      
       @camera.aspect = @width / @height
       @camera.setSize(@width,@height)
       @renderer.setSize(@hRes, @vRes)
       @camera.updateProjectionMatrix()
+      
+      if (@renderer instanceof THREE.WebGLRenderer and @settings.objectOutline is true)
+        #shader uniforms updates
+        @fxAAPass.uniforms['resolution'].value.set(1/@hRes, 1/@vRes)
+        #@fxAAPass.uniforms['resolution'].value.set(@fxaaResolutionMultiplier / (@width * @dpr), @fxaaResolutionMultiplier / (@height * @dpr))
+        
+        @normalComposer.setSize(@hRes, @vRes)
+        @depthComposer.setSize(@hRes, @vRes)
+        @finalComposer.setSize(@hRes, @vRes)
       
       @_render()
     
@@ -827,8 +832,6 @@ define (require) ->
       @renderer.setSize(@width, @height)
       @camera.updateProjectionMatrix()
             
-      @_render()
-      
       @$el.resize @onResize
       window.addEventListener('resize', @onResize, false)
       ##########
@@ -842,9 +845,7 @@ define (require) ->
       @controls.rotateSpeed = 1.8
       @controls.zoomSpeed = 4.2
       @controls.panSpeed = 0.8#1.4
-      @controls.addEventListener( 'change', @_render )
-      
-
+      #@controls.addEventListener( 'change', @_render )
       @controls.staticMoving = true
       @controls.dynamicDampingFactor = 0.3
       
@@ -853,19 +854,20 @@ define (require) ->
       
       @overlayControls = new CustomOrbitControls(@overlayCamera, @el)#Custom
       @overlayControls.noPan = true
-      @overlayControls.noZoom = true
-      @overlayControls.rotateSpeed = 1.8
-      @overlayControls.zoomSpeed = 0
+      @overlayControls.noZoom = false
+      @overlayControls.rotateSpeed = 2
+      @overlayControls.zoomSpeed = 4.2
       @overlayControls.panSpeed = 0
       @overlayControls.userZoomSpeed=0
       
+      @overlayControls.addEventListener( 'change', @_renderOverlay )
+      
+      @initialized = true
       @animate()
     
     _render:()=>
-      if @renderer instanceof THREE.CanvasRenderer
-        @renderer.render( @scene, @camera)
-        @overlayRenderer.render(@overlayScene, @overlayCamera)
-      else
+      
+      if (@renderer instanceof THREE.WebGLRenderer and @settings.objectOutline is true)
         #necessary hack for effectomposer
         THREE.EffectComposer.camera = new THREE.OrthographicCamera( -1, 1, 1, -1, 0, 1 )
         THREE.EffectComposer.quad = new THREE.Mesh( new THREE.PlaneGeometry( 2, 2 ), null )
@@ -876,20 +878,26 @@ define (require) ->
         @depthComposer.render()
         @normalComposer.render()
         helpers.enableHelpers(@scene, originalStates)#show previously shown helpers again
-        #@finalComposer.passes[@finalComposer.passes.length-1].needsSwap = true
-        @finalComposer.passes[@finalComposer.passes.length-2].uniforms[ 'tDiffuse2' ].value = @normalComposer.renderTarget2
-        @finalComposer.passes[@finalComposer.passes.length-2].uniforms[ 'tDiffuse3' ].value = @depthComposer.renderTarget2
         
+        @finalComposer.passes[@finalComposer.passes.length-1].uniforms[ 'tDiffuse2' ].value = @normalComposer.renderTarget2
+        @finalComposer.passes[@finalComposer.passes.length-1].uniforms[ 'tDiffuse3' ].value = @depthComposer.renderTarget2
         @finalComposer.render()
-        @overlayRenderer.render(@overlayScene, @overlayCamera)
+      else
+        @renderer.render( @scene, @camera)
+      
+      
       
       if @settings.showStats
         @stats.update()
       
+    
+    _renderOverlay:()=>
+      @overlayRenderer.render(@overlayScene, @overlayCamera)
+        
     animate:()=>
       @controls.update()
       @overlayControls.update()
-      #@_render()
+      @_render()
       requestAnimationFrame(@animate)
     
     fromCsg:()=>

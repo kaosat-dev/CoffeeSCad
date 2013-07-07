@@ -15,8 +15,8 @@ THREE.AdditiveBlendShader = {
         "tDiffuse3": { type: "t", value: null },
         "normalThreshold": { type: "f", value: 0.1 },
         "depthThreshold": { type: "f", value: 0.05 },
-        "strengh"  : { type: "f", value: 0.3 },
-        "color"    : { type: "c", value: new THREE.Color( 0x000022 ) }
+        "strengh"  : { type: "f", value: 0.4 },
+        "color"    : { type: "c", value: new THREE.Color( 0x000002 ) }
     },
 
     vertexShader: [

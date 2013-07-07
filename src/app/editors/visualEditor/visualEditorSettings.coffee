@@ -6,7 +6,7 @@ define (require)->
   class VisualEditorSettings extends Backbone.Model
     attributeNames: ['name','renderer','antialiasing','shadows','shadowResolution','selfShadows',
     'showAxes','showConnectors','showGrid','gridSize','gridStep','gridColor','gridOpacity','gridText',
-    'showStats','position','projection','objectViewMode','helpersColor','textColor','bgColor','bgColor2','axesSize']
+    'showStats','position','projection','objectViewMode','helpersColor','textColor','bgColor','bgColor2','axesSize','objectOutline']
     
     buildProperties @
     
@@ -24,6 +24,7 @@ define (require)->
       selfShadows  : false
       
       showConnectors: false
+      objectOutline : false
       objectViewMode : 'shaded'    
       
       showAxes     : true
@@ -69,6 +70,7 @@ define (require)->
         selfShadows  :  true
         showConnectors: false
         style:        'shaded'   
+        outline: false
       }
       
       camera:{

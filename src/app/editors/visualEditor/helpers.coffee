@@ -8,37 +8,58 @@ define (require) ->
     constructor:(options)->
       super options
       
-    drawText:(text, displaySize)=>
+    drawText:(text, displaySize, background,scale)=>
+      fontSize = displaySize or 18
+      background = background or false
+      scale = scale or 1.0
+      
       canvas = document.createElement('canvas')
-      size = 256
-      displaysize = 256
-      displaySize = displaySize or size
-      canvas.width = size
-      canvas.height = size
+      borderThickness = 2
       context = canvas.getContext('2d')
-      context.font = "30px sans-serif"
+      context.font = "15px Arial"
       context.textAlign = 'center'
       context.fillStyle = @textColor
-      context.fillText(text, canvas.width/2, canvas.height/2)
-     
+      context.fillStyle = "rgba(0, 0, 0, 1.0)";
+      
+      
+      rect=(ctx, x, y, w, h, r)->
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x+w, y);
+        ctx.lineTo(x+w, y+h);
+        ctx.lineTo(x, y+h);
+        ctx.lineTo(x, y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();   
+      
+      if background
+        metrics = context.measureText( text )
+        textWidth = metrics.width;
+        context.fillStyle = "rgba(255, 255, 255, 0.55)";
+        context.strokeStyle = "rgba(255,255,255,0.55)";
+        rect(context, canvas.width/2-fontSize, canvas.height/2-fontSize, textWidth + borderThickness, fontSize * 1.4 + borderThickness, 6);
+      
+      #context.fillStyle = "rgba(0, 0, 0, 1.0)";
+      #context.fillText(text, canvas.width/2, canvas.height/2)
       context.strokeStyle = @textColor
       context.strokeText(text, canvas.width/2, canvas.height/2)
       
       texture = new THREE.Texture(canvas)
       texture.needsUpdate = true
-      texture.magFilter = THREE.LinearFilter
-      texture.minFilter = THREE.LinearFilter
+      #texture.magFilter = THREE.LinearFilter
+      #texture.minFilter = THREE.LinearFilter
       
       spriteMaterial = new THREE.SpriteMaterial
          map: texture
          transparent:true
-         alphaTest: 0.6
+         alphaTest: 0.5
          #alignment: THREE.SpriteAlignment.topLeft,
          useScreenCoordinates: false
          scaleByViewport:false
          color: 0xffffff
       sprite = new THREE.Sprite(spriteMaterial)
-      sprite.scale.set( displaySize, displaySize, displaySize)
+      sprite.scale.set( 100*scale, 50*scale, 1.0)
       return sprite
     
     drawTextOnPlane:(text, size=256)=>
@@ -48,7 +69,7 @@ define (require) ->
       canvas.width = size
       canvas.height = size
       context = canvas.getContext('2d')
-      context.font = "17px sans-serif"
+      context.font = "18px sans-serif"
       context.textAlign = 'center'
       context.fillStyle = @textColor
       context.fillText(text, canvas.width/2, canvas.height/2)
@@ -74,24 +95,7 @@ define (require) ->
       plane.overdraw = true
       return plane
     
-    drawText2:(text)=>
-      helpersColor = @settings.get("helpersColor")
-      if helpersColor.indexOf "0x" == 0
-        helpersColor= "#"+helpersColor[2..]
-      
-      canvas = document.createElement('canvas')
-      
-      context = canvas.getContext('2d')
-      context.font = "17px sans-serif"
-      context.fillStyle = helpersColor
-      context.fillText(text, 0, 10);
-      context.strokeStyle = '#FFFFFF'
-      context.strokeText(text, 0, 10)
-      
-      texture = new THREE.Texture(canvas)
-      texture.needsUpdate = true
-      return texture
-  
+    
   class Arrow extends BaseHelper
     constructor:(options)->
       super options
@@ -124,15 +128,18 @@ define (require) ->
       @yColor = new THREE.Color().setHex(@yColor)
       @zColor = new THREE.Color().setHex(@zColor)
 
+      #addLabels = false
       if addLabels
         s = @size * 1.1
-        @xLabel=@drawText("X")
+        fontSize = 18
+        scale = 0.008
+        @xLabel=@drawText("X",fontSize,false, scale)
         @xLabel.position.set(s,0,0)
         
-        @yLabel=@drawText("Y")
+        @yLabel=@drawText("Y",fontSize,false, scale)
         @yLabel.position.set(0,s,0)
         
-        @zLabel=@drawText("Z")
+        @zLabel=@drawText("Z",fontSize,false, scale)
         @zLabel.position.set(0,0,s)
         
       if addArrows
@@ -149,6 +156,7 @@ define (require) ->
       @add @xLabel
       @add @yLabel 
       @add @zLabel
+      @name = "axes"
     
     _buildAxes:()=>
       lineGeometryX = new THREE.Geometry()
@@ -177,10 +185,14 @@ define (require) ->
     constructor:(options)->
       super options
       
-      defaults = {size:1000, step:100, color:0xFFFFFF, opacity:0.1, addText:true, textColor:"#FFFFFF", textLocation:"f"}
+      defaults = {size:1000, step:100, color:0xFFFFFF, opacity:0.1, addText:true, textColor:"#FFFFFF", textLocation:"f",rootAssembly:null}
       options = merge defaults, options
-      {@size, @step, @color, @opacity, @addText, @textColor, @textLocation} = options
+      {@size, @step, @color, @opacity, @addText, @textColor, @textLocation, @rootAssembly} = options
       
+      @name = "grid"
+      @_drawGrid()
+    
+    _drawGrid:->
       mainGridZ = -0.05
       gridGeometry = new THREE.Geometry()
       gridMaterial = new THREE.LineBasicMaterial
@@ -263,8 +275,7 @@ define (require) ->
       @add @subGrid
       @add @plane
       @_drawNumbering()
-      @name = "grid"
-     
+    
     _drawNumbering:->
       if @labels?
         @mainGrid.remove(@labels)
@@ -329,7 +340,52 @@ define (require) ->
     setTextLocation:(location)=>
       @textLocation = location
       @_drawNumbering()
+    
+    resize:(size)=>
+      if size != @size
+        @size = size
+        @remove @mainGrid
+        @remove @subGrid
+        @remove @plane
+        @_drawGrid()
+        
+    
+    updateGridSize:()=>
+      #autgrow grid to accomodate all objects in assembly
+      minX = 99999
+      maxX = -99999
+      minY = 99999
+      maxY = -99999
       
+      _getBounds=(mesh)=>
+        if (mesh instanceof THREE.Mesh)
+          mesh.geometry.computeBoundingBox()
+          bBox = mesh.geometry.boundingBox
+
+          # compute overall bbox
+          #TODO: mesh.position additions are actually correct, the way we get shapes from csg.js is NOT
+          minX = Math.min(minX, bBox.min.x)#+mesh.position.x
+          maxX = Math.max(maxX, bBox.max.x)#+mesh.position.x
+          minY = Math.min(minY, bBox.min.y)#+mesh.position.y
+          maxY = Math.max(maxY, bBox.max.y)#+mesh.position.y
+          
+          for subchild in mesh.children
+            _getBounds(subchild)
+        
+      if @rootAssembly?
+        for subchild in @rootAssembly.children
+          if subchild.name != "renderSubs" and subchild.name !="connectors"
+            _getBounds(subchild)
+      
+      #console.log("Bounds for grid", minX, maxX, minY, maxY)
+      max = Math.max(Math.max(maxX, maxY),100)
+      min = Math.min(Math.min(minX, minY),-100)
+      #console.log("Bounds for grid", max, min)
+      size = (Math.max(max, Math.abs(min)))*2
+      #console.log("New size for grid", size)
+      size = Math.ceil(size / 10) * 10
+      if size >= 200
+        @resize(size)
       
   class BoundingCage extends BaseHelper
     #Draws a bounding box (wireframe) around a mesh, and shows its dimentions
@@ -542,12 +598,13 @@ define (require) ->
         if not (selection.hoverOutline?) and not (selection.outline?) and not (selection.name is "hoverOutline") and not (selection.name is "boundingCage") and not (selection.name is "selectOutline")
           selection.currentHoverHex = selection.material.color.getHex()
           selection.material.color.setHex( @selectionColor )
-          
+          #
           outlineMaterial = new THREE.MeshBasicMaterial( { color: 0xffc200, side: THREE.BackSide } )
           outline = new THREE.Mesh( selection.geometry.clone(), outlineMaterial )
           #outline.position = selection.position
           outline.scale.multiplyScalar(1.03)
           outline.name = "hoverOutline"
+          #selection.material.side = THREE.FrontSide
           selection.hoverOutline = outline
           selection.add( outline )
           
@@ -827,7 +884,7 @@ define (require) ->
           originalStates[child]= child.visible
           child.visible = false
       else
-        if child.name == "boundingCage" or child.name == "grid" or child.name == "hoverOutline" or child.name =="selectOutline"
+        if child.name == "boundingCage" or child.name == "grid" or child.name == "hoverOutline" or child.name =="selectOutline" or child.name =="axes"
           originalStates[child]= child.visible
           child.visible = false
           hide = true
@@ -889,7 +946,7 @@ define (require) ->
               
               geom = child.geometry
               obj2 = new THREE.Mesh( geom.clone(), basicMaterial1 )
-              obj3 = new THREE.Line( helpers.geometryToline(geom.clone()), dashMaterial, THREE.LinePieces )
+              obj3 = new THREE.Line( geometryToline(geom.clone()), dashMaterial, THREE.LinePieces )
               obj4 = new THREE.Mesh( geom.clone(), wireFrameMaterial)
       
               renderSubElementsHelper.add(obj2)

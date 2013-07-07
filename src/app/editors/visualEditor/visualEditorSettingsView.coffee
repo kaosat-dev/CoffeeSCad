@@ -53,6 +53,9 @@ define (require)->
             type:'Select'
             options:['shaded','wireframe','structural']
           
+          objectOutline: 'Checkbox'
+            
+          
           helpersColor :  'Text'
           bgColor : 
             title: "background color"
@@ -83,7 +86,7 @@ define (require)->
             
         options.fieldsets=[
           "legend":"Render settings"
-          "fields": ["renderer","antialiasing","shadows","shadowResolution","selfShadows","objectViewMode"]
+          "fields": ["renderer","antialiasing","shadows","shadowResolution","selfShadows","objectViewMode","objectOutline"]
         , 
           "legend":"View settings"
           "fields": ["position","projection","center"]
