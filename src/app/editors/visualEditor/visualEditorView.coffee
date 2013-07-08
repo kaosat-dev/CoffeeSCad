@@ -333,7 +333,6 @@ define (require) ->
       if @settings.projection is "orthographic"
         @camera.toOrthographic()
         
-      
       resetCam=()=>
         @camera.position.z = 0
         @camera.position.y = 0
@@ -345,6 +344,7 @@ define (require) ->
           @overlayCamera.position.y = 150
           @overlayCamera.position.z = 250
           
+          @camera.target = new THREE.Vector3()
           #@camera.lookAt(@scene.position)
           #@overlayCamera.lookAt(@overlayScene.position)
         when 'top'
@@ -369,7 +369,17 @@ define (require) ->
         when 'right' 
           @camera.toRightView()
           @overlayCamera.toRightView()
+        
+        when 'center'
+          #todo : handle this correctly 
+          try
+            offset = new THREE.Vector3().sub(@camera.target.clone())
+            #@controls.target.addSelf(offset)
+            @camera.position.addSelf(offset)
+          catch error
+            console.log "error #{error} "
       
+      @settings.position = ""
       if @initialized 
         @_render()
     
@@ -852,11 +862,11 @@ define (require) ->
       container2.append(@overlayRenderer.domElement)
       
       @overlayControls = new THREE.OrbitControls(@overlayCamera, @el)#new CustomOrbitControls(@overlayCamera, @el)#Custom
-      @overlayControls.noPan = true
-      @overlayControls.noZoom = false
+      @overlayControls.userPan = false
+      @overlayControls.userZoom = false
       #@overlayControls.rotateSpeed = 2
       #@overlayControls.zoomSpeed = 4.2
-      @overlayControls.panSpeed = 0
+      @overlayControls.userPanSpeed = 0
       @overlayControls.userZoomSpeed=0
       
       @overlayControls.autoRotate = @settings.autoRotate
