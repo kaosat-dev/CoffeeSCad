@@ -27,7 +27,6 @@ define (require) ->
   THREE.CSG = require 'core/projects/csg/csg.Three'
   
   
-  
   includeMixin = require 'core/utils/mixins/mixins'
   dndMixin = require 'core/utils/mixins/dragAndDropRecieverMixin'
   
@@ -53,6 +52,7 @@ define (require) ->
       "mousedown .toggleAxes"      :          "toggleAxes"
       "mousedown .toggleAutoRotate"      :    "toggleAutoRotate"
       "mousedown .toggleOutlines"      :    "toggleOutlines"
+      "mousedown .switchViewType":      "switchViewType"
             
     constructor:(options, settings)->
       super options
@@ -340,18 +340,16 @@ define (require) ->
       switch val
         when 'diagonal'
           @camera.position = @defaultCameraPosition
-          
           @overlayCamera.position.x = 150
           @overlayCamera.position.y = 150
           @overlayCamera.position.z = 250
           
           #@camera.lookAt(@scene.position)
           #@overlayCamera.lookAt(@overlayScene.position)
-          
         when 'top'
           @camera.toTopView()
-          @overlayCamera.toTopView()
-          console.log @camera
+          #@overlayCamera.toTopView()
+          #console.log @camera
           ###
           try
             offset = @camera.position.clone().sub(@controls.target)
@@ -370,8 +368,9 @@ define (require) ->
           #@overlayCamera.rotationAutoUpdate = true
           
         when 'bottom'
-          #@camera.toBottomView()
+          @camera.toBottomView()
           #@overlayCamera.toBottomView()
+          ###
           try
             offset = @camera.position.clone().sub(@controls.target)
             nPost = new  THREE.Vector3()
@@ -383,11 +382,12 @@ define (require) ->
           @overlayCamera.position = new THREE.Vector3(0,0,-250)
           @camera.lookAt(@scene.position)
           @overlayCamera.lookAt(@overlayScene.position)
-          #@camera.rotationAutoUpdate = true
+          #@camera.rotationAutoUpdate = true###
           
         when 'front'
-          #@camera.toFrontView()
+          @camera.toFrontView()
           #@overlayCamera.toFrontView()
+          ###
           try
             offset = @camera.position.clone().sub(@controls.target)
             nPost = new  THREE.Vector3()
@@ -399,7 +399,7 @@ define (require) ->
           @overlayCamera.position = new THREE.Vector3(0,-250,0)
           @camera.lookAt(@scene.position)
           @overlayCamera.lookAt(@overlayScene.position)
-          #@camera.rotationAutoUpdate = true
+          #@camera.rotationAutoUpdate = true###
           
         when 'back'
           #@camera.toBackView()
@@ -417,7 +417,9 @@ define (require) ->
           @overlayCamera.lookAt(@overlayScene.position)
           
         when 'left'
-          #@camera.toLeftView()
+          @camera.toLeftView()
+          
+          ###
           try
             offset = @camera.position.clone().sub(@controls.target)
             nPost = new  THREE.Vector3()
@@ -428,10 +430,11 @@ define (require) ->
           #@camera.rotationAutoUpdate = true
           @overlayCamera.position = new THREE.Vector3(250,0,0)
           @camera.lookAt(@scene.position)
-          @overlayCamera.lookAt(@overlayScene.position)
+          @overlayCamera.lookAt(@overlayScene.position)###
           
         when 'right' 
-          #@camera.toRightView()
+          @camera.toRightView()
+          ###
           try
             offset = @camera.position.clone().sub(@controls.target)
             nPost = new  THREE.Vector3()
@@ -442,7 +445,7 @@ define (require) ->
           #@camera.rotationAutoUpdate = true
           @overlayCamera.position = new THREE.Vector3(-250,0,0)
           @camera.lookAt(@scene.position)
-          @overlayCamera.lookAt(@overlayScene.position)
+          @overlayCamera.lookAt(@overlayScene.position)###
       
       if @initialized 
         @_render()
@@ -523,12 +526,16 @@ define (require) ->
           
           when "objectOutline"
             console.log "objectOutline",val
-            #TODO: move this to a seperate method
             if val
-              @fxAAPass.uniforms['resolution'].value.set(1/@hRes, 1/@vRes)
-              @normalComposer.setSize(@hRes, @vRes)
-              @depthComposer.setSize(@hRes, @vRes)
-              @finalComposer.setSize(@hRes, @vRes)
+              @settings.objectOutline = val
+              #TODO: move this to a seperate method
+              if detector.webgl
+                @fxAAPass.uniforms['resolution'].value.set(1/@hRes, 1/@vRes)
+                @normalComposer.setSize(@hRes, @vRes)
+                @depthComposer.setSize(@hRes, @vRes)
+                @finalComposer.setSize(@hRes, @vRes)
+              else
+                @settings.objectOutline = false
             @_render()
           
           when "selfShadows"
@@ -741,7 +748,6 @@ define (require) ->
       return false
 
     toggleOutlines:(ev)=>
-      console.log "toggle outlines"
       toggled = @settings.objectOutline
       if toggled
         @settings.objectOutline = false
@@ -750,6 +756,15 @@ define (require) ->
         @settings.objectOutline = true
         $(ev.target).removeClass("uicon-off")
       return false
+    
+    switchViewType:(ev)=>
+      myClass = $(ev.currentTarget).attr("class")
+      myClass = myClass.replace("switchViewType",'')
+      viewType = myClass.replace(/\s/g, '')
+      viewType = viewType.split('-').pop()
+      console.log viewType
+      @settings.position = viewType
+      #@setupView(@settings.projection)
       
     _onProjectCompiled:(res)=>
       #compile succeeded, generate geometry from csg

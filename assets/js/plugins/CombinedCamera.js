@@ -30,7 +30,10 @@ THREE.CombinedCamera = function ( width, height, fov, near, far, orthoNear, orth
     this.toPerspective();
 
     var aspect = width/height;
-    this.target = new THREE.Object3D()
+    
+    this.target = new THREE.Vector3();
+    this.defaultPosition = new THREE.Vector3();
+    
 
 };
 
@@ -95,30 +98,18 @@ THREE.CombinedCamera.prototype.toOrthographic = function () {
     var aspect = this.cameraP.aspect;
     var near = this.cameraP.near;
     var far = this.cameraP.far;
-
-    var distance = this.position.length()*0.3;
-    console.log("distance",distance);
-    var width = Math.tan(fov) * distance * aspect;
-    var height = Math.tan (fov) * distance;
-    console.log("distance",distance,"height",height,"width",width);
     
-    //TODO: distance should not be relative to [0,0,0], but to the target (taking panning into account)
-    //cameraP
+    
     //set the orthographic view rectangle to 0,0,width,height
     //see here : http://stackoverflow.com/questions/13483775/set-zoomvalue-of-a-perspective-equal-to-perspective
-
-    // The size that we set is the mid plane of the viewing frustum
-    /*
-    var hyperfocus = ( near + far ) / 2;
-
-    var halfHeight = Math.tan( fov / 2 ) * hyperfocus;
-    var planeHeight = 2 * halfHeight;
-    var planeWidth = planeHeight * aspect;
-    var halfWidth = planeWidth / 2;
-
-    halfHeight /= this.zoom;
-    halfWidth /= this.zoom;*/
-   
+    if(this.target === null)
+    {
+    	this.target = new THREE.Vector3();
+    }
+    var distance = new THREE.Vector3().subVectors(this.position,this.target).length()*0.3;
+    var width = Math.tan(fov) * distance * aspect;
+    var height = Math.tan (fov) * distance;
+    
     var halfWidth = width;
     var halfHeight = height;
 
@@ -218,65 +209,59 @@ THREE.CombinedCamera.prototype.setZoom = function( zoom ) {
 };
 
 THREE.CombinedCamera.prototype.toFrontView = function() {
-
-    this.rotation.x = 0;
-    this.rotation.y = 0;
-    this.rotation.z = 0;
     
-
-
+    var offset = this.position.clone().sub(this.target);
+    var nPost = new  THREE.Vector3();
+    nPost.y = -offset.length();
+    this.position = nPost;
+    this.lookAt(this.target);
 };
 
 THREE.CombinedCamera.prototype.toBackView = function() {
 
-    this.rotation.x = 0;
-    this.rotation.y = Math.PI;
-    this.rotation.z = 0;
-    this.rotationAutoUpdate = false;
-
+    var offset = this.position.clone().sub(this.target);
+    var nPost = new  THREE.Vector3();
+    nPost.y = offset.length();
+    this.position = nPost;
+    this.lookAt(this.target);
 };
 
 THREE.CombinedCamera.prototype.toLeftView = function() {
-
-    this.rotation.x = 0;
-    this.rotation.y = - Math.PI / 2;
-    this.rotation.z = 0;
-    this.rotationAutoUpdate = false;
     
+    var offset = this.position.clone().sub(this.target);
+    var nPost = new  THREE.Vector3();
+    nPost.x = offset.length();
+    this.position = nPost;
+    this.lookAt(this.target);
     
-    /*try
-    offset = @camera.position.clone().sub(@controls.target)
-    nPost = new  THREE.Vector3()
-    nPost.x = offset.length()
-    @camera.position = nPost
-  catch error
-    @camera.position = new THREE.Vector3(@defaultCameraPosition.x,0,0)*/
-
 };
 
 THREE.CombinedCamera.prototype.toRightView = function() {
 
-    this.rotation.x = 0;
-    this.rotation.y = Math.PI / 2;
-    this.rotation.z = 0;
-    this.rotationAutoUpdate = false;
+    var offset = this.position.clone().sub(this.target);
+    var nPost = new  THREE.Vector3();
+    nPost.x = -offset.length();
+    this.position = nPost;
+    this.lookAt(this.target);
 
 };
 
 THREE.CombinedCamera.prototype.toTopView = function() {
-
-    this.rotation.x = - Math.PI / 2;
-    this.rotation.y = 0;
-    this.rotation.z = 0;
-    this.rotationAutoUpdate = false;
+	
+	var offset = this.position.clone().sub(this.target);
+    var nPost = new  THREE.Vector3();
+    nPost.z = offset.length();
+    this.position = nPost;
+    this.lookAt(this.target);
 
 };
 
 THREE.CombinedCamera.prototype.toBottomView = function() {
 
-    this.rotation.x = Math.PI / 2;
-    this.rotation.y = 0;
-    this.rotation.z = 0;
-    this.rotationAutoUpdate = false;
+	var offset = this.position.clone().sub(this.target);
+    var nPost = new  THREE.Vector3();
+    nPost.z = -offset.length();
+    this.position = nPost;
+    this.lookAt(this.target);
 
 };
