@@ -62,6 +62,7 @@ define (require)->
       @vent.on("app:started", @onAppStarted)
       @vent.on("settings:show", @onSettingsShow)
       @vent.on("project:loaded", @onProjectLoaded)
+      @vent.on("project:created",@onProjectLoaded)
       
       #handle exporters initialization
       for name, exporter of @exporters
