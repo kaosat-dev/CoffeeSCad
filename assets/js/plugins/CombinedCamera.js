@@ -40,8 +40,6 @@ THREE.CombinedCamera = function ( width, height, fov, near, far, orthoNear, orth
 THREE.CombinedCamera.prototype = Object.create( THREE.Camera.prototype );
 
 
-
-
 THREE.CombinedCamera.prototype.lookAt = function () {
 
     // This routine does not support cameras with rotated and/or translated parent(s)

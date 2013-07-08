@@ -182,8 +182,9 @@ define (require) ->
       #Experimental overlay
       NEAR = 0.1
       FAR = 1000
-      @overlayCamera = new THREE.OrthographicCamera( 350 / - 2, 350 / 2, 250 / 2, 250 / - 2, NEAR, FAR )
+      @overlayCamera = new THREE.CombinedCamera(350 / 2,250 / 2, @viewAngle, NEAR, FAR, NEAR, FAR)
       @overlayCamera.up = new THREE.Vector3( 0, 0, 1 )
+      @overlayCamera.toOrthographic()
       
       @overlayScene = new THREE.Scene()
       @overlayScene.add(@overlayCamera)
@@ -348,104 +349,26 @@ define (require) ->
           #@overlayCamera.lookAt(@overlayScene.position)
         when 'top'
           @camera.toTopView()
-          #@overlayCamera.toTopView()
-          #console.log @camera
-          ###
-          try
-            offset = @camera.position.clone().sub(@controls.target)
-            nPost = new THREE.Vector3()
-            nPost.z = offset.length()
-            @camera.position = nPost
-            
-          catch error
-            @camera.position = new THREE.Vector3(0,0,@defaultCameraPosition.z)
-            
-          @overlayCamera.position = new THREE.Vector3(0,0,250)
-          @camera.lookAt(@scene.position)
-          @overlayCamera.lookAt(@overlayScene.position)
-          ###
-          #@camera.rotationAutoUpdate = true
-          #@overlayCamera.rotationAutoUpdate = true
+          @overlayCamera.toTopView()
           
         when 'bottom'
           @camera.toBottomView()
-          #@overlayCamera.toBottomView()
-          ###
-          try
-            offset = @camera.position.clone().sub(@controls.target)
-            nPost = new  THREE.Vector3()
-            nPost.z = -offset.length()
-            @camera.position = nPost
-          catch error
-            @camera.position = new THREE.Vector3(0,0,-@defaultCameraPosition.z)
-            
-          @overlayCamera.position = new THREE.Vector3(0,0,-250)
-          @camera.lookAt(@scene.position)
-          @overlayCamera.lookAt(@overlayScene.position)
-          #@camera.rotationAutoUpdate = true###
-          
+          @overlayCamera.toBottomView()
         when 'front'
           @camera.toFrontView()
-          #@overlayCamera.toFrontView()
-          ###
-          try
-            offset = @camera.position.clone().sub(@controls.target)
-            nPost = new  THREE.Vector3()
-            nPost.y = -offset.length()
-            @camera.position = nPost
-          catch error
-            @camera.position = new THREE.Vector3(0,-@defaultCameraPosition.y,0)
-            
-          @overlayCamera.position = new THREE.Vector3(0,-250,0)
-          @camera.lookAt(@scene.position)
-          @overlayCamera.lookAt(@overlayScene.position)
-          #@camera.rotationAutoUpdate = true###
+          @overlayCamera.toFrontView()
           
         when 'back'
-          #@camera.toBackView()
-          #@overlayCamera.toBackView()
-          try
-            offset = @camera.position.clone().sub(@controls.target)
-            nPost = new  THREE.Vector3()
-            nPost.y = offset.length()
-            @camera.position = nPost
-          catch error
-            @camera.position = new THREE.Vector3(0,@defaultCameraPosition.y,0)
-          #@camera.rotationAutoUpdate = true
-          @overlayCamera.position = new THREE.Vector3(0,250,0)
-          @camera.lookAt(@scene.position)
-          @overlayCamera.lookAt(@overlayScene.position)
+          @camera.toBackView()
+          @overlayCamera.toBackView()
           
         when 'left'
           @camera.toLeftView()
-          
-          ###
-          try
-            offset = @camera.position.clone().sub(@controls.target)
-            nPost = new  THREE.Vector3()
-            nPost.x = offset.length()
-            @camera.position = nPost
-          catch error
-            @camera.position = new THREE.Vector3(@defaultCameraPosition.x,0,0)
-          #@camera.rotationAutoUpdate = true
-          @overlayCamera.position = new THREE.Vector3(250,0,0)
-          @camera.lookAt(@scene.position)
-          @overlayCamera.lookAt(@overlayScene.position)###
+          @overlayCamera.toLeftView()
           
         when 'right' 
           @camera.toRightView()
-          ###
-          try
-            offset = @camera.position.clone().sub(@controls.target)
-            nPost = new  THREE.Vector3()
-            nPost.x = -offset.length()
-            @camera.position = nPost
-          catch error
-            @camera.position = new THREE.Vector3(-@defaultCameraPosition.x,0,0)
-          #@camera.rotationAutoUpdate = true
-          @overlayCamera.position = new THREE.Vector3(-250,0,0)
-          @camera.lookAt(@scene.position)
-          @overlayCamera.lookAt(@overlayScene.position)###
+          @overlayCamera.toRightView()
       
       if @initialized 
         @_render()
