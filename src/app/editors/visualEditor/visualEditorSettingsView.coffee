@@ -96,7 +96,7 @@ define (require)->
           "fields": ["showAxes","helpersColor","showConnectors", "showGrid","gridSize","gridStep","gridColor","gridOpacity","gridText","gridNumberingPosition"]
         , 
           "legend":"Extra settings"
-          "fields": ["bgColor","bgColor2", "textColor", "axesSize", "showStats"]
+          "fields": ["bgColor", "textColor", "axesSize", "showStats"]
          ,
           "legend":"TEST"
           "fields":["grid"]

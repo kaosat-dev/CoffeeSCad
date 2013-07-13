@@ -141,7 +141,6 @@ THREE.OrbitControls = function ( object, domElement ) {
     };
 
     this.pan = function ( distance ) {
-
         distance.transformDirection( this.object.matrix );
         distance.multiplyScalar( scope.userPanSpeed );
 
@@ -222,7 +221,6 @@ THREE.OrbitControls = function ( object, domElement ) {
 
         if ( scope.enabled === false ) return;
         if ( scope.userRotate === false ) return;
-
         event.preventDefault();
 
         if ( state === STATE.NONE )
@@ -264,8 +262,6 @@ THREE.OrbitControls = function ( object, domElement ) {
         if ( scope.enabled === false ) return;
 
         event.preventDefault();
-
-        
         
         if ( state === STATE.ROTATE ) {
 
@@ -298,7 +294,6 @@ THREE.OrbitControls = function ( object, domElement ) {
 
             var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
             var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-
             scope.pan( new THREE.Vector3( - movementX, movementY, 0 ) );
 
         }
@@ -390,7 +385,32 @@ THREE.OrbitControls = function ( object, domElement ) {
                 state = STATE.NONE;
                 break;
         }
+    }
+    
+    this.enable= function (){
+    	scope.enabled = true;
+    	this.enabled = true;
+    	state = STATE.NONE;
 
+    	/*this.domElement.addEventListener( 'contextmenu', function ( event ) { event.preventDefault(); }, false );
+        this.domElement.addEventListener( 'mousedown', onMouseDown, false );
+        this.domElement.addEventListener( 'mousewheel', onMouseWheel, false );
+        this.domElement.addEventListener( 'DOMMouseScroll', onMouseWheel, false ); // firefox
+        window.addEventListener( 'keydown', onKeyDown, false );
+        window.addEventListener( 'keyup', onKeyUp, false );*/
+    }
+    
+    this.disable = function(){
+    	scope.enabled = false;
+    	this.enabled = false;
+    	state = STATE.NONE;
+    	
+       /* this.domElement.removeEventListener( 'contextmenu', function ( event ) { event.preventDefault(); }, false );
+        this.domElement.removeEventListener( 'mousedown', onMouseDown, false );
+        this.domElement.removeEventListener( 'mousewheel', onMouseWheel, false );
+        this.domElement.removeEventListener( 'DOMMouseScroll', onMouseWheel, false ); // firefox
+        window.removeEventListener( 'keydown', onKeyDown, false );
+        window.removeEventListener( 'keyup', onKeyUp, false );*/
     }
 
     this.domElement.addEventListener( 'contextmenu', function ( event ) { event.preventDefault(); }, false );

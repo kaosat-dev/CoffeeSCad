@@ -40,10 +40,12 @@
             this.options = options
             this.before = this.options.before || this.before
             this.onItem = this.options.onItem || this.onItem
+            this.after = this.options.after || this.after
             if (this.options.target) 
                 this.$element.attr('data-target',this.options.target)
-
+                
             this.listen()
+            
         }
 
     ContextMenu.prototype = {
@@ -70,12 +72,14 @@
                 .css(tp)
                 .addClass('open');
 
-
+            
             return false;
         }
 
         ,closemenu: function(e) {
             this.getMenu().removeClass('open');
+            console.log("after in plugin");
+            if (!this.after.call(this,e,this.$element)) return;
         }
 
         ,before: function(e) {
@@ -85,7 +89,11 @@
         ,onItem: function(e, context) {
             return true;
         }
-
+        
+        ,after: function(e) {
+            return true;
+        }
+        
         ,listen: function () {
             var _this = this;
             this.$element

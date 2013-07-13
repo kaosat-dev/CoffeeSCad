@@ -6805,7 +6805,7 @@ body {
 
 }
 .navbar .brand {
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+  text-shadow: none;
   -webkit-transition: color ease-in-out 0.2s;
   -moz-transition: color ease-in-out 0.2s;
   -o-transition: color ease-in-out 0.2s;
@@ -6820,7 +6820,7 @@ body {
 }
 .navbar .nav > li > a {
   padding: 11px 10px 8px;
-  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.3);
+  text-shadow: none;
   -webkit-transition: color ease-in-out 0.2s;
   -moz-transition: color ease-in-out 0.2s;
   -o-transition: color ease-in-out 0.2s;
@@ -6867,13 +6867,13 @@ body {
   color: #666666;
 }
 .navbar-inverse .brand {
-  text-shadow: -1px -1px 0 rgba(0, 0, 0, 0.3);
+  text-shadow: none;
 }
 .navbar-inverse .brand:hover {
   color: #ffffff;
 }
 .navbar-inverse .nav > li > a {
-  text-shadow: -1px -1px 0 rgba(0, 0, 0, 0.3);
+  text-shadow: none;
 }
 .navbar-inverse .nav li.dropdown.open > .dropdown-toggle .caret,
 .navbar-inverse .nav li.dropdown:hover > .dropdown-toggle .caret,
@@ -7142,7 +7142,7 @@ legend + .control-group {
   margin-bottom: 5px;
 }
 .alert {
-  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+  text-shadow: none;
 }
 .alert h1,
 .alert h2,
@@ -7152,7 +7152,7 @@ legend + .control-group {
 .alert h6 {
   color: #ffffff;
   font-weight: bold;
-  text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.25);
+  text-shadow: none;
 }
 .label-important,
 .badge-important {
@@ -7187,7 +7187,7 @@ legend + .control-group {
   float: none;
   padding: 5px 10px 10px;
   text-decoration: none;
-  text-shadow: 0 1px 0 white;
+  text-shadow: none;
 }
 #tabContent .tab-content {
   overflow: hidden;

@@ -331,6 +331,9 @@ define (require) ->
       @color = color 
       @mainGrid.material.color = new THREE.Color().setHex(@color)
       @subGrid.material.color = new THREE.Color().setHex(@color)
+    
+    setTextColor:(color)=>
+      
      
     toggleText:(toggle)=>
       @addText = toggle
@@ -655,7 +658,7 @@ define (require) ->
             @currentHover.origMaterial = @currentHover.material
             @currentHover.material = newMat
             ###
-            
+          
     _get3DBB:(object)=>
       #shorthand to get object bounding box
       if object?
@@ -666,7 +669,16 @@ define (require) ->
             object.geometry.computeBoundingBox()
             return object.geometry.boundingBox
       return null
-              
+    
+    getScreenCoords:(object, width, height)=>
+      if object?
+        vector = @projector.projectVector( object.position.clone(), @camera )
+        result = new THREE.Vector2()
+        result.x = Math.round( vector.x * (width/2) ) + width/2
+        result.y = Math.round( (0-vector.y) * (height/2) ) + height/2
+        return result
+      
+             
     get2DBB:(object,width,height)=>
       #get the 2d (screen) bounding box of 3d object
       if object?
@@ -709,7 +721,16 @@ define (require) ->
         #console.log "selection positions",result
         return result
         
-   
+    isThereObjectAt:(x,y)=>
+      v = new THREE.Vector3((x/@viewWidth)*2-1, -(y/@viewHeight)*2+1, 0.5)
+      @projector.unprojectVector(v, @camera)
+      raycaster = new THREE.Raycaster(@camera.position, v.sub(@camera.position).normalize())
+      intersects = raycaster.intersectObjects(@hiearchyRoot, true )
+      
+      if intersects.length > 0
+        return true
+      return false
+      
     selectObjectAt:(x,y)=>
       v = new THREE.Vector3((x/@viewWidth)*2-1, -(y/@viewHeight)*2+1, 0.5)
       @projector.unprojectVector(v, @camera)

@@ -79,6 +79,8 @@ define (require) ->
       @hRes = 320
       @vRes = 240
       
+      @noControlChange = false 
+      
       @stats = new stats()
       @stats.domElement.style.position = 'absolute'
       @stats.domElement.style.top = '30px'
@@ -284,7 +286,7 @@ define (require) ->
     
     setupContextMenu:=>
       #experimental context menu
-      require 'contextMenu'
+      contextMenu = require 'contextMenu'
       generatorTest = require "./generators/generatorGeometry"
       
       language = "coffee"
@@ -297,10 +299,18 @@ define (require) ->
           visitor = new generatorTest.OpenJSCadVisitor()
         when "scad"
           visitor = new generatorTest.OpenSCadVisitor()
-      
+            
       @$el.contextmenu
         target:'#context-menu'
+        before: =>
+          console.log "@noControlChange", @noControlChange
+          if @noControlChange
+            @controls.disable()
+            @overlayControls.disable()
+            return true
+          return false
         onItem: (e, element)=>
+          console.log "here"
           visitResult = ""
           mesh = null
           objectType = $(element).attr("data-value")
@@ -328,7 +338,14 @@ define (require) ->
             mesh.meta.blockLength = meshCode.length
             mesh.meta.code = meshCode
             console.log "mesh.meta", mesh.meta
-     
+          
+        after: =>  
+          @controls.enable()
+          @overlayControls.enable()
+          @noControlChange = false
+          @contextMenuRequested = false
+          return false
+          
     setupView:(val)=>
       if @settings.projection is "orthographic"
         @camera.toOrthographic()
@@ -344,7 +361,7 @@ define (require) ->
           @overlayCamera.position.y = 150
           @overlayCamera.position.z = 250
           
-          @camera.target = new THREE.Vector3()
+          #@camera.target = new THREE.Vector3()
           #@camera.lookAt(@scene.position)
           #@overlayCamera.lookAt(@overlayScene.position)
         when 'top'
@@ -562,8 +579,13 @@ define (require) ->
       $("#testOverlay2").removeClass("hide")
       $("#testOverlay2").css("left",centerLeft+@$el.offset().left)
       $("#testOverlay2").css('top', (centerTop - $("#testOverlay2").height()/2)+'px')
-      infoText = "#{@selectionHelper.currentSelect.name}"#\n w:#{width} <br\> l:#{length} <br\>h:#{height}"
       
+      screenCoords = @selectionHelper.getScreenCoords(selectionInfo.selection,@width, @height)
+      $("#testOverlay2").css("left",screenCoords.x+@$el.offset().left)
+      $("#testOverlay2").css('top', (screenCoords.y - $("#testOverlay2").height()/2)+'px')
+      
+      
+      infoText = "#{@selectionHelper.currentSelect.name}"#\n w:#{width} <br\> l:#{length} <br\>h:#{height}"
       $("#testOverlay2").html("""<span>#{infoText} <a class="toto"><i class="icon-exclamation-sign"></a></span>""")
       $(".toto").click ()=>
         volume = @selectionHelper.currentSelect.volume or 0
@@ -626,8 +648,12 @@ define (require) ->
       return false
       
     _onRightclick:(ev)=>
-      @selectionHelper._unSelect()
-      
+      normalizeEvent(ev)
+      x = ev.offsetX
+      y = ev.offsetY
+      if not @selectionHelper.isThereObjectAt(x,y)
+        @selectionHelper._unSelect()
+      @contextMenuRequested = true
     
     _onMouseMove:(ev)->
       normalizeEvent(ev)
@@ -639,6 +665,25 @@ define (require) ->
       @selectionHelper.viewWidth=@width
       @selectionHelper.viewHeight=@height
       @selectionHelper.highlightObjectAt(x,y)
+    
+    _onControlsChange:(ev)=>
+      console.log "controls change"
+      @noControlChange = false 
+      #@oldCamPos = if @newCamPos? then @newCamPos.clone()
+      #@newCamPos = ev.target.object.position
+      
+      if @controlChangeTimeOut?
+        clearTimeout(@controlChangeTimeOut)
+      @controlChangeTimeOut = null  
+      @controlChangeTimeOut = setTimeout ( =>
+        @noControlChange = true
+        console.log(@noControlChange)
+        if @contextMenuRequested?
+          if @contextMenuRequested
+            @setupContextMenu()
+            
+      ), 600
+      return false
 
     switchProjection:(ev)->
       projection = @settings.projection
@@ -847,8 +892,10 @@ define (require) ->
       
       @controls = new THREE.OrbitControls(@camera, @el)
       @controls.staticMoving = true
+      @controls.userPanSpeed = 3.0
       @controls.autoRotate = @settings.autoRotate
       @controls.autoRotateSpeed = 4.0
+      @controls.addEventListener( 'change', @_onControlsChange )
       
       ###
       @controls.rotateSpeed = 1.8

@@ -6,7 +6,7 @@ define (require)->
   class VisualEditorSettings extends Backbone.Model
     attributeNames: ['name','renderer','antialiasing','shadows','shadowResolution','selfShadows',
     'showAxes','showConnectors','showGrid','gridSize','gridStep','gridColor','gridOpacity','gridText',
-    'showStats','position','projection','objectViewMode','helpersColor','textColor','bgColor','bgColor2','axesSize','objectOutline','autoRotate']
+    'showStats','position','projection','objectViewMode','helpersColor','textColor','bgColor','axesSize','objectOutline','autoRotate']
     
     buildProperties @
     
@@ -46,7 +46,6 @@ define (require)->
       helpersColor : "0x00baff"
       textColor    : "#000000"     
       bgColor      : "#FFFFFF"
-      bgColor2     : "#FFFFFF"
       
       showStats    : false
       
