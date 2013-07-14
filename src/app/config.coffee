@@ -64,8 +64,12 @@ require.config
     "backbone-forms" :           "../assets/js/plugins/backbone.forms"
     forms_bootstrap : "../assets/js/plugins/backbone.forms.bootstrap"
     forms_list      : "../assets/js/plugins/backbone.forms.list"  
-    forms_custom    : "../assets/js/plugins/backbone.forms.custom"  
+    forms_custom    : "../assets/js/plugins/backbone/backbone.forms.keybindings"  
     backbone_nested:  "../assets/js/plugins/backbone.nested.min"
+    
+    Mousetrap :         "../assets/js/plugins/backbone/mousetrap"#key bindings
+    Mousetrap_global:   "../assets/js/plugins/backbone/mousetrap-global-bind.min"
+    backbone_mousetrap:        "../assets/js/plugins/backbone/backbone.mousetrap" #key bindings, backbone
     
     
     three_csg:        "../assets/js/plugins/ThreeCSG"
@@ -140,6 +144,14 @@ require.config
     
     backbone_nested:
       deps:["backbone"]
+    
+    Mousetrap:
+      deps: []
+    Mousetrap_global:
+      deps:["Mousetrap"]
+    backbone_mousetrap:
+      deps:["backbone","Mousetrap"]
+    
     
     #CoffeeScript:
     #  exports:  "CoffeeScript"

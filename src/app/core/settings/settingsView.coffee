@@ -215,8 +215,11 @@ define (require)->
     
     constructor:(options)->
       if not options.schema
-        options.schema = {}
-          
+        options.schema=
+          bindings:
+            type: 'KeyBind'
+            
+        
       super options
       
   class KeyBindingsWrapper extends Backbone.Marionette.ItemView

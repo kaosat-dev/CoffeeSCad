@@ -13,9 +13,11 @@ define (require)->
   ProjectBrowserView = require './core/projects/projectBrowseView'
   
   ProjectManager = require './core/projects/projectManager'
+  KeyBindingsManager = require './core/keyBindingsManager'
   
   Settings = require './core/settings/settings'
   SettingsView = require './core/settings/settingsView'
+  
    
   
   class CoffeeScadApp extends Backbone.Marionette.Application
@@ -36,6 +38,9 @@ define (require)->
       @initSettings()
       
       @projectManager = new ProjectManager
+        appSettings: @settings
+      
+      @keyBindingsManager = new KeyBindingsManager
         appSettings: @settings
       
       @editorsList = ["code","hierarchy"]
@@ -109,31 +114,7 @@ define (require)->
     
     _setupKeyboardBindings:=>
       #Setup keyBindings
-      ### 
-      @$el.bind 'keydown', 'ctrl+s', ->
-        console.log "i want to save a FILE"
-        return false
-      
-      $(document).bind "keydown", "alt+n", =>
-        @vent.trigger("project:new")
-        return false
-        
-      $(document).bind "keydown", "ctrl+s", =>
-        @vent.trigger("project:save")
-        return false
-        
-      $(document).bind "keydown", "ctrl+l", =>
-        @vent.trigger("project:load")
-        return false
-      
-      $(document).bind "keydown", "alt+c", =>
-        @vent.trigger("project:compile")
-        return false
-      
-      $(document).bind "keydown", "f4", =>
-        @vent.trigger("project:compile")
-        return false
-      ###
+      @keyBindingsManager.setup()
         
     _setupLanguage:()=>
       langCodeMap =
@@ -146,7 +127,7 @@ define (require)->
         
     onStart:()=>
       console.log "app started"
-      #@_setupKeyboardBindings()
+      @_setupKeyboardBindings()
       @visualEditor.start()
       for editorName,editorInst of @editors
         if editorInst.startWithParent
