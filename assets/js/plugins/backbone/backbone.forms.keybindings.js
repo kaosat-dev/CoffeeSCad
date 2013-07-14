@@ -67,7 +67,7 @@ define(["jquery", "underscore", "backbone", "backbone-forms"], function($, _, Ba
         
         _.each(value, function(itemValue, itemKey) {
           console.log(itemValue);
-          root.append($('<div class="control-group"><div class="control-label" >'+ itemKey +'</div><div class="controls"> <input type="text" value='+ itemValue+ ' disabled></input></div></div>'));
+          root.append($('<div class="control-group"><div class="control-label" >'+ itemKey +'</div><div class="controls"> <input type="text" onClick=self.shortCutEntrySelected() value='+ itemValue+ '></input></div></div>'));
           //$("<i class='icon-fixed-width icon-file'></i>")
         });
       } 
@@ -135,7 +135,34 @@ define(["jquery", "underscore", "backbone", "backbone-forms"], function($, _, Ba
     
     select: function() {
       this.$el.select();
+      console.log("selected");
+    },
+    
+    shortCutEntrySelected: function(){
+        console.log("shortcut entry selected");
     }
 
   });
 });
+
+/*var log = $('#log')[0],
+    pressedKeys = [];
+
+$(document.body).keydown(function (evt) {
+    var li = pressedKeys[evt.keyCode];
+    if (!li) {
+        li = log.appendChild(document.createElement('li'));
+        pressedKeys[evt.keyCode] = li;
+    }
+    $(li).text('Down: ' + evt.keyCode);
+    $(li).removeClass('key-up');
+});
+
+$(document.body).keyup(function (evt) {
+    var li = pressedKeys[evt.keyCode];
+    if (!li) {
+       li = log.appendChild(document.createElement('li'));
+    }
+    $(li).text('Up: ' + evt.keyCode);
+    $(li).addClass('key-up');
+});*/
