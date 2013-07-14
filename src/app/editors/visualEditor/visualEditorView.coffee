@@ -10,6 +10,9 @@ define (require) ->
   reqRes = require 'core/messaging/appReqRes'
   vent = require 'core/messaging/appVent'
   
+  #
+  require 'backbone_mousetrap'
+  
   #OrbitControls = require './controls/orbitControls'
   OrbitControls = require 'OrbitControls'
   CustomOrbitControls = require './controls/customOrbitControls'
@@ -30,6 +33,15 @@ define (require) ->
   includeMixin = require 'core/utils/mixins/mixins'
   dndMixin = require 'core/utils/mixins/dragAndDropRecieverMixin'
   
+  ###
+     keyboardEvents: 
+      'command+shift+t': 'totoPouet'
+      'control+shift+t': 'totoPouet'
+      'control+t': 'totoPouet'
+      'control+e': 'totoPouet'
+      'shift+e': 'totoPouet'
+      'ctrl+s': 'totoPouet'
+    ###
 
   class VisualEditorView extends Backbone.Marionette.ItemView
     el: $("#visual")
@@ -53,6 +65,15 @@ define (require) ->
       "mousedown .toggleAutoRotate"      :    "toggleAutoRotate"
       "mousedown .toggleOutlines"      :    "toggleOutlines"
       "mousedown .switchViewType":      "switchViewType"
+     
+     
+    totoPouet:(e)->
+      if e.preventDefault
+        e.preventDefault()
+      else
+        # internet explorer
+        e.returnValue = false
+      console.log "oh yeah , keyboard"
             
     constructor:(options, settings)->
       super options
@@ -163,7 +184,7 @@ define (require) ->
       @viewAngle=40
       ASPECT = @width / @height
       @NEAR = 1
-      @FAR = 1000
+      @FAR = 10000
       @camera =
        new THREE.CombinedCamera(
           @width,
@@ -175,7 +196,8 @@ define (require) ->
           @FAR)
 
       @camera.up = new THREE.Vector3( 0, 0, 1 )
-      @camera.position = @defaultCameraPosition
+      @camera.position.copy(@defaultCameraPosition)
+      @camera.defaultPosition.copy(@defaultCameraPosition)
           
       @scene.add(@camera)
       @cameraHelper = new THREE.CameraHelper(@camera)
@@ -185,6 +207,8 @@ define (require) ->
       NEAR = 0.1
       FAR = 1000
       @overlayCamera = new THREE.CombinedCamera(350 / 2,250 / 2, @viewAngle, NEAR, FAR, NEAR, FAR)
+      @overlayCamera.position.copy(new THREE.Vector3( 150, 150, 250 ))
+      @overlayCamera.defaultPosition.copy(new THREE.Vector3( 150, 150, 250 ))
       @overlayCamera.up = new THREE.Vector3( 0, 0, 1 )
       @overlayCamera.toOrthographic()
       
@@ -306,7 +330,6 @@ define (require) ->
           console.log "@noControlChange", @noControlChange
           if @noControlChange
             @controls.disable()
-            @overlayControls.disable()
             return true
           return false
         onItem: (e, element)=>
@@ -341,29 +364,22 @@ define (require) ->
           
         after: =>  
           @controls.enable()
-          @overlayControls.enable()
           @noControlChange = false
           @contextMenuRequested = false
           return false
           
     setupView:(val)=>
+      #@camera.defaultPosition = @defaultCameraPosition
+      #@overlayCamera.defaultPosition = new THREE.Vector3(150,150,250)
+      
       if @settings.projection is "orthographic"
         @camera.toOrthographic()
         
-      resetCam=()=>
-        @camera.position.z = 0
-        @camera.position.y = 0
-        @camera.position.x = 0
       switch val
         when 'diagonal'
-          @camera.position = @defaultCameraPosition
-          @overlayCamera.position.x = 150
-          @overlayCamera.position.y = 150
-          @overlayCamera.position.z = 250
-          
-          #@camera.target = new THREE.Vector3()
-          #@camera.lookAt(@scene.position)
-          #@overlayCamera.lookAt(@overlayScene.position)
+          @camera.toDiagonalView()
+          @overlayCamera.toDiagonalView()
+          #@camera.position.copy(@defaultCameraPosition)
         when 'top'
           @camera.toTopView()
           @overlayCamera.toTopView()
@@ -399,6 +415,7 @@ define (require) ->
       @settings.position = ""
       if @initialized 
         @_render()
+        
     
     _setupEventBindings:=>
       @model.on("compiled", @_onProjectCompiled)
@@ -526,10 +543,14 @@ define (require) ->
             if @axes?
               @removeAxes()
               @addAxes()
+            if @grid?
+              @grid.setColor(val)
           when 'textColor'
             if @axes?
               @removeAxes()
               @addAxes()
+            if @grid?
+              @grid.setTextColor(val)
           when 'showConnectors'
             if val
               @assembly.traverse (object)->
@@ -897,29 +918,17 @@ define (require) ->
       @controls.autoRotateSpeed = 4.0
       @controls.addEventListener( 'change', @_onControlsChange )
       
-      ###
-      @controls.rotateSpeed = 1.8
-      @controls.zoomSpeed = 4.2
-      @controls.panSpeed = 0.8#1.4
-      #@controls.addEventListener( 'change', @_render )
-      @controls.staticMoving = true
-      @controls.dynamicDampingFactor = 0.3###
-      
       container2 = $(@ui.glOverlayBlock)
       container2.append(@overlayRenderer.domElement)
       
-      @overlayControls = new THREE.OrbitControls(@overlayCamera, @el)#new CustomOrbitControls(@overlayCamera, @el)#Custom
+      @overlayControls = new THREE.OrbitControls(@overlayCamera, @el)
       @overlayControls.userPan = false
       @overlayControls.userZoom = false
-      #@overlayControls.rotateSpeed = 2
-      #@overlayControls.zoomSpeed = 4.2
       @overlayControls.userPanSpeed = 0
       @overlayControls.userZoomSpeed=0
       
       @overlayControls.autoRotate = @settings.autoRotate
       @overlayControls.autoRotateSpeed = 4.0
-      
-      @overlayControls.addEventListener( 'change', @_renderOverlay )
       
       @initialized = true
       @animate()
@@ -959,8 +968,8 @@ define (require) ->
       #@camera.setZoom(@controls.scale*10)
       #@camera.setFov(10)
       #console.log @camera.position
-      
       @_render()
+      @_renderOverlay()
       requestAnimationFrame(@animate)
     
     fromCsg:()=>

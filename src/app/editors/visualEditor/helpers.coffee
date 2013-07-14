@@ -331,15 +331,16 @@ define (require) ->
       @color = color 
       @mainGrid.material.color = new THREE.Color().setHex(@color)
       @subGrid.material.color = new THREE.Color().setHex(@color)
-    
-    setTextColor:(color)=>
-      
      
     toggleText:(toggle)=>
       @addText = toggle
       for label in @labels.children
         label.visible = toggle
-        
+
+    setTextColor:(color)=>
+      @textColor = color
+      @_drawNumbering()
+    
     setTextLocation:(location)=>
       @textLocation = location
       @_drawNumbering()
@@ -571,7 +572,7 @@ define (require) ->
         computeVolume(mesh)
         
       catch error
-  
+      
   
   class SelectionHelper extends BaseHelper
     #Helper to detect intersection with mouse /touch position (hover and click) and apply effect  
@@ -583,7 +584,7 @@ define (require) ->
       @options = options
       @currentHover = null
       @currentSelect = null
-      @selectionColor = 0xfffccc#0xCC8888
+      @selectionColor = 0xfffccc
       @projector = new THREE.Projector()
       
       

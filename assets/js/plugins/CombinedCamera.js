@@ -206,13 +206,10 @@ THREE.CombinedCamera.prototype.setZoom = function( zoom ) {
 
 };
 
-
 THREE.CombinedCamera.prototype.toDiagonalView = function() {
     
-    var offset = this.position.clone().sub(this.target);
-    var nPost = new  THREE.Vector3();
-    nPost.y = -offset.length();
-    this.position = nPost;
+    this.position = this.defaultPosition;
+    this.target = new THREE.Vector3();
     this.lookAt(this.target);
 };
 
