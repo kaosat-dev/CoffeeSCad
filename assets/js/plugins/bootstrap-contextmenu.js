@@ -78,7 +78,6 @@
 
         ,closemenu: function(e) {
             this.getMenu().removeClass('open');
-            console.log("after in plugin");
             if (!this.after.call(this,e,this.$element)) return;
         }
 

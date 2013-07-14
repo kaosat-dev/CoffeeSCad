@@ -327,13 +327,12 @@ define (require) ->
       @$el.contextmenu
         target:'#context-menu'
         before: =>
-          console.log "@noControlChange", @noControlChange
+          #console.log "@noControlChange", @noControlChange
           if @noControlChange
             @controls.disable()
             return true
           return false
         onItem: (e, element)=>
-          console.log "here"
           visitResult = ""
           mesh = null
           objectType = $(element).attr("data-value")
@@ -352,7 +351,6 @@ define (require) ->
           if mesh?
             @assembly.add( mesh ) 
             visitResult = visitor.visit(mesh)
-            console.log visitResult
             @_render()
             meshCode = "\nassembly.add(#{visitResult})"
             line = @model.injectContent(meshCode)
@@ -688,7 +686,7 @@ define (require) ->
       @selectionHelper.highlightObjectAt(x,y)
     
     _onControlsChange:(ev)=>
-      console.log "controls change"
+      #console.log "controls change"
       @noControlChange = false 
       #@oldCamPos = if @newCamPos? then @newCamPos.clone()
       #@newCamPos = ev.target.object.position
@@ -698,7 +696,6 @@ define (require) ->
       @controlChangeTimeOut = null  
       @controlChangeTimeOut = setTimeout ( =>
         @noControlChange = true
-        console.log(@noControlChange)
         if @contextMenuRequested?
           if @contextMenuRequested
             @setupContextMenu()
