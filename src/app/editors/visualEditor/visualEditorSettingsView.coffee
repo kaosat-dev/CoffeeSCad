@@ -38,20 +38,24 @@ define (require)->
             options:['center','border']
           
           showStats    : 'Checkbox'
+          
           position     :
             type: 'Select'
             options: ['diagonal', 'top', 'bottom', 'front', 'back', 'left', 'right', 'center'] 
-          
           projection   :
             type: 'Select'
             options: ['perspective', 'orthographic']
-          
           center: 'Checkbox'
+          autoRotate : 'Checkbox'
+          
           
           objectViewMode :
             title : 'object rendering'
             type:'Select'
             options:['shaded','wireframe','structural']
+          
+          objectOutline: 'Checkbox'
+            
           
           helpersColor :  'Text'
           bgColor : 
@@ -64,19 +68,38 @@ define (require)->
           textColor:
             type: 'Text'
           axesSize: 'Number'
+          
+          grid:
+            type: 'Object'
+            subSchema:
+              enabled: 'Checkbox'
+              size    : 'Number'
+              steps   : 'Number'
+              color   : 'Text'
+              opacity : {type:'Number', editorAttrs: { step: 0.1, min: 0, max: 1 } }
+              numbering: 'Checkbox'
+              numberingPosition: 
+                title : 'Grid numbering position'
+                type:'Select'
+                options:['center','border']
+              
+          
             
         options.fieldsets=[
           "legend":"Render settings"
-          "fields": ["renderer","antialiasing","shadows","shadowResolution","selfShadows","objectViewMode"]
+          "fields": ["renderer","antialiasing","shadows","shadowResolution","selfShadows","objectViewMode","objectOutline"]
         , 
           "legend":"View settings"
-          "fields": ["position","projection","center"]
+          "fields": ["position","projection","center","autoRotate"]
         ,
           "legend":"Axes and Grid settings"
           "fields": ["showAxes","helpersColor","showConnectors", "showGrid","gridSize","gridStep","gridColor","gridOpacity","gridText","gridNumberingPosition"]
         , 
           "legend":"Extra settings"
-          "fields": ["bgColor","bgColor2", "textColor", "axesSize", "showStats"]
+          "fields": ["bgColor", "textColor", "axesSize", "showStats"]
+         ,
+          "legend":"TEST"
+          "fields":["grid"]
           
         ]
       super options

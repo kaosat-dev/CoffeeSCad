@@ -8,16 +8,29 @@
 			<input id="fileName" type="text" style="width:90%" value="<%=name%>" />
 		</div>
 		<div id="storesContainer">
-			<div id="projectStores" style="float:left; width: 30%"><!--storage types browser-->
+			<div id="projectStores" style="float:left; width: 20%"><!--storage types browser-->
 				Location
 			</div>
+			<!--
 			<div id="projectFiles"  style="float:left; width: 40%">
 				<table class="table table-hover table-condensed">
 					<thead><th>Name</th><th>Type</th></thead>
 			    	<tbody id="projectFilesList"></tbody>
 			  	</table>
-			</div>
-			<div id="thumbNail" style="float:left; width:30%;background-color:  #262626;" class="hide">
+			</div>-->
+			<div id="projectsContainer"   style="float:left; width: 80%">
+				<ul id="projects" style="list-style: none; height: 400px">
+				</ul>
+			</div>	
+				<!--
+				<div>
+					<a href="#">
+						<i class="icon-folder-open icon-extraLarge"></i> Bla bla
+					</a>
+				</div>-->
+			
+			<div id="thumbNail" style="float:left; width:30%" class="hide">
+			<!--background-color:  #262626;-->
 				<img id="projectThumbNail" class="img-rounded"/>
 			</div>
 		</div>
@@ -44,27 +57,38 @@
 
 
 <script id="projectStoreListTmpl" type="text/x-underscore-template">
-	<div class="accordion" id="accordion" >
-	</div>
 </script>
 
 <script id="projectStoreTmpl" type="text/x-underscore-template">
-	<div class="accordion-group" id="<%=name%>StoreContent">
-	 	<div class="accordion-heading store-header" >
-	 		<a class="accordion-toggle"> <!--data-toggle="collapse" data-parent="#accordion" href="#collapseOne">-->
-				<%= storeType %> <i class="icon-question-sign icon-large" rel="tooltip" title="<%=tooltip%>"></i> 
-				<span class="storeConnection pull-right" rel="tooltip" title="Store not connected, please sign in">
-					<i class="icon-ban-circle icon-large" style="color:#FF0000"></i>
-				</span>
-			</a>
-		</div>
-		<div id="collapseOne" class="accordion-body collapse in">
-			<div class="accordion-inner storeProjectsList" ><!--style="overflow:auto;max-height: 150px">-->
-				<ul id="projects">
-				</ul>
-			</div>
-		</div>
-	</div>
+	<table class="table table-bordered table-condensed store" id="<%=name%>StoreContent" >
+		<thead class="store-header">
+			<tr>
+				<th>
+					<a>
+						<%= storeType %> 
+						&nbsp; &nbsp;
+						<i class="icon-question-sign icon-large" rel="tooltip" title="<%=tooltip%>"></i>
+					</a>
+				</th>
+				<th class="icons-group" style="border-left: none"><!--TODO: why does it work in style but not css /less ???-->
+					<% if (loggedIn == false) { %>
+					<span class="storeConnection pull-right" >
+						<i class="icon-ban-circle icon-large" rel="tooltip" title="Store not connected, please sign in" style="color:#FF0000"></i>
+					</span>
+					<% } %>
+				</th>
+			</tr>
+		</thead>
+		<!--
+		<tbody>
+			<tr>
+				<td colspan="2" class="storeProjectsList">
+					<ul id="projects">
+					</ul>
+				</td>
+			</tr>
+		</tbody>-->
+	</table>
 	<div id="<%=name%>ProjectContextMenu">
       <ul class="dropdown-menu" role="menu">
           <li><a tabindex="-1" href="#" class="deleteProject"><i class="icon-remove"></i>Delete</a></li>
@@ -78,4 +102,21 @@
 
 <script id="projectFileTmpl" type="text/x-underscore-template">
 	<%=name%>    <%=ext>
+</script>
+
+<script id="projectListTmpl" type="text/x-underscore-template">
+	
+</script>
+
+<script id="projectTmpl" type="text/x-underscore-template">
+	<li class='projectBlock'>
+	  <div class="flip">
+	    <div class="front">
+	      <a id='#{@model.name}#{name}' class='projectSelector' href='#' data-toggle='context' data-target='##{@model.name}ProjectContextMenu'>#{name}</a>
+	    </div>
+	    <div class="back">
+	      Some text here
+	    </div>
+	  </div>
+ 	</li>
 </script>

@@ -1,33 +1,65 @@
 <script id="3dViewTmpl" type="text/x-underscore-template">
 	<div id="glArea"  > </div>
-	
 	<div id="overLaySpacer" style="float:left; height: 500px;width:100%"></div>
 	<div id="glOverlay"></div>
 	
+	<!--Compiling ... etc or other messages-->	
+	<div id="workingSpinner" style="position: absolute;right:50%;top:0px" class="hide">
+		<i class="icon-spinner icon-spin icon-large"></i> Updating visuals...
+	</div>
+	
+	
 	<!--Experimental, for bounding box overlay-->
 	<div id="testOverlay" style="border: 1px red; width:5px;height:5px;position: absolute;background-color: black"></div>
-	<div id="testOverlay2" style="border: 1px red; width:auto;height:auto;position: absolute;background-color: rgb(255, 194, 0);font-size: 20px"></div>
+	<div id="testOverlay2" style="border: 1px red; width:auto;height:auto;position: absolute;background-color: rgb(255, 194, 0);font-size: 20px"><i class="icon-exclamation-sign"></i></div>
+	
+	<div id="context-menu">
+      <ul class="dropdown-menu" role="menu">
+          <li class="divider">Geometry</li>
+          <li><a tabindex="-1" href="#" data-value="Cube">Cube</a></li>
+          <li><a tabindex="-1" href="#" data-value="Sphere">Sphere</a></li>
+          <li><a tabindex="-1" href="#" data-value="Cylinder">Cylinder</a></li>
+          <li class="divider">Operations</li>
+          <li><a tabindex="-1" href="#" data-value="Union">Union</a></li>
+          <li><a tabindex="-1" href="#" data-value="Subtract">Subtract</a></li>
+          <li><a tabindex="-1" href="#" data-value="Intersect">Intersect</a></li>
+      </ul>
+    </div>
 	
 	<!--
 	<div id="dropOverlay" class="circle hide" style="position: absolute;top:350px; left: 350px">
 		<span>Drop Me</span>
 	
 	</div>-->
-	<!--	<div id="overlay" class="pull-right"> -->
-		<!-- class="navbar  active"  style="float: left;" 
-		<a href="#" rel="tooltip" title="show/hide grid" class="toggleGrid uicons"><i class="icon-table icon-large"></i></a>
+	<div id="overlay" class="pull-right" style="position: absolute; top:20px; right:100px"> 
+		<a href="#" rel="tooltip" title="perspective/orthographic" class="switchProjection uicons"><i class="icon-eye-open"></i></a>
 		&nbsp;&nbsp;&nbsp;&nbsp;
-		<a href="#" rel="tooltip" title="show/hide axes" class="toggleAxes uicons"><i class="icon-plus icon-large"></i></a>
+		<a href="#" class="dropdown-toggle" data-toggle="dropdown">
+			<i class="icon-fixed-width icon-list-ul"></i>
+        	<b class="caret"></b>
+        </a>
+		<ul class="dropdown-menu">
+			<li class="setView-diagonal switchViewType"><a tabindex="-1" href="#">Diagonal</a></li>
+			<li class="setView-top switchViewType"><a tabindex="-1" href="#">Top</a></li>
+			<li class="setView-bottom switchViewType"><a tabindex="-1" href="#">Bottom</a></li>
+			<li class="setView-front switchViewType"><a tabindex="-1" href="#">Front</a></li>
+			<li class="setView-back switchViewType"><a tabindex="-1" href="#">Back</a></li>
+			<li class="setView-left switchViewType"><a tabindex="-1" href="#">Left</a></li>
+			<li class="setView-right switchViewType"><a tabindex="-1" href="#">Right</a></li>
+			<li class="divider"></li>
+			<li class="setView-center switchViewType"><a tabindex="-1" href="#">Center</a></li>
+		</ul>
 		&nbsp;&nbsp;&nbsp;&nbsp;
-		<a href="#" rel="tooltip" title="toggle shadows" class="toggleShadows uicons"><i class="icon-adjust icon-large"></i></a>
+		<a href="#" rel="tooltip" title="show/hide grid" class="toggleGrid uicons"><i class="icon-table"></i></a>
 		&nbsp;&nbsp;&nbsp;&nbsp;
-		<a href="#" rel="tooltip" title="toggle anti aliasing" class="toggleAA uicons"><i class="icon-barcode icon-large"></i></a>
+		<a href="#" rel="tooltip" title="show/hide axes" class="toggleAxes uicons"><i class="icon-plus"></i></a>
 		&nbsp;&nbsp;&nbsp;&nbsp;
-		<a href="#" rel="tooltip" title="auto update view <b>on script change</b> <br\>(can get slow for complex scripts)" class="toggleAutoUpdate uicons"><i class="icon-time icon-large"></i></a>
+		<a href="#" rel="tooltip" title="toggle shadows" class="toggleShadows uicons"><i class="icon-adjust"></i></a>
 		&nbsp;&nbsp;&nbsp;&nbsp;
-		<a href="#" rel="tooltip" title="view settings" class="viewSettings uicons"><i class="icon-eye-open icon-large"></i></a>
-		
-	</div>-->
+		<a href="#" rel="tooltip" title="toggle autorotate" class="toggleAutoRotate uicons"><i class="icon-refresh"></i></a>
+		&nbsp;&nbsp;&nbsp;&nbsp;
+		<a href="#" rel="tooltip" title="toggle outlines" class="toggleOutlines uicons"><i class="icon-circle-blank"></i></a>
+	</div>
 	
 	
 	<script>

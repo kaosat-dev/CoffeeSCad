@@ -29,7 +29,8 @@ define (require)->
       @_setupEventHandlers()
     
     _setupEventHandlers: =>
-      @model.on("change", @modelChanged)
+      console.log "my model", @model
+      @model.on("change:content", @modelChanged)
       @model.on("saved", @modelSaved)
       @settings.on("change", @settingsChanged)
       
@@ -43,7 +44,7 @@ define (require)->
       @vent.on("project:compiled",@_onProjectCompiled)
       @vent.on("project:compile:error",@_onProjectCompileError)
       #hack to fix annoying resize bug
-      @vent.on("codeMirror:refresh",@onRefreshRequested)
+      @vent.on("codeEditor:refresh",@onRefreshRequested)
     
     _tearDownEventHandlers:=>
       #cleanup all events
@@ -61,14 +62,13 @@ define (require)->
       @vent.off("project:compiled",@_onProjectCompiled)
       @vent.off("project:compile:error",@_onProjectCompileError)
       #hack to fix annoying resize bug
-      @vent.off("codeMirror:refresh",@onRefreshRequested)
+      @vent.off("codeEditor:refresh",@onRefreshRequested)
     
     
     onRefreshRequested:(newHeight)=>
       #elHeight
-      #@editor.refresh()
-      #@editor.setSize("100%",newHeight)
-      console.log "on refresh"
+      #console.log "on refresh", newHeight
+      @$el.height(newHeight)
       @editor.resize()    
     
     onFileSelected:(model)=>
@@ -117,7 +117,13 @@ define (require)->
       @bindTo(@model, "saved", @modelSaved)
       
     modelChanged: (model, value)=>
+      console.log "hey , my model has changed"
       @applyStyles()
+      #we have to de/re activate event bindings to avoid infinite event triggering
+      @editor.off("change", @_onEditorContentChange)
+      @editor.setValue(@model.content)
+      @editor.clearSelection()
+      @editor.on("change", @_onEditorContentChange)
       
     modelSaved: (model)=>  
       
@@ -267,12 +273,15 @@ define (require)->
       if @undoManager.hasRedo()
         @editor.redo()
     
+    _onEditorContentChange:(cm, change)=>
+      @model.off("change:content", @modelChanged)
+      @model.content = @editor.getValue()
+      @model.on("change:content", @modelChanged)
+      @updateUndoRedo()
+    
     _setupEditorEventHandlers:=>
       
-      @editor.on "change", (cm, change)=>
-        #@_updateHints()
-        @model.content = @editor.getValue()
-        @updateUndoRedo()
+      @editor.on("change", @_onEditorContentChange)
       
       @editor.getSession().selection.on 'changeCursor', (ev, selection) =>
         cursor = selection.anchor
@@ -301,8 +310,6 @@ define (require)->
       @undoManager = @editor.getSession().getUndoManager()
       
       @editor.resize()    
-      
-
       
       
       #undo_manager = ace.getSession().getUndoManager();

@@ -52,7 +52,7 @@ define (require)->
           containment: "#mainContent"
           handles: "all"
           stop:(event,ui)=>
-            @currentView.$el.trigger("resize")
+            @currentView.$el.trigger("resize",{event:event,ui:ui})
             @$el.css("height","auto")
         @$el.css("position","absolute")
     
@@ -68,8 +68,10 @@ define (require)->
     onOpacityChanged:(e)->
       opacity = parseFloat(e.currentTarget.value)/100
       console.log opacity
-      if opacity >= 0.25 and opacity <= 1
+      if opacity >= 0.15 and opacity <= 1
         @$el.css("opacity",opacity)
+        #alternative opacity setting
+        #@$el.css('background-color',"rgba(255,255,255,#{opacity})")
     
     render:()=>
       @isClosed = false

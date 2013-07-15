@@ -30,7 +30,7 @@ define (require)->
       @startWithParent = true
       @showOnAppStart = true
       @addMainMenuIcon = true
-      @icon = "icon-text-width" 
+      @icon = "icon-code" 
         
       @vent.on("project:loaded",@resetEditor)
       @vent.on("project:created",@resetEditor)

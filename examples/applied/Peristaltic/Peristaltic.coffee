@@ -3,7 +3,7 @@ include("pump.coffee")
 
 @config = {
            explode:1, # 0 for assembled pump 1 for exploded view
-           layout:1, # 1 for assembled , 0 for single print object
+           layout:0, # 1 for assembled , 0 for single print object
            lobes: 3, # number of rollers
            pipe_od: 5, # outside diameter of pipe
            pipe_id: 4, #inside diamter of pip

@@ -237,9 +237,10 @@ define (require)->
         d.resolve entries
       return d.promise()
         
-    _readFile:(path)->
+    _readFile:(path, options)->
+      options = options or {}
       d = $.Deferred()
-      @client.readFile path, (error, data)=>
+      @client.readFile path,options, (error, data)=>
         if error
           @formatError(error,d)
         d.resolve data

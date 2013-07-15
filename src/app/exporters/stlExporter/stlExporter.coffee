@@ -16,15 +16,17 @@ define (require) ->
     ###
     constructor:(options)->
       super options
+      @started = false
       @vent=vent
       @mimeType = "application/sla"
       @on "start", @onStart
+      @vent.on("project:loaded", @reset)
+      @vent.on("project:created", @reset)
     
     start:(options)->
       @project= options.project ? new Project()
       reqRes.addHandler "stlexportBlobUrl", ()=>
-        blobUrl = @export(@project.rootAssembly)
-        return blobUrl
+        @_onExportRequest()
           
       @trigger("initialize:before", options)
       @initCallbacks.run(options, this)
@@ -38,8 +40,15 @@ define (require) ->
       modReg.on("closed", @stop)
       modReg.show stlExporterView
     
-    stop:->
+    stop:=>
       console.log "closing stl exporter"
+    
+    reset:(newProject)=>
+      @project = newProject
+    
+    _onExportRequest:=>
+      blobUrl = @export(@project.rootAssembly)
+      return blobUrl
       
     export:(csgObject,mergeAll=true)=>
       try

@@ -26,13 +26,39 @@ define (require)->
     ui:
       tabHeaders: "#tabHeaders"
       tabContent: "#tabContent"
+      
     events:
       "mouseup .applySettings": "applySettings"
+      "mouseup .resetSettings": "resetSettings"
       
     applySettings:(ev)=>
       for index, form of @tabContent.currentView.forms
         form.commit({ validate: true })
       @model.save()
+      
+    resetSettings:(ev)=>
+      ### 
+      for index, form of @tabContent.currentView.forms
+        console.log "index, form", index, form
+        model = form.model
+        defaults = model.defaults
+        console.log "model defaults",  defaults
+        model.set(defaults)
+        #model.clear().set(defaults)
+      ###
+      bootbox.dialog "This will reset settings and restart the application, are you sure?", [
+        label: "Ok"
+        class: "btn-inverse"
+        callback: =>
+          for index, form of @tabContent.currentView.forms
+            model = form.model
+            model.destroy()  
+          document.location.reload(true)
+      ,
+        label: "Cancel"
+        class: "btn-inverse"
+        callback: ->
+      ]
     
     constructor:(options) ->
       super options
@@ -145,7 +171,7 @@ define (require)->
             
           theme:
             type:'Select'
-            options : ["default", "spacelab","slate"]
+            options : ["coffeescad", "spacelab","slate"]
             
         options.fieldsets=[
           "legend": "CSG compiling settings"
@@ -189,8 +215,11 @@ define (require)->
     
     constructor:(options)->
       if not options.schema
-        options.schema = {}
-          
+        options.schema=
+          bindings:
+            type: 'KeyBind'
+            
+        
       super options
       
   class KeyBindingsWrapper extends Backbone.Marionette.ItemView

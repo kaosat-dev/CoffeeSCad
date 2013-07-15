@@ -18,17 +18,18 @@
 	<link rel="stylesheet" href="assets/css/backbone.forms.default.css">
 	<link rel="stylesheet" href="assets/css/backbone.forms.bootstrap.css">
 	<link rel="stylesheet" href="assets/css/ui-lightness/jquery-ui-1.10.1.custom.min.css">
-	<link rel="stylesheet" href="assets/js/libs/codeMirror/theme/lesser-dark.css"/>
 	<link id="mainTheme" rel="stylesheet" href="assets/css/style/coffeescad/bootstrap.css">
 	
+	<link rel="stylesheet" href="assets/css/colorpicker.css">
 
 <title>CoffeeScad</title> 
 <link rel="shortcut icon" href="favicon.ico" />
 </head>
 
+
 <body>
 	<div id="header" class="unselectable"> </div>
-	<div class="container-fluid fullHeight box-wrap-inner" id="mainContent">
+	<div class="container-fluid fullHeight fullWidth box-wrap-inner" id="mainContent" >
 		<div id="_dockZoneWest" class="dockZone dockZoneWest"></div>
 		<div id="visual" class="unselectable"></div>
 		<div id="_dockZoneEast" class="dockZone dockZoneEast"></div>
@@ -41,22 +42,24 @@
 	</div>
 	<!--experimental, only used in node-webkit (desktop app) variant-->
 	<script>
-	  var http = nodeRequire('http');
-	
-	  http.createServer(function (req, res) {
-	    res.writeHead(200, {'Content-Type': 'text/plain'});
-	    res.end('hello');
-	  }).listen(10086);
-	  
-	  var io = require('socket.io').listen(80);
-
-		io.sockets.on('connection', function (socket) {
-		  socket.emit('news', { hello: 'world' });
-		  socket.on('my other event', function (data) {
-		    console.log(data);
-		  });
-		});
-	  
+		if (typeof process === 'undefined')	
+		{
+			  var http = nodeRequire('http');
+			
+			  http.createServer(function (req, res) {
+			    res.writeHead(200, {'Content-Type': 'text/plain'});
+			    res.end('hello');
+			  }).listen(10086);
+			  
+			  var io = require('socket.io').listen(80);
+		
+				io.sockets.on('connection', function (socket) {
+				  socket.emit('news', { hello: 'world' });
+				  socket.on('my other event', function (data) {
+				    console.log(data);
+				  });
+				});
+	  	}
 	</script>
 	
 </body>

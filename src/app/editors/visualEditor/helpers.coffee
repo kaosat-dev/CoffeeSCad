@@ -8,23 +8,47 @@ define (require) ->
     constructor:(options)->
       super options
       
-    drawText:(text, displaySize)=>
+    drawText:(text, displaySize, background,scale)=>
+      fontSize = displaySize or 18
+      background = background or false
+      scale = scale or 1.0
+      
       canvas = document.createElement('canvas')
-      size = 256
-      displaySize = displaySize or size
-      canvas.width = size
-      canvas.height = size
+      borderThickness = 2
       context = canvas.getContext('2d')
-      context.font = "17px sans-serif"
+      context.font = "15px Arial"
       context.textAlign = 'center'
       context.fillStyle = @textColor
-      context.fillText(text, canvas.width/2, canvas.height/2)
-     
+      context.fillStyle = "rgba(0, 0, 0, 1.0)";
+      
+      
+      rect=(ctx, x, y, w, h, r)->
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x+w, y);
+        ctx.lineTo(x+w, y+h);
+        ctx.lineTo(x, y+h);
+        ctx.lineTo(x, y);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();   
+      
+      if background
+        metrics = context.measureText( text )
+        textWidth = metrics.width;
+        context.fillStyle = "rgba(255, 255, 255, 0.55)";
+        context.strokeStyle = "rgba(255,255,255,0.55)";
+        rect(context, canvas.width/2-fontSize, canvas.height/2-fontSize, textWidth + borderThickness, fontSize * 1.4 + borderThickness, 6);
+      
+      #context.fillStyle = "rgba(0, 0, 0, 1.0)";
+      #context.fillText(text, canvas.width/2, canvas.height/2)
       context.strokeStyle = @textColor
       context.strokeText(text, canvas.width/2, canvas.height/2)
       
       texture = new THREE.Texture(canvas)
       texture.needsUpdate = true
+      #texture.magFilter = THREE.LinearFilter
+      #texture.minFilter = THREE.LinearFilter
       
       spriteMaterial = new THREE.SpriteMaterial
          map: texture
@@ -35,7 +59,7 @@ define (require) ->
          scaleByViewport:false
          color: 0xffffff
       sprite = new THREE.Sprite(spriteMaterial)
-      sprite.scale.set( displaySize, displaySize, displaySize)
+      sprite.scale.set( 100*scale, 50*scale, 1.0)
       return sprite
     
     drawTextOnPlane:(text, size=256)=>
@@ -45,7 +69,7 @@ define (require) ->
       canvas.width = size
       canvas.height = size
       context = canvas.getContext('2d')
-      context.font = "17px sans-serif"
+      context.font = "18px sans-serif"
       context.textAlign = 'center'
       context.fillStyle = @textColor
       context.fillText(text, canvas.width/2, canvas.height/2)
@@ -55,38 +79,23 @@ define (require) ->
       
       texture = new THREE.Texture(canvas)
       texture.needsUpdate = true
-      texture.generateMipmaps = false
+      texture.generateMipmaps = true
       texture.magFilter = THREE.LinearFilter
       texture.minFilter = THREE.LinearFilter
+      #texture.anisotropy = 32
       
       material = new THREE.MeshBasicMaterial
         map: texture
         transparent: true 
         color: 0xffffff
+        alphaTest: 0.2
       
       plane = new THREE.Mesh(new THREE.PlaneGeometry(size/8, size/8),material)
       plane.doubleSided = true
       plane.overdraw = true
       return plane
     
-    drawText2:(text)=>
-      helpersColor = @settings.get("helpersColor")
-      if helpersColor.indexOf "0x" == 0
-        helpersColor= "#"+helpersColor[2..]
-      
-      canvas = document.createElement('canvas')
-      
-      context = canvas.getContext('2d')
-      context.font = "17px sans-serif"
-      context.fillStyle = helpersColor
-      context.fillText(text, 0, 10);
-      context.strokeStyle = '#FFFFFF'
-      context.strokeText(text, 0, 10)
-      
-      texture = new THREE.Texture(canvas)
-      texture.needsUpdate = true
-      return texture
-  
+    
   class Arrow extends BaseHelper
     constructor:(options)->
       super options
@@ -119,15 +128,18 @@ define (require) ->
       @yColor = new THREE.Color().setHex(@yColor)
       @zColor = new THREE.Color().setHex(@zColor)
 
+      #addLabels = false
       if addLabels
         s = @size * 1.1
-        @xLabel=@drawText("X")
+        fontSize = 18
+        scale = 0.008
+        @xLabel=@drawText("X",fontSize,false, scale)
         @xLabel.position.set(s,0,0)
         
-        @yLabel=@drawText("Y")
+        @yLabel=@drawText("Y",fontSize,false, scale)
         @yLabel.position.set(0,s,0)
         
-        @zLabel=@drawText("Z")
+        @zLabel=@drawText("Z",fontSize,false, scale)
         @zLabel.position.set(0,0,s)
         
       if addArrows
@@ -144,6 +156,7 @@ define (require) ->
       @add @xLabel
       @add @yLabel 
       @add @zLabel
+      @name = "axes"
     
     _buildAxes:()=>
       lineGeometryX = new THREE.Geometry()
@@ -172,10 +185,14 @@ define (require) ->
     constructor:(options)->
       super options
       
-      defaults = {size:1000, step:100, color:0xFFFFFF, opacity:0.1, addText:true, textColor:"#FFFFFF", textLocation:"f"}
+      defaults = {size:1000, step:100, color:0xFFFFFF, opacity:0.1, addText:true, textColor:"#FFFFFF", textLocation:"f",rootAssembly:null}
       options = merge defaults, options
-      {@size, @step, @color, @opacity, @addText, @textColor, @textLocation} = options
+      {@size, @step, @color, @opacity, @addText, @textColor, @textLocation, @rootAssembly} = options
       
+      @name = "grid"
+      @_drawGrid()
+    
+    _drawGrid:->
       mainGridZ = -0.05
       gridGeometry = new THREE.Geometry()
       gridMaterial = new THREE.LineBasicMaterial
@@ -258,7 +275,7 @@ define (require) ->
       @add @subGrid
       @add @plane
       @_drawNumbering()
-     
+    
     _drawNumbering:->
       if @labels?
         @mainGrid.remove(@labels)
@@ -319,11 +336,60 @@ define (require) ->
       @addText = toggle
       for label in @labels.children
         label.visible = toggle
-        
+
+    setTextColor:(color)=>
+      @textColor = color
+      @_drawNumbering()
+    
     setTextLocation:(location)=>
       @textLocation = location
       @_drawNumbering()
+    
+    resize:(size)=>
+      if size != @size
+        @size = size
+        @remove @mainGrid
+        @remove @subGrid
+        @remove @plane
+        @_drawGrid()
+        
+    
+    updateGridSize:()=>
+      #autgrow grid to accomodate all objects in assembly
+      minX = 99999
+      maxX = -99999
+      minY = 99999
+      maxY = -99999
       
+      _getBounds=(mesh)=>
+        if (mesh instanceof THREE.Mesh)
+          mesh.geometry.computeBoundingBox()
+          bBox = mesh.geometry.boundingBox
+
+          # compute overall bbox
+          #TODO: mesh.position additions are actually correct, the way we get shapes from csg.js is NOT
+          minX = Math.min(minX, bBox.min.x)#+mesh.position.x
+          maxX = Math.max(maxX, bBox.max.x)#+mesh.position.x
+          minY = Math.min(minY, bBox.min.y)#+mesh.position.y
+          maxY = Math.max(maxY, bBox.max.y)#+mesh.position.y
+          
+          for subchild in mesh.children
+            _getBounds(subchild)
+        
+      if @rootAssembly?
+        for subchild in @rootAssembly.children
+          if subchild.name != "renderSubs" and subchild.name !="connectors"
+            _getBounds(subchild)
+      
+      #console.log("Bounds for grid", minX, maxX, minY, maxY)
+      max = Math.max(Math.max(maxX, maxY),100)
+      min = Math.min(Math.min(minX, minY),-100)
+      #console.log("Bounds for grid", max, min)
+      size = (Math.max(max, Math.abs(min)))*2
+      #console.log("New size for grid", size)
+      size = Math.ceil(size / 10) * 10
+      if size >= 200
+        @resize(size)
       
   class BoundingCage extends BaseHelper
     #Draws a bounding box (wireframe) around a mesh, and shows its dimentions
@@ -335,6 +401,8 @@ define (require) ->
       color = new THREE.Color().setHex(@color)
       #attempt to draw bounding box
       try
+        if not mesh.geometry.boundingBox
+          mesh.geometry.computeBoundingBox()
         bbox = mesh.geometry.boundingBox
         length = bbox.max.x-bbox.min.x
         width  = bbox.max.y-bbox.min.y
@@ -353,7 +421,7 @@ define (require) ->
           wireframe: true
           shading:THREE.FlatShading
         
-        cage = new THREE.Mesh(cageGeo, lineMat)
+        cage = new THREE.Object3D()#new THREE.Mesh(cageGeo, lineMat)
         #cage = new THREE.Line(cageGeo, lineMat, THREE.Lines)
         middlePoint=(geometry)->
           middle  = new THREE.Vector3()
@@ -365,90 +433,225 @@ define (require) ->
         delta = middlePoint(mesh.geometry)
         cage.position = delta
         
+        
+        
+        widthArrowPos = new THREE.Vector3( length/2+10, 0, -height/2 )
+        lengthArrowPos = new THREE.Vector3( 0, width/2+10, -height/2)
+        heightArrowPos = new THREE.Vector3( -length/2-5,-width/2-5,0)
+        
         if @addLabels
-          labelSize = 64
-          widthLabel=@drawText("w: #{width.toFixed(2)}",labelSize)
-          widthLabel.position.set(-length/2-10,0,height/2)
+          labelSize = 24
+          widthLabel=@drawText("#{width.toFixed(2)}",labelSize)
+          widthLabel.position = widthArrowPos 
           
-          lengthLabel=@drawText("l: #{length.toFixed(2)}",labelSize)
-          lengthLabel.position.set(0,-width/2-10,height/2)
+          lengthLabel=@drawText("#{length.toFixed(2)}",labelSize)
+          lengthLabel.position = lengthArrowPos
     
-          heightLabel=@drawText("h: #{height.toFixed(2)}",labelSize)
-          heightLabel.position.set(-length/2-10,-width/2-10,height/2)
+          heightLabel=@drawText("#{height.toFixed(2)}",labelSize)
+          heightLabel.position = heightArrowPos
           
           cage.add widthLabel
           cage.add lengthLabel
           cage.add heightLabel
-      
-        #TODO: solve z fighting issue
-        widthArrow = new THREE.ArrowHelper(new THREE.Vector3(1,0,0),new THREE.Vector3(0,0,0),width/2, 0xFF7700) #new Arrow({length:width/2, color:"#FF7700"})#
-        lengthArrow = new THREE.ArrowHelper(new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,0),length/2, 0x77FF00)
-        heightArrow = new THREE.ArrowHelper(new THREE.Vector3(0,0,1),new THREE.Vector3(0,0,0),height/2, 0x0077FF)
+       
+          widthLabel.material.depthTest = false
+          widthLabel.material.depthWrite = false
+          widthLabel.material.side= THREE.FrontSide 
+          
+          lengthLabel.material.depthTest = false
+          lengthLabel.material.depthWrite = false
+          lengthLabel.material.side= THREE.FrontSide 
+          
+          heightLabel.material.depthTest = false
+          heightLabel.material.depthWrite = false
+          heightLabel.material.side= THREE.FrontSide 
+          
+          
+       
+        forceOverlay=(arrows,sideLines)=>
+          for arrow in arrows
+            arrow.cone.material.side= THREE.FrontSide 
+            arrow.line.material.side= THREE.FrontSide 
+            #arrow.line.material.depthWrite = false
+            arrow.line.material.depthTest = false
+            #arrow.cone.material.depthWrite = false
+            arrow.cone.material.depthTest = false
+            arrow.line.renderDepth = 1e20
+            arrow.cone.renderDepth = 1e20
+          
+          for line in sideLines
+            line.material.side= THREE.FrontSide 
+            line.material.depthTest = false
+            line.renderDepth = 1e20
+          
+        require 'ArrowHelper2'  
+        
+        widthArrow1 = new THREE.ArrowHelper2(new THREE.Vector3(0,-1,0),widthArrowPos,width/2, 0x000000)
+        widthArrow2 = new THREE.ArrowHelper2(new THREE.Vector3(0,1,0),widthArrowPos,width/2, 0x000000)
+        
+        widthLineGeometry = new THREE.Geometry();
+        widthLineGeometry.vertices.push( new THREE.Vector3( length/2, width/2, -height/2 ) );
+        widthLineGeometry.vertices.push( new THREE.Vector3( length/2+10, width/2, -height/2 ) );
+        widthLine = new THREE.Line( widthLineGeometry, new THREE.LineBasicMaterial( { color: 0x000000,depthTest:false,depthWrite:false,renderDepth : 1e20 } ) );
+        cage.add( widthLine)
+        
+        widthLineGeometry2 = new THREE.Geometry();
+        widthLineGeometry2.vertices.push( new THREE.Vector3( length/2, -width/2, -height/2 ) );
+        widthLineGeometry2.vertices.push( new THREE.Vector3( length/2+10, -width/2, -height/2 ) );
+        widthLine2 = new THREE.Line( widthLineGeometry2, new THREE.LineBasicMaterial( { color: 0x000000 } ) );
+        cage.add( widthLine2)
+        forceOverlay([widthArrow1,widthArrow2], [widthLine,widthLine2])
+         
+        lengthArrow1 = new THREE.ArrowHelper2(new THREE.Vector3(1,0,0),lengthArrowPos,length/2, 0x000000)
+        lengthArrow2 = new THREE.ArrowHelper2(new THREE.Vector3(-1,0,0),lengthArrowPos,length/2, 0x000000)
+        
+        lengthLineGeometry = new THREE.Geometry();
+        lengthLineGeometry.vertices.push( new THREE.Vector3( length/2, width/2,  -height/2 ) )
+        lengthLineGeometry.vertices.push( new THREE.Vector3( length/2, width/2+10, -height/2 ) )
+        lengthLine = new THREE.Line( lengthLineGeometry, new THREE.LineBasicMaterial( { color: 0x000000 } ) )
+        cage.add( lengthLine);
+        
+        lengthLineGeometry2 = new THREE.Geometry();
+        lengthLineGeometry2.vertices.push( new THREE.Vector3( -length/2, width/2, -height/2 ) )
+        lengthLineGeometry2.vertices.push( new THREE.Vector3( -length/2, width/2 +10, -height/2 ) )
+        lengthLine2 = new THREE.Line( lengthLineGeometry2, new THREE.LineBasicMaterial( { color: 0x000000 } ) )
+        cage.add( lengthLine2)
+        
+        forceOverlay([lengthArrow1,lengthArrow2], [lengthLine,lengthLine2])
         
         
+        heightArrow1 = new THREE.ArrowHelper2(new THREE.Vector3(0,0,1),heightArrowPos,height/2, 0x000000)
+        heightArrow2 = new THREE.ArrowHelper2(new THREE.Vector3(0,0,-1),heightArrowPos,height/2, 0x000000)
+        
+        
+        heightLineGeometry = new THREE.Geometry();
+        heightLineGeometry.vertices.push( new THREE.Vector3( -length/2, -width/2, -height/2 ) )
+        heightLineGeometry.vertices.push( new THREE.Vector3( -length/2-5, -width/2 -5, -height/2 ) )
+        heightLine = new THREE.Line( heightLineGeometry, new THREE.LineBasicMaterial( { color: 0x000000 } ) )
+        
+        heightLineGeometry2 = new THREE.Geometry();
+        heightLineGeometry2.vertices.push( new THREE.Vector3( -length/2, -width/2, height/2 ) )
+        heightLineGeometry2.vertices.push( new THREE.Vector3( -length/2-5, -width/2 -5, height/2 ) )
+        heightLine2 = new THREE.Line( heightLineGeometry2, new THREE.LineBasicMaterial( { color: 0x000000 } ) )
+        
+        
+        forceOverlay([heightArrow1,heightArrow2], [heightLine,heightLine2])
+        
+        cage.add( heightLine)
+        cage.add( heightLine2)
+        
+        
+        ###
         selectionAxis = new THREE.AxisHelper(Math.min(width,length, height))
         selectionAxis.material.depthTest = false
         selectionAxis.material.transparent = true
-        selectionAxis.position = mesh.position
+        selectionAxis.position = mesh.position###
         #selectionAxis.matrixAutoUpdate = false
         
-        #cage.add selectionAxis
-        #mesh.material.side= THREE.BackSide
-        #widthArrow.material.side = THREE.FrontSide
+        dashMaterial = new THREE.LineDashedMaterial( { color: 0x000000, dashSize: 0.5, gapSize: 2, depthTest: false,linewidth:2} )
+        baseCubeGeom = new THREE.CubeGeometry(length,width,0)
+        baseOutline = new THREE.Line( geometryToline(baseCubeGeom.clone()), dashMaterial, THREE.LinePieces )
+        baseOutline.renderDepth = 1e20
+        baseOutline.position = new THREE.Vector3(delta.x,delta.y,-delta.z)
+        cage.add(baseOutline)
         
-        cage.add widthArrow
-        cage.add lengthArrow
-        cage.add heightArrow
+        
+        cage.name = "boundingCage"
+        cage.add widthArrow1
+        cage.add widthArrow2
+        
+        cage.add lengthArrow1
+        cage.add lengthArrow2
+        
+        cage.add heightArrow1
+        cage.add heightArrow2
         
         mesh.cage = cage
         mesh.add cage
+        
+        computeVolume(mesh)
+        
       catch error
-  
+      
   
   class SelectionHelper extends BaseHelper
     #Helper to detect intersection with mouse /touch position (hover and click) and apply effect  
     constructor:(options)->
       super options
-      defaults = {hiearchyRoot:null,renderCallback:null, camera :null ,viewWidth:640, viewHeight:480}
+      defaults = {hiearchyRoot:null,camera :null ,viewWidth:640, viewHeight:480}
       options = merge defaults, options
-      {@hiearchyRoot, @renderCallback, @camera, @viewWidth, @viewHeight} = options
+      {@hiearchyRoot, @camera, @viewWidth, @viewHeight} = options
       @options = options
       @currentHover = null
       @currentSelect = null
-      @selectionColor = 0xCC8888
+      @selectionColor = 0xfffccc
       @projector = new THREE.Projector()
+      
+      
+      @addEventListener = THREE.EventDispatcher.prototype.addEventListener
+      @hasEventListener = THREE.EventDispatcher.prototype.hasEventListener
+      @removeEventListener = THREE.EventDispatcher.prototype.removeEventListener
+      @dispatchEvent = THREE.EventDispatcher.prototype.dispatchEvent
+      
     
     _onHover:(selection)=>
       #console.log "currentHover", selection
       if selection?
         @currentHover = selection
-        selection.currentHoverHex = selection.material.color.getHex()
-        selection.material.color.setHex( @selectionColor )
-        @renderCallback()
+        
+        if not (selection.hoverOutline?) and not (selection.outline?) and not (selection.name is "hoverOutline") and not (selection.name is "boundingCage") and not (selection.name is "selectOutline")
+          selection.currentHoverHex = selection.material.color.getHex()
+          selection.material.color.setHex( @selectionColor )
+          #
+          outlineMaterial = new THREE.MeshBasicMaterial( { color: 0xffc200, side: THREE.BackSide } )
+          outline = new THREE.Mesh( selection.geometry.clone(), outlineMaterial )
+          #outline.position = selection.position
+          outline.scale.multiplyScalar(1.03)
+          outline.name = "hoverOutline"
+          #selection.material.side = THREE.FrontSide
+          selection.hoverOutline = outline
+          selection.add( outline )
+          
+        @dispatchEvent({type:'hoverIn',selection:selection})
       
     _unHover:=>
       if @currentHover
-        @currentHover.material.color.setHex( @currentHover.currentHoverHex )
+        if @currentHover.hoverOutline?
+          @currentHover.material.color.setHex( @currentHover.currentHoverHex )
+          @currentHover.remove(@currentHover.hoverOutline)
+          @currentHover.hoverOutline = null
+        
         @currentHover = null
-        @renderCallback()
+        @dispatchEvent({type:'hoverOut',selection:@currentHover})
     
     _onSelect:(selection)=>
       #console.log "currentSelect", selection
       @_unHover()
       @currentSelect = selection
       new BoundingCage({mesh:selection,color:@options.color,textColor:@options.textColor})
-      selection.currentSelectHex = selection.material.color.getHex()
-      selection.material.color.setHex( @selectionColor )
-      @renderCallback()
+      #selection.currentSelectHex = selection.material.color.getHex()
+      #selection.material.color.setHex( @selectionColor )
+      
+      outlineMaterial = new THREE.MeshBasicMaterial( { color: 0xffc200, side: THREE.BackSide } )
+      outline = new THREE.Mesh( selection.geometry.clone(), outlineMaterial )
+      outline.name = "selectOutline"
+      #outline.position = selection.position
+      outline.scale.multiplyScalar(1.03)
+      selection.outline = outline
+      selection.add( outline )
+      
+      @dispatchEvent({type:'selected',selection:selection})
       
     _unSelect:=>
       if @currentSelect
         selection = @currentSelect
-        selection.material.color.setHex( selection.currentSelectHex )
+        #selection.material.color.setHex( selection.currentSelectHex )
         selection.remove(selection.cage)
+        selection.remove(selection.outline)
         selection.cage = null
+        selection.outline =null
         @currentSelect = null
-        @renderCallback()
+        @dispatchEvent({type:'unselected',selection:selection})
       #@currentHover.material = @currentHover.origMaterial if @currentHover.origMaterial
       ###
             newMat = new  THREE.MeshLambertMaterial
@@ -456,7 +659,7 @@ define (require) ->
             @currentHover.origMaterial = @currentHover.material
             @currentHover.material = newMat
             ###
-            
+          
     _get3DBB:(object)=>
       #shorthand to get object bounding box
       if object?
@@ -467,7 +670,16 @@ define (require) ->
             object.geometry.computeBoundingBox()
             return object.geometry.boundingBox
       return null
-              
+    
+    getScreenCoords:(object, width, height)=>
+      if object?
+        vector = @projector.projectVector( object.position.clone(), @camera )
+        result = new THREE.Vector2()
+        result.x = Math.round( vector.x * (width/2) ) + width/2
+        result.y = Math.round( (0-vector.y) * (height/2) ) + height/2
+        return result
+      
+             
     get2DBB:(object,width,height)=>
       #get the 2d (screen) bounding box of 3d object
       if object?
@@ -510,7 +722,16 @@ define (require) ->
         #console.log "selection positions",result
         return result
         
-   
+    isThereObjectAt:(x,y)=>
+      v = new THREE.Vector3((x/@viewWidth)*2-1, -(y/@viewHeight)*2+1, 0.5)
+      @projector.unprojectVector(v, @camera)
+      raycaster = new THREE.Raycaster(@camera.position, v.sub(@camera.position).normalize())
+      intersects = raycaster.intersectObjects(@hiearchyRoot, true )
+      
+      if intersects.length > 0
+        return true
+      return false
+      
     selectObjectAt:(x,y)=>
       v = new THREE.Vector3((x/@viewWidth)*2-1, -(y/@viewHeight)*2+1, 0.5)
       @projector.unprojectVector(v, @camera)
@@ -542,24 +763,72 @@ define (require) ->
         @_unHover()
     
    
-  captureScreen=(domElement, width=300, height=300)->
+  captureScreen=(domElement, width=600, height=600)->
     # Save screenshot of 3d view
     if not domElement
       throw new Error("Cannot Do screeshot without canvas domElement")
     #resizing
     srcImg = domElement.toDataURL("image/png")
-    canvas = document.createElement("canvas")
-    canvas.width = width
-    canvas.height = height
-    ctx = canvas.getContext('2d')
+    #canvas = document.createElement("canvas")
+    #canvas.width = width
+    #canvas.height = height
+    #ctx = canvas.getContext('2d')
+    #imgAsDataURL =null
     d = $.Deferred()
-    imgAsDataURL =null 
-    img = new Image()
-    img.onload = ()=> 
-      ctx.drawImage(img, 0,0,width, height)
-      imgAsDataURL = canvas.toDataURL("image/png")
-      d.resolve(imgAsDataURL)
-    img.src = srcImg
+    
+    _aspectResize = (srcUrl, dstW, dstH) =>
+      #taken from THREE.x by Jerome Etienne
+      ### 
+      resize an image to another resolution while preserving aspect
+     
+      @param {String} srcUrl the url of the image to resize
+      @param {Number} dstWidth the destination width of the image
+      @param {Number} dstHeight the destination height of the image
+      @param {Number} callback the callback to notify once completed with callback(newImageUrl)
+      ###
+    
+      cpuScaleAspect = (maxW, maxH, curW, curH)->
+        ratio = curH / curW
+        if( curW >= maxW and ratio <= 1 )
+          curW  = maxW
+          curH  = maxW * ratio
+        else if(curH >= maxH)
+          curH  = maxH
+          curW  = maxH / ratio
+        return { width: curW, height: curH }
+    
+      onLoad = =>
+        canvas  = document.createElement('canvas')
+        canvas.width  = dstW
+        canvas.height = dstH
+        ctx   = canvas.getContext('2d')
+  
+        #ctx.fillStyle = "black";
+        #ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+        # scale the image while preserving the aspect
+        scaled  = cpuScaleAspect(canvas.width, canvas.height, img.width, img.height)
+  
+        # actually draw the image on canvas
+        offsetX = (canvas.width  - scaled.width )/2
+        offsetY = (canvas.height - scaled.height)/2
+        ctx.drawImage(img, offsetX, offsetY, scaled.width, scaled.height)
+  
+        #dump the canvas to an URL    
+        mimetype  = "image/png"
+        newDataUrl  = canvas.toDataURL(mimetype)
+        d.resolve(newDataUrl)
+    
+    
+      img = new Image()
+      img.onload = onLoad
+      ###.onload = ()=> 
+        ctx.drawImage(img, 0,0,width, height)
+        imgAsDataURL = canvas.toDataURL("image/png")
+        d.resolve(imgAsDataURL)###
+      img.src = srcUrl
+      
+    _aspectResize( srcImg, width, height)
     return d
   
   geometryToline=( geo )->
@@ -584,5 +853,137 @@ define (require) ->
     geometry.computeLineDistances()
     return geometry
       
+  computeVolume=(mesh)->
+    geometry = null
+    if mesh instanceof THREE.Mesh
+      geometry = mesh.geometry
+    else if mesh instanceof THREE.Geometry
+      geometry = mesh
+    else
+      throw("Please provide either a mesh or a geometry for volume calculation")
+    
+    if not (mesh.volume?)
+      console.log "Computing Volume"
+      volume = 0
+      for face in geometry.faces
+        if face instanceof THREE.Face4
+          #a, b ,c  AND a, c , d
+          a = geometry.vertices[face.a]
+          b = geometry.vertices[face.b]
+          c = geometry.vertices[face.c]
+          
+          pv1 =  a.x*b.y*c.z  + a.y*b.z*c.x + a.z*b.x*c.y - a.x*b.z*c.y - a.y*b.x*c.z - a.z*b.y*c.x
+          
+          a = geometry.vertices[face.a]
+          b = geometry.vertices[face.c]
+          c = geometry.vertices[face.d]
+          pv2 =  a.x*b.y*c.z  + a.y*b.z*c.x + a.z*b.x*c.y - a.x*b.z*c.y - a.y*b.x*c.z - a.z*b.y*c.x
+          
+          volume += (pv1 + pv2)
+          
+        else if face instanceof THREE.Face3
+          #a, b ,c  #PxQyRz + PyQzRx + PzQxRy - PxQzRy - PyQxRz - PzQyRx
+          a = geometry.vertices[face.a]
+          b = geometry.vertices[face.b]
+          c = geometry.vertices[face.c]
+          pv =  a.x*b.y*c.z  + a.y*b.z*c.x + a.z*b.x*c.y - a.x*b.z*c.y - a.y*b.x*c.z - a.z*b.y*c.x
+          volume += pv
+      
+      volume = volume/6
+      mesh.volume = volume
+    else
+      volume = mesh.volume
+    console.log "volume is: #{volume}"
+    return volume
+  
+  
+  toggleHelpers = (rootAssembly)->
+    originalStates = {}
+    
+    _hideHelpers=(child, hide)=>
+      if hide?
+        if hide 
+          originalStates[child]= child.visible
+          child.visible = false
+      else
+        if child.name == "boundingCage" or child.name == "grid" or child.name == "hoverOutline" or child.name =="selectOutline" or child.name =="axes"
+          originalStates[child]= child.visible
+          child.visible = false
+          hide = true
+          
+      for subchild in child.children
+        _hideHelpers(subchild,hide)
+          
+    if rootAssembly?
+      for child in rootAssembly.children  
+        _hideHelpers(child)
+    return originalStates
+   
+  enableHelpers = (rootAssembly, originalStates)->
+    _enableHelpers=(child)=>
+      if child of originalStates
+        child.visible = originalStates[child]
+        for subchild in child.children
+          _enableHelpers(subchild)
+      
+    if rootAssembly?
+      for child in rootAssembly.children  
+        _enableHelpers(child)
+  
+  updateVisuals=(rootAssembly, settings)->
+      console.log "applying visual style to #{rootAssembly}"
+      
+      removeRenderHelpers=(child)=>
+        if child.renderSubElementsHelper?
+          child.remove(child.renderSubElementsHelper)
+          child.renderSubElementsHelper = null
+      
+      applyStyle=(child)=>
+        child.castShadow =  settings.shadows
+        child.receiveShadow = settings.selfShadows and settings.shadows
+        
+        #hack
+        if child.material?
+          child.material.vertexColors= THREE.VertexColors
+        
+        switch settings.objectViewMode
+          when "shaded"
+            removeRenderHelpers(child)
+            if child.material?
+              child.material.wireframe = false
+          when "wireframe"
+            removeRenderHelpers(child)
+            if child.material?
+              child.material.wireframe = true
+          when "structural"
+            if child.material?
+              child.material.wireframe = false
+            if child.geometry?
+              removeRenderHelpers(child)
+              basicMaterial1 = new THREE.MeshBasicMaterial( { color: 0xccccdd, side: THREE.DoubleSide, depthTest: true, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 } )
+              dashMaterial = new THREE.LineDashedMaterial( { color: 0x000000, dashSize: 2, gapSize: 3, depthTest: false, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1  } )
+              wireFrameMaterial = new THREE.MeshBasicMaterial( { color: 0x000000, depthTest: true, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1, wireframe: true } )
+              renderSubElementsHelper  = new THREE.Object3D()
+              renderSubElementsHelper.name = "renderSubs"
+              
+              geom = child.geometry
+              obj2 = new THREE.Mesh( geom.clone(), basicMaterial1 )
+              obj3 = new THREE.Line( geometryToline(geom.clone()), dashMaterial, THREE.LinePieces )
+              obj4 = new THREE.Mesh( geom.clone(), wireFrameMaterial)
+      
+              renderSubElementsHelper.add(obj2)
+              renderSubElementsHelper.add(obj3)
+              renderSubElementsHelper.add(obj4)
+              child.add(renderSubElementsHelper)
+              child.renderSubElementsHelper = renderSubElementsHelper
+              
+        for subchild in child.children
+          if subchild.name != "renderSubs" and subchild.name !="connectors"
+            applyStyle(subchild)
+          
+      if rootAssembly?
+        for child in rootAssembly.children  
+          applyStyle(child)
+      
 
-  return {"LabeledAxes":LabeledAxes, "Arrow":Arrow, "Grid":Grid, "BoundingCage":BoundingCage, "SelectionHelper":SelectionHelper, "captureScreen":captureScreen, "geometryToline":geometryToline}
+  return {"LabeledAxes":LabeledAxes, "Arrow":Arrow, "Grid":Grid, "BoundingCage":BoundingCage, "SelectionHelper":SelectionHelper, "captureScreen":captureScreen, "geometryToline":geometryToline, "toggleHelpers":toggleHelpers, "enableHelpers":enableHelpers, "updateVisuals":updateVisuals}

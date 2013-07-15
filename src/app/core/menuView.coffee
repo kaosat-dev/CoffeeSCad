@@ -89,7 +89,6 @@ define (require)->
     _onNoRedoAvailable:=>
       $('#redoBtn').addClass("disabled")
     
-    
     _onSubAppStarted:(title,subApp)=>
       #console.log "#{title} started",subApp
       if subApp.addMainMenuIcon
@@ -181,7 +180,7 @@ define (require)->
         console.log data
         
     showAbout:(ev)=>
-      bootbox.dialog """<b>Coffeescad v0.322</b> (pre-alpha)<br/><br/>
+      bootbox.dialog """<b>Coffeescad v0.324</b> (pre-alpha)<br/><br/>
       Licenced under the MIT Licence<br/>
       @2012-2013 by Mark 'kaosat-dev' Moissette
       """, [
@@ -275,7 +274,7 @@ define (require)->
       @triggerMethod("item:before:render", @)
   
       rootEl = @_generateExamplesTree()
-      @$el.parent().append("""<a tabindex="-1" href="#"><i class="icon-list-ul"></i>Examples</a>""")
+      @$el.parent().append("""<a tabindex="-1" href="#"><i class="icon-fixed-width icon-list-ul"></i>Examples</a>""")
       
       insertRoot = @$el
       $(rootEl).children("li").each (i) ->
@@ -294,9 +293,9 @@ define (require)->
           $obj = $('<a>').attr('href', "#").text(jsonObj.name)
           #is this a project?
           if "files" of jsonObj
-            $obj= $obj.prepend($("<i class='icon-file'></i>"))
+            $obj= $obj.prepend($("<i class='icon-fixed-width icon-file'></i>"))
           else
-            $obj= $obj.prepend($("<i class='icon-folder-open'></i>"))
+            $obj= $obj.prepend($("<i class='icon-fixed-width icon-folder-open'></i>"))
           $obj = $('<li>').append($obj)
           
         if jsonObj.length

@@ -117,7 +117,7 @@ compileLess = (srcPath)->
     ts = "#{twoDigits(ts.getHours())}:#{twoDigits(ts.getMinutes())}:#{twoDigits(ts.getSeconds())}"
     console.log "#{ts} - LESS : #{inPath} to #{outPath}"
     
-    _exec "lessc #{inPath} #{outPath}", (e,so,se)->
+    _exec "lessc #{inPath} > #{outPath}", (e,so,se)->
       console.log "#{ts} - [lessc #{inPath} #{outPath}] OUT> #{so}" if so
       console.log "#{ts} - [lessc #{inPath} #{outPath}] ERR> #{se}" if se
   

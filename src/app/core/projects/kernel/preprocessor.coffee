@@ -10,7 +10,7 @@ define (require) ->
       @debug = null
       @project = null
       @includePattern = /(?!\s*?#)(?:\s*?include\s*?)(?:\(?\"([\w\//:'%~+#-.*]+)\"\)?)/g
-      @paramsPattern = /^\s*?params\s*?=\s*?(\[(.|[\r\n])*?\])/g
+      @paramsPattern = /^(\s*)?params\s*?=\s*?(\{(.|[\r\n])*?\})/g
       
       @resolvedIncludes = []
       @unresolvedIncludes = []
@@ -65,15 +65,26 @@ define (require) ->
         if coffeeToJs
           @processedResult = CoffeeScript.compile(@processedResult, {bare: true})
           
+          
+          
+        ###other Experiment###
+        #tokens = CoffeeScript.tokens(@processedResult)
+        #nodes = CoffeeScript.nodes(@processedResult)
+        
+        #GODDAMIT !!! the minified, coffee-script.js DOES NOT WORK: the node names are mangled, therefore, parsing the ast based on node type is not possible...
+        ###RequirejsParser = (require "./codeParsers").RequireJSParser
+        requirejsParser = new RequirejsParser()
+        
+        nodes = requirejsParser.getNodes(@processedResult)
+        
+        deps = requirejsParser.getDependencies(nodes)
+        classes = requirejsParser.getClasses(nodes)
+        objects = requirejsParser.getObjects(nodes)
+        functions = requirejsParser.getFunctions(nodes)
+        console.log "classes",classes, "objects",objects, "functions",functions
+        ###
         #experiment
         ###
-        tokens = CoffeeScript.tokens(@processedResult)
-        console.log "tokens" 
-        console.log tokens
-        nodes = CoffeeScript.nodes(tokens)
-        console.log "nodes"
-        console.log nodes
-        
         addReplacementVisitor = onCall: (n, replaceCallback) ->
           if n.variable.base.value is "ADD"
             addOp = new nodes.Op("+", n.args[0], n.args[1])
@@ -84,6 +95,7 @@ define (require) ->
         for include in @resolvedIncludesFull
           @processedResult.replace(include, "")
         @processedResult.replace("""include""","toto")###
+        
         @processedResult = @_findParams(@processedResult) # just a test
         #console.log "@processedResult",@processedResult
         @deferred.resolve(@processedResult)
@@ -93,23 +105,47 @@ define (require) ->
     
     _findParams:(source)=>
       source = source or ""
-      matches = []
-      match = @paramsPattern.exec(source)
-      while match  
-        matches.push(match)
-        match = @paramsPattern.exec(source)
       
-      @project.meta = {}
-      #console.log "matches", matches
-      if matches.length>0
-        mainMatch = matches[0][0].replace("=",":")
-        params = eval(mainMatch)
+      buf = ""
+      openBrackets = 0
+      closeBrackets = 0
+      startMark = null
+      endMark = null
+      for char,index in source
+        buf+=char
+        
+        if buf.indexOf("params=") != -1 or buf.indexOf("params =") != -1#"para" in buf
+          console.log "found params at",index
+          startMark = index
+          buf = ""
+        
+        if startMark != null
+          if buf.indexOf("{") != -1 
+            openBrackets += 1
+            buf = ""
+          if buf.indexOf("}") != -1 
+            closeBrackets += 1
+            buf = ""
+          if openBrackets == closeBrackets and openBrackets != 0
+            endMark = index
+            break
+            
+      if not @project.meta?
+        @project.meta = {}  
+      
+      if startMark != null
+        paramsSourceBlock = "params " + source.slice(startMark,endMark+1)
+        params = eval(paramsSourceBlock)
+        
         results = {}
-        for param in params
+        for param in params.fields
           results[param.name]=param.default
-        source = source.replace(matches[0][0], "")
+        source = source.replace(paramsSourceBlock, "")
         @project.meta.params = results
         
+        rawParams = eval(paramsSourceBlock)
+        @project.meta.rawParams = rawParams
+       
       return source      
     
     _findMatches:(source)=>

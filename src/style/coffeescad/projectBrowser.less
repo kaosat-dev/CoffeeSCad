@@ -1,0 +1,266 @@
+/**/
+//
+// ProjectBrowser
+// --------------------------------------------------
+
+@projectBlockWidth:150px;  
+
+.store
+{
+    thead 
+    {
+      tr > th .icons-group
+      {
+          border-left: none;
+          width:20%;
+      }
+      tr:hover > th 
+      {
+        color: @dropdownLinkColorHover;
+        background-color: @dropdownLinkBackgroundHover;
+      }
+      tr:hover > th > span > a,
+      tr:hover > th > a
+      {
+        text-decoration: none;
+        color: @dropdownLinkColorHover;
+      }
+    }
+
+   margin-bottom: 11px;
+}
+
+.store-active > a
+{
+  text-decoration: none;
+  color: @dropdownLinkColorHover;
+  background-color: @dropdownLinkBackgroundHover;
+  background-image: none; // Remove CSS gradient
+}
+
+
+//
+// Project blocks
+// --------------------------------------------------
+
+// Base class
+.block {
+  min-height: 20px;
+  float:left; 
+  width:@projectBlockWidth;
+  height:@projectBlockWidth;
+  position:relative;
+  
+  padding: 2px;
+  margin-bottom: 10px;
+  margin-left: 10px;
+  
+  //background-color: @wellBackground;
+  border: 1px solid darken(@wellBackground, 7%);
+  .border-radius(@baseBorderRadius);
+  .box-shadow(inset 0 1px 1px rgba(0,0,0,.05));
+  blockquote {
+    border-color: #ddd;
+    border-color: rgba(0,0,0,.15);
+  }
+  
+  .border-radius(@borderRadiusSmall);
+}
+
+
+.flipped
+{
+  -webkit-transform: rotateY(-180deg);
+}
+.flip
+{
+  z-index: 11;
+  width:100%;
+  height:100%;
+  
+  perspective: 300px;
+  -webkit-perspective: 300px;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+}
+
+.flip .front
+{
+  width: 100%;
+  height: 100%;
+  position:absolute;
+  z-index: 13;
+  
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -moz-backface-visibility: hidden;
+  
+  background-color: @wellBackground;
+  
+  transform: rotateY(0deg);
+  -webkit-transform: rotateY(0deg);
+  transition: all 0.5s linear;
+  
+}
+
+.flip .back
+{
+  width: 100%;
+  height: 100%;
+  position:absolute;
+  z-index: 12;
+  
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  -moz-backface-visibility: hidden;
+  
+  background-color: @wellBackground;
+  
+  transform: rotateY(-180deg);
+  -webkit-transform: rotateY(-180deg);
+  transition: all 0.5s linear;
+  
+}
+
+/*
+.flipped
+{
+  .front{
+    transform: rotateY(180deg);
+    -webkit-transform: rotateY(180deg);
+  }
+  .back {
+    transform: rotateY(0deg);
+    -webkit-transform: rotateY(0deg);
+    z-index: 14;
+  }
+}
+*/
+.flipped .front
+{
+  transform: rotateY(180deg);
+  -webkit-transform: rotateY(180deg);
+}
+
+
+.flipped .back
+{
+  transform: rotateY(0deg);
+  -webkit-transform: rotateY(0deg);
+  z-index: 14;
+}
+
+/*
+.flip:hover .front {
+    transform: rotateY(180deg);
+    -webkit-transform: rotateY(180deg);
+}
+.flip:hover .back {
+    transform: rotateY(0deg);
+    -webkit-transform: rotateY(0deg);
+    z-index: 14;
+}*/
+
+.projectBlock
+{
+  .block;
+  a 
+  {
+    word-wrap: break-word;
+  }
+  .titleContainer
+  {
+    width:@projectBlockWidth;
+  }
+}
+
+
+
+#projects > ul 
+{
+  padding: 0;
+  margin: 0 0 10.5px 2px;
+}
+
+.projectSelector
+{
+  cursor:pointer;
+}
+
+// Sizes
+/*
+.well-large {
+  padding: 24px;
+  .border-radius(@borderRadiusLarge);
+}
+.well-small {
+  padding: 9px;
+  .border-radius(@borderRadiusSmall);
+}*/
+
+
+
+/*
+.store-header > .active > tr > th,
+{
+  text-decoration: none;
+  color: @dropdownLinkColorHover;
+  background-color: @dropdownLinkBackgroundHover;
+  background-image: none; // Remove CSS gradient
+}
+
+.store-header:focus > tr > th >a {
+  text-decoration: none;
+  color: @dropdownLinkColorHover;
+  background-color: @dropdownLinkBackgroundHover;
+  background-image: none; // Remove CSS gradient
+}
+
+.store-header:hover > tr > th{
+  text-decoration: none;
+  color: @dropdownLinkColorHover;
+  background-color: @dropdownLinkBackgroundHover;
+  background-image: none; // Remove CSS gradient
+}
+
+.store-header-activated > tr > th > a
+{
+  text-decoration: none;
+  color: @dropdownLinkColorHover;
+  background-color: @dropdownLinkBackgroundHover;
+  background-image: none; // Remove CSS gradient
+}*/
+
+/* 
+.store-header > .active > a,
+.store-header > .active > a:hover,
+.store-header > .active > a:focus
+{
+  text-decoration: none;
+  color: @dropdownLinkColorHover;
+  background-color: @dropdownLinkBackgroundHover;
+  background-image: none; // Remove CSS gradient
+}
+
+.store-header-activated > a
+{
+  text-decoration: none;
+  color: @dropdownLinkColorHover;
+  background-color: @dropdownLinkBackgroundHover;
+  background-image: none; // Remove CSS gradient
+}
+
+.store-header:focus > a {
+  text-decoration: none;
+  color: @dropdownLinkColorHover;
+  background-color: @dropdownLinkBackgroundHover;
+  background-image: none; // Remove CSS gradient
+}
+
+.store-header:hover > a {
+  text-decoration: none;
+  color: @dropdownLinkColorHover;
+  background-color: @dropdownLinkBackgroundHover;
+  background-image: none; // Remove CSS gradient
+}
+*/

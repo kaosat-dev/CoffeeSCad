@@ -88,6 +88,13 @@ define (require)->
     defaults:
       name: "KeyBindings"
       title: "Key Bindings"
+      bindings: {
+        "project:new":'alt+n'
+        "project:load":'mod+l'
+        "project:save":'mod+s'
+        "project:compile":'f4'
+        "project:compile":'alt+c'
+      }
       
     constructor:(options)->
       super options

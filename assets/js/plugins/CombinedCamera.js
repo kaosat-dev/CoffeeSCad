@@ -30,10 +30,45 @@ THREE.CombinedCamera = function ( width, height, fov, near, far, orthoNear, orth
     this.toPerspective();
 
     var aspect = width/height;
+    
+    this.target = new THREE.Vector3();
+    this.defaultPosition = new THREE.Vector3();
+    
 
 };
 
 THREE.CombinedCamera.prototype = Object.create( THREE.Camera.prototype );
+
+
+THREE.CombinedCamera.prototype.lookAt = function () {
+
+    // This routine does not support cameras with rotated and/or translated parent(s)
+
+    var m1 = new THREE.Matrix4();
+
+    return function ( vector ) {
+        this.target = vector;
+        if(this.inOrthographicMode===true)
+        {
+            this.toOrthographic();
+        }
+        
+        m1.lookAt( this.position, vector, this.up );
+
+        if ( this.useQuaternion === true )  {
+
+            this.quaternion.setFromRotationMatrix( m1 );
+
+        } else {
+
+            this.rotation.setEulerFromRotationMatrix( m1, this.eulerOrder );
+
+        }
+
+    };
+
+}();
+
 
 THREE.CombinedCamera.prototype.toPerspective = function () {
 
@@ -61,33 +96,26 @@ THREE.CombinedCamera.prototype.toOrthographic = function () {
     var aspect = this.cameraP.aspect;
     var near = this.cameraP.near;
     var far = this.cameraP.far;
+    
+    
+    //set the orthographic view rectangle to 0,0,width,height
+    //see here : http://stackoverflow.com/questions/13483775/set-zoomvalue-of-a-perspective-equal-to-perspective
+    if(this.target === null)
+    {
+    	this.target = new THREE.Vector3();
+    }
+    var distance = new THREE.Vector3().subVectors(this.position,this.target).length()*0.3;
+    var width = Math.tan(fov) * distance * aspect;
+    var height = Math.tan (fov) * distance;
+    
+    var halfWidth = width;
+    var halfHeight = height;
 
-    // The size that we set is the mid plane of the viewing frustum
+    this.cameraO.left = halfWidth;
+    this.cameraO.right = -halfWidth;
+    this.cameraO.top = -halfHeight;
+    this.cameraO.bottom = halfHeight;
 
-    var hyperfocus = ( near + far ) / 2;
-
-    var halfHeight = Math.tan( fov / 2 ) * hyperfocus;
-    var planeHeight = 2 * halfHeight;
-    var planeWidth = planeHeight * aspect;
-    var halfWidth = planeWidth / 2;
-
-    halfHeight /= this.zoom;
-    halfWidth /= this.zoom;
-
-    this.cameraO.left = -halfWidth;
-    this.cameraO.right = halfWidth;
-    this.cameraO.top = halfHeight;
-    this.cameraO.bottom = -halfHeight;
-
-    // this.cameraO.left = -farHalfWidth;
-    // this.cameraO.right = farHalfWidth;
-    // this.cameraO.top = farHalfHeight;
-    // this.cameraO.bottom = -farHalfHeight;
-
-    // this.cameraO.left = this.left / this.zoom;
-    // this.cameraO.right = this.right / this.zoom;
-    // this.cameraO.top = this.top / this.zoom;
-    // this.cameraO.bottom = this.bottom / this.zoom;
 
     this.cameraO.updateProjectionMatrix();
 
@@ -178,60 +206,67 @@ THREE.CombinedCamera.prototype.setZoom = function( zoom ) {
 
 };
 
+THREE.CombinedCamera.prototype.toDiagonalView = function() {
+    
+    this.position = this.defaultPosition;
+    this.target = new THREE.Vector3();
+    this.lookAt(this.target);
+};
+
 THREE.CombinedCamera.prototype.toFrontView = function() {
-
-    this.rotation.x = 0;
-    this.rotation.y = 0;
-    this.rotation.z = 0;
-
-    // should we be modifing the matrix instead?
-
-    this.rotationAutoUpdate = false;
-
+    
+    var offset = this.position.clone().sub(this.target);
+    var nPost = new  THREE.Vector3();
+    nPost.y = -offset.length();
+    this.position = nPost;
+    this.lookAt(this.target);
 };
 
 THREE.CombinedCamera.prototype.toBackView = function() {
 
-    this.rotation.x = 0;
-    this.rotation.y = Math.PI;
-    this.rotation.z = 0;
-    this.rotationAutoUpdate = false;
-
+    var offset = this.position.clone().sub(this.target);
+    var nPost = new  THREE.Vector3();
+    nPost.y = offset.length();
+    this.position = nPost;
+    this.lookAt(this.target);
 };
 
 THREE.CombinedCamera.prototype.toLeftView = function() {
-
-    this.rotation.x = 0;
-    this.rotation.y = - Math.PI / 2;
-    this.rotation.z = 0;
-    this.rotationAutoUpdate = false;
-
+    
+    var offset = this.position.clone().sub(this.target);
+    var nPost = new  THREE.Vector3();
+    nPost.x = offset.length();
+    this.position = nPost;
+    this.lookAt(this.target);
+    
 };
 
 THREE.CombinedCamera.prototype.toRightView = function() {
 
-    this.rotation.x = 0;
-    this.rotation.y = Math.PI / 2;
-    this.rotation.z = 0;
-    this.rotationAutoUpdate = false;
+    var offset = this.position.clone().sub(this.target);
+    var nPost = new  THREE.Vector3();
+    nPost.x = -offset.length();
+    this.position = nPost;
+    this.lookAt(this.target);
 
 };
 
 THREE.CombinedCamera.prototype.toTopView = function() {
-
-    this.rotation.x = - Math.PI / 2;
-    this.rotation.y = 0;
-    this.rotation.z = 0;
-    this.rotationAutoUpdate = false;
+	
+	var offset = this.position.clone().sub(this.target);
+    var nPost = new  THREE.Vector3();
+    nPost.z = offset.length();
+    this.position = nPost;
+    this.lookAt(this.target);
 
 };
 
 THREE.CombinedCamera.prototype.toBottomView = function() {
 
-    this.rotation.x = Math.PI / 2;
-    this.rotation.y = 0;
-    this.rotation.z = 0;
-    this.rotationAutoUpdate = false;
+	var offset = this.position.clone().sub(this.target);
+    var nPost = new  THREE.Vector3();
+    nPost.z = -offset.length();
+    this.position = nPost;
+    this.lookAt(this.target);
 
 };
-

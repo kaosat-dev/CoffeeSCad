@@ -32,6 +32,8 @@ require.config
     github:           "../assets/js/libs/github"
     
     XMLWriter:        "../assets/js/libs/XMLWriter-1.0.0"
+    jszip:            "../assets/js/libs/jszip"
+    "jszip-deflate" : "../assets/js/libs/jszip-deflate"
     
     
     #plugins
@@ -44,6 +46,8 @@ require.config
     bootbox:          "../assets/js/plugins/bootbox.min"
     contextMenu:      "../assets/js/plugins/bootstrap-contextmenu"
     notify:           "../assets/js/plugins/bootstrap-notify"
+    colorpicker:      "../assets/js/plugins/bootstrap-colorpicker"
+    slider:           "../assets/js/plugins/bootstrap-slider"
     
     coffeelint:       "../assets/js/plugins/coffeelint"
     
@@ -59,14 +63,23 @@ require.config
     "backbone-forms" :           "../assets/js/plugins/backbone.forms"
     forms_bootstrap : "../assets/js/plugins/backbone.forms.bootstrap"
     forms_list      : "../assets/js/plugins/backbone.forms.list"  
-    forms_custom    : "../assets/js/plugins/backbone.forms.custom"  
+    forms_custom    : "../assets/js/plugins/backbone/backbone.forms.keybindings"  
     backbone_nested:  "../assets/js/plugins/backbone.nested.min"
+    
+    Mousetrap :         "../assets/js/plugins/backbone/mousetrap"#key bindings
+    Mousetrap_global:   "../assets/js/plugins/backbone/mousetrap-global-bind.min"
+    backbone_mousetrap:        "../assets/js/plugins/backbone/backbone.mousetrap" #key bindings, backbone
     
     
     ThreeCSG:        "../assets/js/plugins/three/ThreeCSG2"
     font:           "../assets/font/helvetiker_regular.typeface"
     combo_cam:        "../assets/js/plugins/CombinedCamera"
     transformControls:"../assets/js/plugins/three/controls/transformControls"
+    OrbitControls:    "../assets/js/plugins/three/controls/OrbitControls"
+    
+    RenderManager:    "../assets/js/plugins/three/extras/RenderManager"
+    
+    ArrowHelper2:      "../assets/js/plugins/three/helpers/ArrowHelper"
     
     ObjectExport: "../assets/js/plugins/three/exporters/ObjectExport"
     GeometryExporter: "../assets/js/plugins/three/exporters/GeometryExporter"
@@ -85,6 +98,9 @@ require.config
     VignetteShader: "../assets/js/plugins/three/VignetteShader"
     BlendShader : "../assets/js/plugins/three/BlendShader"
     AdditiveBlendShader : "../assets/js/plugins/three/AdditiveBlendShader"
+    BrightnessContrastShader : "../assets/js/plugins/three/BrightnessContrastShader"
+    
+    EdgeShader3: "../assets/js/plugins/three/shaders/EdgeShader3"
     
     
   shim:
@@ -100,6 +116,10 @@ require.config
     contextMenu:
       dep: ["bootstrap"]
     notify:
+      dep:["bootstrap"]
+    colorpicker: 
+      dep:["bootstrap"]
+    slider: 
       dep:["bootstrap"]
       
     'backbone':
@@ -125,6 +145,14 @@ require.config
     backbone_nested:
       deps:["backbone"]
     
+    Mousetrap:
+      deps: []
+    Mousetrap_global:
+      deps:["Mousetrap"]
+    backbone_mousetrap:
+      deps:["backbone","Mousetrap"]
+    
+    
     #CoffeeScript:
     #  exports:  "CoffeeScript"
     coffeelint:
@@ -142,6 +170,10 @@ require.config
       exports : "combo_cam"
     transformControls:
       deps: ["three"]
+    OrbitControls:  
+      deps: ["three"]
+    ArrowHelper2:
+      deps: ["three"]  
     detector: 
       exports : "Detector"
     stats:
@@ -158,7 +190,9 @@ require.config
     
     ObjectParser:
       deps:["three"]
-      
+    
+    RenderManager:
+      deps:    ["three"]
     
     CopyShader:
       deps:    ["three"]
@@ -169,6 +203,8 @@ require.config
     ShaderPass:
       deps:    ["CopyShader"]
     DotScreenShader:
+      deps:    ["CopyShader"]
+    BrightnessContrastShader:
       deps:    ["CopyShader"]
     DotScreenPass :
       deps:    ["CopyShader","DotScreenShader"]
@@ -182,7 +218,11 @@ require.config
       deps:["CopyShader"]
     BlendShader:
       deps:["three"]
+      
     AdditiveBlendShader:
+      deps:["three"]
+      
+    EdgeShader3:
       deps:["three"]
       
       
@@ -210,4 +250,9 @@ require.config
       exports : "Github"
     XMLWriter:
       exports: "XMLWriter"
+    
+    jszip:
+      exports:"jszip"
+    "jszip-deflate":
+      deps:["jszip"]
       

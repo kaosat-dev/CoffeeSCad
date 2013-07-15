@@ -14,6 +14,9 @@ define (require)->
   rootTemplate = $(projectBrowserTemplate).filter('#projectBrowserTmpl')
   projectStoreListTemplate = _.template($(projectBrowserTemplate).filter('#projectStoreListTmpl').html())
   projectStoreTemplate = _.template($(projectBrowserTemplate).filter('#projectStoreTmpl').html())
+  
+  projectListTemplate = _.template($(projectBrowserTemplate).filter('#projectListTmpl').html())
+  projectTemplate = _.template($(projectBrowserTemplate).filter('#projectTmpl').html())
 
   debug = false
   
@@ -130,37 +133,14 @@ define (require)->
       @vent.off("project:loaded",@onOperationSucceeded)
       @vent.off("project:selected",(id)=>$(@ui.fileNameInput).val(id))
       
-      
-  class StoreView extends Backbone.Marionette.ItemView
-    template:projectStoreTemplate
-    ui: 
-      projects: "#projects"
-      
-    events:
-      "mousedown .projectSelector" : "onProjectSelected"
-      "click .deleteProject": "onProjectDeleteRequest"
-      "click .renameProject": "onProjectRenameRequest"
-      
-    triggers:
-      "click .accordion-heading": "store:selected" 
-      
+  
+  
+  class ProjectView extends Backbone.Marionette.ItemView
+    template: projectTemplate
+    
     constructor:(options)->
-      super options
-      selectable = new Backbone.PickySitter.Selectable(@)
-      _.extend(this, selectable)
+      @store = options.store
       
-      @on("selected", @onStoreSelectToggled)
-      @on("deselected",@onStoreSelectToggled)
-      
-      @selectedModelName = null
-      vent.on("project:newRequest", @onCreateRequested)
-      vent.on("project:saveRequest",@onSaveRequested)
-      vent.on("project:loadRequest",@onLoadRequested)
-      
-      @bindings = 
-        loggedIn: [{selector: '.storeConnection', elAttribute: 'hidden'} ]
-      
-      @modelBinder = new Backbone.ModelBinder()
     
     onProjectDeleteRequest:=>
       #FIXME: YUCK CODE
@@ -173,7 +153,7 @@ define (require)->
             #console.log $("##{@model.name}#{@selectedModelName}")
             $("##{@model.name}#{@selectedModelName}").parent().remove()
             $("#projectFilesList").html("")
-          @model.deleteProject(@selectedModelName).done(onDeleted)
+          @store.deleteProject(@selectedModelName).done(onDeleted)
       ,
         label: "Cancel"
         class: "btn-inverse"
@@ -192,7 +172,7 @@ define (require)->
             fullName = file.split('.')
             ext = fullName.pop()
             $("#projectFilesList").append("<tr><td>#{file}</td><td>#{ext}</td></tr>")
-        @model.getProjectFiles(@selectedModelName).done(onFilesFetched)
+        @store.getProjectFiles(@selectedModelName).done(onFilesFetched)
       
       onReallyRename=(fileName)=>
         console.log "renaming to #{fileName}"
@@ -203,7 +183,7 @@ define (require)->
             label: "Ok"
             class: "btn-inverse"
             callback: =>
-              @model.renameProject(projectToSave, fileName).done(()=>onRenameOk(fileName))
+              @store.renameProject(projectToSave, fileName).done(()=>onRenameOk(fileName))
               
           ,
             label: "Cancel"
@@ -211,25 +191,16 @@ define (require)->
             callback: ->
           ]
          else
-           @model.renameProject(projectToSave, fileName).done(()=>onRenameOk(fileName))
+           @store.renameProject(projectToSave, fileName).done(()=>onRenameOk(fileName))
       
       bootbox.prompt "New name","Cancel","Rename",
         (result) =>
           if result?
             onReallyRename(result)
         ,"#{@selectedModelName}"
-
     
-    onStoreSelectToggled:()=>
-      if @selected
-          header = @$el.find(".store-header")
-          header.addClass('alert-info')
-        else
-          header = @$el.find(".store-header")
-          header.removeClass('alert-info')
-     
     onProjectSelected:(e)=>
-      @trigger("store:selected")
+      @trigger("store:selected",@store)
       e.preventDefault()
       projectName = $(e.currentTarget).attr("id")
       projectName= projectName.split("#{@model.name}").pop()
@@ -246,6 +217,18 @@ define (require)->
           $("#projectFilesList").append("<tr><td>#{file}</td><td>#{ext}</td></tr>")
       
       @model.getProjectFiles(projectName).done(onFilesFetched)
+      
+      #fetch thumbnail
+      try
+        onThumbNailFetched = (imageUrl)=>
+          $("#thumbNail").html("""<img id="projectThumbNail" class="img-rounded"/>""")
+          $("#projectThumbNail").attr("src", imageUrl)
+          $("#thumbNail").removeClass("hide")
+        $("#thumbNail").removeClass("hide")  
+        $("#thumbNail").html("""<div style="height:100%;line-height:100px;">&nbsp &nbsp<i class="icon-spinner icon-spin icon-large"></i> Loading</div>""")
+        @model.getThumbNail(projectName).done(onThumbNailFetched)
+      catch error
+      
     
     onSaveRequested:(fileName)=>
       if @selected
@@ -272,20 +255,161 @@ define (require)->
         #console.log "load requested from #{@model.name}"
         @model.loadProject(fileName)
     
+    
+    
+    
+  class FolderView extends Backbone.Marionette.CompositeView
+ 
+     
+  class StoreView extends Backbone.Marionette.ItemView
+    template:projectStoreTemplate
+    ui: 
+      projects: "#projects"
+      
+    events:
+      #"mousedown .projectSelector" : "onProjectSelected"
+      #"click .deleteProject": "onProjectDeleteRequest"
+      #"click .renameProject": "onProjectRenameRequest"
+      "click .exportStore" : "onStoreExportRequested"
+      "click .store-header": "onStoreSelected"
+      
+    #triggers:
+    #  "click .store-header": "store:selected" 
+    
+    constructor:(options)->
+      super options
+      selectable = new Backbone.PickySitter.Selectable(@)
+      _.extend(this, selectable)
+      
+      @on("selected", @onStoreSelectToggled)
+      @on("deselected",@onStoreSelectToggled)
+      
+      @selectedModelName = null
+      vent.on("project:newRequest", @onCreateRequested)
+      vent.on("project:saveRequest",@onSaveRequested)
+      vent.on("project:loadRequest",@onLoadRequested)
+      
+      @bindings = 
+        loggedIn: [{selector: '.storeConnection', elAttribute: 'hidden'} ]
+      
+      @modelBinder = new Backbone.ModelBinder()
+    
+    onStoreSelected:=>
+      @trigger("store:selected")
+    
+    onStoreExportRequested:(ev)=>
+      #console.log "store #{@model.name} EXPORT requested"
+      $(".exportStore > i").removeClass("icon-download-alt")
+      $(".exportStore > i").addClass("icon-spinner icon-spin")
+      
+      packedDataUrl = @model.dumpAllProjects()
+      
+      if packedDataUrl != null
+        fileName = "CoScadStoreExport.zip"
+        if $(".exportStore").prop("download") != "#{fileName}"
+          @packedDataUrl = packedDataUrl
+          $(".exportStore").prop("download", "#{fileName}")
+          $(".exportStore").prop("href", packedDataUrl)
+      $(".exportStore > i").removeClass("icon-spinner icon-spin")
+      $(".exportStore > i").addClass("icon-download-alt")
+      
+      return true
+    
+    onStoreSelectToggled:()=>
+      if @selected
+        console.log "#{@model.name} selected"
+        @model.getProjectsName(@onProjectsFetched)
+        header = @$el.find(".store-header")
+        header.toggleClass('store-header-activated')
+        
+      else
+        header = @$el.find(".store-header")
+        header.toggleClass('store-header-activated')
+      
+      return true
+    
     onRender:->
       console.log "getting projects from #{@model.name}"
-      @model.getProjectsName(@onProjectsFetched)
+      #@model.getProjectsName(@onProjectsFetched)
       #modelBinding
-      @modelBinder.bind(@model, @el, @bindings)
+      #@modelBinder.bind(@model, @el, @bindings)
+    
+    onSaveRequested:(fileName)=>
+      if @selected
+        console.log "save to #{fileName} requested"
+        projectToSave = @model.targetProject
+        projectNameExists = @model.getProject(fileName)
+        if projectNameExists?
+          bootbox.dialog "A project called #{fileName} already exists, overwrite?", [
+            label: "Ok"
+            class: "btn-inverse"
+            callback: =>
+              @model.saveProject(projectToSave,fileName)
+          ,
+            label: "Cancel"
+            class: "btn-inverse"
+            callback: ->
+          ]
+        else
+          if projectToSave?
+            @model.saveProject(projectToSave,fileName)
+      
       
     onProjectsFetched:(projectNames)=>
       #console.log "projectNames #{projectNames}"
       #console.log @
+      @rootFolderCollection = new Backbone.Collection()
+      
+      ### 
+      for projectName in projectNames
+        projectFolder = new Backbone.Model()
+        @rootFolderCollection.add( projectFolder ) 
+      
+      projectsView = new ProjectsListView
+        collection: @rootFolderCollection
+      ###  
+      #@projectStores.show projectsStoreView
+      
+      
+      
+      targetElem = $("#projects")#@ui.projects 
+      targetElem.html("")
       for name in projectNames
-        @ui.projects.append("<li><a id='#{@model.name}#{name}' class='projectSelector' href='#' data-toggle='context' data-target='##{@model.name}ProjectContextMenu'>#{name}</a></li>")
-          
+        targetElem.append("""<li class='projectBlock'>
+          <div class="flip">
+            <div class="front">
+              <table>
+                <thead>
+                  <tr>
+                    <th> 
+                      <div class="titleContainer">
+                      <a id='#{@model.name}#{name}' class='projectSelector' href='#' data-toggle='context' data-target='##{@model.name}ProjectContextMenu'>#{name}</a>
+                      </div>
+                    </th>
+                  </tr>
+                </thead>
+              
+              </table>
+              
+            </div>
+            <div class="back">
+              Some text here
+            </div>
+          </div>
+          </li>""")
+      
+      targetElem.on("click",(event)=>
+        console.log "$(event.target)", $(event.target)
+        console.log "closest", $(event.target).parent()
+        $(event.target).parent().toggleClass("flipped")
+        #@onProjectSelected($(event.target).closest("li").att("id")
+      )
+      #cache images with new Image()
+      
       @delegateEvents()
-      @ui.projects.slimScroll({size:"10px";height:"100px",alwaysVisible: true})
+      height = 400#targetElem.height()
+      console.log "elem height", height
+      targetElem.slimScroll({size:"10px";height:height+"px",alwaysVisible: true})
       #@$el.find('[rel=tooltip]').tooltip({'placement': 'right'})
     
     onClose:->

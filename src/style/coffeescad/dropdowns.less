@@ -91,7 +91,8 @@
 .dropdown-submenu:focus > a {
   text-decoration: none;
   color: @dropdownLinkColorHover;
-  #gradient > .vertical(@dropdownLinkBackgroundHover, darken(@dropdownLinkBackgroundHover, 5%));
+  background-color: @dropdownLinkBackgroundHover;
+  background-image: none; // Remove CSS gradient
 }
 
 // Active state
@@ -102,7 +103,8 @@
   color: @dropdownLinkColorActive;
   text-decoration: none;
   outline: 0;
-  #gradient > .vertical(@dropdownLinkBackgroundActive, darken(@dropdownLinkBackgroundActive, 5%));
+  background-color: @dropdownLinkBackgroundHover;
+  background-image: none; // Remove CSS gradient
 }
 
 // Disabled state
