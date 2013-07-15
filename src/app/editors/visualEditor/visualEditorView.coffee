@@ -988,7 +988,7 @@ define (require) ->
       helpers.updateVisuals(@assembly, @settings)
       @_render()      
       
-      return
+      #return
       
       start = new Date().getTime()
       if @assembly?
@@ -1028,10 +1028,10 @@ define (require) ->
       cylinder2 = cylinder.clone()
       cylinder2.position.x = -20
       
-      icoSphere = new THREE.IcosahedronGeometry(10,2)
+      icoSphere = new THREE.IcosahedronGeometry(50,2)
       sphere2 = new ObjectBase(icoSphere)
       
-      cube.subtract(text)
+      #cube.subtract(text)
       cube.subtract(cylinder)
       cube.subtract(cylinder2)
       cube.subtract(sphere2)
@@ -1054,10 +1054,29 @@ define (require) ->
             ]
       bla = new ObjectBase( new THREE.LatheGeometry( pts, 5 ), new THREE.MeshLambertMaterial( { color: 0x2D303D, wireframe: false, shading: THREE.FlatShading } ))
 
+
+      points = [
+          new THREE.Vector3( 20, 20, 20 ),
+          new THREE.Vector3( 20, 20, -20 ),
+          new THREE.Vector3( -20, 20, -20 ),
+          new THREE.Vector3( -20, 20, 20 ),
+          new THREE.Vector3( 20, -20, 20 ),
+          new THREE.Vector3( 20, -20, -20 ),
+          new THREE.Vector3( -20, -20, -20 ),
+          new THREE.Vector3( -20, -20, 20 ),
+        ]
       
+      for point in points
+        console.log "point",point
+        point.add(new THREE.Vector3(50,0,0))
       
-      @assembly.add(cube)
-      @assembly.add(sphere2)
+      require "ConvexGeometry"
+      
+      c = new ObjectBase(new THREE.ConvexGeometry(sphere2.geometry.vertices.concat(points)),mat)
+      @assembly.add(c)
+      #@assembly.add(cube)
+      #@assembly.add(sphere2)
+      
       #@assembly.add(bla)
       #@assembly.add(cylinder)
       #@assembly.add(text)

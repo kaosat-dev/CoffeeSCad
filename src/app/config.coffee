@@ -102,6 +102,8 @@ require.config
     
     EdgeShader3: "../assets/js/plugins/three/shaders/EdgeShader3"
     
+    ConvexGeometry: "../assets/js/plugins/three/ConvexGeometry"
+    
     
   shim:
     #any AMD compliant lib should NOT need shims
@@ -224,7 +226,8 @@ require.config
       
     EdgeShader3:
       deps:["three"]
-      
+    ConvexGeometry:
+      deps:["three"]
       
       
       
