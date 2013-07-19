@@ -182,7 +182,7 @@ define (require)->
     showAbout:(ev)=>
       bootbox.dialog """<b>Coffeescad v0.324</b> (pre-alpha)<br/><br/>
       Licenced under the MIT Licence<br/>
-      @2012-2013 by Mark 'kaosat-dev' Moissette
+      @2012-2013 by Mark 'kaosat-dev' Moissette  and contributors
       """, [
           label: "Ok"
           class: "btn-inverse"
