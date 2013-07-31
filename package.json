@@ -1,30 +1,30 @@
 {
-    "name" : "CoffeeScad",
-    "version" : "0.2.0",
-    "license": "MIT",
-    "author": "Mark 'kaosat-dev' Moissette",
-    "private" : "true",
-    "main": "index.html",
-    "node-main": "app/nodeMain.js",
-    "devDependencies" : {
-        "findit" : "*",
-        "glob" : "*",
-        "mkdirp" : "*",
-        "watch-tree-maintained" : "*",
-        "requirejs" : "*",
-        "connect" : "*",
-        "node-zip": "*",
-        "cookie-signature" : "*",
-        "pause" : "*",
-        "bytes" : "*",
-        "debug" : "*",
-        "send" : "*"
-    },
-    "window": {
+  "name": "CoffeeScad",
+  "version": "0.3.3",
+  "license": "MIT",
+  "author": "Mark 'kaosat-dev' Moissette",
+  "private": "true",
+  "main": "index.html",
+  "node-main": "app/nodeMain.js",
+  "devDependencies": {
+    "findit": "*",
+    "glob": "*",
+    "mkdirp": "*",
+    "watch-tree-maintained": "*",
+    "requirejs": "*",
+    "connect": "*",
+    "node-zip": "*",
+    "cookie-signature": "*",
+    "pause": "*",
+    "bytes": "*",
+    "debug": "*",
+    "send": "*"
+  },
+  "window": {
     "title": "CoffeeSCad",
     "icon": "favicon.ico",
     "toolbar": false,
-    "width":1280,
-    "height":1024
-    }
+    "width": 1280,
+    "height": 1024
+  }
 }
