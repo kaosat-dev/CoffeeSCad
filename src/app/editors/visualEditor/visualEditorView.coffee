@@ -127,7 +127,7 @@ define (require) ->
       
       @setBgColor()
       @setupView(@settings.position)
-      @setupContextMenu()
+      #@setupContextMenu()
       
     
     setupRenderers:(settings)=>
@@ -323,7 +323,7 @@ define (require) ->
           visitor = new generatorTest.OpenJSCadVisitor()
         when "scad"
           visitor = new generatorTest.OpenSCadVisitor()
-            
+         
       @$el.contextmenu
         target:'#context-menu'
         before: =>
@@ -691,6 +691,7 @@ define (require) ->
       #@oldCamPos = if @newCamPos? then @newCamPos.clone()
       #@newCamPos = ev.target.object.position
       
+      ###
       if @controlChangeTimeOut?
         clearTimeout(@controlChangeTimeOut)
       @controlChangeTimeOut = null  
@@ -701,7 +702,7 @@ define (require) ->
             @setupContextMenu()
             
       ), 600
-      return false
+      return false###
 
     switchProjection:(ev)->
       projection = @settings.projection
