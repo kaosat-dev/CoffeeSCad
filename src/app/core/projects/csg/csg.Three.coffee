@@ -160,11 +160,20 @@ define (require) ->
           i2 = polyVertices[1]
           i3 = polyVertices[2]
           i4 = polyVertices[3]
-          face = new THREE.Face4(i1,i2,i3,i4,faceNormal)
+          
+          face = new THREE.Face3(i1,i2,i3,faceNormal)
           face.vertexColors[i] = color for i in [0..3]
           
           three_geometry.faces.push face
           three_geometry.faceVertexUvs[0].push new THREE.Vector2()
+          
+          face = new THREE.Face3(i1,i3,i4,faceNormal)
+          face.vertexColors[i] = color for i in [0..3]
+          
+          three_geometry.faces.push face
+          three_geometry.faceVertexUvs[0].push new THREE.Vector2()
+          
+          
         else 
           for i in [2...polyVertices.length]
             i1 = polyVertices[0]

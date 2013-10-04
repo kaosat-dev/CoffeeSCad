@@ -53,7 +53,7 @@ define (require) ->
       overlayDiv:     "#overlay" 
       
     events:
-      "mousedown"   : "_onSelectAttempt"
+      
       "contextmenu" : "_onRightclick"
       "mousemove"   : "_onMouseMove"
       "resize:stop" : "onResizeStop"
@@ -66,7 +66,199 @@ define (require) ->
       "mousedown .toggleOutlines"      :    "toggleOutlines"
       "mousedown .switchViewType":      "switchViewType"
      
+      "mousedown"   : "_onSelectAttempt"
+      "mouseup"   : "_onMouseUp"
+      #"dblclick": "testDoubleClick"
+    
+    testDoubleClick:(ev)=>
+      normalizeEvent(ev)
+      x = ev.offsetX
+      y = ev.offsetY
+      
+      console.log "double clicking",x,y
      
+      hiearchyRoot = if @assembly? then @assembly.children else @scene.children
+      @selectionHelper.hiearchyRoot=hiearchyRoot
+      @selectionHelper.viewWidth=@width
+      @selectionHelper.viewHeight=@height
+      
+      selected = @selectionHelper.selectObjectAt(x,y)
+      console.log "selected",selected
+      if selected?
+        selected.outline.material.color = new THREE.Color(0xff0000)
+        selected.material.color = new THREE.Color(0xff0000)
+        selected.material.vertexColors = false
+        console.log "blagh", selected
+        @mode = "EDIT"
+        #@selectionHelper.currentSelect
+      
+      console.log @mode
+    
+    onObjectSelected:(selectionInfo)=>
+      #experimental 2d overlay for projected min max values of the objects 3d bounding box
+      try
+        [centerLeft,centerTop,length,width,height]=@selectionHelper.get2DBB(selectionInfo.selection,@width, @height)
+        
+        $("#testOverlay2").removeClass("hide")
+        $("#testOverlay2").css("left",centerLeft+@$el.offset().left)
+        $("#testOverlay2").css('top', (centerTop - $("#testOverlay2").height()/2)+'px')
+        
+        screenCoords = @selectionHelper.getScreenCoords(selectionInfo.selection,@width, @height)
+        $("#testOverlay2").css("left",screenCoords.x+@$el.offset().left)
+        $("#testOverlay2").css('top', (screenCoords.y - $("#testOverlay2").height()/2)+'px')
+        
+        
+        infoText = "#{@selectionHelper.currentSelect.name}"#\n w:#{width} <br\> l:#{length} <br\>h:#{height}"
+        $("#testOverlay2").html("""<span>#{infoText} <a class="toto"><i class="icon-exclamation-sign"></a></span>""")
+        $(".toto").click ()=>
+          volume = @selectionHelper.currentSelect.volume or 0
+          
+          htmlStuff = """<span>#{infoText} <br>Volume:#{volume} <a class="toto"><i class="icon-exclamation-sign"></a></span>"""
+          $("#testOverlay2").html(htmlStuff)
+        @_render()
+      catch error
+        
+      
+    onObjectUnSelected:(selectionInfo)=>
+      $("#testOverlay2").addClass("hide")
+      @_render()
+      
+    onObjectHover:()=>
+      @_render()
+    
+    _onSelectionChange:(oldSelect, newSelect)=>
+      console.log("new selected",newSelect)
+      
+      #remove from old
+      if oldSelect?
+        @transformControls.detach()
+        @scene.remove(@transformControls)
+        oldSelect.controls = null
+      
+      #add to new
+      if newSelect?
+        @transformControls.attach( newSelect )
+        @scene.add( @transformControls )
+        newSelect.controls = @transformControls
+      @_render()
+      
+    _onSelectAttempt:(ev)=>
+      """used either for selection or context menu"""
+      normalizeEvent(ev)
+      x = ev.offsetX
+      y = ev.offsetY
+      
+      #timer to ensure we don't unselect things 
+      if @controlChangeTimeOut?
+        clearTimeout(@controlChangeTimeOut)
+      
+      @actionInProgress = true
+      @pushStart = new Date().getTime()
+      @oldX = x
+      @oldY = y
+      @controlChangeTimeOut = null  
+      @controlChangeTimeOut = setTimeout ( =>
+        @noControlChange = true
+            
+      ), 600
+      
+      ev.preventDefault()
+      return false
+      
+    _onMouseUp:(ev)=>
+      normalizeEvent(ev)
+      x = ev.offsetX
+      y = ev.offsetY
+      
+      @actionInProgress = false
+      pushEnd = new Date().getTime()
+      elapsed = pushEnd - @pushStart 
+      console.log "elapsed", elapsed
+      if elapsed <= 125
+        #simple, fast click
+        console.log "simple, fast click"
+        @longAction = false
+      else
+        console.log "long click/move etc"
+        @longAction = true
+      
+      
+      hiearchyRoot = if @assembly? then @assembly.children else @scene.children
+      @selectionHelper.hiearchyRoot=hiearchyRoot
+      @selectionHelper.viewWidth=@width
+      @selectionHelper.viewHeight=@height
+      
+      selected = @selectionHelper.getObjectAt(x,y)
+      if selected?
+          @selectionHelper.selectObjectAt(x,y)
+          if not @currentSelection?
+            @currentSelection = selected
+            @trigger("selectionChange",null,@currentSelection)
+          else
+            oldSelect = @currentSelection
+            @currentSelection = selected
+            @trigger("selectionChange",oldSelect,@currentSelection)
+      else
+        if (not @longAction)
+          @trigger("selectionChange",@currentSelection,null)
+          @selectionHelper._unSelect()
+          @onObjectUnSelected()
+          @currentSelection = null 
+      
+      
+        
+    _onRightclick:(ev)=>
+      normalizeEvent(ev)
+      x = ev.offsetX
+      y = ev.offsetY
+      
+      ###
+      @selectionHelper._unSelect()
+      @trigger("selectionChange",@currentSelection,null)
+      @currentSelection = null ###
+      
+      #if @controlChangeTimeOut?
+      
+      
+
+    _onMouseMove:(ev)->
+      normalizeEvent(ev)
+      x = ev.offsetX
+      y = ev.offsetY
+      
+      hiearchyRoot = if @assembly? then @assembly.children else @scene.children
+      @selectionHelper.hiearchyRoot=hiearchyRoot
+      @selectionHelper.viewWidth=@width
+      @selectionHelper.viewHeight=@height
+      @selectionHelper.highlightObjectAt(x,y)
+      
+      #if @controlChangeTimeOut?
+      if @actionInProgress
+        if ( Math.abs( @oldX - x ) > 5 ) or ( Math.abs( @oldY - y )> 5 )
+          @movementInProgress = true
+          console.log "camera move/rotate"
+        
+    
+    _onControlsChange:(ev)=>
+      #console.log "controls change"
+      @noControlChange = false 
+      #@oldCamPos = if @newCamPos? then @newCamPos.clone()
+      #@newCamPos = ev.target.object.position
+      
+      ###
+      if @controlChangeTimeOut?
+        clearTimeout(@controlChangeTimeOut)
+      @controlChangeTimeOut = null  
+      @controlChangeTimeOut = setTimeout ( =>
+        @noControlChange = true
+        if @contextMenuRequested?
+          if @contextMenuRequested
+            @setupContextMenu()
+            
+      ), 600
+      return false###
+    
+    
     totoPouet:(e)->
       if e.preventDefault
         e.preventDefault()
@@ -106,7 +298,12 @@ define (require) ->
       @stats.domElement.style.position = 'absolute'
       @stats.domElement.style.top = '30px'
       @stats.domElement.style.zIndex = 100
-
+      
+      
+      @controls = null
+      @transformControls = null
+      @currentSelection = null
+      
     init:()=>
       # Setup the RenderManager
       @renderManager = new THREE.Extras.RenderManager(@renderer)
@@ -129,6 +326,25 @@ define (require) ->
       @setupView(@settings.position)
       #@setupContextMenu()
       
+      
+      #------------------------------------#
+      #if mousedown PLUS move NOT over object : rotate/pan, do not deselect current obect
+      
+      ###TRANSFORM CONTROLS###
+      @transformControls = new THREE.TransformControls(@camera, @renderer.domElement)
+      #@transformControls.scale = 0.65
+      
+      onControlsChange=(ev)=>
+        @controls.enabled = true
+        if @transformControls.axis then @controls.enabled = false
+        #if (editor.selected) signals.objectChanged.dispatch( editor.selected )
+        @onObjectSelected({type:'selected',selection:@selectionHelper.currentSelect} )
+
+        @_render()
+        
+      @transformControls.addEventListener( 'change', onControlsChange)
+      @on("selectionChange",@_onSelectionChange)
+      #------------------------------------#
     
     setupRenderers:(settings)=>
       getValidRenderer=(settings)->
@@ -592,117 +808,7 @@ define (require) ->
     makeScreenshot:(width=600, height=600)=>
       return helpers.captureScreen(@renderer.domElement,width,height)
     
-    onObjectSelected:(selectionInfo)=>
-      #experimental 2d overlay for projected min max values of the objects 3d bounding box
-      [centerLeft,centerTop,length,width,height]=@selectionHelper.get2DBB(selectionInfo.selection,@width, @height)
-      $("#testOverlay2").removeClass("hide")
-      $("#testOverlay2").css("left",centerLeft+@$el.offset().left)
-      $("#testOverlay2").css('top', (centerTop - $("#testOverlay2").height()/2)+'px')
-      
-      screenCoords = @selectionHelper.getScreenCoords(selectionInfo.selection,@width, @height)
-      $("#testOverlay2").css("left",screenCoords.x+@$el.offset().left)
-      $("#testOverlay2").css('top', (screenCoords.y - $("#testOverlay2").height()/2)+'px')
-      
-      
-      infoText = "#{@selectionHelper.currentSelect.name}"#\n w:#{width} <br\> l:#{length} <br\>h:#{height}"
-      $("#testOverlay2").html("""<span>#{infoText} <a class="toto"><i class="icon-exclamation-sign"></a></span>""")
-      $(".toto").click ()=>
-        volume = @selectionHelper.currentSelect.volume or 0
-        
-        htmlStuff = """<span>#{infoText} <br>Volume:#{volume} <a class="toto"><i class="icon-exclamation-sign"></a></span>"""
-        $("#testOverlay2").html(htmlStuff)
-      @_render()
-      
-    onObjectUnSelected:(selectionInfo)=>
-      $("#testOverlay2").addClass("hide")
-      @_render()
-      
-    onObjectHover:()=>
-      @_render()
     
-    _onSelectAttempt:(ev)=>
-      """used either for selection or context menu"""
-      normalizeEvent(ev)
-      x = ev.offsetX
-      y = ev.offsetY
-      hiearchyRoot = if @assembly? then @assembly.children else @scene.children
-      @selectionHelper.hiearchyRoot=hiearchyRoot
-      @selectionHelper.viewWidth=@width
-      @selectionHelper.viewHeight=@height
-      
-      selected = @selectionHelper.selectObjectAt(x,y)
-      
-      ###
-      selectionChange = false
-      if selected?
-        if @currentSelection?
-          if @currentSelection != selected
-            selectionChange = true
-        else 
-          selectionChange = true
-     
-      if selectionChange
-        if @currentSelection?
-          controls = @currentSelection.controls
-          if controls?
-            controls.detatch(@currentSelection)
-            controls.removeEventListener( 'change', @_render)
-            @scene.remove(controls.gizmo)
-            controls = null
-            @currentSelection = null
-        
-        @currentSelection = selected        
-        controls = new THREE.TransformControls(@camera, @renderer.domElement)
-        console.log controls
-        controls.addEventListener( 'change', @_render );
-        controls.attatch( selected );
-        controls.scale = 0.65;
-        @scene.add( controls.gizmo );
-        selected.controls = controls
-      
-      @_render()
-      ###      
-      
-      ev.preventDefault()
-      return false
-      
-    _onRightclick:(ev)=>
-      normalizeEvent(ev)
-      x = ev.offsetX
-      y = ev.offsetY
-      if not @selectionHelper.isThereObjectAt(x,y)
-        @selectionHelper._unSelect()
-      @contextMenuRequested = true
-    
-    _onMouseMove:(ev)->
-      normalizeEvent(ev)
-      x = ev.offsetX
-      y = ev.offsetY
-      
-      hiearchyRoot = if @assembly? then @assembly.children else @scene.children
-      @selectionHelper.hiearchyRoot=hiearchyRoot
-      @selectionHelper.viewWidth=@width
-      @selectionHelper.viewHeight=@height
-      @selectionHelper.highlightObjectAt(x,y)
-    
-    _onControlsChange:(ev)=>
-      #console.log "controls change"
-      @noControlChange = false 
-      #@oldCamPos = if @newCamPos? then @newCamPos.clone()
-      #@newCamPos = ev.target.object.position
-      
-      ###
-      if @controlChangeTimeOut?
-        clearTimeout(@controlChangeTimeOut)
-      @controlChangeTimeOut = null  
-      @controlChangeTimeOut = setTimeout ( =>
-        @noControlChange = true
-        if @contextMenuRequested?
-          if @contextMenuRequested
-            @setupContextMenu()
-            
-      ), 600
-      return false###
 
     switchProjection:(ev)->
       projection = @settings.projection

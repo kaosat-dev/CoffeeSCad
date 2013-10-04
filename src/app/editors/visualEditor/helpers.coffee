@@ -611,6 +611,7 @@ define (require) ->
           #selection.material.side = THREE.FrontSide
           selection.hoverOutline = outline
           selection.add( outline )
+          #console.log "blabli",selection.hoverOutline
           
         @dispatchEvent({type:'hoverIn',selection:selection})
       
@@ -731,6 +732,20 @@ define (require) ->
       if intersects.length > 0
         return true
       return false
+    
+    getObjectAt:(x,y)=>
+      v = new THREE.Vector3((x/@viewWidth)*2-1, -(y/@viewHeight)*2+1, 0.5)
+      @projector.unprojectVector(v, @camera)
+      raycaster = new THREE.Raycaster(@camera.position, v.sub(@camera.position).normalize())
+      intersects = raycaster.intersectObjects(@hiearchyRoot, true )
+      
+      if intersects.length > 0
+        intersected = intersects[0].object
+        if intersected.name in ["hoverOutline","selectOutline","boundingCage"]
+          intersected=intersected.parent
+        return intersected
+      else
+        return null
       
     selectObjectAt:(x,y)=>
       v = new THREE.Vector3((x/@viewWidth)*2-1, -(y/@viewHeight)*2+1, 0.5)
@@ -739,13 +754,19 @@ define (require) ->
       intersects = raycaster.intersectObjects(@hiearchyRoot, true )
       
       if intersects.length > 0
-        if intersects[0].object != @currentSelect
+        intersected = intersects[0].object
+        if intersected.name in ["hoverOutline","selectOutline","boundingCage"]#is "hoverOutline" or intersected is "selectOutline"
+          intersected=intersected.parent
+        if intersected != @currentSelect
           @_unSelect()
-          @_onSelect(intersects[0].object)
+          @_onSelect( intersected )
           return @currentSelect
-      else if @currentSelect?
-        return @currentSelect
+        else
+          return @currentSelect
+      #else if @currentSelect?
+      #  return @currentSelect
       else
+        console.log "otot"
         @_unSelect()
     
     highlightObjectAt:(x,y)=>

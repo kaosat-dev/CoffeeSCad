@@ -24,7 +24,6 @@ THREE.ArrowHelper2 = function ( dir, origin, length, hex ) {
     this.position = origin;
     this.direction = dir.clone().multiplyScalar(length);
 
-    this.useQuaternion = true;
 
     var lineGeometry = new THREE.Geometry();
     lineGeometry.vertices.push( new THREE.Vector3() );
