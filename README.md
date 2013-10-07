@@ -23,8 +23,40 @@ Like CoffeeSCad ? Buy me a coffee as they say :)
 [![Flattr this git repo](http://api.flattr.com/button/flattr-badge-large.png)](https://flattr.com/submit/auto?user_id=ckaos&url=https://github.com/kaosat-dev/CoffeeSCad&title=CoffeeSCad&language=&tags=github&category=software)
 
 
-Important notes 
-================
+Status update october 7, 2013 
+=============================
+While it may seem that development has slowed down, (commits in this repository), it is far from being the case:
+I am currently busy with some rather radical changes to CoffeeSCad's kernel and overall structure, 
+and that is taking a bit long : on the menu :
+
+Structure
+- CoffeeSCad is going modular: ie instead of one monolithic application, it will be split up into multiple reusable 
+modules: this means that if you are a developer you could mix and match components and create additional
+functionality easily , or even create a custom version of CoffeeSCad that fits your needs.
+
+On the features side:
+- support for importing geometry from a LOT of formats (stl, amf, obj etc)
+- support for including both code and geometry from different locations (local, remote via http/https)
+- moving to THREE.js library for not just visual representation
+- support for splines & bezier curves via the above mentionned lib
+- support for different types of extrusion (long overdue)
+- a cleaned up, coherent kernel, that works in the browser , in node.js and on desktop
+- LOTS of optimizations and bugfixes
+- a lot coherent module system (modules are the files containing the code): this not only concerns how things are done internally, but also error reporting, "include" statements etc
+- ground work for slicing integration
+- ground work for material definitions
+- ground work for visual to code and code to visual
+
+And I am surely forgetting a few things !
+
+Given the amount of changes and improvements, this might take a bit to trickle up to the online version, 
+but I am doing my best to keep the wait short !
+
+Cheers !
+
+
+Important notes regarding browser storage:
+=========================================
 
 Recently github changed their pages domain to **".io"** instead of **".com"** (https://github.com/blog/1452-new-github-pages-domain-github-io), and since the localstorage system used to store CoffeeSCad's
 data is based on domain , it made them inaccessible!
