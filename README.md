@@ -1,5 +1,16 @@
 ![Coffeescad v0_3_preview](https://raw.github.com/kaosat-dev/CoffeeSCad/dev/coffeescad_v0.3.0_pre.png)
 
+# THIS PROJECT IS DISCONTINUED !! 
+## While I still love the Coffeescript syntax, I only use ES6/ES2015 these days. If you want an up to date, open source browser based cad, please try OpenJSCAD (https://github.com/jscad)
+## it is more up to date, and has more features. (I am also an active developper of that project :)
+
+More information about the end of the project: I stopped developing Coffeescad for multiple reasons:
+- when I hit the limitations of Coffeescript vs Javascript when dealing with code tracing, analysis and generation with tools like Esprima, Estraverse, etc: This was going to be used to allow visual<=>code selection & editing (select something in the 3d view to select the code that defines it etc).
+- I have come to dislike 'Object oriented' code more and more over the past few years, leaning more and more towards simple functions, and all the fantastic possibilities AND simplicity of 'functional' programming.
+- Coffeescad was my first serious 'web' based project, things have evolved a lot in the past few years, and so has my knowledge, I would not have made the same choices today 
+
+
+
 CoffeeSCad
 =============
 
